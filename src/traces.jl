@@ -45,7 +45,11 @@ function traces(p::Product)
     end
 
     analysis = adjust_globally(get_type(p, Analysis), ts)
-    return [Trace(trace.attributes, analysis(trace.select)) for trace in ts]
+    metadata = filter(p.elements) do el
+        !(el isa Union{Analysis, Data, Group, Select})
+    end
+    ts′ = [Trace(trace.attributes, analysis(trace.select)) for trace in ts]
+    return metadata => ts′
 end
 
 traces(s::Sum) = map(traces, s.elements)
