@@ -1,6 +1,7 @@
 module AlgebraOfGraphics
 
 using Base: front, tail, setindex
+import Base: +, *
 using StructArrays: finduniquesorted, StructArray
 using Tables: columntable
 

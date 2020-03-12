@@ -54,4 +54,4 @@ end
 
 traces(s::Sum) = map(traces, s.elements)
 
-traces(args...) = traces(foldl(⊗, args))
+traces(args...) = traces(foldl(*, args))

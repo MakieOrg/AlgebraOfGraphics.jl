@@ -1,4 +1,8 @@
-struct Select
+abstract type AbstractElement end
+
+abstract type AbstractSimple <: AbstractElement end
+
+struct Select <: AbstractSimple
     args::Tuple
     kwargs::NamedTuple
     Select(args...; kwargs...) = new(args, values(kwargs))
@@ -10,7 +14,7 @@ function combine(s1::Select, s2::Select)
     return Select(s1.args..., s2.args...; merge(s1.kwargs, s2.kwargs)...)
 end
 
-struct Analysis{T, N<:NamedTuple}
+struct Analysis{T, N<:NamedTuple} <: AbstractSimple
     f::T
     kwargs::N
     function Analysis(f::T; kwargs...) where {T}
@@ -30,14 +34,14 @@ combine(a1::Analysis, a2::Analysis) = a2
 
 adjust_globally(a::Analysis, ts) = a
 
-struct Group
+struct Group <: AbstractSimple
     columns::NamedTuple
     Group(; kwargs...) = new(values(kwargs))
 end
 
 combine(g1::Group, g2::Group) = Group(; merge(g1.columns, g2.columns)...)
 
-struct Data{T}
+struct Data{T} <: AbstractSimple
     table::T
 end
 Data() = Data(nothing)
