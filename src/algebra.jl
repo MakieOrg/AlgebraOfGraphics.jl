@@ -11,6 +11,11 @@ struct Product{T<:Tuple} <: AbstractComposite
 end
 Product(l::Product) = l
 
+function Base.show(io::IO, l::Product)
+    print(io, "Product")
+    _show(io, l.elements...)
+end
+
 append(l::Product, x) = Product(_append(l.elements, x)...)
 append(l::Product, m::Product) = foldl(append, m.elements, init=l)
 
@@ -30,6 +35,11 @@ struct Sum{T<:Tuple} <: AbstractComposite
     Sum(args...) = new{typeof(args)}(args)
 end
 Sum(l::Sum) = l
+
+function Base.show(io::IO, l::Sum)
+    print(io, "Sum")
+    _show(io, l.elements...)
+end
 
 *(t::Sum, b::AbstractElement) = Sum(map(el -> el * b, t.elements)...)
 *(a::AbstractElement, t::Sum) = Sum(map(el -> a * el, t.elements)...)

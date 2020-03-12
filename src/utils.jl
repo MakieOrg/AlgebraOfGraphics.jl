@@ -44,3 +44,26 @@ extract_column(t, col::AbstractArray) =
     mapslices(v -> extract_column(t, v[1]), col, dims = 1)
 
 extract_columns(t, tup::Union{Tuple, NamedTuple}) = map(col -> extract_column(t, col), tup)
+
+# show utils
+
+function _show(io::IO, args...; kwargs...)
+    print(io, "(")
+    kwargs = values(kwargs)
+    na, nk = length(args), length(kwargs)
+    for i in 1:na
+        show(io, args[i])
+        if i < na + nk
+            print(io, ", ")
+        end
+    end
+    for i in 1:nk
+        print(io, keys(kwargs)[i])
+        print(io, " = ")
+        show(io, kwargs[i])
+        if i < nk
+            print(io, ", ")
+        end
+    end
+    print(io, ")")
+end
