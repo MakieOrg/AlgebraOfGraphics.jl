@@ -20,19 +20,27 @@ end
 struct ByColumn end
 const bycolumn = ByColumn()
 
-Base.isless(::ByColumn, ::ByColumn) = false
 extract_column(t, c::ByColumn) = c
+
+# can this be type stable?
+function _no_bycolumn(t::NamedTuple)
+    foldl(keys(t), init=NamedTuple()) do nt, name 
+        v = getproperty(t, name)
+        eltype(v) === ByColumn ? nt : (; nt..., name => v)
+    end
+end
 
 function traces(p::Product)
     grp, select = groupselect(p)
     data, named_data = select.args, select.kwargs
     len = column_length(data)
-    pcols = map(t -> t isa AbstractVector ? t : fill(t, len), grp.columns)
+    pcols = _no_bycolumn(grp.columns)
     sa = StructArray(map(pool, pcols))
     keys = isempty(pcols) ? (NamedTuple() => 1:len,) : finduniquesorted(sa)
 
     ts = Trace[]
-    for (key, idxs) in keys
+    for (key′, idxs) in keys
+        key = merge(grp.columns, key′)
         if any(x -> isa(x, ByColumn), key)
             m = maximum(ncols, data)
             for i in 1:m
