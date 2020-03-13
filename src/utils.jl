@@ -81,14 +81,14 @@ pool(v::AbstractVector{<:Integer}) = v
 # NamedTuple utils
 
 function keepvectors(n::NamedTuple{s, <:Tuple{AbstractVector, Vararg}}) where s
-    l = keepvectors(NamedTuple{tail(s)}(tail(n)))
+    l = keepvectors(NamedTuple{tail(s)}(n))
     fn, fs = first(n), first(s)
     f = NamedTuple{(fs,)}((fn,))
     return merge(f, l)
 end
 
 function keepvectors(n::NamedTuple{s}) where s
-    return keepvectors(NamedTuple{tail(s)}(tail(n)))
+    return keepvectors(NamedTuple{tail(s)}(n))
 end
 
 keepvectors(::typeof(NamedTuple())) = NamedTuple()
