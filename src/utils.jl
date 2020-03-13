@@ -67,3 +67,17 @@ function _show(io::IO, args...; kwargs...)
     end
     print(io, ")")
 end
+
+# PooledArrays utils
+
+function pool(v)
+    s = refarray(v)
+    pv = PooledArray(s)
+    map(pv) do el
+        refvalue(v, el)
+    end
+end
+
+pool(v::PooledVector) = v
+
+pool(v::AbstractVector{<:Integer}) = v

@@ -28,8 +28,8 @@ function traces(p::Product)
     data, named_data = select.args, select.kwargs
     len = column_length(data)
     pcols = map(t -> t isa AbstractVector ? t : fill(t, len), grp.columns)
-    sa = isempty(pcols) ? fill(NamedTuple(), len) : StructArray(pcols)
-    keys = finduniquesorted(sa)
+    sa = StructArray(map(pool, pcols))
+    keys = isempty(pcols) ? (NamedTuple() => 1:len,) : finduniquesorted(sa)
 
     ts = Trace[]
     for (key, idxs) in keys
