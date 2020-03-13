@@ -1,6 +1,6 @@
-struct Trace
-    attributes::NamedTuple
-    select::Select
+struct Trace{NT<:NamedTuple, S<:Select}
+    attributes::NT
+    select::S
 end
 
 function groupselect(p::Product)
@@ -22,33 +22,26 @@ const bycolumn = ByColumn()
 
 extract_column(t, c::ByColumn) = c
 
-# can this be type stable?
-function _no_bycolumn(t::NamedTuple)
-    foldl(keys(t), init=NamedTuple()) do nt, name 
-        v = getproperty(t, name)
-        eltype(v) === ByColumn ? nt : (; nt..., name => v)
-    end
-end
-
 function traces(p::Product)
     grp, select = groupselect(p)
     data, named_data = select.args, select.kwargs
-    len = column_length(data)
-    pcols = _no_bycolumn(grp.columns)
+    pcols = keepvectors(grp.columns)
     sa = StructArray(map(pool, pcols))
-    keys = isempty(pcols) ? (NamedTuple() => 1:len,) : finduniquesorted(sa)
+    keys = isempty(pcols) ? (NamedTuple() => Colon(),) : finduniquesorted(sa)
 
-    ts = Trace[]
-    for (key′, idxs) in keys
-        key = merge(grp.columns, key′)
-        if any(x -> isa(x, ByColumn), key)
-            m = maximum(ncols, data)
-            for i in 1:m
-                new_key = map(x -> x isa ByColumn ? i : x, key)
-                push!(ts, Trace(new_key, extract_view(select, idxs, i)))
-            end
-        else
-            push!(ts, Trace(key, extract_view(select, idxs)))
+    # Should we use the shape of data rather than presence of `ByColumn`
+    # to decide which branch to pick?
+    ts = if any(x -> isa(x, ByColumn), grp.columns)
+        m = maximum(ncols, data)
+        map(Iterators.product(keys, 1:m)) do ((key, idxs), i)
+            # everything that is not a `AbstractVector` is a `ByColumn`
+            # we replace them with the integer `i`
+            key′ = merge(map(_ -> i, grp.columns), key)
+            Trace(key′, extract_view(select, idxs, i))
+        end
+    else
+        map(keys) do (key, idxs)
+            Trace(key, extract_view(select, idxs))
         end
     end
 

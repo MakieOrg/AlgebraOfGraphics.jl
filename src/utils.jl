@@ -5,10 +5,6 @@ ncols(v::Tuple) = length(v)
 ncols(v::AbstractVector) = 1
 ncols(v::AbstractArray) = mapreduce(length, *, tail(axes(v)))
 
-column_length(v::Union{Tuple, NamedTuple}) = column_length(v[1])
-column_length(v::AbstractVector) = length(v)
-column_length(v::AbstractArray) = length(axes(v, 1))
-
 extract_view(v::Union{Tuple, NamedTuple}, idxs) = map(x -> extract_view(x, idxs), v)
 extract_view(v::AbstractVector, idxs) = view(v, idxs)
 function extract_view(v::AbstractArray{<:Any, N}, idxs) where {T, N}
@@ -81,3 +77,19 @@ end
 pool(v::PooledVector) = v
 
 pool(v::AbstractVector{<:Integer}) = v
+
+# NamedTuple utils
+
+function keepvectors(n::NamedTuple{s, <:Tuple{AbstractVector, Vararg}}) where s
+    l = keepvectors(NamedTuple{tail(s)}(tail(n)))
+    fn, fs = first(n), first(s)
+    f = NamedTuple{(fs,)}((fn,))
+    return merge(f, l)
+end
+
+function keepvectors(n::NamedTuple{s}) where s
+    return keepvectors(NamedTuple{tail(s)}(tail(n)))
+end
+
+keepvectors(::typeof(NamedTuple())) = NamedTuple()
+

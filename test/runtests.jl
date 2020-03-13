@@ -5,6 +5,7 @@ using AlgebraOfGraphics: Data,
                          Analysis,
                          Trace,
                          traces,
+                         bycolumn,
                          AbstractElement
 
 using RDatasets: dataset
@@ -29,4 +30,12 @@ end
     @test ts1[1].select.args == ts2[1].select.args
     @test ts1[1].select.kwargs == ts2[1].select.kwargs
     @test m1 == m2 == ()
+    
+    m1, ts1 = traces(Select((rand(10), rand(10))) * Group(color=bycolumn))
+    @test m1 == ()
+    @test size(ts1) == (1, 2)
+
+    m1, ts1 = traces(Select(rand(10, 2), rand(10)) * Group(color=bycolumn))
+    @test m1 == ()
+    @test size(ts1) == (1, 2)
 end
