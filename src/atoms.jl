@@ -2,14 +2,15 @@ abstract type AbstractElement end
 
 abstract type AbstractSimple <: AbstractElement end
 
-struct Select <: AbstractSimple
-    args::Tuple
-    kwargs::NamedTuple
-    Select(args...; kwargs...) = new(args, values(kwargs))
+struct Select{T<:Tuple, NT<:NamedTuple} <: AbstractSimple
+    args::T
+    kwargs::NT
+    function Select(args...; kwargs...)
+        nt = values(kwargs)
+        return new{typeof(args), typeof(nt)}(args, nt)
+    end
 end
-Select(t::Tuple) = Select(t...)
 Select(s::Select) = s
-
 
 function Base.show(io::IO, s::Select)
     print(io, "Select")
@@ -46,9 +47,12 @@ combine(a1::Analysis, a2::Analysis) = a2
 
 adjust_globally(a::Analysis, ts) = a
 
-struct Group <: AbstractSimple
-    columns::NamedTuple
-    Group(; kwargs...) = new(values(kwargs))
+struct Group{NT<:NamedTuple} <: AbstractSimple
+    columns::NT
+    function Group(; kwargs...)
+        nt = values(kwargs)
+        return new{typeof(nt)}(nt)
+    end
 end
 
 function Base.show(io::IO, g::Group)
