@@ -35,7 +35,4 @@ end
     @test m1 == ()
     @test size(ts1) == (1, 2)
 
-    m1, ts1 = traces(Select(rand(10, 2), rand(10)) * Group(color=bycolumn))
-    @test m1 == ()
-    @test size(ts1) == (1, 2)
 end
