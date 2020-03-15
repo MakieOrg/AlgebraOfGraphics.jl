@@ -3,9 +3,9 @@ using AlgebraOfGraphics: Data,
                          Select,
                          Group,
                          Analysis,
-                         Trace,
-                         traces,
-                         bycolumn,
+                         Traces,
+                         metadata,
+                         counter,
                          AbstractElement
 
 using RDatasets: dataset
@@ -18,21 +18,20 @@ end
     mpg = dataset("ggplot2", "mpg")
     spec = Data(mpg) * Select(:Cyl, :Hwy) * Group(color = :Year)
     s = Metadata(log) + Metadata(exp)
-    ts = traces(s, spec)
-    @test ts[1][1] == (Metadata(log),)
-    @test ts[2][1] == (Metadata(exp),)
-    @test ts[1][2] isa Vector{<:Trace}
+    ts = map(Traces, s * spec)
+    ms = map(metadata, s * spec)
+    @test ms[1] == (Metadata(log),)
+    @test ms[2] == (Metadata(exp),)
+    @test ts isa Vector{<:Traces}
     @test length(ts) == 2
 
-    m1, ts1 = traces(Data(mpg), Select(:Cyl, :Hwy), Group(color=:Year))
-    m2, ts2 = traces(Data(mpg) * Select(:Cyl, :Hwy) * Group(color=:Year))
-    @test ts1[1].attributes == ts2[1].attributes
-    @test ts1[1].select.args == ts2[1].select.args
-    @test ts1[1].select.kwargs == ts2[1].select.kwargs
-    @test m1 == m2 == ()
-    
-    m1, ts1 = traces(Select((rand(10), rand(10))) * Group(color=bycolumn))
-    @test m1 == ()
-    @test size(ts1) == (1, 2)
+    v1, v2 = (rand(10), rand(10))
+    p = Traces(counter(:color), (v1, v2))
+    a, s = first(p)
+    @test a == (; color = 1)
+    @test s == Select(v1)
+    a, s = last(collect(p))
+    @test a == (; color = 2)
+    @test s == Select(v2)
 
 end

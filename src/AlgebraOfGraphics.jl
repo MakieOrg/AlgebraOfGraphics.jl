@@ -10,6 +10,5 @@ using DataAPI: refarray, refvalue
 include("algebra.jl")
 include("atoms.jl")
 include("utils.jl")
-include("traces.jl")
 
 end # module
