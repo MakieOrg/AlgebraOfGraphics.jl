@@ -35,7 +35,7 @@ function combine(s1::Select, s2::Select)
 end
 
 # Maybe store in memory as two separate lists?
-struct Traces{S}
+struct Traces{S} <: AbstractSimple
     list::S # iterates attributes => Select pairs
     function Traces(l)
         list = map(l) do (a, s)
@@ -57,9 +57,16 @@ Base.eltype(::Type{Traces{T}}) where {T} = eltype(T)
 Base.IteratorEltype(::Type{Traces{T}}) where {T} = Base.IteratorEltype(T)
 Base.IteratorSize(::Type{Traces{T}}) where {T} = Base.IteratorSize(T)
 
+function consistent((t1, t2),)
+    a1, _ = t1
+    a2, _ = t2
+    merge(a1, a2) == merge(a2, a1)
+end
+
 function combine(t1::Traces, t2::Traces)
-    itr = zip(t1.list, t2.list)
-    Traces[combine(a1, a2) => combine(sel1, sel2) for ((a1, sel2), (a2, sel2)) in itrs]
+    itr = Iterators.filter(consistent, Iterators.product(t1.list, t2.list))
+    list = [combine(a1, a2) => combine(sel1, sel2) for ((a1, sel1), (a2, sel2)) in itr]
+    return Traces(list)
 end
 
 combine(s::Select, t::Traces) = combine(Traces(s), t)
