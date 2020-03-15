@@ -33,12 +33,13 @@ function traces(p::Product)
     # to decide which branch to pick?
     ts = if any(x -> isa(x, ByColumn), grp.columns)
         m = maximum(ncols, data)
-        map(Iterators.product(keys, 1:m)) do ((key, idxs), i)
+        mat = map(Iterators.product(keys, 1:m)) do ((key, idxs), i)
             # everything that is not a `AbstractVector` is a `ByColumn`
             # we replace them with the integer `i`
             key′ = merge(map(_ -> i, grp.columns), key)
             Trace(key′, extract_view(select, idxs, i))
         end
+        vec(mat)
     else
         map(keys) do (key, idxs)
             Trace(key, extract_view(select, idxs))
