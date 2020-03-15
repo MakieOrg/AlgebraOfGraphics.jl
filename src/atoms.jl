@@ -34,6 +34,7 @@ function combine(s1::Select, s2::Select)
     return Select(s1.args..., s2.args...; merge(s1.kwargs, s2.kwargs)...)
 end
 
+# Maybe store in memory as two separate lists?
 struct Traces{S}
     list::S # iterates attributes => Select pairs
     function Traces(l)
