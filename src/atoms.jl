@@ -35,6 +35,8 @@ function combine(s1::Select, s2::Select)
 end
 
 # Maybe store in memory as two separate lists?
+# Should we keep AbstractSimple AbstractComposite distinction?
+# Here it kind of breaks...
 struct Traces{S} <: AbstractSimple
     list::S # iterates attributes => Select pairs
     function Traces(l)
