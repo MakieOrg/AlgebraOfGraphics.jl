@@ -1,8 +1,6 @@
 abstract type AbstractElement end
 
-abstract type AbstractComposite <: AbstractElement end
-
-struct Product{T<:Tuple} <: AbstractComposite
+struct Product{T<:Tuple} <: AbstractElement
     elements::T
     Product(args...) = new{typeof(args)}(args)
 end
@@ -28,7 +26,7 @@ function get(p::Product, T::Type, init = T())
     foldl(combine, Iterators.filter(x -> isa(x, T), vals), init=init)
 end
 
-struct Sum{T<:Tuple} <: AbstractComposite
+struct Sum{T<:Tuple} <: AbstractElement
     elements::T
     Sum(args...) = new{typeof(args)}(args)
 end

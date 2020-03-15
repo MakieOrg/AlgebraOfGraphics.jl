@@ -1,6 +1,4 @@
-abstract type AbstractSimple <: AbstractElement end
-
-struct Group{NT<:NamedTuple} <: AbstractSimple
+struct Group{NT<:NamedTuple} <: AbstractElement
     columns::NT
     function Group(; kwargs...)
         nt = values(kwargs)
@@ -15,7 +13,7 @@ end
 
 combine(g1::Group, g2::Group) = Group(; merge(g1.columns, g2.columns)...)
 
-struct Select{T<:Tuple, NT<:NamedTuple} <: AbstractSimple
+struct Select{T<:Tuple, NT<:NamedTuple} <: AbstractElement
     args::T
     kwargs::NT
     function Select(args...; kwargs...)
@@ -35,9 +33,7 @@ function combine(s1::Select, s2::Select)
 end
 
 # Maybe store in memory as two separate lists?
-# Should we keep AbstractSimple AbstractComposite distinction?
-# Here it kind of breaks...
-struct Traces{S} <: AbstractSimple
+struct Traces{S} <: AbstractElement
     list::S # iterates attributes => Select pairs
     function Traces(l)
         list = map(l) do (a, s)
@@ -58,6 +54,12 @@ Base.eltype(::Type{Traces{T}}) where {T} = eltype(T)
 
 Base.IteratorEltype(::Type{Traces{T}}) where {T} = Base.IteratorEltype(T)
 Base.IteratorSize(::Type{Traces{T}}) where {T} = Base.IteratorSize(T)
+
+function Base.show(io::IO, ts::Traces)
+    print(io, "Traces(")
+    _show(io, ts...)
+    print(io, ")")
+end
 
 function consistent((t1, t2),)
     a1, _ = t1
@@ -94,7 +96,7 @@ function Traces(p::Product)
     return an(Traces(grp, ts))
 end
 
-struct Analysis{T, N<:NamedTuple} <: AbstractSimple
+struct Analysis{T, N<:NamedTuple} <: AbstractElement
     f::T
     kwargs::N
     function Analysis(f::T; kwargs...) where {T}
@@ -119,7 +121,7 @@ end
 
 combine(a1::Analysis, a2::Analysis) = a2 ∘ a1
 
-struct Data{T} <: AbstractSimple
+struct Data{T} <: AbstractElement
     table::T
     function Data(t)
         nt = columntable(t)
