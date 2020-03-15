@@ -61,12 +61,6 @@ function Base.show(io::IO, ts::Traces)
     print(io, ")")
 end
 
-function consistent((t1, t2),)
-    a1, _ = t1
-    a2, _ = t2
-    merge(a1, a2) == merge(a2, a1)
-end
-
 function combine(t1::Traces, t2::Traces)
     itr = Iterators.filter(consistent, Iterators.product(t1.list, t2.list))
     list = [combine(a1, a2) => combine(sel1, sel2) for ((a1, sel1), (a2, sel2)) in itr]

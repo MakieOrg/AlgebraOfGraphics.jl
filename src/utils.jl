@@ -102,3 +102,17 @@ Base.eltype(::Type{Counter{T}}) where {T} = T
 Base.IteratorSize(::Type{<:Counter}) = Base.IsInfinite()
 
 counter(syms::Symbol...) = Counter(NamedTuple{syms}(map(_ -> 0, syms)))
+
+function _compare(nt1::NamedTuple, nt2::NamedTuple, fields::Tuple)
+    f = first(fields)
+    haskey(nt2, f) && (getproperty(nt1, f) != getproperty(nt2, f)) && return false
+    return _compare(nt1, nt2, tail(fields))
+end
+_compare(nt1::NamedTuple, nt2::NamedTuple, fields::Tuple{}) = true
+
+function consistent((t1, t2),)
+    a1, _ = t1
+    a2, _ = t2
+    _compare(a1, a2, keys(a1))
+end
+
