@@ -1,40 +1,41 @@
-abstract type AbstractComposite <: AbstractElement end
+abstract type AbstractElement end
 
-function _append(t::Tuple, el)
-    i = findlast(x -> applicable(combine, x, el), t)
-    i === nothing ? (t..., el) : setindex(t, combine(t[i], el), i)
-end
-
-struct Product{T<:Tuple} <: AbstractComposite
+struct Product{T<:Tuple} <: AbstractElement
     elements::T
     Product(args...) = new{typeof(args)}(args)
 end
 Product(l::Product) = l
+
+Base.iterate(p::Product) = iterate(p.elements)
+Base.iterate(p::Product, st) = iterate(p.elements, st)
+Base.length(p::Product) = length(p.elements)
+Base.eltype(::Type{Product{T}}) where {T} = eltype(T)
 
 function Base.show(io::IO, l::Product)
     print(io, "Product")
     _show(io, l.elements...)
 end
 
-append(l::Product, x) = Product(_append(l.elements, x)...)
-append(l::Product, m::Product) = foldl(append, m.elements, init=l)
+*(a::AbstractElement, b::AbstractElement) = Product(a) * Product(b)
+*(a::Product, b::Product) = Product(a.elements..., b.elements...)
 
-function *(a::AbstractElement, b::AbstractElement)
-    applicable(combine, a, b) ? combine(a, b) : Product(a) * Product(b)
-end
-*(a::Product, b::Product) = append(a, b)
+combine(a, b) = merge(a, b)
 
-function get_type(p::Product, ::Type{T}) where T
+function get(p::Product, T::Type, init = T())
     vals = p.elements
-    i = findfirst(x -> isa(x, T), vals)
-    i === nothing ? T() : vals[i]
+    foldl(combine, Iterators.filter(x -> isa(x, T), vals), init=init)
 end
 
-struct Sum{T<:Tuple} <: AbstractComposite
+struct Sum{T<:Tuple} <: AbstractElement
     elements::T
     Sum(args...) = new{typeof(args)}(args)
 end
 Sum(l::Sum) = l
+
+Base.iterate(p::Sum) = iterate(p.elements)
+Base.iterate(p::Sum, st) = iterate(p.elements, st)
+Base.length(p::Sum) = length(p.elements)
+Base.eltype(::Type{Sum{T}}) where {T} = eltype(T)
 
 function Base.show(io::IO, l::Sum)
     print(io, "Sum")

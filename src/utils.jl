@@ -29,7 +29,21 @@ extract_column(t, col::AbstractVector) = col
 extract_column(t, col::Symbol) = getproperty(t, col)
 extract_column(t, col::Integer) = getindex(t, col)
 
-extract_columns(t, tup::Union{Tuple, NamedTuple}) = map(col -> extract_column(t, col), tup)
+_extract_columns(t, tup::Union{Tuple, NamedTuple}) = map(col -> extract_column(t, col), tup)
+
+function _extract_columns(t, select::Select)
+    Select(
+           _extract_columns(t, select.args)...;
+           _extract_columns(t, select.kwargs)...
+          )
+end
+
+_extract_columns(t, grp::Group) = Group(; _extract_columns(t, grp.columns)...)
+
+function extract_columns(d::Data, g)
+    t = d.table
+    t === nothing ? g : _extract_columns(t, g)
+end
 
 # show utils
 
@@ -68,18 +82,37 @@ pool(v::PooledVector) = v
 
 pool(v::AbstractVector{<:Integer}) = v
 
-# NamedTuple utils
+# TupleUtils
 
-function keepvectors(n::NamedTuple{s, <:Tuple{AbstractVector, Vararg}}) where s
-    l = keepvectors(NamedTuple{tail(s)}(n))
-    fn, fs = first(n), first(s)
-    f = NamedTuple{(fs,)}((fn,))
-    return merge(f, l)
+const AoG = Union{Data, Group, Analysis, Traces, Select}
+
+metadata(t::Tuple{AoG, Vararg}) = metadata(tail(t))
+metadata(t::Tuple) = (first(t), metadata(tail(t))...)
+metadata(::Tuple{}) = ()
+metadata(p::Product) = metadata(p.elements)
+
+struct Counter{S}
+    nt::S
 end
-
-function keepvectors(n::NamedTuple{s}) where s
-    return keepvectors(NamedTuple{tail(s)}(n))
+function Base.iterate(c::Counter, st = 0)
+    st += 1
+    return map(_ -> st, c.nt), st 
 end
+Base.eltype(::Type{Counter{T}}) where {T} = T
+Base.IteratorSize(::Type{<:Counter}) = Base.IsInfinite()
 
-keepvectors(::typeof(NamedTuple())) = NamedTuple()
+counter(syms::Symbol...) = Counter(NamedTuple{syms}(map(_ -> 0, syms)))
+
+function _compare(nt1::NamedTuple, nt2::NamedTuple, fields::Tuple)
+    f = first(fields)
+    haskey(nt2, f) && (getproperty(nt1, f) != getproperty(nt2, f)) && return false
+    return _compare(nt1, nt2, tail(fields))
+end
+_compare(nt1::NamedTuple, nt2::NamedTuple, fields::Tuple{}) = true
+
+function consistent((t1, t2),)
+    a1, _ = t1
+    a2, _ = t2
+    _compare(a1, a2, keys(a1))
+end
 
