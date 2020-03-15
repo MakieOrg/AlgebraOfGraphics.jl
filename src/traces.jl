@@ -1,59 +1,37 @@
-struct Trace{NT<:NamedTuple, S<:Select}
-    attributes::NT
-    select::S
+struct Traces{S}
+    list::S # iterates attributes => Select pairs
+end
+Traces(t::Traces) = t
+
+Traces(s::Select) = Traces([NamedTuple() => s])
+
+function combine(t1::Traces, t2::Traces)
+    itr = zip(t1.list, t2.list)
+    Traces[combine(a1, a2) => combine(sel1, sel2) for ((a1, sel2), (a2, sel2)) in itrs]
 end
 
-function groupselect(p::Product)
-    grp = get_type(p, Group)
-    select = get_type(p, Select)
-    df = get_type(p, Data).table
-    df === nothing && return grp, select
-    t = columntable(df)
-    grp = Group(; extract_columns(t, grp.columns)...)
-    select = Select(
-                    extract_columns(t, select.args)...;
-                    extract_columns(t, select.kwargs)...
-                   )
-    return grp, select
-end
+combine(s::Select, t::Traces) = combine(Traces(s), t)
+combine(t::Traces, s::Select) = combine(t, Traces(s))
 
-struct ByColumn end
-const bycolumn = ByColumn()
+Traces(s::Select, g::Group) = Traces(Traces(s), g)
 
-extract_column(t, c::ByColumn) = c
-
-function traces(p::Product)
-    grp, select = groupselect(p)
-    data, named_data = select.args, select.kwargs
-    pcols = keepvectors(grp.columns)
+function Traces(t::Traces, g::Group)
+    isempty(g.columns) && return t
     sa = StructArray(map(pool, pcols))
-    keys = isempty(pcols) ? (NamedTuple() => Colon(),) : finduniquesorted(sa)
-
-    # Should we use the shape of data rather than presence of `ByColumn`
-    # to decide which branch to pick?
-    ts = if any(x -> isa(x, ByColumn), grp.columns)
-        m = maximum(ncols, data)
-        mat = map(Iterators.product(keys, 1:m)) do ((key, idxs), i)
-            # everything that is not a `AbstractVector` is a `ByColumn`
-            # we replace them with the integer `i`
-            key′ = merge(map(_ -> i, grp.columns), key)
-            Trace(key′, extract_view(select, idxs, i))
-        end
-        vec(mat)
-    else
-        map(keys) do (key, idxs)
-            Trace(key, extract_view(select, idxs))
-        end
-    end
-
-    analysis = adjust_globally(get_type(p, Analysis), ts)
-    metadata = filter(p.elements) do el
-        !(el isa Union{Analysis, Data, Group, Select})
-    end
-    ts′ = [Trace(trace.attributes, analysis(trace.select)) for trace in ts]
-    return metadata => ts′
+    itr = finduniquesorted(sa)
+    list = [merge(a, k) => extract_view(s, idxs) for (k, idxs) in itr for (a, s) in t.list]
+    return Traces(list)
 end
 
-traces(s::Sum) = map(traces, s.elements)
+function Traces(p::Product)
+    data = get(p, Data, Data())
+    grp = extract_columns(data, get(p, Group, Group()))
+    ts = extract_columns(data, get(p, Union{Select, Traces}, Select()))
+    an = get(p, Analysis, Analysis())
+    return an(Traces(ts, grp))
+end
 
-traces(args...) = traces(foldl(*, args))
+function metadata(p::Product)
+    AoG = Union{Data, Group, Analysis, Traces, Select}
+    Iterators.filter(x -> !isa(x, AoG), p.elements)
+end

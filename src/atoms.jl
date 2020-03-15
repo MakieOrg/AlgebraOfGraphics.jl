@@ -1,5 +1,3 @@
-abstract type AbstractElement end
-
 abstract type AbstractSimple <: AbstractElement end
 
 struct Select{T<:Tuple, NT<:NamedTuple} <: AbstractSimple
@@ -64,8 +62,12 @@ combine(g1::Group, g2::Group) = Group(; merge(g1.columns, g2.columns)...)
 
 struct Data{T} <: AbstractSimple
     table::T
+    function Data(t)
+        nt = columntable(t)
+        return new{typeof(nt)}(nt)
+    end
+    Data() = new{Nothing}(nothing)
 end
-Data() = Data(nothing)
 
 function Base.show(io::IO, d::Data)
     print(io, "Data with columns ")

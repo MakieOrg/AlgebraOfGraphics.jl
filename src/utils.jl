@@ -29,7 +29,21 @@ extract_column(t, col::AbstractVector) = col
 extract_column(t, col::Symbol) = getproperty(t, col)
 extract_column(t, col::Integer) = getindex(t, col)
 
-extract_columns(t, tup::Union{Tuple, NamedTuple}) = map(col -> extract_column(t, col), tup)
+_extract_columns(t, tup::Union{Tuple, NamedTuple}) = map(col -> extract_column(t, col), tup)
+
+function _extract_columns(t, s::Select)
+    Select(
+           _extract_columns(t, select.args)...;
+           _extract_columns(t, select.kwargs)...
+          )
+end
+
+_extract_columns(t, grp::Group) = Group(; _extract_columns(t, grp.columns)...)
+
+function extract_columns(d::Data, g)
+    t = d.table
+    t === nothing ? g : _extract_columns(t, g)
+end
 
 # show utils
 
