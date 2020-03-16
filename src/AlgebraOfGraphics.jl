@@ -6,6 +6,7 @@ using StructArrays: finduniquesorted, StructArray
 using Tables: columntable
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
+using OrderedCollections: OrderedDict
 
 include("spec.jl")
 include("algebra.jl")

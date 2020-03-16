@@ -11,9 +11,6 @@ extract_column(t, col::AbstractVector) = col
 extract_column(t, col::Symbol) = getproperty(t, col)
 extract_column(t, col::Integer) = getindex(t, col)
 
-extract_columns(::Nothing, g::Tup) = g
-extract_columns(t, g::Tup) = map(col -> extract_column(t, col), g)
-
 # show utils
 
 function _show(io::IO, args...; kwargs...)

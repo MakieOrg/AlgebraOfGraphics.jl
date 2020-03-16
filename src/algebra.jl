@@ -32,24 +32,3 @@ end
 +(a::Sum, b::AbstractSpec) = a + Sum(b)
 +(a::AbstractSpec, b::Sum) = Sum(a) + b
 +(a::Sum, b::Sum) = Sum(a.elements..., b.elements...)
-
-# function Traces(g::Group, t::Traces)
-#     isempty(g.columns) && return t
-#     sa = StructArray(map(pool, g.columns))
-#     itr = finduniquesorted(sa)
-#     list = [merge(k, a) => extract_view(s, idxs) for (k, idxs) in itr for (a, s) in t.list]
-#     return Traces(list)
-# end
-
-# function Base.collect(p::Select)
-#     data = p.d
-#     an = p.an
-#     options = p.o
-#     grp = extract_columns(data, p.g)
-#     args = extract_columns(data, p.args)
-#     kwargs = extract_columns(data, p.kwargs)
-#     ts = extract_columns(data, get(p, Union{Select, Traces}, Select()))
-#     an = get(p, Analysis, Analysis())
-#     return an(Traces(grp, ts))
-# end
-
