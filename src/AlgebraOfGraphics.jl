@@ -1,14 +1,14 @@
 module AlgebraOfGraphics
 
 using Base: front, tail, setindex
-import Base: +, *, get, merge
+import Base: +, *, merge
 using StructArrays: finduniquesorted, StructArray
-using Tables: columntable, columns, columnnames
+using Tables: columntable
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
 
+include("spec.jl")
 include("algebra.jl")
-include("atoms.jl")
 include("utils.jl")
 
 end # module

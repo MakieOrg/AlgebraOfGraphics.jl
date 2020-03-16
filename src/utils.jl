@@ -1,49 +1,18 @@
-concatenate(v::Union{Tuple, NamedTuple}...) = map(concatenate, v...)
+const Tup = Union{Tuple, NamedTuple, MixedTuple}
+
+concatenate(v::Tup...) = map(concatenate, v...)
 concatenate(v::AbstractArray...) = vcat(v...)
 
-ncols(v::Tuple) = length(v)
-ncols(v::AbstractVector) = 1
-
-extract_view(v::Union{Tuple, NamedTuple}, idxs) = map(x -> extract_view(x, idxs), v)
+extract_view(v::Tup, idxs) = map(x -> extract_view(x, idxs), v)
 extract_view(v::AbstractVector, idxs) = view(v, idxs)
 
-function extract_view(v::Select, idxs)
-    Select(
-           map(x -> extract_view(x, idxs), v.args)...;
-           map(x -> extract_view(x, idxs), v.kwargs)...
-          )
-end
-
-extract_view(v::Union{Tuple, NamedTuple}, idxs, n) = extract_view(v[n], idxs)
-extract_view(v::AbstractVector, idxs, n) = view(v, idxs)
-
-function extract_view(v::Select, idxs, n)
-    Select(
-           map(x -> extract_view(x, idxs, n), v.args)...;
-           map(x -> extract_view(x, idxs, n), v.kwargs)...
-          )
-end
-
-extract_column(t, c::Union{Tuple, NamedTuple}) = map(x -> extract_column(t, x), c)
+extract_column(t, c::Tup) = map(x -> extract_column(t, x), c)
 extract_column(t, col::AbstractVector) = col
 extract_column(t, col::Symbol) = getproperty(t, col)
 extract_column(t, col::Integer) = getindex(t, col)
 
-_extract_columns(t, tup::Union{Tuple, NamedTuple}) = map(col -> extract_column(t, col), tup)
-
-function _extract_columns(t, select::Select)
-    Select(
-           _extract_columns(t, select.args)...;
-           _extract_columns(t, select.kwargs)...
-          )
-end
-
-_extract_columns(t, grp::Group) = Group(; _extract_columns(t, grp.columns)...)
-
-function extract_columns(d::Data, g)
-    t = d.table
-    t === nothing ? g : _extract_columns(t, g)
-end
+extract_columns(::Nothing, g::Tup) = g
+extract_columns(t, g::Tup) = map(col -> extract_column(t, col), g)
 
 # show utils
 
@@ -102,27 +71,16 @@ struct Counter{S}
     nt::S
 end
 function Base.iterate(c::Counter, st = c.nt)
-    st += 1
-    return map(_ -> st, c.nt), st 
+    st = map(x -> x + 1, st)
+    return st, st
 end
 Base.eltype(::Type{Counter{T}}) where {T} = T
 Base.IteratorSize(::Type{<:Counter}) = Base.IsInfinite()
 
 Counter(syms::Symbol...) = Counter(NamedTuple{syms}(map(_ -> Class(0), syms)))
 
-function _compare(nt1::NamedTuple, nt2::NamedTuple, fields::Tuple)
-    f = first(fields)
-    haskey(nt2, f) && (getproperty(nt1, f) != getproperty(nt2, f)) && return false
-    return _compare(nt1, nt2, tail(fields))
+consistent(a::Spec, b::Spec) = consistent(a.primary.kwargs, b.primary.kwargs)
+
+function consistent(nt1::NamedTuple, nt2::NamedTuple)
+    all(((key, val),) -> val == get(n2, key, val), pairs(nt1))
 end
-_compare(nt1::NamedTuple, nt2::NamedTuple, fields::Tuple{}) = true
-
-consistent(a, b) = consistent(Select(a), Select(b))
-
-function consistent(s1::Select, s2::Select)
-    nt1, nt2 = s1.o, s2.o
-    return !any(pairs(s1.o)) do (key, val)
-        isa(val, Class) && val != get(s2.o, key, val)
-    end
-end
-

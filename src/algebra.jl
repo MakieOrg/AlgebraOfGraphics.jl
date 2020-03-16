@@ -1,5 +1,3 @@
-abstract type AbstractElement end
-
 struct Sum{T<:Tuple}
     elements::T
     Sum(args...) = new{typeof(args)}(args)
@@ -16,12 +14,13 @@ function Base.show(io::IO, l::Sum)
     _show(io, l.elements...)
 end
 
-function *(a::AbstractElement, b::AbstractElement)
+function *(a::AbstractSpec, b::AbstractSpec)
     consistent(a, b) ? merge(a, b) : Sum()
 end
 
-*(t::Sum, b::AbstractElement) = Sum(map(el -> *(el, b), t.elements)...)
-*(a::AbstractElement, t::Sum) = Sum(map(el -> *(a, el), t.elements)...)
+*(t::Sum, b::AbstractSpec) = Sum(map(el -> *(el, b), t.elements)...)
+*(a::AbstractSpec, t::Sum) = Sum(map(el -> *(a, el), t.elements)...)
+
 function *(s::Sum, t::Sum)
     f = *(s, first(t.elements))
     ls = *(s, Sum(tail(t.elements)...))
@@ -29,7 +28,9 @@ function *(s::Sum, t::Sum)
 end
 *(s::Sum, ::Sum{Tuple{}}) = Sum()
 
-+(a::AbstractElement, b::AbstractElement) = Sum(a) + Sum(b)
++(a::AbstractSpec, b::AbstractSpec) = Sum(a) + Sum(b)
++(a::Sum, b::AbstractSpec) = a + Sum(b)
++(a::AbstractSpec, b::Sum) = Sum(a) + b
 +(a::Sum, b::Sum) = Sum(a.elements..., b.elements...)
 
 # function Traces(g::Group, t::Traces)
@@ -40,9 +41,13 @@ end
 #     return Traces(list)
 # end
 
-# function Traces(p::Product)
-#     data = get(p, Data, Data())
-#     grp = extract_columns(data, get(p, Group, Group()))
+# function Base.collect(p::Select)
+#     data = p.d
+#     an = p.an
+#     options = p.o
+#     grp = extract_columns(data, p.g)
+#     args = extract_columns(data, p.args)
+#     kwargs = extract_columns(data, p.kwargs)
 #     ts = extract_columns(data, get(p, Union{Select, Traces}, Select()))
 #     an = get(p, Analysis, Analysis())
 #     return an(Traces(grp, ts))
