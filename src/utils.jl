@@ -92,22 +92,23 @@ droptype(t::Tuple{T, Vararg}, ::Type{T}) where {T} = droptype(tail(t), T)
 droptype(t::Tuple, ::Type{T}) where {T} = (first(t), droptype(tail(t), T)...)
 droptype(t::Tuple{}, ::Type{T}) where {T} = ()
 
-const AoG = Union{Data, Group, Analysis, Traces, Select}
-
-metadata(t::Tuple) = droptype(t, AoG)
-metadata(p::Product) = metadata(p.elements)
+struct Class
+    i::Int
+end
+Base.isless(a::Class, b::Class) = isless(a.i, b.i)
++(a::Class, i::Int) = Class(a.i+i)
 
 struct Counter{S}
     nt::S
 end
-function Base.iterate(c::Counter, st = 0)
+function Base.iterate(c::Counter, st = c.nt)
     st += 1
     return map(_ -> st, c.nt), st 
 end
 Base.eltype(::Type{Counter{T}}) where {T} = T
 Base.IteratorSize(::Type{<:Counter}) = Base.IsInfinite()
 
-counter(syms::Symbol...) = Counter(NamedTuple{syms}(map(_ -> 0, syms)))
+Counter(syms::Symbol...) = Counter(NamedTuple{syms}(map(_ -> Class(0), syms)))
 
 function _compare(nt1::NamedTuple, nt2::NamedTuple, fields::Tuple)
     f = first(fields)
@@ -116,9 +117,12 @@ function _compare(nt1::NamedTuple, nt2::NamedTuple, fields::Tuple)
 end
 _compare(nt1::NamedTuple, nt2::NamedTuple, fields::Tuple{}) = true
 
-function consistent((t1, t2),)
-    a1, _ = t1
-    a2, _ = t2
-    _compare(a1, a2, keys(a1))
+consistent(a, b) = consistent(Select(a), Select(b))
+
+function consistent(s1::Select, s2::Select)
+    nt1, nt2 = s1.o, s2.o
+    return !any(pairs(s1.o)) do (key, val)
+        isa(val, Class) && val != get(s2.o, key, val)
+    end
 end
 

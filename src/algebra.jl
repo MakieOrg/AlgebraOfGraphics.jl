@@ -1,7 +1,5 @@
 abstract type AbstractElement end
 
-*(a::AbstractElement, b::AbstractElement) = merge(a, b)
-
 struct Sum{T<:Tuple}
     elements::T
     Sum(args...) = new{typeof(args)}(args)
@@ -18,6 +16,10 @@ function Base.show(io::IO, l::Sum)
     _show(io, l.elements...)
 end
 
+function *(a::AbstractElement, b::AbstractElement)
+    consistent(a, b) ? merge(a, b) : Sum()
+end
+
 *(t::Sum, b::AbstractElement) = Sum(map(el -> *(el, b), t.elements)...)
 *(a::AbstractElement, t::Sum) = Sum(map(el -> *(a, el), t.elements)...)
 function *(s::Sum, t::Sum)
@@ -29,12 +31,6 @@ end
 
 +(a::AbstractElement, b::AbstractElement) = Sum(a) + Sum(b)
 +(a::Sum, b::Sum) = Sum(a.elements..., b.elements...)
-
-function merge(t1::Traces, t2::Traces)
-    itr = Iterators.filter(consistent, Iterators.product(t1.list, t2.list))
-    list = [merge(a1, a2) => merge(sel1, sel2) for ((a1, sel1), (a2, sel2)) in itr]
-    return Traces(list)
-end
 
 # function Traces(g::Group, t::Traces)
 #     isempty(g.columns) && return t

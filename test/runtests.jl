@@ -3,23 +3,16 @@ using AlgebraOfGraphics: Data,
                          Select,
                          Group,
                          Analysis,
-                         Traces,
-                         metadata,
-                         counter,
+                         Counter,
                          AbstractElement
 
 using RDatasets: dataset
 
-struct Metadata{T} <: AbstractElement
-    x::T
-end
-
 @testset "traces" begin
     mpg = dataset("ggplot2", "mpg")
     spec = Data(mpg) * Select(:Cyl, :Hwy) * Group(color = :Year)
-    s = Metadata(log) + Metadata(exp)
-    ts = map(Traces, s * spec)
-    ms = map(metadata, s * spec)
+    s = Select((color = :red, font = 10)) + Select(marker = :Year)
+    s * spec
     @test ms[1] == (Metadata(log),)
     @test ms[2] == (Metadata(exp),)
     @test ts isa Vector{<:Traces}

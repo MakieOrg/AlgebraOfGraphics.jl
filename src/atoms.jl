@@ -11,10 +11,6 @@ function Base.show(io::IO, g::Group)
     _show(io; g.columns...)
 end
 
-function merge(a::AbstractElement, b::AbstractElement, bs::AbstractElement...)
-    return foldl(merge, (a, b, bs...))
-end
-
 merge(g1::Group, g2::Group) = Group(; merge(g1.columns, g2.columns)...)
 
 struct Analysis{T, N<:NamedTuple} <: AbstractElement
@@ -25,7 +21,6 @@ struct Analysis{T, N<:NamedTuple} <: AbstractElement
         new{T, typeof(nt)}(f, nt)
     end
 end
-Analysis() = Analysis(Select)
 
 function Base.show(io::IO, an::Analysis)
     print(io, "Analysis(")
@@ -37,7 +32,6 @@ end
 function (an::Analysis)(args...; kwargs...)
     return an.f(args...; kwargs..., an.kwargs...)
 end
-(an::Analysis)(s::Select) = Select(an(s.args...; s.kwargs...))
 # (an::Analysis)(t::Traces) = Traces([a => an(s) for (a, s) in t.list])
 
 merge(a1::Analysis, a2::Analysis) = a2 ∘ a1
@@ -78,8 +72,7 @@ end
 Select(s::Select) = s
 
 function Base.show(io::IO, s::Select)
-    print(io, "Select")
-    _show(io, s.args...; s.kwargs...)
+    print(io, "Select{ }")
 end
 
 function merge(s1::Select, s2::Select)
@@ -89,7 +82,12 @@ function merge(s1::Select, s2::Select)
     o = merge(s1.o, s2.o)
     args = (s1.args..., s2.args...)
     kwargs = merge(s1.kwargs, s2.kwargs)
-    return Select(a, g, d, o, args; kwargs)
+    return Select(a, g, d, o, args; kwargs...)
 end
 
-merge(a1::AbstractElement, a2::AbstractElement) = merge(Select(a1), select(a2))
+merge(a1::AbstractElement, a2::AbstractElement) = merge(Select(a1), Select(a2))
+merge(a::AbstractElement, b::NamedTuple) = merge(a, Select(b))
+merge(a::NamedTuple, b::AbstractElement) = merge(Select(a), b)
+
+Analysis() = Analysis(Select)
+(an::Analysis)(s::Select) = Select(an(s.args...; s.kwargs...))
