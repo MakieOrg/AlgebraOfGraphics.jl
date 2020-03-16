@@ -1,7 +1,7 @@
 module AlgebraOfGraphics
 
 using Base: front, tail, setindex
-import Base: +, *, get
+import Base: +, *, get, merge
 using StructArrays: finduniquesorted, StructArray
 using Tables: columntable, columns, columnnames
 using PooledArrays: PooledArray, PooledVector

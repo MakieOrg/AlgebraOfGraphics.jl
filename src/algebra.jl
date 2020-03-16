@@ -1,32 +1,8 @@
 abstract type AbstractElement end
 
-struct Product{T<:Tuple} <: AbstractElement
-    elements::T
-    Product(args...) = new{typeof(args)}(args)
-end
-Product(l::Product) = l
+*(a::AbstractElement, b::AbstractElement) = merge(a, b)
 
-Base.iterate(p::Product) = iterate(p.elements)
-Base.iterate(p::Product, st) = iterate(p.elements, st)
-Base.length(p::Product) = length(p.elements)
-Base.eltype(::Type{Product{T}}) where {T} = eltype(T)
-
-function Base.show(io::IO, l::Product)
-    print(io, "Product")
-    _show(io, l.elements...)
-end
-
-*(a::AbstractElement, b::AbstractElement) = Product(a) * Product(b)
-*(a::Product, b::Product) = Product(a.elements..., b.elements...)
-
-combine(a, b) = merge(a, b)
-
-function get(p::Product, T::Type, init = T())
-    vals = p.elements
-    foldl(combine, Iterators.filter(x -> isa(x, T), vals), init=init)
-end
-
-struct Sum{T<:Tuple} <: AbstractElement
+struct Sum{T<:Tuple}
     elements::T
     Sum(args...) = new{typeof(args)}(args)
 end
@@ -42,14 +18,37 @@ function Base.show(io::IO, l::Sum)
     _show(io, l.elements...)
 end
 
-*(t::Sum, b::AbstractElement) = Sum(map(el -> el * b, t.elements)...)
-*(a::AbstractElement, t::Sum) = Sum(map(el -> a * el, t.elements)...)
+*(t::Sum, b::AbstractElement) = Sum(map(el -> *(el, b), t.elements)...)
+*(a::AbstractElement, t::Sum) = Sum(map(el -> *(a, el), t.elements)...)
 function *(s::Sum, t::Sum)
-    f = (s * first(t.elements))
-    ls = (s * Sum(tail(t.elements)...))
+    f = *(s, first(t.elements))
+    ls = *(s, Sum(tail(t.elements)...))
     return f + ls
 end
 *(s::Sum, ::Sum{Tuple{}}) = Sum()
 
 +(a::AbstractElement, b::AbstractElement) = Sum(a) + Sum(b)
 +(a::Sum, b::Sum) = Sum(a.elements..., b.elements...)
+
+function merge(t1::Traces, t2::Traces)
+    itr = Iterators.filter(consistent, Iterators.product(t1.list, t2.list))
+    list = [merge(a1, a2) => merge(sel1, sel2) for ((a1, sel1), (a2, sel2)) in itr]
+    return Traces(list)
+end
+
+# function Traces(g::Group, t::Traces)
+#     isempty(g.columns) && return t
+#     sa = StructArray(map(pool, g.columns))
+#     itr = finduniquesorted(sa)
+#     list = [merge(k, a) => extract_view(s, idxs) for (k, idxs) in itr for (a, s) in t.list]
+#     return Traces(list)
+# end
+
+# function Traces(p::Product)
+#     data = get(p, Data, Data())
+#     grp = extract_columns(data, get(p, Group, Group()))
+#     ts = extract_columns(data, get(p, Union{Select, Traces}, Select()))
+#     an = get(p, Analysis, Analysis())
+#     return an(Traces(grp, ts))
+# end
+

@@ -84,11 +84,17 @@ pool(v::AbstractVector{<:Integer}) = v
 
 # TupleUtils
 
+keeptype(t::Tuple{T, Vararg}, ::Type{T}) where {T} = (first(t), keeptype(tail(t), T)...)
+keeptype(t::Tuple, ::Type{T}) where {T} = keeptype(tail(t), T)
+keeptype(t::Tuple{}, ::Type{T}) where {T} = ()
+
+droptype(t::Tuple{T, Vararg}, ::Type{T}) where {T} = droptype(tail(t), T)
+droptype(t::Tuple, ::Type{T}) where {T} = (first(t), droptype(tail(t), T)...)
+droptype(t::Tuple{}, ::Type{T}) where {T} = ()
+
 const AoG = Union{Data, Group, Analysis, Traces, Select}
 
-metadata(t::Tuple{AoG, Vararg}) = metadata(tail(t))
-metadata(t::Tuple) = (first(t), metadata(tail(t))...)
-metadata(::Tuple{}) = ()
+metadata(t::Tuple) = droptype(t, AoG)
 metadata(p::Product) = metadata(p.elements)
 
 struct Counter{S}
