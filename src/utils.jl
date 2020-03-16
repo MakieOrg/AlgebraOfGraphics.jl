@@ -48,6 +48,12 @@ pool(v::PooledVector) = v
 
 pool(v::AbstractVector{<:Integer}) = v
 
+consistent(a::Spec, b::Spec) = consistent(a.primary.kwargs, b.primary.kwargs)
+
+function consistent(nt1::NamedTuple, nt2::NamedTuple)
+    all(((key, val),) -> val == get(n2, key, val), pairs(nt1))
+end
+
 # TupleUtils
 
 keeptype(t::Tuple{T, Vararg}, ::Type{T}) where {T} = (first(t), keeptype(tail(t), T)...)
@@ -75,9 +81,3 @@ Base.eltype(::Type{Counter{T}}) where {T} = T
 Base.IteratorSize(::Type{<:Counter}) = Base.IsInfinite()
 
 Counter(syms::Symbol...) = Counter(NamedTuple{syms}(map(_ -> Class(0), syms)))
-
-consistent(a::Spec, b::Spec) = consistent(a.primary.kwargs, b.primary.kwargs)
-
-function consistent(nt1::NamedTuple, nt2::NamedTuple)
-    all(((key, val),) -> val == get(n2, key, val), pairs(nt1))
-end

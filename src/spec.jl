@@ -101,7 +101,7 @@ function get_named(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where 
     return NamedTuple{names}(t)
 end
 
-function Base.collect(p::Spec)
+function OrderedDict(p::Spec)
     table = p.table
     analysis = p.analysis
     primary = p.primary
