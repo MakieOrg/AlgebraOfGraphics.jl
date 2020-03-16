@@ -3,11 +3,6 @@ struct MixedTuple{T<:Tuple, NT<:NamedTuple}
     kwargs::NT
 end
 
-to_mixedtuple(t::Tuple) = MixedTuple(t, NamedTuple())
-to_mixedtuple(nt::NamedTuple) = MixedTuple((), t)
-to_mixedtuple(m::MixedTuple) = m
-to_mixedtuple(t) = to_mixedtuple(tuple(t))
-
 function mixedtuple(args...; kwargs...)
     nt = values(kwargs)
     MixedTuple(args, nt)
@@ -26,33 +21,6 @@ function merge(a::MixedTuple, b::MixedTuple)
     return MixedTuple(tup, nt)
 end
 
-struct Analysis{T, N<:NamedTuple}
-    f::T
-    kwargs::N
-    function Analysis(f::T; kwargs...) where {T}
-        nt = values(kwargs)
-        new{T, typeof(nt)}(f, nt)
-    end
-end
-Analysis() = Analysis(mixedtuple)
-
-function Base.show(io::IO, an::Analysis)
-    print(io, "Analysis(")
-    show(io, an.f)
-    print(io, ")")
-end
-
-(an::Analysis)(; kwargs...) = Analysis(an.f; kwargs..., an.kwargs...)
-function (an::Analysis)(args...; kwargs...)
-    return an.f(args...; kwargs..., an.kwargs...)
-end
-function (an::Analysis)(m::MixedTuple)
-    to_mixedtuple(an(m.args...; m.kwargs...))
-end
-function (an::Analysis)(d::OrderedDict{<:NamedTuple, <:MixedTuple})
-    OrderedDict(k => an(v) for (k, v) in d)
-end
-
 _merge(::Nothing, ::Nothing) = nothing
 _merge(a, ::Nothing) = a
 _merge(::Nothing, b) = b
@@ -61,8 +29,8 @@ _merge(a, b) = merge(a, b)
 abstract type AbstractSpec end
 
 Base.@kwdef struct Spec{A, D} <: AbstractSpec
-    analysis::A=identity
-    table::D=Nothing()
+    analysis::A=nothing
+    table::D=nothing
     primary::MixedTuple=mixedtuple()
     data::MixedTuple=mixedtuple()
     metadata::MixedTuple=mixedtuple()
@@ -70,7 +38,7 @@ end
 Spec(s::Spec) = s
 
 function merge(s1::Spec, s2::Spec)
-    analysis = s2.analysis ∘ s1.analysis
+    analysis = s2.analysis === nothing ? s1.analysis : s2.analysis
     table = s2.table === nothing ? s1.table : s2.table
     primary = merge(s1.primary, s2.primary)
     data = merge(s1.data, s2.data)
@@ -83,10 +51,15 @@ function Base.show(io::IO, s::Spec)
 end
 
 primary(args...; kwargs...) = Spec(primary = mixedtuple(args...; kwargs...))
+primary(s::Spec) = s.primary
 data(args...; kwargs...) = Spec(data = mixedtuple(args...; kwargs...))
+data(s::Spec) = s.data
 metadata(args...; kwargs...) = Spec(metadata = mixedtuple(args...; kwargs...))
-analysis(f; kwargs...) = Spec(analysis = Analysis(f; kwargs...))
+metadata(s::Spec) = s.metadata
+analysis(f; kwargs...) = Spec(analysis = f)
+analysis(s::Spec) = s.analysis
 table(t) = Spec(table = t)
+table(s::Spec) = s.table
 
 # function Traces(g::Group, t::Traces)
 #     isempty(g.columns) && return t
@@ -112,13 +85,24 @@ function OrderedDict(p::Spec)
         data = extract_column(t, data)
     end
     cols = (primary.args..., primary.kwargs...)
-    dict = if isempty(cols)
+    list = if isempty(cols)
         OrderedDict(mixedtuple() => data)
     else
         sa = StructArray(map(pool, cols))
         it = finduniquesorted(sa)
         OrderedDict(get_named(k, primary) => extract_view(data, idxs) for (k, idxs) in it)
     end
-    return analysis(dict)
+    return analyze(analysis, list)
 end
+
+to_mixedtuple(t::Tuple) = MixedTuple(t, NamedTuple())
+to_mixedtuple(nt::NamedTuple) = MixedTuple((), t)
+to_mixedtuple(m::MixedTuple) = m
+to_mixedtuple(t) = to_mixedtuple(tuple(t))
+
+analyze(::Nothing, o::OrderedDict) = o
+function analyze(f, o::OrderedDict)
+    OrderedDict(k => analyze(f, v) for (k, v) in o)
+end
+analyze(f, m::MixedTuple) = to_mixedtuple(f(m.args...; m.kwargs...))
 

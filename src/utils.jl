@@ -81,3 +81,8 @@ Base.eltype(::Type{Counter{T}}) where {T} = T
 Base.IteratorSize(::Type{<:Counter}) = Base.IsInfinite()
 
 Counter(syms::Symbol...) = Counter(NamedTuple{syms}(map(_ -> Class(0), syms)))
+
+## counting tools
+
+rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(d)))
+rankdicts(d) = map(rankdict, columntable(d))

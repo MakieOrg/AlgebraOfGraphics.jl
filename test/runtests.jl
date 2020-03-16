@@ -17,8 +17,6 @@ using RDatasets: dataset
     @test res[2].table == mpg
     @test length(res) == 2
 
-    
-    OrderedDict(res[1])
     # v1, v2 = (rand(10), rand(10))
     # p = Traces(counter(:color), (v1, v2))
     # a, s = first(p)
