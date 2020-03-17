@@ -6,18 +6,10 @@ concatenate(v::AbstractArray...) = vcat(v...)
 extract_view(v::Tup, idxs) = map(x -> extract_view(x, idxs), v)
 extract_view(v::AbstractVector, idxs) = view(v, idxs)
 
-# TODO also use to fill in vectors, give it proper semantics
-# use `fill(1)` for example, and broadcast semantics on columns
-struct Constant
-    x::Int
-end
-Base.isless(a::Constant, b::Constant) = isless(a.x, b.x)
-
 extract_column(t, c::Tup) = map(x -> extract_column(t, x), c)
-extract_column(t, col::AbstractVector) = col
+extract_column(t, col::AbstractArray) = col
 extract_column(t, col::Symbol) = getproperty(t, col)
 extract_column(t, col::Integer) = getindex(t, col)
-extract_column(t, col::Constant) = col
 
 # show utils
 

@@ -35,9 +35,11 @@ end
 function get_attrs(grp::NamedTuple{names}, user_options, palette, rks) where names
     tup = map(names) do key
         user = get(user_options, key, Observable(nothing))
-        scale = isa(user[], AbstractVector) ? user[] : palette[key][]
+        default = get(palette, key, Observable(nothing))
+        scale = isa(user[], AbstractVector) ? user[] : default[]
         val = getproperty(grp, key)
-        return scale[mod1(rks[key][val], length(scale))]
+        idx = rks[key][val]
+        scale isa AbstractVector ? scale[mod1(idx, length(scale))] : idx
     end
     return merge(user_options, Attributes(NamedTuple{names}(tup)))
 end

@@ -70,7 +70,7 @@ function to_vectors(vs...)
     i = findfirst(t -> isa(t, AbstractVector), vs)
     i === nothing && return nothing
     map(vs) do v
-        v isa AbstractVector ? v : fill(v, length(vs[i]))
+        v isa AbstractVector ? v : fill(v[], length(vs[i]))
     end
 end
 
@@ -87,7 +87,7 @@ function OrderedDict(p::Spec)
     cols = (primary.args..., primary.kwargs...)
     vecs = to_vectors(cols...)
     list = if vecs === nothing
-        OrderedDict(get_named(cols, primary) => data)
+        OrderedDict(get_named(map(getindex, cols), primary) => data)
     else
         # TODO do not create unnecessary vectors
         sa = StructArray(map(pool, vecs))
