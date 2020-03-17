@@ -19,7 +19,7 @@ function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attribu
     ms = map(metadata, s)
     ods = map(OrderedDict, s)
     palette = AbstractPlotting.current_default_theme()[:palette]
-    rks = rankdicts(map(keys, ods))
+    rks = rankdicts(map(collect∘keys, ods))
     for (od, m) in zip(ods, ms)
         P1 = foldl((a, b) -> isabstractplot(b) ? b : a, m.args, init=P)
         args = Iterators.filter(!isabstractplot, m.args)

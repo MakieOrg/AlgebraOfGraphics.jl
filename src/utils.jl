@@ -54,22 +54,7 @@ function consistent(nt1::NamedTuple, nt2::NamedTuple)
     all(((key, val),) -> val == get(nt2, key, val), pairs(nt1))
 end
 
-# TupleUtils
-# TODO what is needed here? consider wide data case and facet!
-
-struct Counter{S}
-    nt::S
-end
-function Base.iterate(c::Counter, st = c.nt)
-    st = map(x -> x + 1, st)
-    return st, st
-end
-Base.eltype(::Type{Counter{T}}) where {T} = T
-Base.IteratorSize(::Type{<:Counter}) = Base.IsInfinite()
-
-Counter(syms::Symbol...) = Counter(NamedTuple{syms}(map(_ -> 0, syms)))
-
-## counting tools
+# ranking
 
 function jointable(ts)
     tables = map(columntable, ts)
