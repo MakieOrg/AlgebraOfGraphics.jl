@@ -7,6 +7,9 @@ struct Sum{T<:Tuple}
 end
 Sum(l::Sum) = l
 
+_primary(by, i) = mapfoldl(b -> primary(; b => fill(i)), *, by)
+Sum(v, by...) = Sum(el * _primary(by, i) for (i, el) in enumerate(v))
+
 const null = Sum(())
 
 to_sum(s::AbstractSpec) = Sum((s,))
@@ -38,3 +41,5 @@ end
 function ^(a::Union{Sum, AbstractSpec}, n::Int)
     return foldl(*, ntuple(_ -> a, n))
 end
+
+
