@@ -7,6 +7,7 @@ extract_view(v::Tup, idxs) = map(x -> extract_view(x, idxs), v)
 extract_view(v::AbstractVector, idxs) = view(v, idxs)
 
 # TODO also use to fill in vectors, give it proper semantics
+# use `fill(1)` for example, and broadcast semantics on columns
 struct Constant
     x::Int
 end

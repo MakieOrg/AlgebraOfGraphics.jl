@@ -1,4 +1,6 @@
 using AbstractPlotting, GLMakie
+using Observables
+using AbstractPlotting: SceneLike, PlotFunc
 using StatsMakie: linear, density
 
 using AlgebraOfGraphics, Test
@@ -7,17 +9,24 @@ using OrderedCollections
 
 using RDatasets: dataset
 
-makieplot!(scn::Scene, s::AbstractSpec) = makieplot!(scn, Sum(s))
+function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, s::AbstractSpec)
+    return AbstractPlotting.plot!(scn, P, attr, Sum(s))
+end
 
-function makieplot!(scn::Scene, s::Sum)
+isabstractplot(s) = isa(s, Type) && s <: AbstractPlot
+
+function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attributes, s::Sum)
     ms = map(metadata, s)
     ods = map(OrderedDict, s)
     palette = AbstractPlotting.current_default_theme()[:palette]
     rks = rankdicts(map(keys, ods))
     for (od, m) in zip(ods, ms)
+        P1 = foldl((a, b) -> isabstractplot(b) ? b : a, m.args, init=P)
+        args = Iterators.filter(!isabstractplot, m.args)
+        series_attr = merge(attributes, Attributes(m.kwargs))
         for (key, val) in od
-            attrs = get_attrs(key, m.kwargs, palette, rks)
-            plot!(scn, m.args..., val.args...; val.kwargs..., merge(m.kwargs, attrs)...)
+            attrs = get_attrs(key, series_attr, palette, rks)
+            AbstractPlotting.plot!(scn, P1, merge(attrs, Attributes(val.kwargs)), args..., val.args...)
         end
     end
     return scn
@@ -25,34 +34,32 @@ end
 
 function get_attrs(grp::NamedTuple{names}, user_options, palette, rks) where names
     tup = map(names) do key
-        user = get(user_options, key, nothing)
-        scale = isa(user, AbstractVector) ? user : palette[key][]
+        user = get(user_options, key, Observable(nothing))
+        scale = isa(user[], AbstractVector) ? user[] : palette[key][]
         val = getproperty(grp, key)
         return scale[mod1(rks[key][val], length(scale))]
     end
-    NamedTuple{names}(tup)
+    return merge(user_options, Attributes(NamedTuple{names}(tup)))
 end
-
-makieplot(s) = makieplot!(Scene(), s)
 
 #######
 
 iris = dataset("datasets", "iris")
 spec = table(iris) * data(:SepalLength, :SepalWidth) * primary(color = :Species)
 s = metadata(Scatter, markersize = 10px) + analysis(linear)
-makieplot(s * spec)
+plot(s * spec)
 
-plt = makieplot(metadata(Wireframe) * spec * analysis(density))
-makieplot!(plt, metadata(Scatter) * spec)
+plt = plot(metadata(Wireframe) * spec * analysis(density))
+scatter!(plt, spec)
 
 df = table(iris)
 x = data(:PetalLength) * primary(marker = Constant(1)) +
     data(:PetalWidth) * primary(marker = Constant(2))
 y = data(:SepalLength, color = :SepalWidth)
-makieplot(metadata(Scatter) * df * x * y)
+plot(metadata(Scatter) * df * x * y)
 
 x = [-pi..0, 0..pi]
 y = [sin, cos]
 ts1 = sum(((i, el),) -> primary(color = i) * data(el), enumerate(x))
 ts2 = sum(((i, el),) -> primary(linestyle = i) * data(el), enumerate(y))
-makieplot(ts1 * ts2 * metadata(linewidth = 10))
+plot(ts1 * ts2 * metadata(linewidth = 10))
