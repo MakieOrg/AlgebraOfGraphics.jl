@@ -1,8 +1,8 @@
 using AbstractPlotting, GLMakie
-using StatsMakie: linear
+using StatsMakie: linear, density
 
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: Sum, AbstractSpec, table, data, metadata, primary, analysis, mixedtuple, rankdicts
+using AlgebraOfGraphics: Sum, AbstractSpec, table, data, metadata, primary, analysis, mixedtuple, rankdicts, Constant
 using OrderedCollections
 
 using RDatasets: dataset
@@ -38,10 +38,18 @@ makieplot(s) = makieplot!(Scene(), s)
 #######
 
 iris = dataset("datasets", "iris")
-spec = table(iris) * data(:PetalLength, :PetalWidth) * primary(color = :Species)
+spec = table(iris) * data(:SepalLength, :SepalWidth) * primary(color = :Species)
 s = metadata(Scatter, markersize = 10px) + analysis(linear)
 makieplot(s * spec)
 
+plt = makieplot(metadata(Wireframe) * spec * analysis(density))
+makieplot!(plt, metadata(Scatter) * spec)
+
+df = table(iris)
+x = data(:PetalLength) * primary(marker = Constant(1)) +
+    data(:PetalWidth) * primary(marker = Constant(2))
+y = data(:SepalLength, color = :SepalWidth)
+makieplot(metadata(Scatter) * df * x * y)
 
 x = [-pi..0, 0..pi]
 y = [sin, cos]

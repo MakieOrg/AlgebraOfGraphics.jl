@@ -1,3 +1,5 @@
+# issue: Sum vararg differs from Base.sum
+# We may want a sumwith to sum with styling
 struct Sum{T<:Tuple}
     elements::T
     Sum(args...) = new{typeof(args)}(args)
@@ -18,17 +20,15 @@ function *(a::AbstractSpec, b::AbstractSpec)
     consistent(a, b) ? merge(a, b) : Sum()
 end
 
-*(t::Sum, b::AbstractSpec) = Sum(map(el -> *(el, b), t.elements)...)
-*(a::AbstractSpec, t::Sum) = Sum(map(el -> *(a, el), t.elements)...)
-
-function *(s::Sum, t::Sum)
-    f = *(s, first(t.elements))
-    ls = *(s, Sum(tail(t.elements)...))
-    return f + ls
-end
-*(s::Sum, ::Sum{Tuple{}}) = Sum()
+*(t::Sum, b::AbstractSpec) = *(t, Sum(b))
+*(a::AbstractSpec, t::Sum) = *(Sum(a), t)
+*(s::Sum, t::Sum) = foldl(+, (a * b for a in s for b in t), init=Sum())
 
 +(a::AbstractSpec, b::AbstractSpec) = Sum(a) + Sum(b)
 +(a::Sum, b::AbstractSpec) = a + Sum(b)
 +(a::AbstractSpec, b::Sum) = Sum(a) + b
 +(a::Sum, b::Sum) = Sum(a.elements..., b.elements...)
+
+function ^(a::Union{Sum, AbstractSpec}, n::Int)
+    return foldl(*, ntuple(_ -> a, n))
+end
