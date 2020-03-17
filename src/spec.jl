@@ -61,17 +61,17 @@ analysis(s::Spec) = s.analysis
 table(t) = Spec(table = t)
 table(s::Spec) = s.table
 
-# function Traces(g::Group, t::Traces)
-#     isempty(g.columns) && return t
-#     sa = StructArray(map(pool, g.columns))
-#     itr = finduniquesorted(sa)
-#     list = [merge(k, a) => extract_view(s, idxs) for (k, idxs) in itr for (a, s) in t.list]
-#     return Traces(list)
-# end
-
 get_named(t::Tuple, m::MixedTuple) = get_named(tail(t), m(tail(m.args), m.kwargs))
 function get_named(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where names
     return NamedTuple{names}(t)
+end
+
+function to_vectors(vs...)
+    i = findfirst(t -> isa(t, AbstractVector), vs)
+    i === nothing && return nothing
+    map(vs) do v
+        v isa AbstractVector ? v : fill(v, length(vs[i]))
+    end
 end
 
 function OrderedDict(p::Spec)
@@ -85,10 +85,12 @@ function OrderedDict(p::Spec)
         data = extract_column(t, data)
     end
     cols = (primary.args..., primary.kwargs...)
-    list = if isempty(cols)
-        OrderedDict(mixedtuple() => data)
+    vecs = to_vectors(cols...)
+    list = if vecs === nothing
+        OrderedDict(get_named(cols, primary) => data)
     else
-        sa = StructArray(map(pool, cols))
+        # TODO do not create unnecessary vectors
+        sa = StructArray(map(pool, vecs))
         it = finduniquesorted(sa)
         OrderedDict(get_named(k, primary) => extract_view(data, idxs) for (k, idxs) in it)
     end

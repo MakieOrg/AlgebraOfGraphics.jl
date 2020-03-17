@@ -51,10 +51,11 @@ pool(v::AbstractVector{<:Integer}) = v
 consistent(a::Spec, b::Spec) = consistent(a.primary.kwargs, b.primary.kwargs)
 
 function consistent(nt1::NamedTuple, nt2::NamedTuple)
-    all(((key, val),) -> val == get(n2, key, val), pairs(nt1))
+    all(((key, val),) -> val == get(nt2, key, val), pairs(nt1))
 end
 
 # TupleUtils
+# TODO what is needed here? consider wide data case and facet!
 
 keeptype(t::Tuple{T, Vararg}, ::Type{T}) where {T} = (first(t), keeptype(tail(t), T)...)
 keeptype(t::Tuple, ::Type{T}) where {T} = keeptype(tail(t), T)
