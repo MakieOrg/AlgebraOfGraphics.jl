@@ -10,7 +10,7 @@ using OrderedCollections
 using RDatasets: dataset
 
 function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, s::AbstractSpec)
-    return AbstractPlotting.plot!(scn, P, attr, Sum(s))
+    return AbstractPlotting.plot!(scn, P, attr, Sum((s,)))
 end
 
 isabstractplot(s) = isa(s, Type) && s <: AbstractPlot

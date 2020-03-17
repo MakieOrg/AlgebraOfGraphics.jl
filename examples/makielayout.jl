@@ -50,7 +50,7 @@ function layoutplot!(scene, l, s::Sum; kwargs...)
     return scene
 end
 layoutplot(s::Sum) = layoutplot!(layoutscene(resolution = (2000, 2000))..., s)
-layoutplot(s::AbstractSpec) = layoutplot!(layoutscene(resolution = (2000, 2000))..., Sum(s))
+layoutplot(s::AbstractSpec) = layoutplot!(layoutscene(resolution = (2000, 2000))..., Sum((s,)))
 
 scene, layout = layoutscene(resolution = (2000, 2000))
 scene
