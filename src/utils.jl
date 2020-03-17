@@ -57,20 +57,6 @@ end
 # TupleUtils
 # TODO what is needed here? consider wide data case and facet!
 
-keeptype(t::Tuple{T, Vararg}, ::Type{T}) where {T} = (first(t), keeptype(tail(t), T)...)
-keeptype(t::Tuple, ::Type{T}) where {T} = keeptype(tail(t), T)
-keeptype(t::Tuple{}, ::Type{T}) where {T} = ()
-
-droptype(t::Tuple{T, Vararg}, ::Type{T}) where {T} = droptype(tail(t), T)
-droptype(t::Tuple, ::Type{T}) where {T} = (first(t), droptype(tail(t), T)...)
-droptype(t::Tuple{}, ::Type{T}) where {T} = ()
-
-struct Class
-    i::Int
-end
-Base.isless(a::Class, b::Class) = isless(a.i, b.i)
-+(a::Class, i::Int) = Class(a.i+i)
-
 struct Counter{S}
     nt::S
 end
@@ -81,9 +67,22 @@ end
 Base.eltype(::Type{Counter{T}}) where {T} = T
 Base.IteratorSize(::Type{<:Counter}) = Base.IsInfinite()
 
-Counter(syms::Symbol...) = Counter(NamedTuple{syms}(map(_ -> Class(0), syms)))
+Counter(syms::Symbol...) = Counter(NamedTuple{syms}(map(_ -> 0, syms)))
 
 ## counting tools
 
+function jointable(ts)
+    tables = map(columntable, ts)
+    return jointable(tables, foldl(merge, tables))
+end
+
+function jointable(tables, ::NamedTuple{names}) where names
+    vals = map(names) do name
+        vcat((get(table, name, Union{}) for table in tables)...)
+    end
+    NamedTuple{names}(vals)
+end
+
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(d)))
-rankdicts(d) = map(rankdict, columntable(d))
+rankdicts(ts) = map(rankdict, jointable(ts))
+

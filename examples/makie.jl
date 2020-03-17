@@ -7,8 +7,19 @@ using OrderedCollections
 
 using RDatasets: dataset
 
+makieplot!(scn::Scene, s::AbstractSpec) = makieplot!(scn, Sum(s))
+
 function makieplot!(scn::Scene, s::Sum)
-    foreach(el -> makieplot!(scn, el), s)
+    ms = map(metadata, s)
+    ods = map(OrderedDict, s)
+    palette = AbstractPlotting.current_default_theme()[:palette]
+    rks = rankdicts(map(keys, ods))
+    for (od, m) in zip(ods, ms)
+        for (key, val) in od
+            attrs = get_attrs(key, m.kwargs, palette, rks)
+            plot!(scn, m.args..., val.args...; val.kwargs..., merge(m.kwargs, attrs)...)
+        end
+    end
     return scn
 end
 
@@ -22,19 +33,9 @@ function get_attrs(grp::NamedTuple{names}, user_options, palette, rks) where nam
     NamedTuple{names}(tup)
 end
 
-function makieplot!(scn::Scene, s::AbstractSpec)
-    m = metadata(s)
-    o = OrderedDict(s)
-    palette = AbstractPlotting.current_default_theme()[:palette]
-    rks = rankdicts(keys(o))
-    for (key, val) in o
-        attrs = get_attrs(key, m.kwargs, palette, rks)
-        plot!(scn, m.args..., val.args...; val.kwargs..., merge(m.kwargs, attrs)...)
-    end
-    return scn
-end
-
 makieplot(s) = makieplot!(Scene(), s)
+
+#######
 
 iris = dataset("datasets", "iris")
 spec = table(iris) * data(:PetalLength, :PetalWidth) * primary(color = :Species)
@@ -42,3 +43,8 @@ s = metadata(Scatter, markersize = 10px) + analysis(linear)
 makieplot(s * spec)
 
 
+x = [-pi..0, 0..pi]
+y = [sin, cos]
+ts1 = sum(((i, el),) -> primary(color = i) * data(el), enumerate(x))
+ts2 = sum(((i, el),) -> primary(linestyle = i) * data(el), enumerate(y))
+makieplot(ts1 * ts2 * metadata(linewidth = 10))
