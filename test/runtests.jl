@@ -12,10 +12,10 @@ using RDatasets: dataset
     @test res[2].metadata == mixedtuple()
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
-    @test res[1].data[1].args == Tuple(eachcol(mpg[idx1, [:Cyl, :Hwy]]))
-    @test res[1].data[2].args == Tuple(eachcol(mpg[idx2, [:Cyl, :Hwy]]))
-    @test res[2].data[1].args == Tuple(eachcol(mpg[idx1, [:Cyl, :Hwy]]))
-    @test res[2].data[2].args == Tuple(eachcol(mpg[idx2, [:Cyl, :Hwy]]))
+    @test res[1].data[1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test res[1].data[2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    @test res[2].data[1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test res[2].data[2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
     @test res[1].data[1].kwargs == NamedTuple()
     @test res[2].data[1].kwargs == (; markersize = mpg[idx1, :Year])
     @test res[2].data[2].kwargs == (; markersize = mpg[idx2, :Year])

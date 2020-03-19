@@ -78,11 +78,11 @@ function to_vectors(vs...)
     end
 end
 
-function (p::LazySpec)(table)
+function (p::LazySpec)(table=nothing)
     primary = p.primary
     data = p.data
     metadata = p.metadata
-    t = columntable(table)
+    t = columntable(something(table, NamedTuple()))
     primary = extract_column(t, primary)
     data = extract_column(t, data)
     cols = (primary.args..., primary.kwargs...)
