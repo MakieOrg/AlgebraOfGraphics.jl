@@ -48,8 +48,6 @@ pool(v::PooledVector) = v
 
 pool(v::AbstractVector{<:Integer}) = v
 
-consistent(a::Spec, b::Spec) = consistent(a.primary.kwargs, b.primary.kwargs)
-
 function consistent(nt1::NamedTuple, nt2::NamedTuple)
     all(((key, val),) -> val == get(nt2, key, val), pairs(nt1))
 end

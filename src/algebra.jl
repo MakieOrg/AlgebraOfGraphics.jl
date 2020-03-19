@@ -1,16 +1,13 @@
-struct Sum{T<:AbstractArray}
+struct Sum{T<:Tuple}
     elements::T
 end
+const null = Sum(())
 
 function Sum(itr)
-    v::AbstractArray = collect(itr)
-    return Sum(v)
+    t::Tuple = collect(itr)
+    return Sum(t)
 end
 Sum(l::Sum) = l
-
-_primary(by, i) = mapfoldl(b -> primary(; b => fill(i)), *, by)
-Sum(v, by) = Sum([el * _primary(by, i) for (i, el) in enumerate(v)])
-
 
 to_sum(s::AbstractSpec) = Sum((s,))
 to_sum(s::Sum) = s
@@ -36,10 +33,10 @@ end
 +(a::AbstractSpec, b::AbstractSpec) = to_sum(a) + to_sum(b)
 +(a::Sum, b::AbstractSpec) = a + to_sum(b)
 +(a::AbstractSpec, b::Sum) = to_sum(a) + b
-+(a::Sum, b::Sum) = Sum(vcat(a.elements, b.elements))
++(a::Sum, b::Sum) = Sum((a.elements..., b.elements...))
 
 function ^(a::Union{Sum, AbstractSpec}, n::Int)
     return foldl(*, ntuple(_ -> a, n))
 end
 
-
+(s::Sum)(v) = map(f -> f(v), s.elements)
