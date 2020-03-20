@@ -68,4 +68,15 @@ function jointable(tables, ::NamedTuple{names}) where names
 end
 
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(d)))
-rankdicts(ts) = map(rankdict, jointable(ts))
+
+function rankdicts(ts::AbstractTraceList)
+    d = Dict{Symbol, Vector{Any}}()
+    for trace in ts
+        nt = primary(trace).kwargs
+        for (key, val) in pairs(nt)
+            vec = get!(d, key, Any[])
+            push!(vec, val)
+        end
+    end
+    return Dict(key => rankdict(val) for (key, val) in d)
+end
