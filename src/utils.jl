@@ -1,8 +1,5 @@
 const Tup = Union{Tuple, NamedTuple, MixedTuple}
 
-concatenate(v::Tup...) = map(concatenate, v...)
-concatenate(v::AbstractArray...) = vcat(v...)
-
 extract_view(v::Tup, idxs) = map(x -> extract_view(x, idxs), v)
 extract_view(v::AbstractVector, idxs) = view(v, idxs)
 
@@ -54,18 +51,6 @@ end
 consistent(mt1::MixedTuple, mt2::MixedTuple) = consistent(mt1.kwargs, mt2.kwargs)
 
 # ranking
-
-function jointable(ts)
-    tables = map(columntable, ts)
-    return jointable(tables, foldl(merge, tables))
-end
-
-function jointable(tables, ::NamedTuple{names}) where names
-    vals = map(names) do name
-        vcat((get(table, name, Union{}) for table in tables)...)
-    end
-    NamedTuple{names}(vals)
-end
 
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(d)))
 

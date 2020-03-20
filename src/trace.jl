@@ -67,11 +67,11 @@ data(s::Trace) = s.data
 metadata(args...; kwargs...) = Trace(metadata = mixedtuple(args...; kwargs...))
 metadata(s::Trace) = s.metadata
 
-function rename(t::Tuple, m::MixedTuple)
-    mt = rename(tail(t), m(tail(m.args), m.kwargs))
+function _rename(t::Tuple, m::MixedTuple)
+    mt = _rename(tail(t), m(tail(m.args), m.kwargs))
     MixedTuple((first(t), mt.args...), mt.kwargs)
 end
-function rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where names
+function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where names
     return MixedTuple((), NamedTuple{names}(t))
 end
 
@@ -93,12 +93,12 @@ function (p::Trace)(table=nothing)
     cols = (primary.args..., primary.kwargs...)
     vecs = to_vectors(cols...)
     traces = if vecs === nothing
-        [Trace(rename(map(getindex, cols), primary), data, metadata)]
+        [Trace(_rename(map(getindex, cols), primary), data, metadata)]
     else
         # TODO do not create unnecessary vectors
         sa = StructArray(map(pool, vecs))
         Base.Generator(finduniquesorted(sa)) do (k, idxs)
-            Trace(rename(k, primary), extract_view(data, idxs), metadata)
+            Trace(_rename(k, primary), extract_view(data, idxs), metadata)
         end
     end
     TraceList(traces)
