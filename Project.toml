@@ -12,6 +12,10 @@ StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [compat]
+DataAPI = "1"
+Observables = "0.2, 0.3"
+PooledArrays = "0.5"
+Requires = "1"
 StructArrays = "0.4"
 julia = "1"
 
