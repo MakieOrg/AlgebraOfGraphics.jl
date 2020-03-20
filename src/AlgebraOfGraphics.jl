@@ -7,8 +7,7 @@ using Tables: columntable
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
 
-include("spec.jl")
-include("algebra.jl")
+include("trace.jl")
 include("utils.jl")
 
 end # module

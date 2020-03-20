@@ -51,6 +51,7 @@ pool(v::AbstractVector{<:Integer}) = v
 function consistent(nt1::NamedTuple, nt2::NamedTuple)
     all(((key, val),) -> val == get(nt2, key, val), pairs(nt1))
 end
+consistent(mt1::MixedTuple, mt2::MixedTuple) = consistent(mt1.kwargs, mt2.kwargs)
 
 # ranking
 
@@ -68,4 +69,3 @@ end
 
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(d)))
 rankdicts(ts) = map(rankdict, jointable(ts))
-
