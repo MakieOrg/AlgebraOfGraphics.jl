@@ -24,12 +24,3 @@ using RDatasets: dataset
     @test length(res) == 4
 end
 
-# v1, v2 = (rand(10), rand(10))
-# p = Traces(counter(:color), (v1, v2))
-# a, s = first(p)
-# @test a == (; color = 1)
-# @test s == Select(v1)
-# a, s = last(collect(p))
-# @test a == (; color = 2)
-# @test s == Select(v2)
-
