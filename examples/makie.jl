@@ -4,61 +4,30 @@ using AbstractPlotting: SceneLike, PlotFunc
 using StatsMakie: linear, density
 
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: Sum, AbstractSpec, table, data, metadata, primary, analysis, mixedtuple, rankdicts, Constant
-using OrderedCollections
+using AlgebraOfGraphics: TraceList,
+                         TraceOrList,
+                         data,
+                         metadata,
+                         primary,
+                         mixedtuple,
+                         rankdicts,
+                         traces
 
 using RDatasets: dataset
 
-function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, s::AbstractSpec)
-    return AbstractPlotting.plot!(scn, P, attr, Sum((s,)))
-end
-
-isabstractplot(s) = isa(s, Type) && s <: AbstractPlot
-
-function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attributes, s::Sum)
-    ms = map(metadata, s)
-    ods = map(OrderedDict, s)
-    palette = AbstractPlotting.current_default_theme()[:palette]
-    rks = rankdicts(map(collect∘keys, ods))
-    for (od, m) in zip(ods, ms)
-        P1 = foldl((a, b) -> isabstractplot(b) ? b : a, m.args, init=P)
-        args = Iterators.filter(!isabstractplot, m.args)
-        series_attr = merge(attributes, Attributes(m.kwargs))
-        for (key, val) in od
-            attrs = get_attrs(key, series_attr, palette, rks)
-            AbstractPlotting.plot!(scn, P1, merge(attrs, Attributes(val.kwargs)), args..., val.args...)
-        end
-    end
-    return scn
-end
-
-function get_attrs(grp::NamedTuple{names}, user_options, palette, rks) where names
-    tup = map(names) do key
-        user = get(user_options, key, Observable(nothing))
-        default = get(palette, key, Observable(nothing))
-        scale = isa(user[], AbstractVector) ? user[] : default[]
-        val = getproperty(grp, key)
-        idx = rks[key][val]
-        scale isa AbstractVector ? scale[mod1(idx, length(scale))] : idx
-    end
-    return merge(user_options, Attributes(NamedTuple{names}(tup)))
-end
-
-#######
-
 iris = dataset("datasets", "iris")
-spec = table(iris) * data(:SepalLength, :SepalWidth) * primary(color = :Species)
-s = metadata(Scatter, markersize = 10px) + analysis(linear)
+spec = iris |> data(:SepalLength, :SepalWidth) * primary(color = :Species)
+s = metadata(Scatter, markersize = 10px) + metadata(linear)
 plot(s * spec)
 
-plt = plot(metadata(Wireframe) * spec * analysis(density))
+plt = metadata(Wireframe, density) * spec |> plot
 scatter!(plt, spec)
 
-df = table(iris)
-x = data(:PetalLength) * primary(marker = Constant(1)) +
-    data(:PetalWidth) * primary(marker = Constant(2))
+df = iris
+x = data(:PetalLength) * primary(marker = fill(1)) +
+    data(:PetalWidth) * primary(marker = fill(2))
 y = data(:SepalLength, color = :SepalWidth)
-plot(metadata(Scatter) * df * x * y)
+df |> metadata(Scatter) * x * y |> plot
 
 x = [-pi..0, 0..pi]
 y = [sin, cos]

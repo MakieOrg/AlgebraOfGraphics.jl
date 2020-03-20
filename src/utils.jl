@@ -48,11 +48,10 @@ pool(v::PooledVector) = v
 
 pool(v::AbstractVector{<:Integer}) = v
 
-consistent(a::Spec, b::Spec) = consistent(a.primary.kwargs, b.primary.kwargs)
-
 function consistent(nt1::NamedTuple, nt2::NamedTuple)
     all(((key, val),) -> val == get(nt2, key, val), pairs(nt1))
 end
+consistent(mt1::MixedTuple, mt2::MixedTuple) = consistent(mt1.kwargs, mt2.kwargs)
 
 # ranking
 
@@ -69,5 +68,15 @@ function jointable(tables, ::NamedTuple{names}) where names
 end
 
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(d)))
-rankdicts(ts) = map(rankdict, jointable(ts))
 
+function rankdicts(ts::AbstractTraceList)
+    d = Dict{Symbol, Vector{Any}}()
+    for trace in ts
+        nt = primary(trace).kwargs
+        for (key, val) in pairs(nt)
+            vec = get!(d, key, Any[])
+            push!(vec, val)
+        end
+    end
+    return Dict(key => rankdict(val) for (key, val) in d)
+end
