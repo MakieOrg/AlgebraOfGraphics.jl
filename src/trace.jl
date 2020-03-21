@@ -57,7 +57,14 @@ end
 
 function merge(s1::AbstractTrace, s2::AbstractTrace)
     @assert context(s2) === nothing || context(s2) === context(s1)
-    return merge(context(s1), s1, s2)
+    ctx = context(s1)
+    p1, p2 = primary(s1), primary(s2)
+    d1, d2 = data(s1), data(s2)
+    m1, m2 = metadata(s1), metadata(s2)
+    p = merge(p1, p2)
+    d = merge(d1, d2)
+    m = merge(m1, m2)
+    return Trace(ctx, p, d, m)
 end
 
 function Base.show(io::IO, s::Trace)

@@ -1,12 +1,5 @@
 abstract type AbstractContext end
 
-function merge(c::Union{Nothing, AbstractContext}, s1::AbstractTrace, s2::AbstractTrace)
-    primary = merge(s1.primary, s2.primary)
-    data = merge(s1.data, s2.data)
-    metadata = merge(s1.metadata, s2.metadata)
-    return Trace(c, primary, data, metadata)
-end
-
 apply_context(c::AbstractContext, m::AbstractTrace) = m
 
 struct NullContext <: AbstractContext end
@@ -76,7 +69,7 @@ function merge_mixed(m1::MixedTuple, m2::MixedTuple, l1, l2)
     return merge(n1, n2)
 end
 
-function merge(c::GroupedContext, t1::AbstractTrace, t2::AbstractTrace)
+function combine(c::GroupedContext, t1::AbstractTrace, t2::AbstractTrace)
     m = merge(metadata(t1), metadata(t2))
     p1, p2 = map(collect, primary(t1)), map(collect, primary(t2))
     d1, d2 = map(collect, data(t1)), map(collect, data(t2))
