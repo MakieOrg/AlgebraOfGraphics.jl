@@ -41,13 +41,11 @@ struct Trace{C, P<:MixedTuple, D<:MixedTuple, M<:MixedTuple} <: AbstractTrace{C}
     metadata::M
 end
 
-const empty_trace = Trace(nothing, mixedtuple(), mixedtuple(), mixedtuple())
-
 (t::AbstractTrace)(s::AbstractTrace) = merge(s, t)
 (t::AbstractTrace)(s) = merge(data(s), t)
 
 function Trace(;
-               context=nothing,
+               context=default_context(),
                primary=mixedtuple(),
                data=mixedtuple(),
                metadata=mixedtuple()
@@ -56,15 +54,18 @@ function Trace(;
 end
 
 function merge(s1::AbstractTrace, s2::AbstractTrace)
-    @assert context(s2) === nothing || context(s2) === context(s1)
-    ctx = context(s1)
+    c1, c2 = context(s1), context(s2)
     p1, p2 = primary(s1), primary(s2)
     d1, d2 = data(s1), data(s2)
     m1, m2 = metadata(s1), metadata(s2)
+    c = merge(c1, c2)
+    if c !== c1
+        isempty(p1) && isempty(d1) || @warn "Chaging context with a non-emty `Trace`"
+    end
     p = merge(p1, p2)
     d = merge(d1, d2)
     m = merge(m1, m2)
-    return Trace(ctx, p, d, m)
+    return Trace(c, p, d, m)
 end
 
 function Base.show(io::IO, s::Trace)

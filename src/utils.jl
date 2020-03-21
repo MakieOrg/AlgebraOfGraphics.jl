@@ -45,11 +45,6 @@ pool(v::PooledVector) = v
 
 pool(v::AbstractVector{<:Integer}) = v
 
-# function consistent(nt1::NamedTuple, nt2::NamedTuple)
-#     all(((key, val),) -> val == get(nt2, key, val), pairs(nt1))
-# end
-# consistent(mt1::MixedTuple, mt2::MixedTuple) = consistent(mt1.kwargs, mt2.kwargs)
-
 # ranking
 
 jointable(ts) = jointable(ts, foldl(merge, ts))
@@ -76,7 +71,11 @@ function soa(m)
     return MixedTuple(Tuple(args), kwargs)
 end
 
-aos(m::MixedTuple) = isempty(m) ? Union{}[] : [_rename(el, m) for el in zip(m.args..., m.kwargs...)]
+function aos(m::MixedTuple)
+    broadcast(m.args..., m.kwargs...) do args...
+        _rename(args, m)
+    end
+end
 
 function keyvalue(p::MixedTuple, d::MixedTuple)
     isempty(p) && isempty(d) && error("Both arguments are empty")

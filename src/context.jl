@@ -1,5 +1,7 @@
 abstract type AbstractContext end
 
+merge(c1::AbstractContext, c2::AbstractContext) = c1
+
 apply_context(c::AbstractContext, m::AbstractTrace) = m
 
 struct NullContext <: AbstractContext end
@@ -31,6 +33,7 @@ function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where na
     return MixedTuple((), NamedTuple{names}(t))
 end
 
+# use broadcast machinery directly?
 function to_vectors(vs...)
     i = findfirst(t -> isa(t, AbstractVector), vs)
     i === nothing && return nothing
@@ -59,24 +62,8 @@ end
 
 struct GroupedContext <: AbstractContext end
 const groupedcontext = GroupedContext()
+group() = context(groupedcontext)
+default_context() = groupedcontext
 
 group(::GroupedContext, t::AbstractTrace) = t
 group(t::AbstractTraceList) = TraceList(map(group, t))
-
-function merge_mixed(m1::MixedTuple, m2::MixedTuple, l1, l2)
-    n1 = map(arg -> repeat(arg, inner = l2), m1)
-    n2 = map(arg -> repeat(arg, outer = l1), m2)
-    return merge(n1, n2)
-end
-
-function combine(c::GroupedContext, t1::AbstractTrace, t2::AbstractTrace)
-    m = merge(metadata(t1), metadata(t2))
-    p1, p2 = map(collect, primary(t1)), map(collect, primary(t2))
-    d1, d2 = map(collect, data(t1)), map(collect, data(t2))
-    pd1, pd2 = merge(p1, d1), merge(p2, d2)
-    l1 = isempty(pd1) ? 1 : length(first(pd1))
-    l2 = isempty(pd2) ? 1 : length(first(pd2))
-    p = merge_mixed(p1, p2, l1, l2)
-    d = merge_mixed(d1, d2, l1, l2)
-    return Trace(c, p, d, m)
-end
