@@ -45,7 +45,7 @@ end
 (t::AbstractTrace)(s) = merge(data(s), t)
 
 function Trace(;
-               context=default_context(),
+               context=nothing,
                primary=mixedtuple(),
                data=mixedtuple(),
                metadata=mixedtuple()
@@ -55,13 +55,11 @@ end
 
 function merge(s1::AbstractTrace, s2::AbstractTrace)
     c1, c2 = context(s1), context(s2)
+    c = c2 === nothing ? c1 : c2
+    s2 = apply_context(c, s2)
     p1, p2 = primary(s1), primary(s2)
     d1, d2 = data(s1), data(s2)
     m1, m2 = metadata(s1), metadata(s2)
-    c = merge(c1, c2)
-    if c !== c1
-        isempty(p1) && isempty(d1) || @warn "Chaging context with a non-emty `Trace`"
-    end
     p = merge(p1, p2)
     d = merge(d1, d2)
     m = merge(m1, m2)

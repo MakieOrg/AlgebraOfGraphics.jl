@@ -1,8 +1,6 @@
 abstract type AbstractContext end
 
-merge(c1::AbstractContext, c2::AbstractContext) = c1
-
-apply_context(c::AbstractContext, m::AbstractTrace) = m
+apply_context(c::Union{AbstractContext, Nothing}, m::AbstractTrace) = m
 
 struct NullContext <: AbstractContext end
 const nullcontext = NullContext()
@@ -20,10 +18,7 @@ function apply_context(c::ColumnContext, tr::AbstractTrace)
     return Trace(nothing, p, d, m)
 end
 
-function group(tr::AbstractTrace)
-    ctx = context(tr)
-    group(ctx, apply_context(ctx, tr))
-end
+group(tr::AbstractTrace) =  group(context(tr), tr)
 
 function _rename(t::Tuple, m::MixedTuple)
     mt = _rename(tail(t), MixedTuple(tail(m.args), m.kwargs))
@@ -63,7 +58,6 @@ end
 struct GroupedContext <: AbstractContext end
 const groupedcontext = GroupedContext()
 group() = context(groupedcontext)
-default_context() = groupedcontext
 
 group(::GroupedContext, t::AbstractTrace) = t
 group(t::AbstractTraceList) = TraceList(map(group, t))
