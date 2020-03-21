@@ -52,16 +52,21 @@ pool(v::AbstractVector{<:Integer}) = v
 
 # ranking
 
+function jointable(ts)
+    tables = map(columntable, ts)
+    return jointable(tables, foldl(merge, tables))
+end
+
+function jointable(tables, ::NamedTuple{names}) where names
+    vals = map(names) do name
+        vcat((get(table, name, Union{}[]) for table in tables)...)
+    end
+    NamedTuple{names}(vals)
+end
+
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(d)))
 
 function rankdicts(ts::AbstractTraceList)
-    d = Dict{Symbol, Vector{Any}}()
-    for trace in ts
-        nt = primary(trace).kwargs
-        for (key, val) in pairs(nt)
-            vec = get!(d, key, Any[])
-            push!(vec, val)
-        end
-    end
-    return Dict(key => rankdict(val) for (key, val) in d)
+    tables = map(t -> map(x -> x.kwargs, primary(group(t))), ts) |> jointable
+    return map(rankdict, tables)
 end

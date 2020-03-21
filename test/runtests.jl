@@ -1,5 +1,5 @@
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: table, data, metadata, primary, mixedtuple, traces, group
+using AlgebraOfGraphics: table, data, metadata, primary, mixedtuple, traces, group, rankdicts
 
 using RDatasets: dataset
 
@@ -22,3 +22,11 @@ using RDatasets: dataset
     @test length(res) == 2
 end
 
+@testset "rankdicts" begin
+    mpg = dataset("ggplot2", "mpg")
+    spec = data(:Cyl, :Hwy) |> primary(color = :Year)
+    s = metadata(color = :red, font = 10) + data(markersize = :Year)
+    res = mpg |> table |> s |> spec |> group
+    @test rankdicts(res)[:color][2008] == 2
+    @test rankdicts(res)[:color][1999] == 1
+end

@@ -65,5 +65,5 @@ struct GroupedContext <: AbstractContext end
 const groupedcontext = GroupedContext()
 
 group(::GroupedContext, t::AbstractTrace) = t
-group(t::AbstractTraceList) = map(group, t)
+group(t::AbstractTraceList) = TraceList(map(group, t))
 

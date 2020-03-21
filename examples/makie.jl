@@ -5,8 +5,8 @@ using StatsMakie: linear, density
 
 using AlgebraOfGraphics, Test
 using AlgebraOfGraphics: TraceList,
-                         TraceOrList,
                          data,
+                         table,
                          metadata,
                          primary,
                          mixedtuple,
@@ -16,11 +16,11 @@ using AlgebraOfGraphics: TraceList,
 using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
-spec = iris |> data(:SepalLength, :SepalWidth) * primary(color = :Species)
+spec = iris |> table |> data(:SepalLength, :SepalWidth) |> primary(color = :Species)
 s = metadata(Scatter, markersize = 10px) + metadata(linear)
-plot(s * spec)
+spec |> s |> plot
 
-plt = metadata(Wireframe, density) * spec |> plot
+plt = spec |> metadata(Wireframe, density) |> plot
 scatter!(plt, spec)
 
 df = iris
@@ -28,6 +28,13 @@ x = data(:PetalLength) * primary(marker = fill(1)) +
     data(:PetalWidth) * primary(marker = fill(2))
 y = data(:SepalLength, color = :SepalWidth)
 df |> metadata(Scatter) * x * y |> plot
+
+x = TraceList(data.([:SepalWidth, :SepalLength]), )
+
+histogram(data([:SepalWidth, :SepalLength]))
+
+(a = sim1, b = sim2, c = sim3) |> data |> primary(color = bycolumn) |> histogram
+data((:SepalLength, :SepalWidth)) * primary(color = identity)
 
 x = [-pi..0, 0..pi]
 y = [sin, cos]
