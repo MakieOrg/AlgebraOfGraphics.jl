@@ -41,9 +41,6 @@ struct Trace{C, P<:MixedTuple, D<:MixedTuple, M<:MixedTuple} <: AbstractTrace{C}
     metadata::M
 end
 
-(t::AbstractTrace)(s::AbstractTrace) = merge(s, t)
-(t::AbstractTrace)(s) = merge(data(s), t)
-
 function Trace(;
                context=nothing,
                primary=mixedtuple(),
@@ -119,6 +116,14 @@ function merge(s::AbstractTraceList, t::AbstractTraceList)
     return TraceList(merge(els, elt) for (els, elt) in prod)
 end
 
-(l::AbstractTraceList)(v::AbstractTrace) = merge(v, l)
-(l::AbstractTraceList)(v::AbstractTraceList) = merge(v, l)
-(t::AbstractTrace)(l::AbstractTraceList) = merge(l, t)
+const AbstractTraceOrList = Union{AbstractTrace, AbstractTraceList}
+
+_to_trace(t) = data(t)
+_to_trace(t::AbstractTraceOrList) = t
+
+@static if VERSION < v"1.4.0-rc1.0"
+    (t::Trace)(s) = merge(_to_trace(s), t)
+    (l::TraceList)(v) = merge(_to_trace(v), l)
+else
+    (t::AbstractTraceOrList)(l) = merge(_to_trace(l), t)
+end
