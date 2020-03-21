@@ -55,13 +55,9 @@ function Trace(;
     return Trace(context, primary, data, metadata)
 end
 
-function merge(s1::Trace, s2::Trace)
-    @assert s2.context === nothing || s2.context === s1.context
-    context = s1.context
-    primary = merge(s1.primary, s2.primary)
-    data = merge(s1.data, s2.data)
-    metadata = merge(s1.metadata, s2.metadata)
-    return Trace(context, primary, data, metadata)
+function merge(s1::AbstractTrace, s2::AbstractTrace)
+    @assert context(s2) === nothing || context(s2) === context(s1)
+    return merge(context(s1), s1, s2)
 end
 
 function Base.show(io::IO, s::Trace)

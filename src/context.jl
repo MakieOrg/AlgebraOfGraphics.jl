@@ -1,8 +1,11 @@
 abstract type AbstractContext end
 
-context_pair(c::AbstractContext, p) = c => p
-context_pair(c::AbstractContext, p::Pair{<:AbstractContext}) = p
-context_pair(c::AbstractContext, m::MixedTuple) = map(x -> context_pair(c, x), m)
+function merge(c::Union{Nothing, AbstractContext}, s1::AbstractTrace, s2::AbstractTrace)
+    primary = merge(s1.primary, s2.primary)
+    data = merge(s1.data, s2.data)
+    metadata = merge(s1.metadata, s2.metadata)
+    return Trace(c, primary, data, metadata)
+end
 
 apply_context(c::AbstractContext, m::AbstractTrace) = m
 
@@ -67,3 +70,20 @@ const groupedcontext = GroupedContext()
 group(::GroupedContext, t::AbstractTrace) = t
 group(t::AbstractTraceList) = TraceList(map(group, t))
 
+function merge_mixed(m1::MixedTuple, m2::MixedTuple, l1, l2)
+    n1 = map(arg -> repeat(arg, inner = l2), m1)
+    n2 = map(arg -> repeat(arg, outer = l1), m2)
+    return merge(n1, n2)
+end
+
+function merge(c::GroupedContext, t1::AbstractTrace, t2::AbstractTrace)
+    m = merge(metadata(t1), metadata(t2))
+    p1, p2 = map(collect, primary(t1)), map(collect, primary(t2))
+    d1, d2 = map(collect, data(t1)), map(collect, data(t2))
+    pd1, pd2 = merge(p1, d1), merge(p2, d2)
+    l1 = isempty(pd1) ? 1 : length(first(pd1))
+    l2 = isempty(pd2) ? 1 : length(first(pd2))
+    p = merge_mixed(p1, p2, l1, l2)
+    d = merge_mixed(d1, d2, l1, l2)
+    return Trace(c, p, d, m)
+end

@@ -76,11 +76,11 @@ function soa(m)
     return MixedTuple(Tuple(args), kwargs)
 end
 
-aos(m::MixedTuple) = collect(iter_mixed(m))
-iter_mixed(m::MixedTuple) = (_rename(el, m) for el in zip(m.args..., m.kwargs...))
+aos(m::MixedTuple) = isempty(m) ? Union{}[] : [_rename(el, m) for el in zip(m.args..., m.kwargs...)]
 
 function keyvalue(p::MixedTuple, d::MixedTuple)
-    isempty(p) && return ((mixedtuple(), el) for el in iter_mixed(d))
-    isempty(d) && return ((el, mixedtuple()) for el in iter_mixed(p))
-    return zip(iter_mixed(p), iter_mixed(d))
+    isempty(p) && isempty(d) && error("Both arguments are empty")
+    isempty(p) && return ((mixedtuple(), el) for el in aos(d))
+    isempty(d) && return ((el, mixedtuple()) for el in aos(p))
+    return zip(aos(p), aos(d))
 end
