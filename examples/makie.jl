@@ -24,7 +24,6 @@ spec |> s |> plot
 plt = spec |> metadata(Wireframe, density) |> plot
 scatter!(plt, spec)
 
-df = iris
 x = data([:PetalLength, :PetalWidth])
 y = data([:SepalLength :SepalWidth])
 s = iris |> table |> x |> y |> primary(color = dims(1), marker = dims(2)) |> scatter
