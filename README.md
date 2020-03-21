@@ -10,7 +10,7 @@ Define a "plotting package agnostic" algebra of graphics based on a few simple b
 ```julia
 using RDatasets: dataset
 
-using AlgebraOfGraphics: data, primary, metadata
+using AlgebraOfGraphics: table, data, primary, metadata
 using AbstractPlotting, GLMakie
 
 mpg = dataset("ggplot2", "mpg");
@@ -18,7 +18,7 @@ cols = data(:Displ, :Hwy);
 grp = primary(color = :Cyl);
 scat = metadata(Scatter, markersize = 10px)
 
-mpg |> cols * scat |> plot
+mpg |> table |> cols |> scat |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/76689571-0add6900-662f-11ea-9881-918ea426e571.png)
@@ -26,7 +26,7 @@ mpg |> cols * scat |> plot
 Now I can simply add `grp` to do the grouping
 
 ```julia
-mpg |> cols * grp * scat |> plot
+mpg |> table |> cols |> grp |> scat |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/76689579-234d8380-662f-11ea-8626-3071283f96be.png)
@@ -35,14 +35,14 @@ It can be applied to the arguments just by multiplying them
 
 ```julia
 lin = metadata(linear, linewidth = 5)
-mpg |> cols * (scat + lin) |> plot
+mpg |> table |> cols |> scat + lin |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/77187183-fafcd380-6acb-11ea-89fa-a9e570f2b4dd.png)
 Again, if I multiply by the grouping, I add it to the scene (we filter to avoid a degenerate group).
 
 ```julia
-filter(row -> row.Cyl != 5, mpg) |> cols * (scat + lin) * grp |> plot
+filter(row -> row.Cyl != 5, mpg) |> table |> cols |> scat + lin |> grp |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/77187043-c426bd80-6acb-11ea-8c4f-bac6a53652e3.png)
@@ -50,8 +50,8 @@ This is a more complex example, where I want to split the scatter,
 but do the linear regression with all the data
 
 ```julia
-different_grouping = grp * scat + lin
-mpg |> cols * different_grouping |> plot
+different_grouping = merge(scat, grp) + lin
+mpg |> table |> cols |> different_grouping |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/77187226-0bad4980-6acc-11ea-8676-cbb7ee08843c.png)
@@ -64,9 +64,10 @@ The framework does not requires that the objects listed in `Traces` are columns.
 ```julia
 using AlgebraOfGraphics: data
 
-ts1 = data(-pi..0) * primary(color = 1) + data(0..pi) * primary(color = 2)
-ts2 = data(sin) * primary(linestyle = 1) + data(cos) * primary(linestyle = 2)
-ts1 * ts2 * metadata(linewidth = 10 ) |> plot
+x = [-pi..0, 0..pi]
+y = [sin cos]
+spec = data(x, y) |> primary(color = dims(1), linestyle = dims(2))
+plot(spec, linewidth = 10)
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/76711535-e05fde80-6708-11ea-8790-8b20a4a5cf7c.png)

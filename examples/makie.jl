@@ -1,12 +1,13 @@
 using AbstractPlotting, GLMakie
 using Observables
 using AbstractPlotting: SceneLike, PlotFunc
-using StatsMakie: linear, density
+using StatsMakie: linear, density, histogram
 
 using AlgebraOfGraphics, Test
 using AlgebraOfGraphics: TraceList,
-                         TraceOrList,
                          data,
+                         dims,
+                         table,
                          metadata,
                          primary,
                          mixedtuple,
@@ -16,21 +17,35 @@ using AlgebraOfGraphics: TraceList,
 using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
-spec = iris |> data(:SepalLength, :SepalWidth) * primary(color = :Species)
+spec = iris |> table |> data(:SepalLength, :SepalWidth) |> primary(color = :Species)
 s = metadata(Scatter, markersize = 10px) + metadata(linear)
-plot(s * spec)
+spec |> s |> plot
 
-plt = metadata(Wireframe, density) * spec |> plot
+plt = spec |> metadata(Wireframe, density) |> plot
 scatter!(plt, spec)
 
-df = iris
-x = data(:PetalLength) * primary(marker = fill(1)) +
-    data(:PetalWidth) * primary(marker = fill(2))
-y = data(:SepalLength, color = :SepalWidth)
-df |> metadata(Scatter) * x * y |> plot
+x = data([:PetalLength, :PetalWidth])
+y = data([:SepalLength :SepalWidth])
+s = iris |> table |> x |> y |> primary(color = dims(1), marker = dims(2)) |> scatter
+
+data([rand(10), rand(10)], Ref(rand(10)), color = Ref(rand(100))) |> primary(marker = 1:2) |> scatter
+(randn(1000), rand(100)) |> primary(color = 1:2) |> metadata(density, linewidth=10) |> plot
+
+# TODO fix stacking and choose edges globally
+(randn(1000), rand(100)) |>
+    primary(color = 1:2) |>
+    metadata(histogram(edges = -3:0.1:3)) |>
+    plot
+
+using Distributions
+mus = 1:4
+shapes = [6, 10]
+gs = InverseGaussian.(mus, shapes')
+geom = metadata(linewidth = 5)
+grp = primary(color = dims(1), linestyle = dims(2))
+data(fill(0..5), gs) |> grp |> geom |> plot
 
 x = [-pi..0, 0..pi]
-y = [sin, cos]
-ts1 = sum(((i, el),) -> primary(color = i) * data(el), enumerate(x))
-ts2 = sum(((i, el),) -> primary(linestyle = i) * data(el), enumerate(y))
-plot(ts1 * ts2 * metadata(linewidth = 10))
+y = [sin cos]
+spec = data(x, y) |> primary(color = dims(1), linestyle = dims(2))
+plot(spec, linewidth = 10)
