@@ -31,28 +31,43 @@ end
 
 abstract type AbstractTrace end
 
-struct Trace <: AbstractTrace
-    primary::MixedTuple
-    data::MixedTuple
-    metadata::MixedTuple
+struct Trace{C, P<:MixedTuple, D<:MixedTuple, M<:MixedTuple} <: AbstractTrace
+    context::C
+    primary::P
+    data::D
+    metadata::M
 end
-Trace(s::Trace) = s
 
-function Trace(; primary=mixedtuple(), data=mixedtuple(), metadata=mixedtuple())
-    return Trace(primary, data, metadata)
+const empty_trace = Trace(nothing, mixedtuple(), mixedtuple(), mixedtuple())
+
+(t::Trace)(s::AbstractTrace) = merge(s, t)
+(t::Trace)(s) = merge(data(s), t)
+
+function Trace(
+               t::AbstractTrace=empty_trace;
+               context=nothing,
+               primary=mixedtuple(),
+               data=mixedtuple(),
+               metadata=mixedtuple()
+              )
+    return merge(t, Trace(context, primary, data, metadata))
 end
 
 traces(t::AbstractTrace) = [t]
 
 function merge(s1::Trace, s2::Trace)
+    @assert s2.context === nothing || s2.context === s1.context
+    context = s1.context
     primary = merge(s1.primary, s2.primary)
     data = merge(s1.data, s2.data)
     metadata = merge(s1.metadata, s2.metadata)
-    return Trace(primary, data, metadata)
+    return Trace(context, primary, data, metadata)
 end
 
 function Base.show(io::IO, s::Trace)
-    print(io, "Trace with primary")
+    print(io, "Trace with context")
+    show(io, s.context)
+    print(io, ", primary")
     show(io, s.primary)
     print(io, ", data")
     show(io, s.data)
@@ -60,6 +75,8 @@ function Base.show(io::IO, s::Trace)
     show(io, s.metadata)
 end
 
+context(x) = Trace(context = x)
+context(s::Trace) = s.context
 primary(args...; kwargs...) = Trace(primary = mixedtuple(args...; kwargs...))
 primary(s::Trace) = s.primary
 data(args...; kwargs...) = Trace(data = mixedtuple(args...; kwargs...))
@@ -81,27 +98,6 @@ function to_vectors(vs...)
     map(vs) do v
         v isa AbstractVector ? v : fill(v[], length(vs[i]))
     end
-end
-
-function (p::Trace)(table=nothing)
-    primary = p.primary
-    data = p.data
-    metadata = p.metadata
-    t = columntable(something(table, NamedTuple()))
-    primary = extract_column(t, primary)
-    data = extract_column(t, data)
-    cols = (primary.args..., primary.kwargs...)
-    vecs = to_vectors(cols...)
-    traces = if vecs === nothing
-        [Trace(_rename(map(getindex, cols), primary), data, metadata)]
-    else
-        # TODO do not create unnecessary vectors
-        sa = StructArray(map(pool, vecs))
-        Base.Generator(finduniquesorted(sa)) do (k, idxs)
-            Trace(_rename(k, primary), extract_view(data, idxs), metadata)
-        end
-    end
-    TraceList(traces)
 end
 
 abstract type AbstractTraceList{T} end
@@ -145,19 +141,7 @@ function merge(s::AbstractTraceList, t::AbstractTraceList)
 end
 
 function (l::TraceList)(v=nothing)
+    # do not flatten, keep nested structure?
     ts = Iterators.flatten(traces(el(v)) for el in traces(l))
     return TraceList(ts)
 end
-
-const TraceOrList = Union{AbstractTrace, AbstractTraceList}
-
-merge(s1::TraceOrList, s2::TraceOrList, ss::TraceOrList...) = merge(merge(s1, s2), ss...)
-
-merge(s1::TraceOrList, s2::TraceOrList) = error("Merge not implemented for $(typeof(s1)) and $(typeof(s2))")
-
-*(a::TraceOrList, b::TraceOrList) = merge(a, b)
-
-function ^(a::TraceOrList, n::Int)
-    return foldl(*, ntuple(_ -> a, n))
-end
-
