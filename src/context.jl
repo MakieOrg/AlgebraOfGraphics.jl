@@ -1,10 +1,8 @@
 abstract type AbstractContext end
 
-apply_context(c::Union{AbstractContext, Nothing}, m::AbstractTrace) = m
+struct GroupedContext <: AbstractContext end
 
-struct NullContext <: AbstractContext end
-const nullcontext = NullContext()
-context() = context(nullcontext)
+apply_context(c::Union{AbstractContext, Nothing}, m::AbstractTrace) = m
 
 struct ColumnContext{T} <: AbstractContext
     cols::T
@@ -28,36 +26,39 @@ function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where na
     return MixedTuple((), NamedTuple{names}(t))
 end
 
-# use broadcast machinery directly?
-function to_vectors(vs...)
-    i = findfirst(t -> isa(t, AbstractVector), vs)
-    i === nothing && return nothing
-    map(vs) do v
-        v isa AbstractVector ? v : fill(v[], length(vs[i]))
-    end
-end
-
 function group(c::ColumnContext, tr::AbstractTrace)
+    l = length(first(c.cols))
     p, d, m = primary(tr), data(tr), metadata(tr)
+    d = map(wrap_cols, d)
+    shape = Broadcast.combine_axes(d...)
+    cidxs = CartesianIndices(shape)
     cols = (p.args..., p.kwargs...)
-    vecs = to_vectors(cols...)
-    if vecs === nothing
-        p1 = [_rename(map(getindex, cols), p)]
-        d1 = [d]
-    else
-        # TODO do not create unnecessary vectors
-        sa = StructArray(map(pool, vecs))
-        itr = Base.Generator(finduniquesorted(sa)) do (k, idxs)
-            _rename(k, p) => extract_view(d, idxs)
+    # TODO do not create unnecessary vectors
+    sa = StructArray(map(pool, cols))
+    itr = Base.Generator(finduniquesorted(sa)) do (k, idxs)
+        v = map(d) do el
+            map(t -> view(t, idxs), el)
         end
-        p1, d1 = fieldarrays(StructArray(itr))
+        values = aos(v)
+        keys = [_rename(adjust_all(k, c), p) for c in cidxs]
+        StructArray((keys = vec(keys), values = vec(values)))
     end
-    return Trace(groupedcontext, soa(p1), soa(d1), m)
+    st = collect_structarray_flattened(itr)
+    p1, d1 = fieldarrays(st)
+    return Trace(GroupedContext(), soa(p1), soa(d1), m)
 end
-
-struct GroupedContext <: AbstractContext end
-const groupedcontext = GroupedContext()
-group() = context(groupedcontext)
 
 group(::GroupedContext, t::AbstractTrace) = t
 group(t::AbstractTraceList) = TraceList(map(group, t))
+
+struct DefaultContext <: AbstractContext end
+context() = context(DefaultContext())
+
+function group(::Union{Nothing, DefaultContext}, t::AbstractTrace)
+    p = primary(t)
+    d = data(t)
+    shape = axes(aos(d))
+    p = adjust(p, shape)
+    return Trace(GroupedContext(), p, d, metadata(t))
+end
+

@@ -1,12 +1,24 @@
 const Tup = Union{Tuple, NamedTuple, MixedTuple}
 
-extract_view(v::Tup, idxs) = map(x -> extract_view(x, idxs), v)
-extract_view(v::AbstractVector, idxs) = view(v, idxs)
+struct DimsSelector{T}
+    x::T
+end
+dims(args...) = DimsSelector(args)
 
-extract_column(t, c::Tup) = map(x -> extract_column(t, x), c)
-extract_column(t, col::AbstractArray) = col
+Base.isless(a::DimsSelector, b::DimsSelector) = isless(a.x, b.x)
+
+adjust(x::Tup, shape) = map(t -> adjust(t, shape), x)
+adjust(x, shape) = x
+adjust(d::DimsSelector, shape) = [c[(d.x)...] for c in CartesianIndices(shape)]
+
+adjust_index(x, c::CartesianIndex) = x
+adjust_index(d::DimsSelector, c::CartesianIndex) = c[(d.x)...]
+adjust_all(t, c::CartesianIndex) = map(x -> adjust_index(x, c), t)
+
+extract_column(t, col::DimsSelector) = fill(col, length(first(t)))
 extract_column(t, col::Symbol) = getproperty(t, col)
 extract_column(t, col::Integer) = getindex(t, col)
+extract_column(t, c::Union{Tup, AbstractArray}) = map(x -> extract_column(t, x), c)
 
 # show utils
 
@@ -56,7 +68,7 @@ function jointable(tables, ::NamedTuple{names}) where names
     NamedTuple{names}(vals)
 end
 
-rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(d)))
+rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
 
 function rankdicts(ts::AbstractTraceList)
     tables = map(t -> primary(group(t)).kwargs, ts) |> jointable
@@ -72,9 +84,10 @@ function soa(m)
 end
 
 function aos(m::MixedTuple)
-    broadcast(m.args..., m.kwargs...) do args...
+    res = broadcast(m.args..., m.kwargs...) do args...
         _rename(args, m)
     end
+    res isa MixedTuple ? fill(res) : res
 end
 
 function keyvalue(p::MixedTuple, d::MixedTuple)
@@ -83,3 +96,12 @@ function keyvalue(p::MixedTuple, d::MixedTuple)
     isempty(d) && return ((el, mixedtuple()) for el in aos(p))
     return zip(aos(p), aos(d))
 end
+
+wrap_cols(s::AbstractArray) = fill(s)
+wrap_cols(s::AbstractArray{<:AbstractArray}) = s
+
+_append!!(v, itr) = append!!(v, itr)
+_append!!(v::StructArray{NamedTuple{(),Tuple{}}}, itr) = collect_structarray(itr)
+
+collect_structarray_flattened(itr) = foldl(_append!!, itr, init = StructArray())
+

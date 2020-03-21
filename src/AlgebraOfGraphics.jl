@@ -2,7 +2,7 @@ module AlgebraOfGraphics
 
 using Base: front, tail, setindex
 import Base: +, *, ^, merge
-using StructArrays: collect_structarray, uniquesorted, finduniquesorted, fieldarrays, StructArray
+using StructArrays: append!!, collect_structarray, uniquesorted, finduniquesorted, fieldarrays, StructArray
 using Tables: columntable
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
