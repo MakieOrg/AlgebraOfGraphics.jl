@@ -121,7 +121,7 @@ const AbstractTraceOrList = Union{AbstractTrace, AbstractTraceList}
 _to_trace(t) = data(t)
 _to_trace(t::AbstractTraceOrList) = t
 
-@static if VERSION < v"1.4.0-rc1.0"
+@static if VERSION < v"1.3.0"
     (t::Trace)(s) = merge(_to_trace(s), t)
     (l::TraceList)(v) = merge(_to_trace(v), l)
 else
