@@ -53,9 +53,10 @@ mpg |> table |> cols |> different_grouping |> plot
 
 using AlgebraOfGraphics: data
 
-ts1 = data(-pi..0) * primary(color = 1) + data(0..pi) * primary(color = 2)
-ts2 = data(sin) * primary(linestyle = 1) + data(cos) * primary(linestyle = 2)
-ts1 * ts2 * metadata(linewidth = 10 ) |> plot
+x = [-pi..0, 0..pi]
+y = [sin cos]
+spec = data(x, y) |> primary(color = dims(1), linestyle = dims(2))
+plot(spec, linewidth = 10)
 
 # ![test](https://user-images.githubusercontent.com/6333339/76711535-e05fde80-6708-11ea-8790-8b20a4a5cf7c.png)
 

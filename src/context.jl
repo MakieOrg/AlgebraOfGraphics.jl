@@ -2,7 +2,12 @@ abstract type AbstractContext end
 
 struct GroupedContext <: AbstractContext end
 
+group(::GroupedContext, t::AbstractTrace) = t
+group(t::AbstractTraceList) = TraceList(map(group, t))
+
 apply_context(c::Union{AbstractContext, Nothing}, m::AbstractTrace) = m
+
+# Column Context
 
 struct ColumnContext{T} <: AbstractContext
     cols::T
@@ -33,23 +38,28 @@ function group(c::ColumnContext, tr::AbstractTrace)
     shape = Broadcast.combine_axes(d...)
     cidxs = CartesianIndices(shape)
     cols = (p.args..., p.kwargs...)
-    # TODO do not create unnecessary vectors
-    sa = StructArray(map(pool, cols))
-    itr = Base.Generator(finduniquesorted(sa)) do (k, idxs)
-        v = map(d) do el
-            map(t -> view(t, idxs), el)
-        end
-        values = aos(v)
-        keys = [_rename(adjust_all(k, c), p) for c in cidxs]
+    st = if isempty(cols)
+        values = aos(d)
+        keys = fill(mixedtuple(), axes(values))
         StructArray((keys = vec(keys), values = vec(values)))
+    else
+        # TODO do not create unnecessary vectors
+        sa = StructArray(map(pool, cols))
+        itr = Base.Generator(finduniquesorted(sa)) do (k, idxs)
+            v = map(d) do el
+                map(t -> view(t, idxs), el)
+            end
+            values = aos(v)
+            keys = [_rename(adjust_all(k, c), p) for c in cidxs]
+            StructArray((keys = vec(keys), values = vec(values)))
+        end
+        collect_structarray_flattened(itr)
     end
-    st = collect_structarray_flattened(itr)
     p1, d1 = fieldarrays(st)
     return Trace(GroupedContext(), soa(p1), soa(d1), m)
 end
 
-group(::GroupedContext, t::AbstractTrace) = t
-group(t::AbstractTraceList) = TraceList(map(group, t))
+# Default context
 
 struct DefaultContext <: AbstractContext end
 context() = context(DefaultContext())
