@@ -1,4 +1,4 @@
-struct AbstractContext end
+abstract type AbstractContext end
 
 context_pair(c::AbstractContext, p) = c => p
 context_pair(c::AbstractContext, p::Pair{<:AbstractContext}) = p
@@ -22,27 +22,48 @@ function apply_context(c::ColumnContext, tr::AbstractTrace)
     return Trace(nothing, p, d, m)
 end
 
-function Base.collect(tr::AbstractTrace)
+function group(tr::AbstractTrace)
     ctx = context(tr)
-    collect_context(ctx, apply_context(ctx, tr))
+    group(ctx, apply_context(ctx, tr))
 end
 
-function Base.collect(c::ColumnContext, tr::AbstractTrace)
+function _rename(t::Tuple, m::MixedTuple)
+    mt = _rename(tail(t), m(tail(m.args), m.kwargs))
+    MixedTuple((first(t), mt.args...), mt.kwargs)
+end
+function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where names
+    return MixedTuple((), NamedTuple{names}(t))
+end
+
+function to_vectors(vs...)
+    i = findfirst(t -> isa(t, AbstractVector), vs)
+    i === nothing && return nothing
+    map(vs) do v
+        v isa AbstractVector ? v : fill(v[], length(vs[i]))
+    end
+end
+
+function group(c::ColumnContext, tr::AbstractTrace)
     p, d, m = primary(tr), data(tr), metadata(tr)
     cols = (p.args..., p.kwargs...)
     vecs = to_vectors(cols...)
     if vecs === nothing
-        [Trace(nothing, _rename(map(getindex, cols), p), d, m)]
+        p1 = [_rename(map(getindex, cols), p)]
+        d1 = [d]
     else
         # TODO do not create unnecessary vectors
         sa = StructArray(map(pool, vecs))
-        map(finduniquesorted(sa)) do (k, idxs)
-            Trace(nothing, _rename(k, p), extract_view(d, idxs), m)
+        itr = Base.Generator(finduniquesorted(sa)) do (k, idxs)
+            _rename(k, p) => extract_view(d, idxs)
         end
+        p1, d1 = fieldarrays(StructArray(itr))
     end
+    return Trace(groupedcontext, p1, d1, m)
 end
 
-struct GroupedContext{T} <: AbstractContext
-    array::T
-end
+struct GroupedContext <: AbstractContext end
+const groupedcontext = GroupedContext()
+
+group(::GroupedContext, t::AbstractTrace) = t
+group(t::AbstractTraceList) = map(group, t)
 

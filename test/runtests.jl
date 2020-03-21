@@ -1,26 +1,24 @@
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: data, metadata, primary, mixedtuple, traces
+using AlgebraOfGraphics: table, data, metadata, primary, mixedtuple, traces, group
 
 using RDatasets: dataset
 
 @testset "lazy spec" begin
     mpg = dataset("ggplot2", "mpg")
-    spec = data(:Cyl, :Hwy) * primary(color = :Year)
+    spec = data(:Cyl, :Hwy) |> primary(color = :Year)
     s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    res = mpg |> s * spec |> collect
+    res = mpg |> table |> s |> spec |> group |> collect
     @test res[1].metadata == mixedtuple(color = :red, font = 10)
-    @test res[2].metadata == mixedtuple(color = :red, font = 10)
-    @test res[3].metadata == mixedtuple()
-    @test res[4].metadata == mixedtuple()
+    @test res[2].metadata == mixedtuple()
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
-    @test res[1].data.args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test res[2].data.args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
-    @test res[3].data.args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test res[4].data.args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
-    @test res[1].data.kwargs == NamedTuple()
-    @test res[3].data.kwargs == (; markersize = mpg[idx1, :Year])
-    @test res[4].data.kwargs == (; markersize = mpg[idx2, :Year])
-    @test length(res) == 4
+    @test res[1].data[1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test res[1].data[2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    @test res[2].data[1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test res[2].data[2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    @test res[1].data[1].kwargs == NamedTuple()
+    @test res[2].data[1].kwargs == (; markersize = mpg[idx1, :Year])
+    @test res[2].data[2].kwargs == (; markersize = mpg[idx2, :Year])
+    @test length(res) == 2
 end
 

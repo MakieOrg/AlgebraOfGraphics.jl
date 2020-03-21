@@ -29,9 +29,9 @@ function Base.:(==)(m1::MixedTuple, m2::MixedTuple)
     m1.args == m2.args && m1.kwargs == m2.kwargs
 end
 
-abstract type AbstractTrace end
+abstract type AbstractTrace{C} end
 
-struct Trace{C, P<:MixedTuple, D<:MixedTuple, M<:MixedTuple} <: AbstractTrace
+struct Trace{C, P, D, M} <: AbstractTrace{C}
     context::C
     primary::P
     data::D
@@ -40,20 +40,17 @@ end
 
 const empty_trace = Trace(nothing, mixedtuple(), mixedtuple(), mixedtuple())
 
-(t::Trace)(s::AbstractTrace) = merge(s, t)
-(t::Trace)(s) = merge(data(s), t)
+(t::AbstractTrace)(s::AbstractTrace) = merge(s, t)
+(t::AbstractTrace)(s) = merge(data(s), t)
 
-function Trace(
-               t::AbstractTrace=empty_trace;
+function Trace(;
                context=nothing,
                primary=mixedtuple(),
                data=mixedtuple(),
                metadata=mixedtuple()
               )
-    return merge(t, Trace(context, primary, data, metadata))
+    return Trace(context, primary, data, metadata)
 end
-
-traces(t::AbstractTrace) = [t]
 
 function merge(s1::Trace, s2::Trace)
     @assert s2.context === nothing || s2.context === s1.context
@@ -65,14 +62,7 @@ function merge(s1::Trace, s2::Trace)
 end
 
 function Base.show(io::IO, s::Trace)
-    print(io, "Trace with context")
-    show(io, s.context)
-    print(io, ", primary")
-    show(io, s.primary)
-    print(io, ", data")
-    show(io, s.data)
-    print(io, ", metadata")
-    show(io, s.metadata)
+    print(io, "Trace {...}")
 end
 
 context(x) = Trace(context = x)
@@ -83,22 +73,6 @@ data(args...; kwargs...) = Trace(data = mixedtuple(args...; kwargs...))
 data(s::Trace) = s.data
 metadata(args...; kwargs...) = Trace(metadata = mixedtuple(args...; kwargs...))
 metadata(s::Trace) = s.metadata
-
-function _rename(t::Tuple, m::MixedTuple)
-    mt = _rename(tail(t), m(tail(m.args), m.kwargs))
-    MixedTuple((first(t), mt.args...), mt.kwargs)
-end
-function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where names
-    return MixedTuple((), NamedTuple{names}(t))
-end
-
-function to_vectors(vs...)
-    i = findfirst(t -> isa(t, AbstractVector), vs)
-    i === nothing && return nothing
-    map(vs) do v
-        v isa AbstractVector ? v : fill(v[], length(vs[i]))
-    end
-end
 
 abstract type AbstractTraceList{T} end
 
@@ -133,15 +107,13 @@ function consistent(s::AbstractTrace, t::AbstractTrace)
     return consistent(primary(s).kwargs, primary(t).kwargs)
 end
 
-merge(s::AbstractTrace, t::AbstractTraceList) = merge(TraceList(traces(s)), t)
-merge(s::AbstractTraceList, t::AbstractTrace) = merge(s, TraceList(traces(t)))
+merge(s::AbstractTrace, t::AbstractTraceList) = TraceList([merge(s, el) for el in traces(t)])
+merge(s::AbstractTraceList, t::AbstractTrace) = TraceList([merge(el, t) for el in traces(s)])
 function merge(s::AbstractTraceList, t::AbstractTraceList)
     prod = Iterators.product(traces(s), traces(t))
-    return TraceList(merge(els, elt) for (els, elt) in prod if consistent(els, elt))
+    return TraceList(merge(els, elt) for (els, elt) in prod)
 end
 
-function (l::TraceList)(v=nothing)
-    # do not flatten, keep nested structure?
-    ts = Iterators.flatten(traces(el(v)) for el in traces(l))
-    return TraceList(ts)
-end
+(l::AbstractTraceList)(v::AbstractTrace) = merge(v, l)
+(l::AbstractTraceList)(v::AbstractTraceList) = merge(v, l)
+(t::AbstractTrace)(l::AbstractTraceList) = merge(l, t)
