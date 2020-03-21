@@ -52,10 +52,7 @@ pool(v::AbstractVector{<:Integer}) = v
 
 # ranking
 
-function jointable(ts)
-    tables = map(columntable, ts)
-    return jointable(tables, foldl(merge, tables))
-end
+jointable(ts) = jointable(ts, foldl(merge, ts))
 
 function jointable(tables, ::NamedTuple{names}) where names
     vals = map(names) do name
@@ -67,6 +64,23 @@ end
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(d)))
 
 function rankdicts(ts::AbstractTraceList)
-    tables = map(t -> map(x -> x.kwargs, primary(group(t))), ts) |> jointable
+    tables = map(t -> primary(group(t)).kwargs, ts) |> jointable
     return map(rankdict, tables)
+end
+
+# StructArray utils
+
+function soa(m)
+    args = isempty(m[1].args) ? () : columntable(map(t -> t.args, m))
+    kwargs = isempty(m[1].kwargs) ? NamedTuple() : columntable(map(t -> t.kwargs, m))
+    return MixedTuple(Tuple(args), kwargs)
+end
+
+aos(m::MixedTuple) = collect(iter_mixed(m))
+iter_mixed(m::MixedTuple) = (_rename(el, m) for el in zip(m.args..., m.kwargs...))
+
+function keyvalue(p::MixedTuple, d::MixedTuple)
+    isempty(p) && return ((mixedtuple(), el) for el in iter_mixed(d))
+    isempty(d) && return ((el, mixedtuple()) for el in iter_mixed(p))
+    return zip(iter_mixed(p), iter_mixed(d))
 end

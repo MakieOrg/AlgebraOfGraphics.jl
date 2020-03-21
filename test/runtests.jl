@@ -1,5 +1,6 @@
 using AlgebraOfGraphics, Test
 using AlgebraOfGraphics: table, data, metadata, primary, mixedtuple, traces, group, rankdicts
+using AlgebraOfGraphics: aos
 
 using RDatasets: dataset
 
@@ -12,13 +13,17 @@ using RDatasets: dataset
     @test res[2].metadata == mixedtuple()
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
-    @test res[1].data[1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test res[1].data[2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
-    @test res[2].data[1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test res[2].data[2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
-    @test res[1].data[1].kwargs == NamedTuple()
-    @test res[2].data[1].kwargs == (; markersize = mpg[idx1, :Year])
-    @test res[2].data[2].kwargs == (; markersize = mpg[idx2, :Year])
+
+    dt = aos(res[1].data)
+    @test dt[1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test dt[2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    @test dt[1].kwargs == NamedTuple()
+
+    dt = aos(res[2].data)
+    @test dt[1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test dt[2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    @test dt[1].kwargs == (; markersize = mpg[idx1, :Year])
+    @test dt[2].kwargs == (; markersize = mpg[idx2, :Year])
     @test length(res) == 2
 end
 

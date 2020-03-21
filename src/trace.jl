@@ -8,6 +8,9 @@ function mixedtuple(args...; kwargs...)
     MixedTuple(args, nt)
 end
 
+Base.iterate(m::MixedTuple) = Base.iterate((m.args..., m.kwargs...))
+Base.iterate(m::MixedTuple, i) = Base.iterate((m.args..., m.kwargs...), i)
+
 function Base.map(f, m::MixedTuple, ms::MixedTuple...)
     args = map(t -> t.args, (m, ms...))
     kwargs = map(t -> t.kwargs, (m, ms...))
@@ -31,7 +34,7 @@ end
 
 abstract type AbstractTrace{C} end
 
-struct Trace{C, P, D, M} <: AbstractTrace{C}
+struct Trace{C, P<:MixedTuple, D<:MixedTuple, M<:MixedTuple} <: AbstractTrace{C}
     context::C
     primary::P
     data::D

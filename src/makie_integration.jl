@@ -16,7 +16,7 @@ function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attribu
     for trace in ts
         gp = group(trace)
         m = metadata(gp)
-        for (key, val) in zip(primary(gp), data(gp))
+        for (key, val) in keyvalue(primary(gp), data(gp))
             P1 = foldl((a, b) -> isabstractplot(b) ? b : a, m.args, init=P)
             args = Iterators.filter(!isabstractplot, m.args)
             series_attr = merge(attributes, Attributes(m.kwargs))

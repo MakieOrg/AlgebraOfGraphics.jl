@@ -28,7 +28,7 @@ function group(tr::AbstractTrace)
 end
 
 function _rename(t::Tuple, m::MixedTuple)
-    mt = _rename(tail(t), m(tail(m.args), m.kwargs))
+    mt = _rename(tail(t), MixedTuple(tail(m.args), m.kwargs))
     MixedTuple((first(t), mt.args...), mt.kwargs)
 end
 function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where names
@@ -58,7 +58,7 @@ function group(c::ColumnContext, tr::AbstractTrace)
         end
         p1, d1 = fieldarrays(StructArray(itr))
     end
-    return Trace(groupedcontext, p1, d1, m)
+    return Trace(groupedcontext, soa(p1), soa(d1), m)
 end
 
 struct GroupedContext <: AbstractContext end
