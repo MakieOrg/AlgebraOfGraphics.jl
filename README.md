@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/piever/AlgebraOfGraphics.jl.svg?branch=master)](https://travis-ci.org/piever/AlgebraOfGraphics.jl)
 [![codecov.io](http://codecov.io/github/piever/AlgebraOfGraphics.jl/coverage.svg?branch=master)](http://codecov.io/github/piever/AlgebraOfGraphics.jl?branch=master)
 
-Define a "plotting package agnostic" algebra of graphics based on a few simple building blocks that can be combined using `*` and `+`. Highly experimental proof of concept, which may break often.
+Define a "plotting package agnostic" algebra of graphics based on a few simple building blocks that can be combined using arrays, broadcasting, and `|>` (used to be `+` and `*`). Highly experimental proof of concept, which may break often.
 
 ## Demo
 
@@ -59,13 +59,18 @@ mpg |> table |> cols .|> different_grouping |> plot
 
 ## Pipeline
 
-Under the hood, `primary`, `data`, and `metadata` generate an underspecified `Trace` object. These `Trace`s can be combined with `*` (merging the information), and `+` (making lists of `Trace`s). The two operation interact following the distributive law.
+Under the hood, `primary`, `data`, and `metadata` generate an underspecified `Trace` object. These `Trace`s can be combined with `|>` (merging the information), or put together in lists.
 The framework does not requires that the objects listed in `Traces` are columns. They could be anything that the plotting package can deal with.
 
 ```julia
 using AlgebraOfGraphics: dims
 x = [-pi..0, 0..pi]
 y = [sin cos]
+```
+
+We use broadcasting semantics on `tuple.(x, y)`.
+
+```julia
 spec = data(x, y) |> primary(color = dims(1), linestyle = dims(2))
 plot(spec, linewidth = 10)
 ```
