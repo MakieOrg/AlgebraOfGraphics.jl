@@ -79,20 +79,33 @@ metadata(s::Trace) = s.metadata
 struct TraceArray{T, N} <: AbstractArray{T, N}
     parent::Array{T, N}
 end
-TraceArray(t::TraceArray) = TraceArray(copy(parent(t)))
+TraceArray(t::TraceArray) = copy(t)
+
 Base.parent(t::TraceArray) = t.parent
 Base.size(s::TraceArray) = size(parent(s))
 Base.getindex(s::TraceArray, i::Integer) = getindex(parent(s), i)
 Base.setindex!(s::TraceArray, v, i::Integer) = setindex!(parent(s), v, i)
 Base.IndexStyle(::Type{<:TraceArray}) = IndexLinear()
 
-# TODO: make broadcast return a `TraceArray`?
-# TODO: implement similar and reshape?
-merge(s::Trace, t::TraceArray) = TraceArray(merge.(s, t))
-merge(s::TraceArray, t::Trace) = TraceArray(merge.(s, t))
+Broadcast.BroadcastStyle(::Type{<:TraceArray}) = ArrayStyle{TraceArray}()
+function Base.similar(bc::Broadcasted{ArrayStyle{TraceArray}}, ::Type{ElType}) where {ElType<:Trace}
+    return TraceArray(similar(Array{ElType}, axes(bc)))
+end
+
+function Base.similar(::Type{T}, sz::Dims) where {T<:TraceArray}
+    return TraceArray(similar(Array{T}, sz))
+end
+Base.similar(s::TraceArray, ::Type{T}, sz::Dims) where {T} = TraceArray(similar(parent(s), T, sz))
+ 
+Base.reshape(s::TraceArray, d::Dims) = TraceArray(reshape(parent(s), d))
+Base.copy(s::TraceArray) = TraceArray(copy(parent(s)))
+
+# should we use a private function instead?
+merge(s::Trace, t::TraceArray) = merge.(s, t)
+merge(s::TraceArray, t::Trace) = merge.(s, t)
 function merge(s::TraceArray{<:Any, N}, t::TraceArray) where N
     sz = (ntuple(_ -> 1, N)..., size(t)...)
-    t′ = TraceArray(reshape(parent(t), sz...))
+    t′ = reshape(t, sz...)
     return TraceArray(merge.(s, t′))
 end
 

@@ -2,6 +2,7 @@ module AlgebraOfGraphics
 
 using Base: front, tail, setindex
 import Base: merge
+using Base.Broadcast: ArrayStyle, Broadcasted
 using StructArrays: append!!, collect_structarray, uniquesorted, finduniquesorted, fieldarrays, StructArray
 using Tables: columntable
 using PooledArrays: PooledArray, PooledVector

@@ -3,7 +3,7 @@ abstract type AbstractContext end
 struct GroupedContext <: AbstractContext end
 
 group(tr::Trace) =  group(context(tr), tr)
-group(ts::TraceArray) = TraceArray(map(group, ts))
+group(ts::TraceArray) = group.(ts)
 group(::GroupedContext, t::Trace) = t
 
 apply_context(c::Union{AbstractContext, Nothing}, m::Trace) = m
