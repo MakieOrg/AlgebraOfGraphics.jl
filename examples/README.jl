@@ -21,29 +21,29 @@ mpg |> table |> cols |> scat |> plot
 
 # ![test](https://user-images.githubusercontent.com/6333339/76689571-0add6900-662f-11ea-9881-918ea426e571.png)
 
-# Now I can simply add `grp` to do the grouping
+# Now I can simply add `grp` to the pipeline to do the grouping.
 
 mpg |> table |> cols |> grp |> scat |> plot
 
 # ![test](https://user-images.githubusercontent.com/6333339/76689579-234d8380-662f-11ea-8626-3071283f96be.png)
-# This is almost a recipe with scatter and linear regression :)
-# It can be applied to the arguments just by multiplying them
+#
+# List of traces are automatically supported via broadcasting (note the `.` in `.|>`).
 
 using StatsMakie: linear
 lin = metadata(linear, linewidth = 5)
-mpg |> table |> cols |> scat + lin |> plot
+mpg |> table |> cols .|> [scat, lin] |> plot
 
 # ![test](https://user-images.githubusercontent.com/6333339/77187183-fafcd380-6acb-11ea-89fa-a9e570f2b4dd.png)
-# Again, if I multiply by the grouping, I add it to the scene (we filter to avoid a degenerate group).
+# Again, we can add grouping to the pipeline (we filter to avoid a degenerate group).
 
-filter(row -> row.Cyl != 5, mpg) |> table |> cols |> scat + lin |> grp |> plot
+filter(row -> row.Cyl != 5, mpg) |> table |> cols |> grp .|> [scat, lin] |> plot
 
 # ![test](https://user-images.githubusercontent.com/6333339/77187043-c426bd80-6acb-11ea-8c4f-bac6a53652e3.png)
 # This is a more complex example, where I want to split the scatter,
 # but do the linear regression with all the data
 
-different_grouping = (grp |> scat) + lin
-mpg |> table |> cols |> different_grouping |> plot
+different_grouping = [grp |> scat, lin]
+mpg |> table |> cols .|> different_grouping |> plot
 
 # ![test](https://user-images.githubusercontent.com/6333339/77187226-0bad4980-6acc-11ea-8676-cbb7ee08843c.png)
 #

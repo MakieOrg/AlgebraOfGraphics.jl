@@ -7,10 +7,10 @@ using RDatasets: dataset
 @testset "lazy spec" begin
     mpg = dataset("ggplot2", "mpg")
     spec = data(:Cyl, :Hwy) |> primary(color = :Year)
-    s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    res = mpg |> table |> s |> spec |> group
-    @test res[1].metadata == mixedtuple(color = :red, font = 10)
-    @test res[2].metadata == mixedtuple()
+    s = [metadata(color = :red, font = 10), data(markersize = :Year)]
+    res = mpg |> table .|> s |> spec |> group
+    @test first(res.data)[1].metadata == mixedtuple(color = :red, font = 10)
+    @test first(res.data)[2].metadata == mixedtuple()
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
 

@@ -42,43 +42,6 @@ data(s::Trace) = s.data
 metadata(args...; kwargs...) = Trace(metadata = mixedtuple(args...; kwargs...))
 metadata(s::Trace) = s.metadata
 
-struct TraceArray{T, N} <: AbstractArray{T, N}
-    parent::Array{T, N}
-end
-TraceArray(t::TraceArray) = copy(t)
-
-Base.parent(t::TraceArray) = t.parent
-Base.size(s::TraceArray) = size(parent(s))
-Base.getindex(s::TraceArray, i::Integer) = getindex(parent(s), i)
-Base.setindex!(s::TraceArray, v, i::Integer) = setindex!(parent(s), v, i)
-Base.IndexStyle(::Type{<:TraceArray}) = IndexLinear()
-
-Broadcast.BroadcastStyle(::Type{<:TraceArray}) = ArrayStyle{TraceArray}()
-function Base.similar(bc::Broadcasted{ArrayStyle{TraceArray}}, ::Type{ElType}) where {ElType<:Trace}
-    return TraceArray(similar(Array{ElType}, axes(bc)))
-end
-
-function Base.similar(::Type{T}, sz::Dims) where {T<:TraceArray}
-    return TraceArray(similar(Array{T}, sz))
-end
-Base.similar(s::TraceArray, ::Type{T}, sz::Dims) where {T} = TraceArray(similar(parent(s), T, sz))
- 
-Base.reshape(s::TraceArray, d::Dims) = TraceArray(reshape(parent(s), d))
-Base.copy(s::TraceArray) = TraceArray(copy(parent(s)))
-
-# should we use a private function instead?
-merge(s::Trace, t::TraceArray) = merge.(s, t)
-merge(s::TraceArray, t::Trace) = merge.(s, t)
-function merge(s::TraceArray{<:Any, N}, t::TraceArray) where N
-    sz = (ntuple(_ -> 1, N)..., size(t)...)
-    t′ = reshape(t, sz...)
-    return TraceArray(merge.(s, t′))
-end
-
-_to_trace(s::Union{Trace, TraceArray}) = s
-_to_trace(s) = data(s)
-
-(t::Trace)(s) = merge(_to_trace(s), t)
-(t::TraceArray)(s) = merge(_to_trace(s), t)
-
-Base.:+(a::Union{Trace, TraceArray}, b::Union{Trace, TraceArray}) = TraceArray(vcat(a, b))
+# To support piping interface
+(t::Trace)(s) = merge(data(s)::Trace, t)
+(t::Trace)(s::Trace) = merge(s, t)

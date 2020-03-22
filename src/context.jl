@@ -6,7 +6,6 @@ function group(tr::Trace)
     ctx = context(tr)
     return group(ctx, apply_context(ctx, tr))
 end
-group(ts::TraceArray) = group.(ts)
 group(::GroupedContext, t::Trace) = t
 
 apply_context(c::Union{AbstractContext, Nothing}, m::Trace) = m
