@@ -7,8 +7,11 @@ using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
 spec = iris |> table |> data(:SepalLength, :SepalWidth) |> primary(color = :Species)
-s = metadata(Scatter, markersize = 10px) + metadata(linear)
-spec |> s |> plot
+s = [metadata(Scatter, markersize = 10px), metadata(linear)]
+spec .|> s |> plot
+
+spec |> metadata(linewidth = 3) .|> [metadata(Lines), metadata(linear)] |>
+    primary(linestyle = dims(1)) |> plot
 
 plt = spec |> metadata(Wireframe, density) |> plot
 scatter!(plt, spec)

@@ -7,8 +7,8 @@ using RDatasets: dataset
 @testset "lazy spec" begin
     mpg = dataset("ggplot2", "mpg")
     spec = data(:Cyl, :Hwy) |> primary(color = :Year)
-    s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    res = mpg |> table |> s |> spec |> group
+    s = [metadata(color = :red, font = 10), data(markersize = :Year)]
+    res = map(group, mpg |> table |> spec .|> s)
     @test res[1].metadata == mixedtuple(color = :red, font = 10)
     @test res[2].metadata == mixedtuple()
     idx1 = mpg.Year .== 1999
@@ -30,8 +30,8 @@ end
 @testset "rankdicts" begin
     mpg = dataset("ggplot2", "mpg")
     spec = data(:Cyl, :Hwy) |> primary(color = :Year)
-    s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    res = mpg |> table |> s |> spec |> group
+    s = [metadata(color = :red, font = 10), data(markersize = :Year)]
+    res = map(group, mpg |> table |> spec .|> s)
     @test rankdicts(res)[:color][2008] == 2
     @test rankdicts(res)[:color][1999] == 1
 end
