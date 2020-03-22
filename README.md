@@ -51,7 +51,7 @@ This is a more complex example, where I want to split the scatter,
 but do the linear regression with all the data
 
 ```julia
-different_grouping = merge(scat, grp) + lin
+different_grouping = (grp |> scat) + lin
 mpg |> table |> cols |> different_grouping |> plot
 ```
 

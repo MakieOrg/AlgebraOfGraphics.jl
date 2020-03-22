@@ -42,7 +42,7 @@ filter(row -> row.Cyl != 5, mpg) |> table |> cols |> scat + lin |> grp |> plot
 # This is a more complex example, where I want to split the scatter,
 # but do the linear regression with all the data
 
-different_grouping = merge(scat, grp) + lin
+different_grouping = (grp |> scat) + lin
 mpg |> table |> cols |> different_grouping |> plot
 
 # ![test](https://user-images.githubusercontent.com/6333339/77187226-0bad4980-6acc-11ea-8676-cbb7ee08843c.png)
