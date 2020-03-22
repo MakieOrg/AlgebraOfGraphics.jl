@@ -2,7 +2,10 @@ abstract type AbstractContext end
 
 struct GroupedContext <: AbstractContext end
 
-group(tr::Trace) =  group(context(tr), tr)
+function group(tr::Trace)
+    ctx = context(tr)
+    return group(ctx, apply_context(ctx, tr))
+end
 group(ts::TraceArray) = group.(ts)
 group(::GroupedContext, t::Trace) = t
 
@@ -10,14 +13,19 @@ apply_context(c::Union{AbstractContext, Nothing}, m::Trace) = m
 
 # Column Context
 
+extract_column(t, col::DimsSelector) = fill(col, length(getcolumn(t, 1)))
+extract_column(t, col::Union{Symbol, Int}) = getcolumn(t, col)
+extract_column(t, c::Union{Tup, AbstractArray}) = map(x -> extract_column(t, x), c)
+
 struct ColumnContext{T} <: AbstractContext
-    cols::T
+    table::T
 end
-table(x) = context(ColumnContext(columntable(x)))
+table(x) = context(ColumnContext(x))
 
 function apply_context(c::ColumnContext, tr::Trace)
-    p = extract_column(c.cols, primary(tr))
-    d = extract_column(c.cols, data(tr))
+    cols = columns(c.table) # TODO: use TableOperations.select instead
+    p = extract_column(cols, primary(tr))
+    d = extract_column(cols, data(tr))
     m = metadata(tr) # TODO: add labels here
     return Trace(c, p, d, m)
 end
@@ -31,13 +39,13 @@ function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where na
 end
 
 function group(c::ColumnContext, tr::Trace)
-    l = length(first(c.cols))
     p, d, m = primary(tr), data(tr), metadata(tr)
     d = map(wrap_cols, d)
     shape = Broadcast.combine_axes(d...)
     cidxs = CartesianIndices(shape)
     cols = (p.args..., p.kwargs...)
     st = if isempty(cols)
+        # avoid aos to soa back and forth?
         values = aos(d)
         keys = fill(mixedtuple(), axes(values))
         StructArray((keys = vec(keys), values = vec(values)))

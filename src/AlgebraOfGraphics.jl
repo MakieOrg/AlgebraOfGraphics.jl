@@ -3,13 +3,21 @@ module AlgebraOfGraphics
 using Base: front, tail, setindex
 import Base: merge
 using Base.Broadcast: ArrayStyle, Broadcasted
-using StructArrays: append!!, collect_structarray, uniquesorted, finduniquesorted, fieldarrays, StructArray
-using Tables: columntable
+using StructArrays: append!!,
+                    collect_structarray,
+                    uniquesorted,
+                    finduniquesorted,
+                    fieldarrays,
+                    StructArray,
+                    StructArrayInitializer
+
+using Tables: columns, getcolumn, columnnames
 using PooledArrays: PooledArray, PooledVector
-using DataAPI: refarray, refvalue
+using DataAPI: refarray, refvalue, defaultarray
 using Observables: Observable
 using Requires: @require
 
+include("mixedtuple.jl")
 include("trace.jl")
 include("utils.jl")
 include("context.jl")

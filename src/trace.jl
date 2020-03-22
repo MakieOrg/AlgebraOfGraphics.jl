@@ -1,37 +1,3 @@
-struct MixedTuple{T<:Tuple, NT<:NamedTuple}
-    args::T
-    kwargs::NT
-end
-
-function mixedtuple(args...; kwargs...)
-    nt = values(kwargs)
-    MixedTuple(args, nt)
-end
-
-Base.iterate(m::MixedTuple) = Base.iterate((m.args..., m.kwargs...))
-Base.iterate(m::MixedTuple, i) = Base.iterate((m.args..., m.kwargs...), i)
-
-function Base.map(f, m::MixedTuple, ms::MixedTuple...)
-    args = map(t -> t.args, (m, ms...))
-    kwargs = map(t -> t.kwargs, (m, ms...))
-    return MixedTuple(map(f, args...), map(f, kwargs...))
-end
-
-function Base.show(io::IO, m::MixedTuple)
-    print(io, "MixedTuple")
-    _show(io, m.args...; m.kwargs...)
-end
-
-function merge(a::MixedTuple, b::MixedTuple)
-    tup = (a.args..., b.args...)
-    nt = merge(a.kwargs, b.kwargs)
-    return MixedTuple(tup, nt)
-end
-
-function Base.:(==)(m1::MixedTuple, m2::MixedTuple)
-    m1.args == m2.args && m1.kwargs == m2.kwargs
-end
-
 struct Trace{C, P<:MixedTuple, D<:MixedTuple, M<:MixedTuple}
     context::C
     primary::P
@@ -50,10 +16,10 @@ end
 
 Broadcast.broadcastable(t::Trace) = Ref(t)
 
+# Allow customization of merge by context?
 function merge(s1::Trace, s2::Trace)
     c1, c2 = context(s1), context(s2)
     c = c2 === nothing ? c1 : c2
-    s2 = apply_context(c, s2)
     p1, p2 = primary(s1), primary(s2)
     d1, d2 = data(s1), data(s2)
     m1, m2 = metadata(s1), metadata(s2)

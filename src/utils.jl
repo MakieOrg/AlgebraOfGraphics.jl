@@ -12,34 +12,6 @@ _adjust(x, shape) = x
 _adjust(d::DimsSelector, shape) = [_adjust(d, c) for c in CartesianIndices(shape)]
 _adjust(d::DimsSelector, c::CartesianIndex) = c[d.x...]
 
-extract_column(t, col::DimsSelector) = fill(col, length(first(t)))
-extract_column(t, col::Symbol) = getproperty(t, col)
-extract_column(t, col::Integer) = getindex(t, col)
-extract_column(t, c::Union{Tup, AbstractArray}) = map(x -> extract_column(t, x), c)
-
-# show utils
-
-function _show(io::IO, args...; kwargs...)
-    print(io, "(")
-    kwargs = values(kwargs)
-    na, nk = length(args), length(kwargs)
-    for i in 1:na
-        show(io, args[i])
-        if i < na + nk
-            print(io, ", ")
-        end
-    end
-    for i in 1:nk
-        print(io, keys(kwargs)[i])
-        print(io, " = ")
-        show(io, kwargs[i])
-        if i < nk
-            print(io, ", ")
-        end
-    end
-    print(io, ")")
-end
-
 # PooledArrays utils
 
 function pool(v)
@@ -74,10 +46,18 @@ end
 
 # StructArray utils
 
+_unwrap(t::Type{<:Union{Tuple, NamedTuple}}) = true
+_unwrap(t::Type{<:Union{Tuple{}, NamedTuple{(), Tuple{}}}}) = false
+_unwrap(t::Type) = false
+initarray(::Type{S}, ax::NTuple{N, Any}) where {S, N} = similar(defaultarray(S, N), ax)
+
+const initstructarray = StructArrayInitializer(_unwrap, initarray)
+
 function soa(m)
-    args = isempty(m[1].args) ? () : columntable(map(t -> t.args, m))
-    kwargs = isempty(m[1].kwargs) ? NamedTuple() : columntable(map(t -> t.kwargs, m))
-    return MixedTuple(Tuple(args), kwargs)
+    res = collect_structarray(m, initializer=initstructarray)
+    args = res.args isa StructArray ? fieldarrays(res.args) : ()
+    kwargs = res.kwargs isa StructArray ? fieldarrays(res.kwargs) : NamedTuple()
+    return MixedTuple(args, kwargs)
 end
 
 function aos(m::MixedTuple)
