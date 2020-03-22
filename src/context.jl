@@ -19,7 +19,7 @@ function apply_context(c::ColumnContext, tr::Trace)
     p = extract_column(c.cols, primary(tr))
     d = extract_column(c.cols, data(tr))
     m = metadata(tr) # TODO: add labels here
-    return Trace(nothing, p, d, m)
+    return Trace(c, p, d, m)
 end
 
 function _rename(t::Tuple, m::MixedTuple)
@@ -49,7 +49,7 @@ function group(c::ColumnContext, tr::Trace)
                 map(t -> view(t, idxs), el)
             end
             values = aos(v)
-            keys = [_rename(adjust_all(k, c), p) for c in cidxs]
+            keys = [_rename(_adjust(k, c), p) for c in cidxs]
             StructArray((keys = vec(keys), values = vec(values)))
         end
         collect_structarray_flattened(itr)
@@ -67,7 +67,7 @@ function group(::Union{Nothing, DefaultContext}, t::Trace)
     p = primary(t)
     d = data(t)
     shape = axes(aos(d))
-    p = adjust(p, shape)
+    p = _adjust(p, shape)
     return Trace(GroupedContext(), p, d, metadata(t))
 end
 
