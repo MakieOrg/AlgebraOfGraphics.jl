@@ -46,15 +46,12 @@ end
 
 # StructArray utils
 
-_unwrap(t::Type{<:Union{Tuple, NamedTuple}}) = true
-_unwrap(t::Type{<:Union{Tuple{}, NamedTuple{(), Tuple{}}}}) = false
-_unwrap(t::Type) = false
-initarray(::Type{S}, ax::NTuple{N, Any}) where {S, N} = similar(defaultarray(S, N), ax)
-
-const initstructarray = StructArrayInitializer(_unwrap, initarray)
+_unwrap(::Type) = false
+_unwrap(::Type{<:Union{Tuple, NamedTuple}}) = true
+_unwrap(::Type{<:Union{Tuple{}, NamedTuple{(), Tuple{}}}}) = false
 
 function soa(m)
-    res = collect_structarray(m, initializer=initstructarray)
+    res = StructArray(m, unwrap=_unwrap)
     args = res.args isa StructArray ? fieldarrays(res.args) : ()
     kwargs = res.kwargs isa StructArray ? fieldarrays(res.kwargs) : NamedTuple()
     return MixedTuple(args, kwargs)

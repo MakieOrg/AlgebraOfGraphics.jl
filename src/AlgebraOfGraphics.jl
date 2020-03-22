@@ -8,12 +8,11 @@ using StructArrays: append!!,
                     uniquesorted,
                     finduniquesorted,
                     fieldarrays,
-                    StructArray,
-                    StructArrayInitializer
+                    StructArray
 
 using Tables: columns, getcolumn, columnnames
 using PooledArrays: PooledArray, PooledVector
-using DataAPI: refarray, refvalue, defaultarray
+using DataAPI: refarray, refvalue
 using Observables: Observable
 using Requires: @require
 

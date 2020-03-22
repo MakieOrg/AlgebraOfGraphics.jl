@@ -16,7 +16,8 @@ DataAPI = "1"
 Observables = "0.2, 0.3"
 PooledArrays = "0.5"
 Requires = "1"
-StructArrays = "0.4"
+StructArrays = "0.4.3"
+Tables = "1"
 julia = "1"
 
 [extras]
