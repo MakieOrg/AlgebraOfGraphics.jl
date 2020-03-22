@@ -1,5 +1,5 @@
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: table, data, metadata, primary, mixedtuple, traces, group, rankdicts
+using AlgebraOfGraphics: table, data, metadata, primary, mixedtuple, group, rankdicts
 using AlgebraOfGraphics: aos
 
 using RDatasets: dataset
@@ -8,7 +8,7 @@ using RDatasets: dataset
     mpg = dataset("ggplot2", "mpg")
     spec = data(:Cyl, :Hwy) |> primary(color = :Year)
     s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    res = mpg |> table |> s |> spec |> group |> collect
+    res = mpg |> table |> s |> spec |> group
     @test res[1].metadata == mixedtuple(color = :red, font = 10)
     @test res[2].metadata == mixedtuple()
     idx1 = mpg.Year .== 1999

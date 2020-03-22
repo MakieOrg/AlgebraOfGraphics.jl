@@ -2,10 +2,11 @@ abstract type AbstractContext end
 
 struct GroupedContext <: AbstractContext end
 
-group(::GroupedContext, t::AbstractTrace) = t
-group(t::AbstractTraceList) = TraceList(map(group, t))
+group(tr::Trace) =  group(context(tr), tr)
+group(ts::TraceArray) = TraceArray(map(group, ts))
+group(::GroupedContext, t::Trace) = t
 
-apply_context(c::Union{AbstractContext, Nothing}, m::AbstractTrace) = m
+apply_context(c::Union{AbstractContext, Nothing}, m::Trace) = m
 
 # Column Context
 
@@ -14,14 +15,12 @@ struct ColumnContext{T} <: AbstractContext
 end
 table(x) = context(ColumnContext(columntable(x)))
 
-function apply_context(c::ColumnContext, tr::AbstractTrace)
+function apply_context(c::ColumnContext, tr::Trace)
     p = extract_column(c.cols, primary(tr))
     d = extract_column(c.cols, data(tr))
     m = metadata(tr) # TODO: add labels here
     return Trace(nothing, p, d, m)
 end
-
-group(tr::AbstractTrace) =  group(context(tr), tr)
 
 function _rename(t::Tuple, m::MixedTuple)
     mt = _rename(tail(t), MixedTuple(tail(m.args), m.kwargs))
@@ -31,7 +30,7 @@ function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where na
     return MixedTuple((), NamedTuple{names}(t))
 end
 
-function group(c::ColumnContext, tr::AbstractTrace)
+function group(c::ColumnContext, tr::Trace)
     l = length(first(c.cols))
     p, d, m = primary(tr), data(tr), metadata(tr)
     d = map(wrap_cols, d)
@@ -64,7 +63,7 @@ end
 struct DefaultContext <: AbstractContext end
 context() = context(DefaultContext())
 
-function group(::Union{Nothing, DefaultContext}, t::AbstractTrace)
+function group(::Union{Nothing, DefaultContext}, t::Trace)
     p = primary(t)
     d = data(t)
     shape = axes(aos(d))

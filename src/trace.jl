@@ -32,9 +32,7 @@ function Base.:(==)(m1::MixedTuple, m2::MixedTuple)
     m1.args == m2.args && m1.kwargs == m2.kwargs
 end
 
-abstract type AbstractTrace{C} end
-
-struct Trace{C, P<:MixedTuple, D<:MixedTuple, M<:MixedTuple} <: AbstractTrace{C}
+struct Trace{C, P<:MixedTuple, D<:MixedTuple, M<:MixedTuple}
     context::C
     primary::P
     data::D
@@ -50,7 +48,9 @@ function Trace(;
     return Trace(context, primary, data, metadata)
 end
 
-function merge(s1::AbstractTrace, s2::AbstractTrace)
+Broadcast.broadcastable(t::Trace) = Ref(t)
+
+function merge(s1::Trace, s2::Trace)
     c1, c2 = context(s1), context(s2)
     c = c2 === nothing ? c1 : c2
     s2 = apply_context(c, s2)
@@ -76,54 +76,30 @@ data(s::Trace) = s.data
 metadata(args...; kwargs...) = Trace(metadata = mixedtuple(args...; kwargs...))
 metadata(s::Trace) = s.metadata
 
-abstract type AbstractTraceList{T} end
-
-struct TraceList{T} <: AbstractTraceList{T}
-    traces::T
+struct TraceArray{T, N} <: AbstractArray{T, N}
+    parent::Array{T, N}
 end
-const null = TraceList(())
-traces(t::TraceList) = t.traces
+TraceArray(t::TraceArray) = TraceArray(copy(parent(t)))
+Base.parent(t::TraceArray) = t.parent
+Base.size(s::TraceArray) = size(parent(s))
+Base.getindex(s::TraceArray, i::Integer) = getindex(parent(s), i)
+Base.setindex!(s::TraceArray, v, i::Integer) = setindex!(parent(s), v, i)
+Base.IndexStyle(::Type{<:TraceArray}) = IndexLinear()
 
-TraceList(l::TraceList) = l
-
-Base.iterate(p::AbstractTraceList) = iterate(traces(p))
-Base.iterate(p::AbstractTraceList, st) = iterate(traces(p), st)
-Base.length(p::AbstractTraceList) = length(traces(p))
-Base.axes(p::AbstractTraceList) = axes(traces(p))
-Base.eltype(::Type{<:AbstractTraceList{T}}) where {T} = eltype(T)
-
-Base.IteratorEltype(::Type{<:AbstractTraceList{T}}) where {T} = Base.IteratorEltype(T)
-Base.IteratorSize(::Type{<:AbstractTraceList{T}}) where {T} = Base.IteratorSize(T)
-
-function Base.show(io::IO, l::TraceList)
-    print(io, "TraceList with traces ")
-    show(io, traces(l))
+# TODO: make broadcast return a `TraceArray`?
+# TODO: implement similar and reshape?
+merge(s::Trace, t::TraceArray) = TraceArray(merge.(s, t))
+merge(s::TraceArray, t::Trace) = TraceArray(merge.(s, t))
+function merge(s::TraceArray{<:Any, N}, t::TraceArray) where N
+    sz = (ntuple(_ -> 1, N)..., size(t)...)
+    t′ = TraceArray(reshape(parent(t), sz...))
+    return TraceArray(merge.(s, t′))
 end
 
-+(a::AbstractTrace, b::AbstractTrace) = TraceList([a]) + TraceList([b])
-+(a::AbstractTraceList, b::AbstractTrace) = a + TraceList([b])
-+(a::AbstractTrace, b::AbstractTraceList) = TraceList([a]) + b
-+(a::AbstractTraceList, b::AbstractTraceList) = TraceList(Iterators.flatten(traces.([a, b])))
+_to_trace(s::Union{Trace, TraceArray}) = s
+_to_trace(s) = data(s)
 
-function consistent(s::AbstractTrace, t::AbstractTrace)
-    return consistent(primary(s).kwargs, primary(t).kwargs)
-end
+(t::Trace)(s) = merge(_to_trace(s), t)
+(t::TraceArray)(s) = merge(_to_trace(s), t)
 
-merge(s::AbstractTrace, t::AbstractTraceList) = TraceList([merge(s, el) for el in traces(t)])
-merge(s::AbstractTraceList, t::AbstractTrace) = TraceList([merge(el, t) for el in traces(s)])
-function merge(s::AbstractTraceList, t::AbstractTraceList)
-    prod = Iterators.product(traces(s), traces(t))
-    return TraceList(merge(els, elt) for (els, elt) in prod)
-end
-
-const AbstractTraceOrList = Union{AbstractTrace, AbstractTraceList}
-
-_to_trace(t) = data(t)
-_to_trace(t::AbstractTraceOrList) = t
-
-@static if VERSION < v"1.3.0"
-    (t::Trace)(s) = merge(_to_trace(s), t)
-    (l::TraceList)(v) = merge(_to_trace(v), l)
-else
-    (t::AbstractTraceOrList)(l) = merge(_to_trace(l), t)
-end
+Base.:+(a::Union{Trace, TraceArray}, b::Union{Trace, TraceArray}) = TraceArray(vcat(a, b))

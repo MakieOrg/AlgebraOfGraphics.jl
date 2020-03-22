@@ -29,6 +29,7 @@ mpg |> table |> cols |> grp |> scat |> plot
 # This is almost a recipe with scatter and linear regression :)
 # It can be applied to the arguments just by multiplying them
 
+using StatsMakie: linear
 lin = metadata(linear, linewidth = 5)
 mpg |> table |> cols |> scat + lin |> plot
 
@@ -51,8 +52,7 @@ mpg |> table |> cols |> different_grouping |> plot
 # Under the hood, `primary`, `data`, and `metadata` generate an underspecified `Trace` object. These `Trace`s can be combined with `*` (merging the information), and `+` (making lists of `Trace`s). The two operation interact following the distributive law.
 # The framework does not requires that the objects listed in `Traces` are columns. They could be anything that the plotting package can deal with.
 
-using AlgebraOfGraphics: data
-
+using AlgebraOfGraphics: dims
 x = [-pi..0, 0..pi]
 y = [sin cos]
 spec = data(x, y) |> primary(color = dims(1), linestyle = dims(2))

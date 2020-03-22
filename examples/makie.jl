@@ -1,18 +1,7 @@
 using AbstractPlotting, GLMakie
-using Observables
-using AbstractPlotting: SceneLike, PlotFunc
 using StatsMakie: linear, density, histogram
 
-using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: TraceList,
-                         data,
-                         dims,
-                         table,
-                         metadata,
-                         primary,
-                         mixedtuple,
-                         rankdicts,
-                         traces
+using AlgebraOfGraphics: data, metadata, primary, dims, table
 
 using RDatasets: dataset
 

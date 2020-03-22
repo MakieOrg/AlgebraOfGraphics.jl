@@ -70,7 +70,7 @@ end
 
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
 
-function rankdicts(ts::AbstractTraceList)
+function rankdicts(ts::TraceArray)
     tables = map(t -> primary(group(t)).kwargs, ts) |> jointable
     return map(rankdict, tables)
 end
