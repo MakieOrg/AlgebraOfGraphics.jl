@@ -34,6 +34,7 @@ This is almost a recipe with scatter and linear regression :)
 It can be applied to the arguments just by multiplying them
 
 ```julia
+using StatsMakie: linear
 lin = metadata(linear, linewidth = 5)
 mpg |> table |> cols |> scat + lin |> plot
 ```
@@ -50,7 +51,7 @@ This is a more complex example, where I want to split the scatter,
 but do the linear regression with all the data
 
 ```julia
-different_grouping = merge(scat, grp) + lin
+different_grouping = (grp |> scat) + lin
 mpg |> table |> cols |> different_grouping |> plot
 ```
 
@@ -62,8 +63,7 @@ Under the hood, `primary`, `data`, and `metadata` generate an underspecified `Tr
 The framework does not requires that the objects listed in `Traces` are columns. They could be anything that the plotting package can deal with.
 
 ```julia
-using AlgebraOfGraphics: data
-
+using AlgebraOfGraphics: dims
 x = [-pi..0, 0..pi]
 y = [sin cos]
 spec = data(x, y) |> primary(color = dims(1), linestyle = dims(2))

@@ -7,13 +7,10 @@ dims(args...) = DimsSelector(args)
 
 Base.isless(a::DimsSelector, b::DimsSelector) = isless(a.x, b.x)
 
-adjust(x::Tup, shape) = map(t -> adjust(t, shape), x)
-adjust(x, shape) = x
-adjust(d::DimsSelector, shape) = [c[(d.x)...] for c in CartesianIndices(shape)]
-
-adjust_index(x, c::CartesianIndex) = x
-adjust_index(d::DimsSelector, c::CartesianIndex) = c[(d.x)...]
-adjust_all(t, c::CartesianIndex) = map(x -> adjust_index(x, c), t)
+_adjust(x::Tup, shape) = map(t -> _adjust(t, shape), x)
+_adjust(x, shape) = x
+_adjust(d::DimsSelector, shape) = [_adjust(d, c) for c in CartesianIndices(shape)]
+_adjust(d::DimsSelector, c::CartesianIndex) = c[d.x...]
 
 extract_column(t, col::DimsSelector) = fill(col, length(first(t)))
 extract_column(t, col::Symbol) = getproperty(t, col)
@@ -70,7 +67,7 @@ end
 
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
 
-function rankdicts(ts::AbstractTraceList)
+function rankdicts(ts::TraceArray)
     tables = map(t -> primary(group(t)).kwargs, ts) |> jointable
     return map(rankdict, tables)
 end
