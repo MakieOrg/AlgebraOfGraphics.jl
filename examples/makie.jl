@@ -7,18 +7,19 @@ using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
 spec = iris |> table |> data(:SepalLength, :SepalWidth) |> primary(color = :Species)
-s = [metadata(Scatter, markersize = 10px), metadata(linear)]
-spec .|> s |> plot
+s = metadata(Scatter, markersize = 10px) + metadata(linear)
+spec |> s |> plot
 
+# Just as a test
 spec |> metadata(linewidth = 3) .|> [metadata(Lines), metadata(linear)] |>
     primary(linestyle = dims(1)) |> plot
 
 plt = spec |> metadata(Wireframe, density) |> plot
 scatter!(plt, spec)
 
-x = data([:PetalLength, :PetalWidth])
-y = data([:SepalLength :SepalWidth])
-s = iris |> table |> x |> y |> primary(color = dims(1), marker = dims(2)) |> scatter
+x = data.([:PetalLength, :PetalWidth])
+y = data.([:SepalLength :SepalWidth])
+s = iris |> table .|> x .|> y |> primary(color = dims(1), marker = dims(2)) |> scatter
 
 data([rand(10), rand(10)], Ref(rand(10)), color = Ref(rand(100))) |> primary(marker = 1:2) |> scatter
 (randn(1000), rand(100)) |> primary(color = 1:2) |> metadata(density, linewidth=10) |> plot

@@ -30,9 +30,9 @@ pool(v::AbstractVector{<:Integer}) = v
 
 jointable(ts) = jointable(ts, foldl(merge, ts))
 
-function jointable(tables, ::NamedTuple{names}) where names
+function jointable(ts, ::NamedTuple{names}) where names
     vals = map(names) do name
-        vcat((get(table, name, Union{}[]) for table in tables)...)
+        vcat((get(table, name, Union{}[]) for table in ts)...)
     end
     NamedTuple{names}(vals)
 end
@@ -40,21 +40,20 @@ end
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
 
 function rankdicts(ts)
-    tables = map(t -> primary(group(t)).kwargs, ts) |> jointable
+    traces_list = collect(Iterators.flatten(ts))
+    itr = Iterators.flatten(Base.Generator(traces, traces_list))
+    tables = jointable(map(primary, itr))
     return map(rankdict, tables)
 end
 
-# StructArray utils
+# tabular utils
 
-_unwrap(::Type) = false
-_unwrap(::Type{<:Union{Tuple, NamedTuple}}) = true
-_unwrap(::Type{<:Union{Tuple{}, NamedTuple{(), Tuple{}}}}) = false
-
-function soa(m)
-    res = StructArray(m, unwrap=_unwrap)
-    args = res.args isa StructArray ? fieldarrays(res.args) : ()
-    kwargs = res.kwargs isa StructArray ? fieldarrays(res.kwargs) : NamedTuple()
-    return MixedTuple(args, kwargs)
+function _rename(t::Tuple, m::MixedTuple)
+    mt = _rename(tail(t), MixedTuple(tail(m.args), m.kwargs))
+    MixedTuple((first(t), mt.args...), mt.kwargs)
+end
+function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where names
+    return MixedTuple((), NamedTuple{names}(t))
 end
 
 function aos(m::MixedTuple)
@@ -64,18 +63,11 @@ function aos(m::MixedTuple)
     res isa MixedTuple ? fill(res) : res
 end
 
-function keyvalue(p::MixedTuple, d::MixedTuple)
-    isempty(p) && isempty(d) && error("Both arguments are empty")
-    isempty(p) && return ((mixedtuple(), el) for el in aos(d))
-    isempty(d) && return ((el, mixedtuple()) for el in aos(p))
-    return zip(aos(p), aos(d))
+function mapcols(f, t)
+    cols = columns(t)
+    itr = (name => f(getcolumn(cols, name)) for name in columnnames(cols))
+    return OrderedDict{Symbol, AbstractVector}(itr)
 end
-
-wrap_cols(s::AbstractArray) = fill(s)
-wrap_cols(s::AbstractArray{<:AbstractArray}) = s
-
-_append!!(v, itr) = append!!(v, itr)
-_append!!(v::StructArray{NamedTuple{(),Tuple{}}}, itr) = collect_structarray(itr)
-
-collect_structarray_flattened(itr) = foldl(_append!!, itr, init = StructArray())
+coldict(t) = mapcols(identity, t)
+coldict(t, idxs) = mapcols(v -> view(v, idxs), t)
 

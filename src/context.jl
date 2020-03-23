@@ -1,80 +1,81 @@
 abstract type AbstractContext end
 
-struct GroupedContext <: AbstractContext end
+# Fallbacks
 
-function group(tr::Trace)
-    ctx = context(tr)
-    return group(ctx, apply_context(ctx, tr))
+apply_context(::Union{Nothing, AbstractContext}, t::Trace) = t
+group(::Union{Nothing, AbstractContext}, t::Trace) = Traces([t])
+
+traces(::Union{Nothing, AbstractContext}, t::Trace) = [t]
+
+function combine(c::Union{Nothing, AbstractContext}, s1::Trace, s2::Trace)
+    s2 = apply_context(c, s2)
+    p1, p2 = primary(s1), primary(s2)
+    if !isempty(keys(p1) ∩ keys(p2))
+        error("Cannot combine with overlapping primary keys")
+    end
+    d1, d2 = data(s1), data(s2)
+    m1, m2 = metadata(s1), metadata(s2)
+    p = merge(p1, p2)
+    d = merge(d1, d2)
+    m = merge(m1, m2)
+    return group(c, Trace(c, p, d, m))
 end
-group(::GroupedContext, t::Trace) = t
 
-apply_context(c::Union{AbstractContext, Nothing}, m::Trace) = m
+# Broadcast context (default)
+
+function keyvalue(p::NamedTuple, d::MixedTuple)
+    isempty(p) && isempty(d) && error("Both arguments are empty")
+    isempty(p) && return ((NamedTuple(), el) for el in aos(d))
+    isempty(d) && return ((el, mixedtuple()) for el in StructArray(p))
+    data = aos(d)
+    primary = StructArray(_adjust(p, axes(data)))
+    return zip(primary, data)
+end
+
+struct BroadcastContext <: AbstractContext end
+
+function traces(c::Union{Nothing, BroadcastContext}, t::Trace)
+    return [Trace(c, p, d, metadata(t)) for (p, d) in keyvalue(primary(t), data(t))]
+end
 
 # Column Context
-
-extract_column(t, col::DimsSelector) = fill(col, length(getcolumn(t, 1)))
-extract_column(t, col::Union{Symbol, Int}) = getcolumn(t, col)
-extract_column(t, c::Union{Tup, AbstractArray}) = map(x -> extract_column(t, x), c)
 
 struct ColumnContext{T} <: AbstractContext
     table::T
 end
-table(x) = context(ColumnContext(x))
+table(x) = context(ColumnContext(coldict(x)))
+
+extract_column(t, col::Union{Symbol, Int}) = getcolumn(t, col)
+extract_column(t, c::Union{Tup}) = map(x -> extract_column(t, x), c)
 
 function apply_context(c::ColumnContext, tr::Trace)
-    cols = columns(c.table) # TODO: use TableOperations.select instead
+    cols = columns(c.table)
     p = extract_column(cols, primary(tr))
     d = extract_column(cols, data(tr))
     m = metadata(tr) # TODO: add labels here
     return Trace(c, p, d, m)
 end
 
-function _rename(t::Tuple, m::MixedTuple)
-    mt = _rename(tail(t), MixedTuple(tail(m.args), m.kwargs))
-    MixedTuple((first(t), mt.args...), mt.kwargs)
+function keepvectors(t::NamedTuple{names}) where names
+    f, ls = first(t), NamedTuple{tail(names)}(t)
+    ff = f isa AbstractVector ? NamedTuple{(first(names),)}((f,)) : NamedTuple()
+    return merge(ff, keepvectors(ls))
 end
-function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where names
-    return MixedTuple((), NamedTuple{names}(t))
-end
+keepvectors(::NamedTuple{()}) = NamedTuple()
 
 function group(c::ColumnContext, tr::Trace)
     p, d, m = primary(tr), data(tr), metadata(tr)
-    d = map(wrap_cols, d)
-    shape = Broadcast.combine_axes(d...)
-    cidxs = CartesianIndices(shape)
-    cols = (p.args..., p.kwargs...)
-    st = if isempty(cols)
-        # avoid aos to soa back and forth?
-        values = aos(d)
-        keys = fill(mixedtuple(), axes(values))
-        StructArray((keys = vec(keys), values = vec(values)))
+    pv = keepvectors(p)
+    list = if isempty(pv)
+        [Trace(c, p, d, m)]
     else
-        # TODO do not create unnecessary vectors
-        sa = StructArray(map(pool, cols))
-        itr = Base.Generator(finduniquesorted(sa)) do (k, idxs)
-            v = map(d) do el
-                map(t -> view(t, idxs), el)
-            end
-            values = aos(v)
-            keys = [_rename(_adjust(k, c), p) for c in cidxs]
-            StructArray((keys = vec(keys), values = vec(values)))
+        pv = keepvectors(p)
+        sa = StructArray(map(pool, pv))
+        map(finduniquesorted(sa)) do (k, idxs)
+            v = map(t -> view(t, idxs), d)
+            subtable = ColumnContext(coldict(c.table, idxs))
+            Trace(subtable, merge(p, k), v, m)
         end
-        collect_structarray_flattened(itr)
     end
-    p1, d1 = fieldarrays(st)
-    return Trace(GroupedContext(), soa(p1), soa(d1), m)
+    return Traces(list)
 end
-
-# Default context
-
-struct DefaultContext <: AbstractContext end
-context() = context(DefaultContext())
-
-function group(::Union{Nothing, DefaultContext}, t::Trace)
-    p = primary(t)
-    d = data(t)
-    shape = axes(aos(d))
-    p = _adjust(p, shape)
-    return Trace(GroupedContext(), p, d, metadata(t))
-end
-

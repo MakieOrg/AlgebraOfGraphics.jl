@@ -1,4 +1,4 @@
-struct Trace{C, P<:MixedTuple, D<:MixedTuple, M<:MixedTuple}
+struct Trace{C, P<:NamedTuple, D<:MixedTuple, M<:MixedTuple}
     context::C
     primary::P
     data::D
@@ -7,7 +7,7 @@ end
 
 function Trace(;
                context=nothing,
-               primary=mixedtuple(),
+               primary=NamedTuple(),
                data=mixedtuple(),
                metadata=mixedtuple()
               )
@@ -16,32 +16,55 @@ end
 
 Broadcast.broadcastable(t::Trace) = Ref(t)
 
-# Allow customization of merge by context?
-function merge(s1::Trace, s2::Trace)
+function combine(s1::Trace, s2::Trace)
     c1, c2 = context(s1), context(s2)
     c = c2 === nothing ? c1 : c2
-    p1, p2 = primary(s1), primary(s2)
-    d1, d2 = data(s1), data(s2)
-    m1, m2 = metadata(s1), metadata(s2)
-    p = merge(p1, p2)
-    d = merge(d1, d2)
-    m = merge(m1, m2)
-    return Trace(c, p, d, m)
+    return combine(c, s1, s2)
 end
+
+context(s::Trace)  = s.context
+primary(s::Trace)  = s.primary
+data(s::Trace)     = s.data
+metadata(s::Trace) = s.metadata
 
 function Base.show(io::IO, s::Trace)
     print(io, "Trace {...}")
 end
 
-context(x) = Trace(context = x)
-context(s::Trace) = s.context
-primary(args...; kwargs...) = Trace(primary = mixedtuple(args...; kwargs...))
-primary(s::Trace) = s.primary
-data(args...; kwargs...) = Trace(data = mixedtuple(args...; kwargs...))
-data(s::Trace) = s.data
-metadata(args...; kwargs...) = Trace(metadata = mixedtuple(args...; kwargs...))
-metadata(s::Trace) = s.metadata
+traces(t::Trace) = traces(context(t), t)
 
-# To support piping interface
-(t::Trace)(s) = merge(data(s)::Trace, t)
-(t::Trace)(s::Trace) = merge(s, t)
+struct Traces{T<:Trace}
+    list::Vector{T}
+end
+Traces(t) = Traces(vec(collect(t))::Vector)
+Traces(t::Vector) = error("Eltype of Traces must be Trace")
+Traces(t::Traces) = copy(t)
+traces(t::Traces) = t.list
+
+function Base.show(io::IO, s::Traces)
+    print(io, "Trace list of length $(length(s))")
+end
+
+Broadcast.broadcastable(t::Traces) = Ref(t)
+
+Base.copy(t::Traces) = Traces(copy(t.list))
+
+Base.length(l::Traces) = length(l.list)
+Base.getindex(t::Traces, i) = t.list[i]
+Base.iterate(t::Traces) = iterate(t.list)
+Base.iterate(t::Traces, st) = iterate(t.list, st)
+Base.eltype(::Type{Traces{T}}) where {T} = T
+
+(t::Traces)(s) = t(data(s)::Traces)
+function (t::Traces)(s::Traces)
+    l1, l2 = s.list, permutedims(t.list)
+    arr = @. vec(traces(combine(l1, l2)))
+    return Traces(reduce(vcat, arr))
+end
+Base.:+(s::Traces, t::Traces) = Traces(vcat(s.list, t.list))
+
+context(x)                   = Traces([Trace(context=x)])
+primary(; kwargs...)         = Traces([Trace(primary=values(kwargs))])
+data(args...; kwargs...)     = Traces([Trace(data=mixedtuple(args...; kwargs...))])
+metadata(args...; kwargs...) = Traces([Trace(metadata=mixedtuple(args...; kwargs...))])
+

@@ -3,25 +3,34 @@ const SceneLike    = AbstractPlotting.SceneLike
 const PlotFunc     = AbstractPlotting.PlotFunc
 const AbstractPlot = AbstractPlotting.AbstractPlot
 
-function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, s::Trace)
+function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, s::Traces)
     return AbstractPlotting.plot!(scn, P, attr, [s])
 end
 
 isabstractplot(s) = isa(s, Type) && s <: AbstractPlot
 
-function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attributes, ts::AbstractArray{<:Trace})
+function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attributes, ts::AbstractArray{<:Traces})
     palette = AbstractPlotting.current_default_theme()[:palette]
-    ts = map(group, ts)
     rks = rankdicts(ts)
-    for trace in ts
-        gp = group(trace)
-        m = metadata(gp)
-        for (key, val) in keyvalue(primary(gp), data(gp))
-            P1 = foldl((a, b) -> isabstractplot(b) ? b : a, m.args, init=P)
-            args = Iterators.filter(!isabstractplot, m.args)
-            series_attr = merge(attributes, Attributes(m.kwargs))
-            attrs = get_attrs(key.kwargs, series_attr, palette, rks)
-            AbstractPlotting.plot!(scn, P1, merge(attrs, Attributes(val.kwargs)), args..., val.args...)
+    for tracelist in ts
+        for trace_object in tracelist
+            # TODO add a convenience function to navigate traces (make Trace iterable?)
+            for trace in traces(trace_object)
+                m = metadata(trace)
+                key = primary(trace)
+                val = data(trace)
+                P1 = foldl((a, b) -> isabstractplot(b) ? b : a, m.args, init=P)
+                args = Iterators.filter(!isabstractplot, m.args)
+                series_attr = merge(attributes, Attributes(m.kwargs))
+                attrs = get_attrs(key, series_attr, palette, rks)
+                AbstractPlotting.plot!(
+                                       scn,
+                                       P1,
+                                       merge(attrs, Attributes(val.kwargs)),
+                                       args...,
+                                       val.args...
+                                      )
+            end
         end
     end
     return scn

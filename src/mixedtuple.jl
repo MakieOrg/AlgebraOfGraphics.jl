@@ -40,8 +40,7 @@ function Base.show(io::IO, mt::MixedTuple)
     print(io, ")")
 end
 
-
-function merge(a::MixedTuple, b::MixedTuple)
+function Base.merge(a::MixedTuple, b::MixedTuple)
     tup = (a.args..., b.args...)
     nt = merge(a.kwargs, b.kwargs)
     return MixedTuple(tup, nt)
