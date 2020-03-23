@@ -31,7 +31,7 @@ function Base.show(io::IO, s::Trace)
     print(io, "Trace {...}")
 end
 
-traces(t::Trace) = traces(context(t), t)
+keyvalue(t::Trace) = keyvalue(context(t), t)
 
 struct Traces{T<:Trace}
     list::Vector{T}
@@ -39,7 +39,7 @@ end
 Traces(t) = Traces(vec(collect(t))::Vector)
 Traces(t::Vector) = error("Eltype of Traces must be Trace")
 Traces(t::Traces) = copy(t)
-traces(t::Traces) = t.list
+list(t::Traces) = t.list
 
 function Base.show(io::IO, s::Traces)
     print(io, "Trace list of length $(length(s))")
@@ -58,7 +58,7 @@ Base.eltype(::Type{Traces{T}}) where {T} = T
 (t::Traces)(s) = t(data(s)::Traces)
 function (t::Traces)(s::Traces)
     l1, l2 = s.list, permutedims(t.list)
-    arr = @. vec(traces(combine(l1, l2)))
+    arr = @. list(combine(l1, l2))
     return Traces(reduce(vcat, arr))
 end
 Base.:+(s::Traces, t::Traces) = Traces(vcat(s.list, t.list))

@@ -10,6 +10,11 @@ end
 
 Base.iterate(m::MixedTuple) = Base.iterate((m.args..., m.kwargs...))
 Base.iterate(m::MixedTuple, i) = Base.iterate((m.args..., m.kwargs...), i)
+Base.length(m::MixedTuple) = length(m.args) + length(m.kwargs)
+
+function Base.eltype(::Type{MixedTuple{T, NT}}) where {T, NT}
+    Base.promote_typejoin(eltype(T), eltype(NT))
+end
 
 function Base.map(f, m::MixedTuple, ms::MixedTuple...)
     args = map(t -> t.args, (m, ms...))

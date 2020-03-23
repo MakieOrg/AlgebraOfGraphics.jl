@@ -12,25 +12,20 @@ isabstractplot(s) = isa(s, Type) && s <: AbstractPlot
 function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attributes, ts::AbstractArray{<:Traces})
     palette = AbstractPlotting.current_default_theme()[:palette]
     rks = rankdicts(ts)
-    for tracelist in ts
-        for trace_object in tracelist
-            # TODO add a convenience function to navigate traces (make Trace iterable?)
-            for trace in traces(trace_object)
-                m = metadata(trace)
-                key = primary(trace)
-                val = data(trace)
-                P1 = foldl((a, b) -> isabstractplot(b) ? b : a, m.args, init=P)
-                args = Iterators.filter(!isabstractplot, m.args)
-                series_attr = merge(attributes, Attributes(m.kwargs))
-                attrs = get_attrs(key, series_attr, palette, rks)
-                AbstractPlotting.plot!(
-                                       scn,
-                                       P1,
-                                       merge(attrs, Attributes(val.kwargs)),
-                                       args...,
-                                       val.args...
-                                      )
-            end
+    for trace in Iterators.flatten(ts)
+        m = metadata(trace)
+        for (key, val) in keyvalue(trace)
+            P1 = foldl((a, b) -> isabstractplot(b) ? b : a, m.args, init=P)
+            args = Iterators.filter(!isabstractplot, m.args)
+            series_attr = merge(attributes, Attributes(m.kwargs))
+            attrs = get_attrs(key, series_attr, palette, rks)
+            AbstractPlotting.plot!(
+                                   scn,
+                                   P1,
+                                   merge(attrs, Attributes(val.kwargs)),
+                                   args...,
+                                   val.args...
+                                  )
         end
     end
     return scn

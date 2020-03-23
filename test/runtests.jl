@@ -1,6 +1,5 @@
 using AlgebraOfGraphics, Test
 using AlgebraOfGraphics: table, data, metadata, primary, mixedtuple, group, rankdicts
-using AlgebraOfGraphics: aos
 
 using RDatasets: dataset
 

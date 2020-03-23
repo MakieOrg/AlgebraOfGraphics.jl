@@ -5,7 +5,7 @@ abstract type AbstractContext end
 apply_context(::Union{Nothing, AbstractContext}, t::Trace) = t
 group(::Union{Nothing, AbstractContext}, t::Trace) = Traces([t])
 
-traces(::Union{Nothing, AbstractContext}, t::Trace) = [t]
+keyvalue(::Union{Nothing, AbstractContext}, t::Trace) = [primary(t) => data(t)]
 
 function combine(c::Union{Nothing, AbstractContext}, s1::Trace, s2::Trace)
     s2 = apply_context(c, s2)
@@ -23,19 +23,12 @@ end
 
 # Broadcast context (default)
 
-function keyvalue(p::NamedTuple, d::MixedTuple)
-    isempty(p) && isempty(d) && error("Both arguments are empty")
-    isempty(p) && return ((NamedTuple(), el) for el in aos(d))
-    isempty(d) && return ((el, mixedtuple()) for el in StructArray(p))
-    data = aos(d)
-    primary = StructArray(_adjust(p, axes(data)))
-    return zip(primary, data)
-end
-
 struct BroadcastContext <: AbstractContext end
 
-function traces(c::Union{Nothing, BroadcastContext}, t::Trace)
-    return [Trace(c, p, d, metadata(t)) for (p, d) in keyvalue(primary(t), data(t))]
+function keyvalue(::Union{Nothing, BroadcastContext}, s::Trace)
+    d = aos(data(s))
+    p = aos(_adjust(primary(s), axes(d)))
+    return p .=> d
 end
 
 # Column Context

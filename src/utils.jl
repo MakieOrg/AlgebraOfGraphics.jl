@@ -40,27 +40,24 @@ end
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
 
 function rankdicts(ts)
-    traces_list = collect(Iterators.flatten(ts))
-    itr = Iterators.flatten(Base.Generator(traces, traces_list))
-    tables = jointable(map(primary, itr))
+    trace_list = Iterators.flatten(ts)
+    ps = [key for tr in trace_list for (key, _) in keyvalue(tr)]
+    tables = jointable(ps)
     return map(rankdict, tables)
 end
 
 # tabular utils
 
-function _rename(t::Tuple, m::MixedTuple)
-    mt = _rename(tail(t), MixedTuple(tail(m.args), m.kwargs))
-    MixedTuple((first(t), mt.args...), mt.kwargs)
-end
-function _rename(t::Tuple, m::MixedTuple{Tuple{}, <:NamedTuple{names}}) where names
-    return MixedTuple((), NamedTuple{names}(t))
-end
+addnames(::NamedTuple{names}, args...) where {names} = NamedTuple{names}(args)
+addnames(m::MixedTuple, args...) = addnames(m.kwargs, args...)
 
 function aos(m::MixedTuple)
-    res = broadcast(m.args..., m.kwargs...) do args...
-        _rename(args, m)
-    end
+    res = MixedTuple.(tuple.(m.args...), addnames.(Ref(m), m.kwargs...))
     res isa MixedTuple ? fill(res) : res
+end
+function aos(n::NamedTuple)
+    res = addnames.(Ref(n), n...)
+    res isa NamedTuple ? fill(res) : res
 end
 
 function mapcols(f, t)
