@@ -33,17 +33,19 @@ end
 
 # tabular utils
 
-to_array(s::AbstractArray) = s
-to_array(s) = fill(s)
+wrapif(v::T, ::Type{T}) where {T} = fill(v)
+wrapif(v, ::Type) = v
 
 addnames(::NamedTuple{names}, args...) where {names} = NamedTuple{names}(args)
 addnames(m::MixedTuple, args...) = addnames(m.kwargs, args...)
 
 function aos(m::MixedTuple)
-    to_array(MixedTuple.(tuple.(m.args...), addnames.(Ref(m), m.kwargs...)))
+    res = MixedTuple.(tuple.(m.args...), addnames.(Ref(m), m.kwargs...))
+    return wrapif(res, MixedTuple)
 end
 function aos(n::NamedTuple)
-    to_array(addnames.(Ref(n), n...))
+    res = addnames.(Ref(n), n...)
+    return wrapif(res, NamedTuple)
 end
 
 function mapcols(f, t)

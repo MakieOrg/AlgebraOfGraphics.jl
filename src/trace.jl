@@ -39,7 +39,7 @@ _adjust(d::DimsSelector, c::CartesianIndex) = c[d.x...]
 function Base.pairs(s::Trace)
     d = aos(data(s))
     p = aos(_adjust(primary(s), axes(d)))
-    return to_array(p .=> d)
+    return wrapif(p .=> d, Pair)
 end
 
 primary(; kwargs...)         = Trace(primary=values(kwargs))
@@ -84,7 +84,7 @@ function extract_column(t, col::Union{Symbol, Int}, wrap=false)
 end
 extract_column(t, c::Tup, wrap=false) = map(x -> extract_column(t, x, wrap), c)
 extract_column(t, c::AbstractArray, wrap=false) = map(x -> extract_column(t, x, false), c)
-extract_column(t, c::DimsSelector) = c
+extract_column(t, c::DimsSelector, wrap=false) = c
 
 function group(cols, p, d)
     pv = keepvectors(p)
