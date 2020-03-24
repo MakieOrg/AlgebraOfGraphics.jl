@@ -1,6 +1,5 @@
 module AlgebraOfGraphics
 
-using Base: front, tail, setindex
 using Base.Broadcast: ArrayStyle, Broadcasted
 using StructArrays: uniquesorted,
                     finduniquesorted,
@@ -11,12 +10,12 @@ using Tables: columns, getcolumn, columnnames
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
 using Observables: Observable
-using OrderedCollections: OrderedDict
+using DataStructures: OrderedDict, LinkedList, list, tail, cons
 using Requires: @require
 
 include("mixedtuple.jl")
 include("trace.jl")
-include("series.jl")
+include("tracetree.jl")
 include("utils.jl")
 
 function __init__()

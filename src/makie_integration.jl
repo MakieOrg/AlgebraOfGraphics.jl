@@ -4,12 +4,16 @@ const PlotFunc     = AbstractPlotting.PlotFunc
 const AbstractPlot = AbstractPlotting.AbstractPlot
 
 function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, s::AbstractTrace)
-    return AbstractPlotting.plot!(scn, P, attr, Series(s))
+    return AbstractPlotting.plot!(scn, P, attr, list(s))
+end
+
+function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, s::TraceTree)
+    return AbstractPlotting.plot!(scn, P, attr, s(Trace()))
 end
 
 isabstractplot(s) = isa(s, Type) && s <: AbstractPlot
 
-function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attributes, ts::Series)
+function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attributes, ts::LinkedList)
     palette = AbstractPlotting.current_default_theme()[:palette]
     rks = rankdicts(ts)
     for trace in ts
