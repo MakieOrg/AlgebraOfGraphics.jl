@@ -16,6 +16,7 @@ using Requires: @require
 
 include("mixedtuple.jl")
 include("trace.jl")
+include("series.jl")
 include("utils.jl")
 
 function __init__()

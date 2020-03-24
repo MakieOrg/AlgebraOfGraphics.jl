@@ -1,12 +1,11 @@
-abstract type AbstractTraceOrList end
+abstract type AbstractTrace end
 
-abstract type AbstractTrace <: AbstractTraceOrList end
-abstract type AbstractList <: AbstractTraceOrList end
-
-Broadcast.broadcastable(t::AbstractTrace) = Ref(t)
-
+# Interface: 
 # key-value iterator (pairs)
 # metadata
+# support (t2::Trace)(t1::MyTrace) (returns a `MyTrace`)
+
+Broadcast.broadcastable(t::AbstractTrace) = Ref(t)
 
 struct Trace{P<:NamedTuple, D<:MixedTuple, M<:MixedTuple} <: AbstractTrace
     primary::P
@@ -111,35 +110,3 @@ function (s2::Trace)(s1::DataTrace)
 end
 
 table(x) = DataTrace([(coldict(x), NamedTuple() => mixedtuple())], mixedtuple())
-
-# Trick to be able to define `+`
-
-struct ScalarList <: AbstractList
-    list::Vector{AbstractTrace}
-end
-ScalarList(v::Vector) = ScalarList(convert(Vector{AbstractTrace}, v))
-ScalarList(s::ScalarList) = s
-ScalarList(t::AbstractTrace) = ScalarList([t])
-
-function Base.show(io::IO, s::ScalarList)
-    print(io, "Scalar list of length $(length(s.list))")
-end
-
-Broadcast.broadcastable(t::ScalarList) = Ref(t)
-
-(t::Trace)(s::ScalarList) = ScalarList(map(t, s.list))
-(s::ScalarList)(t::AbstractTrace) = ScalarList(map(f -> f(t), s.list))
-(s::ScalarList)(t::ScalarList) = ScalarList([ss(tt) for ss in s.list for tt in t.list])
-
-function Base.:+(a::Union{AbstractTrace, ScalarList}, b::Union{AbstractTrace, ScalarList})
-    a = ScalarList(a)
-    b = ScalarList(b)
-    return ScalarList(vcat(a.list, b.list))
-end
-
-list(s::AbstractTrace) = [s]
-list(s::ScalarList) = s.list
-
-function flatten(t::AbstractArray{<:AbstractTraceOrList})
-    return collect(Iterators.flatten(Base.Generator(list, t)))
-end

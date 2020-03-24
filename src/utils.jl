@@ -12,25 +12,6 @@ pool(v::PooledVector) = v
 
 pool(v::AbstractVector{<:Integer}) = v
 
-# ranking
-
-jointable(ts) = jointable(ts, foldl(merge, ts))
-
-function jointable(ts, ::NamedTuple{names}) where names
-    vals = map(names) do name
-        vcat((get(table, name, Union{}[]) for table in ts)...)
-    end
-    NamedTuple{names}(vals)
-end
-
-rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
-
-function rankdicts(ts)
-    piter = map(first, Iterators.flatten(Base.Generator(pairs, ts)))
-    tables = jointable(piter)
-    return map(rankdict, tables)
-end
-
 # tabular utils
 
 wrapif(v::T, ::Type{T}) where {T} = fill(v)
@@ -62,4 +43,3 @@ function keepvectors(t::NamedTuple{names}) where names
     return merge(ff, keepvectors(ls))
 end
 keepvectors(::NamedTuple{()}) = NamedTuple()
-

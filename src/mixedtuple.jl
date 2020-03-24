@@ -56,5 +56,3 @@ end
 function Base.:(==)(m1::MixedTuple, m2::MixedTuple)
     m1.args == m2.args && m1.kwargs == m2.kwargs
 end
-
-

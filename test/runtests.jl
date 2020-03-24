@@ -38,8 +38,8 @@ end
 @testset "rankdicts" begin
     mpg = dataset("ggplot2", "mpg")
     spec = data(:Cyl, :Hwy) |> primary(color = :Year)
-    s = [metadata(color = :red, font = 10), data(markersize = :Year)]
-    res = mpg |> table |> spec .|> s
+    s = metadata(color = :red, font = 10) + data(markersize = :Year)
+    res = mpg |> table |> spec |> s
     @test rankdicts(res)[:color][2008] == 2
     @test rankdicts(res)[:color][1999] == 1
 end
