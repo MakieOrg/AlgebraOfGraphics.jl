@@ -38,7 +38,7 @@ coldict(t) = mapcols(identity, t)
 coldict(t, idxs) = mapcols(v -> view(v, idxs), t)
 
 function keepvectors(t::NamedTuple{names}) where names
-    f, ls = first(t), NamedTuple{tail(names)}(t)
+    f, ls = first(t), NamedTuple{Base.tail(names)}(t)
     ff = f isa AbstractVector ? NamedTuple{(first(names),)}((f,)) : NamedTuple()
     return merge(ff, keepvectors(ls))
 end
