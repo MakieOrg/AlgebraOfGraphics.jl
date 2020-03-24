@@ -7,7 +7,7 @@ using RDatasets: dataset
     mpg = dataset("ggplot2", "mpg")
     spec = data(:Cyl, :Hwy) * primary(color = :Year)
     s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    res = collect(mpg |> spec * s)
+    res = map(first, mpg |> spec * s)
     @test metadata(res[1]) == mixedtuple(color = :red, font = 10)
     @test metadata(res[2]) == mixedtuple()
 
@@ -39,7 +39,7 @@ end
     mpg = dataset("ggplot2", "mpg")
     spec = data(:Cyl, :Hwy) * primary(color = :Year)
     s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    res = mpg |> spec * s
+    res = map(first, mpg |> spec * s)
     @test rankdicts(res)[:color][2008] == 2
     @test rankdicts(res)[:color][1999] == 1
 end

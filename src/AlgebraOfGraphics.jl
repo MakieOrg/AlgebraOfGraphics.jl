@@ -10,12 +10,12 @@ using Tables: columns, getcolumn, columnnames, istable
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
 using Observables: Observable
-using DataStructures: OrderedDict, LinkedList, list, tail, cons, nil
+using DataStructures: OrderedDict, LinkedList, list, tail, cons
 using Requires: @require
 
 include("mixedtuple.jl")
 include("trace.jl")
-include("tracetree.jl")
+include("tree.jl")
 include("utils.jl")
 
 function __init__()
