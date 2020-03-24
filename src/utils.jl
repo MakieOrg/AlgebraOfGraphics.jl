@@ -1,15 +1,3 @@
-struct DimsSelector{T}
-    x::T
-end
-dims(args...) = DimsSelector(args)
-
-Base.isless(a::DimsSelector, b::DimsSelector) = isless(a.x, b.x)
-
-_adjust(x::Tup, shape) = map(t -> _adjust(t, shape), x)
-_adjust(x, shape) = x
-_adjust(d::DimsSelector, shape) = [_adjust(d, c) for c in CartesianIndices(shape)]
-_adjust(d::DimsSelector, c::CartesianIndex) = c[d.x...]
-
 # PooledArrays utils
 
 function pool(v)
@@ -45,16 +33,17 @@ end
 
 # tabular utils
 
+to_array(s::AbstractArray) = s
+to_array(s) = fill(s)
+
 addnames(::NamedTuple{names}, args...) where {names} = NamedTuple{names}(args)
 addnames(m::MixedTuple, args...) = addnames(m.kwargs, args...)
 
 function aos(m::MixedTuple)
-    res = MixedTuple.(tuple.(m.args...), addnames.(Ref(m), m.kwargs...))
-    res isa MixedTuple ? fill(res) : res
+    to_array(MixedTuple.(tuple.(m.args...), addnames.(Ref(m), m.kwargs...)))
 end
 function aos(n::NamedTuple)
-    res = addnames.(Ref(n), n...)
-    res isa NamedTuple ? fill(res) : res
+    to_array(addnames.(Ref(n), n...))
 end
 
 function mapcols(f, t)

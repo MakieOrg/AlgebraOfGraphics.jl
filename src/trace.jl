@@ -26,10 +26,20 @@ primary(s::Trace)  = s.primary
 data(s::Trace)     = s.data
 metadata(s::Trace) = s.metadata
 
+struct DimsSelector{T}
+    x::T
+end
+dims(args...) = DimsSelector(args)
+
+_adjust(x::Tup, shape) = map(t -> _adjust(t, shape), x)
+_adjust(x, shape) = x
+_adjust(d::DimsSelector, shape) = [_adjust(d, c) for c in CartesianIndices(shape)]
+_adjust(d::DimsSelector, c::CartesianIndex) = c[d.x...]
+
 function Base.pairs(s::Trace)
     d = aos(data(s))
     p = aos(_adjust(primary(s), axes(d)))
-    return p .=> d
+    return to_array(p .=> d)
 end
 
 primary(; kwargs...)         = Trace(primary=values(kwargs))
@@ -59,26 +69,33 @@ struct DataTrace{T<:AbstractArray, M<:MixedTuple} <: AbstractTrace
     metadata::M
 end
 metadata(t::DataTrace) = t.metadata
-Base.pairs(t::DataTrace) = map(last, t.list)
-
-function Base.show(io::IO, s::DataTrace)
-    print(io, "DataTrace of length $(length(pairs(s.list)))")
+function Base.pairs(t::DataTrace)
+    itr = (pairs(Trace(primary=p, data=d)) for (_, (p, d)) in t.list)
+    return collect(Iterators.flatten(itr))
 end
 
-extract_column(t, col::Union{Symbol, Int}) = getcolumn(t, col)
-extract_column(t, c::Union{Tup}) = map(x -> extract_column(t, x), c)
+function Base.show(io::IO, s::DataTrace)
+    print(io, "DataTrace of length $(length(pairs(s)))")
+end
+
+function extract_column(t, col::Union{Symbol, Int}, wrap=false)
+    v = getcolumn(t, col)
+    return wrap ? fill(v) : v
+end
+extract_column(t, c::Tup, wrap=false) = map(x -> extract_column(t, x, wrap), c)
+extract_column(t, c::AbstractArray, wrap=false) = map(x -> extract_column(t, x, false), c)
+extract_column(t, c::DimsSelector) = c
 
 function group(cols, p, d)
     pv = keepvectors(p)
     list = if isempty(pv)
         [(cols, p => d)]
     else
-        pv = keepvectors(p)
         sa = StructArray(map(pool, pv))
         map(finduniquesorted(sa)) do (k, idxs)
-            v = map(t -> view(t, idxs), d)
+            v = map(t -> map(x -> view(x, idxs), t), d)
             subtable = coldict(cols, idxs)
-            (subtable, merge(p, k) => v)
+            (subtable, merge(p, map(fill, k)) => v)
         end
     end
 end
@@ -87,7 +104,7 @@ function (s2::Trace)(s1::DataTrace)
     # TODO: add labels to metadata
     itr = Base.Generator(s1.list) do (cols, (p, d))
         p2 = extract_column(cols, primary(s2))
-        d2 = extract_column(cols, data(s2))
+        d2 = extract_column(cols, data(s2), true)
         return group(cols, merge(p, p2), merge(d, d2))
     end
     return DataTrace(collect(Iterators.flatten(itr)), merge(metadata(s1), metadata(s2)))
