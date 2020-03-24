@@ -5,8 +5,6 @@ abstract type AbstractTrace end
 # metadata
 # support (t2::Trace)(t1::MyTrace) (returns a `MyTrace`)
 
-Broadcast.broadcastable(t::AbstractTrace) = Ref(t)
-
 struct Trace{P<:NamedTuple, D<:MixedTuple, M<:MixedTuple} <: AbstractTrace
     primary::P
     data::D

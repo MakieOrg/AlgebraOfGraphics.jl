@@ -4,7 +4,7 @@ struct TraceTree
     list::LinkedList
 end
 TraceTree(s::TraceTree) = s
-TraceTree(t::AbstractTrace) = TraceTree(list(t => list()))
+TraceTree(t::AbstractTrace) = TraceTree(list(t => nil(Union{})))
 
 function Base.show(io::IO, s::TraceTree)
     print(io, "TraceTree")
@@ -17,7 +17,7 @@ function Base.:+(a::Union{AbstractTrace, TraceTree}, b::Union{AbstractTrace, Tra
 end
 
 function leafconcat(l1::LinkedList, l2::LinkedList)
-    isempty(l1) && return list()
+    isempty(l1) && return nil()
     trace, ll = first(l1)
     t = isempty(ll) ? l2 : leafconcat(ll, l2)
     return cons(trace => t, leafconcat(tail(l1), l2))
@@ -37,7 +37,7 @@ function applylist(l::LinkedList)
 end
 
 function applylist(l::LinkedList, x)
-    isempty(l) && return list()
+    isempty(l) && return nil(Union{})
     trace, ll = first(l)
     t = isempty(ll) ? list(trace(x)) : applylist(ll, trace(x))
     return cat(t, applylist(tail(l), x))

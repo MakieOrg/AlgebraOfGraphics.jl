@@ -10,7 +10,7 @@ using Tables: columns, getcolumn, columnnames, istable
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
 using Observables: Observable
-using DataStructures: OrderedDict, LinkedList, list, tail, cons
+using DataStructures: OrderedDict, LinkedList, list, tail, cons, nil
 using Requires: @require
 
 include("mixedtuple.jl")
