@@ -5,7 +5,7 @@ using AlgebraOfGraphics: data, metadata, primary, dims, table
 
 using RDatasets: dataset
 
-iris = table(dataset("datasets", "iris"))
+iris = dataset("datasets", "iris")
 spec = data(:SepalLength, :SepalWidth) * primary(color = :Species)
 s = metadata(Scatter, markersize = 10px) + metadata(linear)
 iris |> spec * s |> plot
@@ -14,7 +14,8 @@ iris |> spec * metadata(Wireframe, density) |> plot
 
 x = data([:PetalLength, :PetalWidth])
 y = data([:SepalLength :SepalWidth])
-s = iris |> x |> y |> primary(color = dims(1), marker = dims(2)) |> scatter
+style = primary(color = dims(1), marker = dims(2))
+s = iris |> x * y * style |> scatter
 
 data([rand(10), rand(10)], Ref(rand(10)), color = Ref(rand(100))) * primary(marker = 1:2) |> scatter
 (randn(1000), rand(100)) |> primary(color = 1:2) * metadata(density, linewidth=10) |> plot

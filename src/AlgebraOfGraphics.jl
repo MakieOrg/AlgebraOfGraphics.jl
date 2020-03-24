@@ -6,7 +6,7 @@ using StructArrays: uniquesorted,
                     fieldarrays,
                     StructArray
 
-using Tables: columns, getcolumn, columnnames
+using Tables: columns, getcolumn, columnnames, istable
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
 using Observables: Observable

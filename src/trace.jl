@@ -45,7 +45,10 @@ primary(; kwargs...)         = Trace(primary=values(kwargs))
 data(args...; kwargs...)     = Trace(data=mixedtuple(args...; kwargs...))
 metadata(args...; kwargs...) = Trace(metadata=mixedtuple(args...; kwargs...))
 
-(t::Trace)(s) = t(data(s)::Trace)
+function (t::Trace)(s::T) where {T<:AbstractTrace}
+    error("No method implemented to call a `Trace` on $T")
+end
+(t::Trace)(s) = t(AbstractTrace(s)::AbstractTrace)
 function (s2::Trace)(s1::Trace) 
     p1, p2 = primary(s1), primary(s2)
     if !isempty(keys(p1) ∩ keys(p2))
@@ -110,3 +113,8 @@ function (s2::Trace)(s1::DataTrace)
 end
 
 table(x) = DataTrace([(coldict(x), NamedTuple() => mixedtuple())], mixedtuple())
+
+## Default conversions
+
+AbstractTrace(t::AbstractTrace) = t
+AbstractTrace(t) = istable(t) ? table(t) : data(t)

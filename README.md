@@ -19,7 +19,7 @@ grp = primary(color = :Cyl);
 scat = metadata(Scatter, markersize = 10px)
 pipeline = cols * scat
 
-table(mpg) |> pipeline |> plot
+mpg |> pipeline |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/76689571-0add6900-662f-11ea-9881-918ea426e571.png)
@@ -27,7 +27,7 @@ table(mpg) |> pipeline |> plot
 Now I can simply add `grp` to the pipeline to do the grouping.
 
 ```julia
-table(mpg) |> grp * pipeline |> plot
+mpg |> grp * pipeline |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/76689579-234d8380-662f-11ea-8626-3071283f96be.png)
@@ -38,14 +38,14 @@ Traces can be added together with `+`.
 using StatsMakie: linear
 lin = metadata(linear, linewidth = 5)
 pipenew = cols * (scat + lin)
-table(mpg) |> pipenew |> plot
+mpg |> pipenew |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/77187183-fafcd380-6acb-11ea-89fa-a9e570f2b4dd.png)
 We can put grouping in the pipeline (we filter to avoid a degenerate group).
 
 ```julia
-table(filter(row -> row.Cyl != 5, mpg)) |> grp * pipenew |> plot
+filter(row -> row.Cyl != 5, mpg) |> grp * pipenew |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/77187043-c426bd80-6acb-11ea-8c4f-bac6a53652e3.png)
@@ -54,7 +54,7 @@ but do the linear regression with all the data
 
 ```julia
 different_grouping = grp * scat + lin
-table(mpg) |> cols * different_grouping |> plot
+mpg |> cols * different_grouping |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/77187226-0bad4980-6acc-11ea-8676-cbb7ee08843c.png)

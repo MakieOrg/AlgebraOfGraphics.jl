@@ -4,13 +4,13 @@ struct TraceTree
     list::LinkedList
 end
 TraceTree(s::TraceTree) = s
-TraceTree(t::Trace) = TraceTree(list(t => list()))
+TraceTree(t::AbstractTrace) = TraceTree(list(t => list()))
 
 function Base.show(io::IO, s::TraceTree)
     print(io, "TraceTree")
 end
 
-function Base.:+(a::Union{Trace, TraceTree}, b::Union{Trace, TraceTree})
+function Base.:+(a::Union{AbstractTrace, TraceTree}, b::Union{AbstractTrace, TraceTree})
     a = TraceTree(a)
     b = TraceTree(b)
     return TraceTree(cat(a.list, b.list))
@@ -23,10 +23,17 @@ function leafconcat(l1::LinkedList, l2::LinkedList)
     return cons(trace => t, leafconcat(tail(l1), l2))
 end
 
-function Base.:*(a::Union{Trace, TraceTree}, b::Union{Trace, TraceTree})
+function Base.:*(a::Union{AbstractTrace, TraceTree}, b::Union{AbstractTrace, TraceTree})
     a = TraceTree(a)
     b = TraceTree(b)
     return TraceTree(leafconcat(a.list, b.list))
+end
+
+function applylist(l::LinkedList)
+    l′ = map(l) do (tr, ll)
+        (_ -> tr) => ll
+    end
+    return applylist(l′, nothing)
 end
 
 function applylist(l::LinkedList, x)
@@ -37,6 +44,7 @@ function applylist(l::LinkedList, x)
 end
 
 (t::TraceTree)(x) = applylist(t.list, x)
+(t::TraceTree)() = applylist(t.list)
 
 # ranking
 

@@ -8,7 +8,7 @@ function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, 
 end
 
 function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, s::TraceTree)
-    return AbstractPlotting.plot!(scn, P, attr, s(Trace()))
+    return AbstractPlotting.plot!(scn, P, attr, s())
 end
 
 isabstractplot(s) = isa(s, Type) && s <: AbstractPlot
