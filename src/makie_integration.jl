@@ -3,18 +3,22 @@ const SceneLike    = AbstractPlotting.SceneLike
 const PlotFunc     = AbstractPlotting.PlotFunc
 const AbstractPlot = AbstractPlotting.AbstractPlot
 
-function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, s::Traces)
+function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attr:: Attributes, s::AbstractTraceOrList)
     return AbstractPlotting.plot!(scn, P, attr, [s])
 end
 
 isabstractplot(s) = isa(s, Type) && s <: AbstractPlot
 
-function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attributes, ts::AbstractArray{<:Traces})
+const TraceOrList = Union{AbstractTrace, ScalarList}
+
+function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, attributes::Attributes,
+                                ts::AbstractArray{<:AbstractTraceOrList})
     palette = AbstractPlotting.current_default_theme()[:palette]
+    ts = flatten(ts)
     rks = rankdicts(ts)
-    for trace in Iterators.flatten(ts)
+    for trace in ts
         m = metadata(trace)
-        for (key, val) in keyvalue(trace)
+        for (key, val) in pairs(trace)
             P1 = foldl((a, b) -> isabstractplot(b) ? b : a, m.args, init=P)
             args = Iterators.filter(!isabstractplot, m.args)
             series_attr = merge(attributes, Attributes(m.kwargs))

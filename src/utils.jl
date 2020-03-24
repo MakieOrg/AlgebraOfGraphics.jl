@@ -1,5 +1,3 @@
-const Tup = Union{Tuple, NamedTuple, MixedTuple}
-
 struct DimsSelector{T}
     x::T
 end
@@ -40,9 +38,8 @@ end
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
 
 function rankdicts(ts)
-    trace_list = Iterators.flatten(ts)
-    ps = [key for tr in trace_list for (key, _) in keyvalue(tr)]
-    tables = jointable(ps)
+    piter = map(first, Iterators.flatten(Base.Generator(pairs, ts)))
+    tables = jointable(piter)
     return map(rankdict, tables)
 end
 
@@ -67,4 +64,11 @@ function mapcols(f, t)
 end
 coldict(t) = mapcols(identity, t)
 coldict(t, idxs) = mapcols(v -> view(v, idxs), t)
+
+function keepvectors(t::NamedTuple{names}) where names
+    f, ls = first(t), NamedTuple{tail(names)}(t)
+    ff = f isa AbstractVector ? NamedTuple{(first(names),)}((f,)) : NamedTuple()
+    return merge(ff, keepvectors(ls))
+end
+keepvectors(::NamedTuple{()}) = NamedTuple()
 

@@ -3,6 +3,8 @@ struct MixedTuple{T<:Tuple, NT<:NamedTuple}
     kwargs::NT
 end
 
+const Tup = Union{Tuple, NamedTuple, MixedTuple}
+
 function mixedtuple(args...; kwargs...)
     nt = values(kwargs)
     MixedTuple(args, nt)

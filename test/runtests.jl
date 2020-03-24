@@ -8,22 +8,31 @@ using RDatasets: dataset
     spec = data(:Cyl, :Hwy) |> primary(color = :Year)
     s = [metadata(color = :red, font = 10), data(markersize = :Year)]
     res = mpg |> table |> spec .|> s
-    @test res[1][1].metadata == mixedtuple(color = :red, font = 10)
-    @test res[2][1].metadata == mixedtuple()
+    @test metadata(res[1]) == mixedtuple(color = :red, font = 10)
+    @test metadata(res[2]) == mixedtuple()
+
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
 
-    @test res[1][1].data.args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test res[1][2].data.args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
-    @test res[2][1].data.args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test res[2][2].data.args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    datas = [map(last, pairs(res[i])) for i in 1:2]
+    @test datas[1][1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test datas[1][2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    @test datas[2][1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test datas[2][2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
 
-    @test res[1][1].data.kwargs == NamedTuple()
-    @test res[1][2].data.kwargs == NamedTuple()
-    @test res[2][1].data.kwargs == (; markersize = mpg[idx1, :Year])
-    @test res[2][2].data.kwargs == (; markersize = mpg[idx2, :Year])
+    @test datas[1][1].kwargs == NamedTuple()
+    @test datas[1][2].kwargs == NamedTuple()
+    @test datas[2][1].kwargs == (; markersize = mpg[idx1, :Year])
+    @test datas[2][2].kwargs == (; markersize = mpg[idx2, :Year])
 
-    @test length(res) == 2
+    primaries = [map(first, pairs(res[i])) for i in 1:2]
+    @test primaries[1][1] == (; color = 1999)
+    @test primaries[1][2] == (; color = 2008)
+    @test primaries[2][1] == (; color = 1999)
+    @test primaries[2][2] == (; color = 2008)
+
+    @test length(pairs(res[1])) == 2
+    @test length(pairs(res[2])) == 2
 end
 
 @testset "rankdicts" begin
