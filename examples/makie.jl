@@ -8,20 +8,20 @@ using RDatasets: dataset
 iris = dataset("datasets", "iris")
 spec = data(:SepalLength, :SepalWidth) * primary(color = :Species)
 s = metadata(Scatter, markersize = 10px) + metadata(linear)
-iris |> spec * s |> plot
+table(iris) * spec * s |> plot
 
-iris |> spec * metadata(Wireframe, density) |> plot
+table(iris) * spec * metadata(Wireframe, density) |> plot
 
 x = data([:PetalLength, :PetalWidth])
 y = data([:SepalLength :SepalWidth])
 style = primary(color = dims(1), marker = dims(2))
-s = iris |> x * y * style |> scatter
+s = table(iris) * x * y * style |> scatter
 
 data([rand(10), rand(10)], Ref(rand(10)), color = Ref(rand(100))) * primary(marker = 1:2) |> scatter
-(randn(1000), rand(100)) |> primary(color = 1:2) * metadata(density, linewidth=10) |> plot
+data((randn(1000), rand(100))) * primary(color = 1:2) * metadata(density, linewidth=10) |> plot
 
 # TODO fix stacking and choose edges globally
-(randn(1000), rand(100)) |> primary(color = 1:2) * metadata(histogram(edges = -3:0.1:3)) |> plot
+data((randn(1000), rand(100))) * primary(color = 1:2) * metadata(histogram(edges = -3:0.1:3)) |> plot
 
 using Distributions
 mus = 1:4

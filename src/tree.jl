@@ -1,10 +1,8 @@
-# Combine different `Trace`s in a `Tree` object
-
+# Rooted tree type
 struct Tree{T}
     list::LinkedList{T}
 end
 Tree(s::Tree) = s
-Tree(t::AbstractTrace) = tree(t)
 
 tree(m) = Tree(list(m => list()))
 
@@ -17,57 +15,22 @@ function Base.show(io::IO, s::Tree)
     print(io, "Tree")
 end
 
-function Base.:+(a::Union{AbstractTrace, Tree}, b::Union{AbstractTrace, Tree})
-    a = Tree(a)
-    b = Tree(b)
-    return Tree(cat(a.list, b.list))
-end
+# Join trees by the root
+Base.:+(a::Tree, b::Tree) = Tree(cat(a.list, b.list))
 
-function leafconcat(l1::LinkedList, l2::LinkedList)
-    isempty(l1) && return list()
-    trace, ll = first(l1)
-    t = isempty(ll) ? l2 : leafconcat(ll, l2)
-    return cons(trace => t, leafconcat(tail(l1), l2))
-end
+atleaves(::Nil, l::LinkedList) = l
+atleaves(l::LinkedList, l′::LinkedList) = map(((k, v),) -> k => atleaves(v, l′), l)
 
-function Base.:*(a::Union{AbstractTrace, Tree}, b::Union{AbstractTrace, Tree})
-    a = Tree(a)
-    b = Tree(b)
-    return Tree(leafconcat(a.list, b.list))
-end
+# Attach the second tree on each leaf of the first
+Base.:*(a::Tree, b::Tree) = Tree(atleaves(a.list, b.list))
 
-function applylist(l::LinkedList)
-    l′ = map(l) do (tr, ll)
-        (_ -> tr) => ll
-    end
-    return applylist(l′, nothing)
-end
+applylist(::Nil) = list()
+applylist(tr, ::Nil) = list(tr => list())
+applylist(tr, l::LinkedList) = applylist(map(((k, v),) -> k(tr) => v, l))
+applylist(l::LinkedList) = cat(applylist(first(l)...), applylist(tail(l)))
 
-function applylist(l::LinkedList, x)
-    isempty(l) && return list()
-    trace, ll = first(l)
-    t = isempty(ll) ? list(trace(x)) : applylist(ll, trace(x))
-    return cat(t, applylist(tail(l), x))
-end
+(t::Tree)() = Tree(applylist(t.list))
+(t::Tree)(x::Tree) = (x * t)()
 
-shallowtree(ls::LinkedList) = Tree(map(val -> val => list(), ls))
+outputs(t::Tree) = map(first, t())
 
-(t::Tree)() = shallowtree(applylist(t.list))
-(t::Tree)(x) = shallowtree(applylist(t.list, x))
-
-# ranking
-
-jointable(ts) = jointable(ts, foldl(merge, ts))
-
-function jointable(ts, ::NamedTuple{names}) where names
-    vals = map(names) do name
-        vcat((get(table, name, Union{}[]) for table in ts)...)
-    end
-    NamedTuple{names}(vals)
-end
-
-primarytable(t::AbstractTrace) = fieldarrays(StructArray(p for (p, _) in pairs(t)))
-
-rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
-
-rankdicts(ts) = map(rankdict, jointable(map(primarytable, ts)))

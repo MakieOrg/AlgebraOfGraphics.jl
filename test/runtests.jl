@@ -1,5 +1,5 @@
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: data, metadata, primary, mixedtuple, rankdicts
+using AlgebraOfGraphics: table, data, metadata, primary, mixedtuple, rankdicts
 
 using RDatasets: dataset
 
@@ -7,7 +7,8 @@ using RDatasets: dataset
     mpg = dataset("ggplot2", "mpg")
     spec = data(:Cyl, :Hwy) * primary(color = :Year)
     s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    res = map(first, mpg |> spec * s)
+    tree = table(mpg) * spec * s
+    res = map(first, tree())
     @test metadata(res[1]) == mixedtuple(color = :red, font = 10)
     @test metadata(res[2]) == mixedtuple()
 
@@ -39,7 +40,8 @@ end
     mpg = dataset("ggplot2", "mpg")
     spec = data(:Cyl, :Hwy) * primary(color = :Year)
     s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    res = map(first, mpg |> spec * s)
+    tree = table(mpg) * spec * s
+    res = map(first, tree())
     @test rankdicts(res)[:color][2008] == 2
     @test rankdicts(res)[:color][1999] == 1
 end

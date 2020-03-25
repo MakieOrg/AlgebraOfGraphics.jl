@@ -10,13 +10,12 @@ using Tables: columns, getcolumn, columnnames, istable
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
 using Observables: Observable
-using DataStructures: OrderedDict, LinkedList, list, tail, cons
+using DataStructures: OrderedDict, LinkedList, Nil, list, tail, cons
 using Requires: @require
 
-include("mixedtuple.jl")
-include("trace.jl")
-include("tree.jl")
 include("utils.jl")
+include("tree.jl")
+include("trace.jl")
 
 function __init__()
     @require AbstractPlotting="537997a7-5e4e-5d89-9595-2241ea00577e" begin

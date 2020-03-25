@@ -1,5 +1,7 @@
 abstract type AbstractTrace end
 
+primarytable(t::AbstractTrace) = fieldarrays(StructArray(p for (p, _) in pairs(t)))
+
 # Interface: 
 # key-value iterator (pairs)
 # metadata
@@ -23,6 +25,10 @@ primary(s::Trace)  = s.primary
 data(s::Trace)     = s.data
 metadata(s::Trace) = s.metadata
 
+primary(; kwargs...)         = tree(Trace(primary=values(kwargs)))
+data(args...; kwargs...)     = tree(Trace(data=mixedtuple(args...; kwargs...)))
+metadata(args...; kwargs...) = tree(Trace(metadata=mixedtuple(args...; kwargs...)))
+
 struct DimsSelector{T}
     x::T
 end
@@ -39,14 +45,9 @@ function Base.pairs(s::Trace)
     return wrapif(p .=> d, Pair)
 end
 
-primary(; kwargs...)         = Trace(primary=values(kwargs))
-data(args...; kwargs...)     = Trace(data=mixedtuple(args...; kwargs...))
-metadata(args...; kwargs...) = Trace(metadata=mixedtuple(args...; kwargs...))
-
 function (t::Trace)(s::T) where {T<:AbstractTrace}
     error("No method implemented to call a `Trace` on $T")
 end
-(t::Trace)(s) = t(AbstractTrace(s)::AbstractTrace)
 function (s2::Trace)(s1::Trace) 
     p1, p2 = primary(s1), primary(s2)
     if !isempty(keys(p1) ∩ keys(p2))
@@ -110,9 +111,9 @@ function (s2::Trace)(s1::DataTrace)
     return DataTrace(collect(Iterators.flatten(itr)), merge(metadata(s1), metadata(s2)))
 end
 
-table(x) = DataTrace([(coldict(x), NamedTuple() => mixedtuple())], mixedtuple())
+function table(x)
+    t = coldict(x)
+    dt = DataTrace([(t, NamedTuple() => mixedtuple())], mixedtuple())
+    return tree(dt)
+end
 
-## Default conversions
-
-AbstractTrace(t::AbstractTrace) = t
-AbstractTrace(t) = istable(t) ? table(t) : data(t)
