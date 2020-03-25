@@ -1,6 +1,5 @@
 module AlgebraOfGraphics
 
-using Base.Broadcast: ArrayStyle, Broadcasted
 using StructArrays: uniquesorted,
                     finduniquesorted,
                     fieldarrays,
@@ -10,7 +9,7 @@ using Tables: columns, getcolumn, columnnames, istable
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
 using Observables: Observable
-using DataStructures: OrderedDict, LinkedList, Nil, list, tail, cons
+using DataStructures: OrderedDict, LinkedList, Nil, list, tail
 using Requires: @require
 
 include("utils.jl")
