@@ -4,13 +4,14 @@ const PlotFunc     = AbstractPlotting.PlotFunc
 const AbstractPlot = AbstractPlotting.AbstractPlot
 
 # forcefully remove extra info from the plot call
-function AbstractPlotting.plot!(scn::SceneLike, ::PlotFunc, ::Attributes, tree::Tree)
+function AbstractPlotting.plot!(scn::SceneLike, P::PlotFunc, ::Attributes, tree::Tree)
+    P === Any || error("Only `plot` is supported on a `Tree`")
     palette = AbstractPlotting.current_default_theme()[:palette]
-    speclist = specs(tree, palette)
-    for specdict in speclist
-        for (key, spec) in specdict
-            P = plottype(spec)
-            AbstractPlotting.plot!(scn, P, Attributes(spec.kwargs), spec.args...)
+    serieslist = traces(tree, palette)
+    for series in serieslist
+        for (_, trace) in series
+            P = plottype(trace)
+            AbstractPlotting.plot!(scn, P, Attributes(trace.kwargs), trace.args...)
         end
     end
     return scn

@@ -1,5 +1,5 @@
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: table, data, spec, to_spec, primary, rankdicts
+using AlgebraOfGraphics: table, data, spec, trace, primary, rankdicts
 
 using RDatasets: dataset
 
@@ -9,8 +9,8 @@ using RDatasets: dataset
     s = spec(color = :red, font = 10) + data(markersize = :Year)
     tree = table(mpg) * d * s
     res = map(first, tree())
-    @test spec(res[1]) == to_spec(color = :red, font = 10)
-    @test spec(res[2]) == to_spec()
+    @test spec(res[1]) == trace(color = :red, font = 10)
+    @test spec(res[2]) == trace()
 
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
