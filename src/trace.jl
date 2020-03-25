@@ -40,7 +40,7 @@ function applytheme(scales, grp, rks)
         # let's worry about interactivity later
         scale = to_value(get(scales, key, nothing))
         idx = rks[key][val]
-        d[key] = scale === nothing ? idxs : scale[mod1(idx, length(scale))]
+        d[key] = scale === nothing ? idx : scale[mod1(idx, length(scale))]
     end
     return d
 end

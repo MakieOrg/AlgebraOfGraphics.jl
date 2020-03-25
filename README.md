@@ -4,6 +4,7 @@
 [![codecov.io](http://codecov.io/github/piever/AlgebraOfGraphics.jl/coverage.svg?branch=master)](http://codecov.io/github/piever/AlgebraOfGraphics.jl?branch=master)
 
 Define a "plotting package agnostic" algebra of graphics based on a few simple building blocks that can be combined using `+` and `*`. Highly experimental proof of concept, which may break often.
+The functions `primary`, `data`, and `spec` generate `Tree` objects. These `Tree`s can be combined with `*` (vertical composition), or `+` (horizontal composition). The resulting `Tree` can then be plotted with a package that supports it.
 
 ## Demo
 
@@ -59,9 +60,8 @@ table(mpg) * cols * different_grouping |> plot
 
 ![test](https://user-images.githubusercontent.com/6333339/77187226-0bad4980-6acc-11ea-8676-cbb7ee08843c.png)
 
-## Pipeline
+## Non tabular data
 
-Under the hood, `primary`, `data`, and `spec` generate `Tree` objects. These `Tree`s can be combined with `*` (vertical composition), or `+` (horizontal composition).
 The framework is not specific to tables, but can be used with anything that the plotting package supports.
 
 ```julia
@@ -77,6 +77,24 @@ data(x, y) * primary(color = dims(1), linestyle = dims(2)) * spec(linewidth = 10
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/76711535-e05fde80-6708-11ea-8790-8b20a4a5cf7c.png)
+
+## Layout
+
+Using the MakieLayout package it is possible to create plots where categorical variables inform the layout.
+
+```julia
+using MakieLayout
+using AlgebraOfGraphics: dims, layoutplot
+using StatsMakie: linear
+iris = dataset("datasets", "iris")
+xcols = data([:SepalLength, :SepalWidth])
+ycols = data([:PetalLength :PetalWidth])
+grp = primary(layout_x = dims(1), layout_y = dims(2), color = :Species)
+geom = spec(Scatter, markersize = 10px) + spec(linear, linewidth = 3)
+table(iris) * xcols * ycols * grp * scat |> layoutplot
+```
+
+![scatter](https://user-images.githubusercontent.com/6333339/77554953-a03df000-6eae-11ea-85d1-47a813a4b296.png)
 
 ---
 
