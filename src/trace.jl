@@ -1,33 +1,51 @@
+struct Spec{T}
+    args::Tuple
+    kwargs::NamedTuple
+end
+
+to_spec(args...; kwargs...) = Spec{Any}(args, values(kwargs))
+to_spec(::Type{T}, args...; kwargs...) where {T} = Spec{T}(args, values(kwargs))
+plottype(::Spec{T}) where {T} = T
+
+function Base.merge(t1::Spec{T1}, t2::Spec{T2}) where {T1, T2}
+    T = T2 === Any ? T1 : T2
+    args = (t1.args..., t2.args...)
+    kwargs = merge(t1.kwargs, t2.kwargs)
+    return Spec{T}(args, kwargs)
+end
+
+# Trace
+
 abstract type AbstractTrace end
 
 primarytable(t::AbstractTrace) = fieldarrays(StructArray(p for (p, _) in pairs(t)))
 
 # Interface: 
 # key-value iterator (pairs)
-# metadata
+# trace
 # support (t2::Trace)(t1::MyTrace) (returns a `MyTrace`)
 
-struct Trace{P<:NamedTuple, D<:MixedTuple, M<:MixedTuple} <: AbstractTrace
+struct Trace{P<:NamedTuple, D<:MixedTuple, T} <: AbstractTrace
     primary::P
     data::D
-    metadata::M
+    spec::Spec{T}
 end
 
 function Trace(;
                primary=NamedTuple(),
                data=mixedtuple(),
-               metadata=mixedtuple()
+               spec=to_spec()
               )
-    return Trace(primary, data, metadata)
+    return Trace(primary, data, spec)
 end
 
-primary(s::Trace)  = s.primary
-data(s::Trace)     = s.data
-metadata(s::Trace) = s.metadata
+primary(s::Trace) = s.primary
+data(s::Trace)    = s.data
+spec(s::Trace)    = s.spec
 
-primary(; kwargs...)         = tree(Trace(primary=values(kwargs)))
-data(args...; kwargs...)     = tree(Trace(data=mixedtuple(args...; kwargs...)))
-metadata(args...; kwargs...) = tree(Trace(metadata=mixedtuple(args...; kwargs...)))
+primary(; kwargs...)     = tree(Trace(primary=values(kwargs)))
+data(args...; kwargs...) = tree(Trace(data=mixedtuple(args...; kwargs...)))
+spec(args...; kwargs...) = tree(Trace(spec=to_spec(args...; kwargs...)))
 
 struct DimsSelector{T}
     x::T
@@ -54,7 +72,7 @@ function (s2::Trace)(s1::Trace)
         error("Cannot combine with overlapping primary keys")
     end
     d1, d2 = data(s1), data(s2)
-    m1, m2 = metadata(s1), metadata(s2)
+    m1, m2 = spec(s1), spec(s2)
     p = merge(p1, p2)
     d = merge(d1, d2)
     m = merge(m1, m2)
@@ -65,11 +83,11 @@ function Base.show(io::IO, s::Trace)
     print(io, "Trace {...}")
 end
 
-struct DataTrace{T<:AbstractArray, M<:MixedTuple} <: AbstractTrace
-    list::T
-    metadata::M
+struct DataTrace{L<:AbstractArray, T} <: AbstractTrace
+    list::L
+    spec::Spec{T}
 end
-metadata(t::DataTrace) = t.metadata
+spec(t::DataTrace) = t.spec
 function Base.pairs(t::DataTrace)
     itr = (pairs(Trace(primary=p, data=d)) for (_, (p, d)) in t.list)
     return collect(Iterators.flatten(itr))
@@ -102,18 +120,18 @@ function group(cols, p, d)
 end
 
 function (s2::Trace)(s1::DataTrace)
-    # TODO: add labels to metadata
+    # TODO: add labels to spec
     itr = Base.Generator(s1.list) do (cols, (p, d))
         p2 = extract_column(cols, primary(s2))
         d2 = extract_column(cols, data(s2), true)
         return group(cols, merge(p, p2), merge(d, d2))
     end
-    return DataTrace(collect(Iterators.flatten(itr)), merge(metadata(s1), metadata(s2)))
+    return DataTrace(collect(Iterators.flatten(itr)), merge(spec(s1), spec(s2)))
 end
 
 function table(x)
     t = coldict(x)
-    dt = DataTrace([(t, NamedTuple() => mixedtuple())], mixedtuple())
+    dt = DataTrace([(t, NamedTuple() => mixedtuple())], to_spec())
     return tree(dt)
 end
 

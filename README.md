@@ -10,13 +10,13 @@ Define a "plotting package agnostic" algebra of graphics based on a few simple b
 ```julia
 using RDatasets: dataset
 
-using AlgebraOfGraphics: table, data, primary, metadata
+using AlgebraOfGraphics: table, data, primary, spec
 using AbstractPlotting, GLMakie
 
 mpg = dataset("ggplot2", "mpg");
 cols = data(:Displ, :Hwy);
 grp = primary(color = :Cyl);
-scat = metadata(Scatter, markersize = 10px)
+scat = spec(Scatter, markersize = 10px)
 pipeline = cols * scat
 
 table(mpg) * pipeline |> plot
@@ -36,7 +36,7 @@ Traces can be added together with `+`.
 
 ```julia
 using StatsMakie: linear
-lin = metadata(linear, linewidth = 5)
+lin = spec(linear, linewidth = 5)
 pipenew = cols * (scat + lin)
 table(mpg) * pipenew |> plot
 ```
@@ -61,8 +61,8 @@ table(mpg) * cols * different_grouping |> plot
 
 ## Pipeline
 
-Under the hood, `primary`, `data`, and `metadata` generate callable `Trace` objects. These `Trace`s can be combined in a tree with `*` (vertical composition), or `+` (horizontal composition).
-The framework does not require that the objects listed in `Traces` are columns. They could be anything that the plotting package can deal with.
+Under the hood, `primary`, `data`, and `spec` generate `Tree` objects. These `Tree`s can be combined with `*` (vertical composition), or `+` (horizontal composition).
+The framework is not specific to tables, but can be used with anything that the plotting package supports.
 
 ```julia
 using AlgebraOfGraphics: dims
@@ -73,8 +73,7 @@ y = [sin cos]
 We use broadcasting semantics on `tuple.(x, y)`.
 
 ```julia
-spec = data(x, y) * primary(color = dims(1), linestyle = dims(2))
-plot(spec, linewidth = 10)
+data(x, y) * primary(color = dims(1), linestyle = dims(2)) * spec(linewidth = 10) |> plot
 ```
 
 ![test](https://user-images.githubusercontent.com/6333339/76711535-e05fde80-6708-11ea-8790-8b20a4a5cf7c.png)

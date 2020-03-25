@@ -1,16 +1,16 @@
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: table, data, metadata, primary, mixedtuple, rankdicts
+using AlgebraOfGraphics: table, data, spec, to_spec, primary, rankdicts
 
 using RDatasets: dataset
 
 @testset "lazy spec" begin
     mpg = dataset("ggplot2", "mpg")
-    spec = data(:Cyl, :Hwy) * primary(color = :Year)
-    s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    tree = table(mpg) * spec * s
+    d = data(:Cyl, :Hwy) * primary(color = :Year)
+    s = spec(color = :red, font = 10) + data(markersize = :Year)
+    tree = table(mpg) * d * s
     res = map(first, tree())
-    @test metadata(res[1]) == mixedtuple(color = :red, font = 10)
-    @test metadata(res[2]) == mixedtuple()
+    @test spec(res[1]) == to_spec(color = :red, font = 10)
+    @test spec(res[2]) == to_spec()
 
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
@@ -38,9 +38,9 @@ end
 
 @testset "rankdicts" begin
     mpg = dataset("ggplot2", "mpg")
-    spec = data(:Cyl, :Hwy) * primary(color = :Year)
-    s = metadata(color = :red, font = 10) + data(markersize = :Year)
-    tree = table(mpg) * spec * s
+    d = data(:Cyl, :Hwy) * primary(color = :Year)
+    s = spec(color = :red, font = 10) + data(markersize = :Year)
+    tree = table(mpg) * d * s
     res = map(first, tree())
     @test rankdicts(res)[:color][2008] == 2
     @test rankdicts(res)[:color][1999] == 1
