@@ -1,5 +1,5 @@
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: table, data, spec, trace, primary, rankdicts
+using AlgebraOfGraphics: table, data, spec, trace, primary, rankdicts, positional, keyword
 
 using RDatasets: dataset
 
@@ -16,15 +16,15 @@ using RDatasets: dataset
     idx2 = mpg.Year .== 2008
 
     datas = [map(last, pairs(res[i])) for i in 1:2]
-    @test datas[1][1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test datas[1][2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
-    @test datas[2][1].args == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test datas[2][2].args == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    @test Tuple(positional(datas[1][1])) == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test Tuple(positional(datas[1][2])) == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    @test Tuple(positional(datas[2][1])) == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test Tuple(positional(datas[2][2])) == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
 
-    @test datas[1][1].kwargs == NamedTuple()
-    @test datas[1][2].kwargs == NamedTuple()
-    @test datas[2][1].kwargs == (; markersize = mpg[idx1, :Year])
-    @test datas[2][2].kwargs == (; markersize = mpg[idx2, :Year])
+    @test (; keyword(datas[1][1])...) == NamedTuple()
+    @test (; keyword(datas[1][2])...) == NamedTuple()
+    @test (; keyword(datas[2][1])...) == (; markersize = mpg[idx1, :Year])
+    @test (; keyword(datas[2][2])...) == (; markersize = mpg[idx2, :Year])
 
     primaries = [map(first, pairs(res[i])) for i in 1:2]
     @test primaries[1][1] == (; color = 1999)

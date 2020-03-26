@@ -9,7 +9,7 @@ primarytable(t::AbstractSeries) = fieldarrays(StructArray(p for (p, _) in pairs(
 # trace
 # support (t2::Series)(t1::MySeries) (returns a `MySeries`)
 
-struct Series{P<:NamedTuple, D<:MixedTuple, T} <: AbstractSeries
+struct Series{P<:NamedTuple, D<:NamedTuple, T} <: AbstractSeries
     primary::P
     data::D
     spec::Trace{T}
@@ -17,7 +17,7 @@ end
 
 function Series(;
                primary=NamedTuple(),
-               data=mixedtuple(),
+               data=NamedTuple(),
                spec=trace()
               )
     return Series(primary, data, spec)
@@ -28,7 +28,7 @@ data(s::Series)    = s.data
 spec(s::Series)    = s.spec
 
 primary(; kwargs...)     = tree(Series(primary=values(kwargs)))
-data(args...; kwargs...) = tree(Series(data=mixedtuple(args...; kwargs...)))
+data(args...; kwargs...) = tree(Series(data=namedtuple(args...; kwargs...)))
 spec(args...; kwargs...) = tree(Series(spec=trace(args...; kwargs...)))
 
 struct DimsSelector{T}
@@ -36,7 +36,7 @@ struct DimsSelector{T}
 end
 dims(args...) = DimsSelector(args)
 
-_adjust(x::Tup, shape) = map(t -> _adjust(t, shape), x)
+_adjust(x::NamedTuple, shape) = map(t -> _adjust(t, shape), x)
 _adjust(x, shape) = x
 _adjust(d::DimsSelector, shape) = [_adjust(d, c) for c in CartesianIndices(shape)]
 _adjust(d::DimsSelector, c::CartesianIndex) = c[d.x...]
@@ -85,7 +85,7 @@ function extract_column(t, col::Union{Symbol, Int}, wrap=false)
     v = getcolumn(t, col)
     return wrap ? fill(v) : v
 end
-extract_column(t, c::Tup, wrap=false) = map(x -> extract_column(t, x, wrap), c)
+extract_column(t, c::NamedTuple, wrap=false) = map(x -> extract_column(t, x, wrap), c)
 extract_column(t, c::AbstractArray, wrap=false) = map(x -> extract_column(t, x, false), c)
 extract_column(t, c::DimsSelector, wrap=false) = c
 
@@ -115,7 +115,7 @@ end
 
 function table(x)
     t = coldict(x)
-    dt = DataSeries([(t, NamedTuple() => mixedtuple())], trace())
+    dt = DataSeries([(t, NamedTuple() => NamedTuple())], trace())
     return tree(dt)
 end
 
