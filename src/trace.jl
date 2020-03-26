@@ -27,7 +27,7 @@ function traces(tree::Tree, palette)
         end
         for (primary, data) in pairs(series)
             theme = applytheme(scales, primary, rks)
-            d[primary] = merge(m, trace(data.args...; data.kwargs..., theme...))
+            d[primary] = merge(m, trace(positional(data)...; keyword(data)..., theme...))
         end
         push!(serieslist, d)
     end

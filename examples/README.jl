@@ -70,10 +70,9 @@ using MakieLayout
 using AlgebraOfGraphics: dims, layoutplot
 using StatsMakie: linear
 iris = dataset("datasets", "iris")
-xcols = data([:SepalLength, :SepalWidth])
-ycols = data([:PetalLength :PetalWidth])
+cols = data([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
 grp = primary(layout_x = dims(1), layout_y = dims(2), color = :Species)
 geom = spec(Scatter, markersize = 10px) + spec(linear, linewidth = 3)
-table(iris) * xcols * ycols * grp * scat |> layoutplot
+table(iris) * cols * grp * scat |> layoutplot
 #
 # ![scatter](https://user-images.githubusercontent.com/6333339/77554953-a03df000-6eae-11ea-85d1-47a813a4b296.png)

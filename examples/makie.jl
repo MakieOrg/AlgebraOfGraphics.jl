@@ -12,10 +12,9 @@ table(iris) * d * s |> plot
 
 table(iris) * d * spec(Wireframe, density) |> plot
 
-x = data([:PetalLength, :PetalWidth])
-y = data([:SepalLength :SepalWidth])
+cols = data([:PetalLength, :PetalWidth], [:SepalLength :SepalWidth])
 style = primary(color = dims(1), marker = dims(2))
-s = table(iris) * x * y * style * spec(Scatter) |> plot
+s = table(iris) * cols * style * spec(Scatter) |> plot
 
 data([rand(10), rand(10)], Ref(rand(10)), color = Ref(rand(100))) * primary(marker = 1:2) * spec(Scatter) |> plot
 
