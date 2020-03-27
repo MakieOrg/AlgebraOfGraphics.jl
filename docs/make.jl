@@ -11,3 +11,7 @@ makedocs(
                      "generated/tutorial.md"
                     ]
         )
+
+deploydocs(
+    repo = "github.com/JuliaPlots/AlgebraOfGraphics.jl.git",
+)
