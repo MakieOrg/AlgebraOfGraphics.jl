@@ -1,4 +1,4 @@
-struct DefaultContext{P<:NamedTuple, D<:NamedTuple} <: AbstractRoot
+struct DefaultContext{P<:NamedTuple, D<:NamedTuple} <: AbstractEdge
     primary::P
     data::D
 end
@@ -34,7 +34,7 @@ function Base.show(io::IO, s::DefaultContext)
     print(io, "DefaultContext {...}")
 end
 
-struct DataContext{L<:AbstractArray} <: AbstractRoot
+struct DataContext{L<:AbstractArray} <: AbstractEdge
     list::L
 end
 function Base.pairs(t::DataContext)

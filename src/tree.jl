@@ -1,10 +1,9 @@
-abstract type AbstractTree end
-abstract type AbstractRoot <: AbstractTree end
+abstract type AbstractEdge end
 
-children(s::AbstractRoot) = list(s => list())
+children(s::AbstractEdge) = list(s => nil(AbstractEdge))
 
 # Rooted tree type
-struct Tree{T} <: AbstractTree
+struct Tree{T}
     list::LinkedList{T}
 end
 Tree(s::Tree) = s
@@ -19,25 +18,23 @@ function Base.show(io::IO, s::Tree)
     print(io, "Tree")
 end
 
+const TreeLike = Union{Tree, AbstractEdge}
+
 # Join trees by the root
-Base.:+(a::AbstractTree, b::AbstractTree) = Tree(cat(children(a), children(b)))
+Base.:+(a::TreeLike, b::TreeLike) = Tree(cat(children(a), children(b)))
 
 atleaves(::Nil, l::LinkedList) = l
 atleaves(l::LinkedList, l′::LinkedList) = map(((k, v),) -> k => atleaves(v, l′), l)
 
 # Attach the second tree on each leaf of the first
-Base.:*(a::AbstractTree, b::AbstractTree) = Tree(atleaves(children(a), children(b)))
+Base.:*(a::TreeLike, b::TreeLike) = Tree(atleaves(children(a), children(b)))
 
-applylist(::Nil) = list()
-applylist(tr, ::Nil) = list(tr => list())
+applylist(::Nil) = nil(AbstractEdge)
+applylist(tr, ::Nil) = list(tr => nil(AbstractEdge))
 applylist(tr, l::LinkedList) = applylist(map(((k, v),) -> k(tr) => v, l))
 applylist(l::LinkedList) = cat(applylist(first(l)...), applylist(tail(l)))
 
-@static if VERSION < v"1.3.0"
-    (t::Tree)() = Tree(applylist(children(t)))
-else
-    (t::AbstractTree)() = Tree(applylist(children(t)))
-end
+(t::Tree)() = Tree(applylist(children(t)))
 
 outputs(t::Tree) = map(first, t())
 

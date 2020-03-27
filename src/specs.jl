@@ -1,4 +1,4 @@
-struct Spec{T} <: AbstractRoot
+struct Spec{T} <: AbstractEdge
     args::Tuple
     kwargs::NamedTuple
 end
@@ -46,7 +46,7 @@ function applytheme(scales, grp, rks)
     return d
 end
 
-struct Series{T, S} <: AbstractRoot
+struct Series{T, S} <: AbstractEdge
     spec::Spec{T}
     series::S
 end

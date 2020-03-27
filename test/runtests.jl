@@ -1,5 +1,5 @@
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: table, data, spec, primary, rankdicts, positional, keyword, DataContext
+using AlgebraOfGraphics: table, data, spec, primary, rankdicts, positional, keyword, DataContext, outputs
 
 using RDatasets: dataset
 
@@ -8,7 +8,7 @@ using RDatasets: dataset
     d = data(:Cyl, :Hwy) * primary(color = :Year)
     s = spec(color = :red, font = 10) + data(markersize = :Year)
     tree = table(mpg) * d * s
-    res = map(first, tree())
+    res = outputs(tree)
     @test res[1].spec == spec(color = :red, font = 10)
     @test res[2] isa DataContext
 
@@ -41,7 +41,7 @@ end
     d = data(:Cyl, :Hwy) * primary(color = :Year)
     s = spec(color = :red, font = 10) + data(markersize = :Year)
     tree = table(mpg) * d * s
-    res = map(first, tree())
+    res = outputs(tree)
     @test rankdicts(res)[:color][2008] == 2
     @test rankdicts(res)[:color][1999] == 1
 end
