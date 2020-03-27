@@ -1,6 +1,6 @@
 .DS_Store
 /Manifest.toml
-test/Manifest.toml
+test/coverage/Manifest.toml
 /dev/
 examples/backup.jl
 docs/build
