@@ -1,7 +1,7 @@
 # # Tutorial
 #
 # Define a "plotting package agnostic" algebra of graphics based on a few simple building blocks that can be combined using `+` and `*`. Highly experimental proof of concept, which may break often.
-# The functions `primary`, `data`, and `spec` generate `AbstractEdge` objects. These `AbstractEdge`s can be combined into trees with `*` (vertical composition), or `+` (horizontal composition). The resulting `Tree` can then be plotted with a package that supports it.
+# The functions `primary`, `data`, and `spec` generate `AbstractEdge` objects. These `AbstractEdge`s can be combined into trees with `*` (vertical composition), or `+` (horizontal composition). The resulting `Tree` can then be plotted with a package that supports it (so far Makie and MakieLayout).
 #
 # ## Working with tables
 
