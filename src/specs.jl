@@ -15,6 +15,10 @@ function Base.merge(t1::Spec{T1}, t2::Spec{T2}) where {T1, T2}
     return Spec{T}(args, kwargs)
 end
 
+function Base.:(==)(s1::Spec, s2::Spec)
+    return plottype(s1) === plottype(s2) && s1.args == s2.args && s1.kwargs == s2.kwargs
+end
+
 function specs(tree::Tree, palette)
     ts = outputs(tree)
     rks = rankdicts(ts)
@@ -54,5 +58,6 @@ end
 Base.pairs(s::Series) = pairs(s.series)
 
 (t::Spec)(s) = Series(t, s)
-(t::Spec)(s::Series) = Series(merge(s.spec, t), s)
+(t::Spec)(s::Series) = Series(merge(s.spec, t), s.series)
 
+Base.:(==)(s1::Series, s2::Series) = s1.spec == s2.spec && s1.series == s2.series

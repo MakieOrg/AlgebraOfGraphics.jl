@@ -1,7 +1,26 @@
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: table, data, spec, primary, rankdicts, positional, keyword, DataContext, outputs
+using AlgebraOfGraphics: table,
+                         data,
+                         spec,
+                         specs,
+                         primary,
+                         Series,
+                         rankdicts,
+                         positional,
+                         keyword,
+                         DataContext,
+                         DefaultContext,
+                         dims,
+                         outputs
 
+using DataStructures: OrderedDict
 using RDatasets: dataset
+
+@testset "calling" begin
+    s = data(1:2, ["a", "b"]) |> primary(color = dims(1))
+    exp = DefaultContext((; color = dims(1)), (; Symbol(1) => 1:2, Symbol(2) => ["a", "b"]))
+    @test s == exp
+end
 
 @testset "lazy spec" begin
     mpg = dataset("ggplot2", "mpg")
@@ -44,4 +63,28 @@ end
     res = outputs(tree)
     @test rankdicts(res)[:color][2008] == 2
     @test rankdicts(res)[:color][1999] == 1
+end
+
+@testset "specs" begin
+    palette = Dict(:color => ["red", "blue"])
+    t = (x = [1, 2], y = [10, 20], z = [3, 4], c = ["a", "b"])
+    d = data(:x, :y) * primary(color = :c)
+    s = spec(log) * spec(font = 10) + data(size = :z)
+    ds = table(t) * d
+    tree = ds * s
+    res = specs(tree, palette)
+    @test length(res) == 2
+    dict1 = OrderedDict(
+                        (color = "a",) => spec(log, [1], [10], font = 10, color = "red"),
+                        (color = "b",) => spec(log, [2], [20], font = 10, color = "blue"),
+                       )
+    dict2 = OrderedDict(
+                        (color = "a",) => spec([1], [10], size = [3], color = "red"),
+                        (color = "b",) => spec([2], [20], size = [4], color = "blue"),
+                       )
+    @test res[1][(color = "a",)] == dict1[(color = "a",)]
+    @test res[1][(color = "b",)] == dict1[(color = "b",)]
+    @test res[2][(color = "a",)] == dict2[(color = "a",)]
+    @test res[2][(color = "b",)] == dict2[(color = "b",)]
+    @test map(first, tree())[1] == Series(spec(log, font = 10), first(first(ds())))
 end
