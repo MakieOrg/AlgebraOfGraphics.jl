@@ -104,8 +104,7 @@ end
 
 function Base.pairs(s::SliceContext)
     d = map(s.data) do col
-        dims = filter(t -> t < ndims(col), s.dims)
-        mapslices(v -> [v], col; dims=dims)
+        mapslices(v -> [v], col; dims=s.dims)
     end
     return pairs(DefaultContext(s.primary, d))
 end
