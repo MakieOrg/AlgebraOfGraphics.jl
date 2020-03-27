@@ -1,4 +1,4 @@
-using AbstractPlotting, GLMakie
+using AbstractPlotting, CairoMakie
 using StatsMakie: linear, density, histogram
 
 using AlgebraOfGraphics: data, spec, primary, dims, table
@@ -22,11 +22,3 @@ data((randn(1000), rand(100))) * primary(color = 1:2) * spec(density, linewidth=
 
 # TODO fix stacking and choose edges globally
 data((randn(1000), rand(100))) * primary(color = 1:2) * spec(histogram(edges = -3:0.1:3)) |> plot
-
-using Distributions
-mus = 1:4
-shapes = [6, 10]
-gs = InverseGaussian.(mus, shapes')
-geom = spec(linewidth = 5)
-grp = primary(color = dims(1), linestyle = dims(2))
-data(fill(0..5), gs) * grp * geom |> plot
