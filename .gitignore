@@ -2,3 +2,5 @@
 /Manifest.toml
 /dev/
 examples/backup.jl
+docs/build
+docs/src/generated/*.md
