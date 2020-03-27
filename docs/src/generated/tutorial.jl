@@ -1,7 +1,23 @@
 # # Tutorial
 #
-# Define a "plotting package agnostic" algebra of graphics based on a few simple building blocks that can be combined using `+` and `*`. Highly experimental proof of concept, which may break often.
-# The functions `primary`, `data`, and `spec` generate `AbstractEdge` objects. These `AbstractEdge`s can be combined into trees with `*` (vertical composition), or `+` (horizontal composition). The resulting `Tree` can then be plotted with a package that supports it (so far Makie and MakieLayout).
+# Below are some examples on how to use AlgebraOfGraphics to create plots based on tables
+# or other data formats.
+# The most important functions are `primary`, `data`, and `spec`. They generate
+# `AbstractEdge` objects, whic can be combined into trees with `*` (vertical composition),
+# or `+` (horizontal composition). The resulting `Tree` can then be plotted with a package
+# that supports it (so far Makie and MakieLayout).
+#
+# `data` determines what is the data to be plotted. Its positional arguments correspond to
+# the `x`, `y.` or `z` axes of the plot, whereas the keyword arguments correspond to plot
+# attributes that can vary continuously, such as `color` or `markersize`. `primary`
+# determines the grouping of the data. The data is split according to the variables listed
+# in `primary`, and then styled using a default palette. Finally `spec` can be used to
+# give data-independent specifications about the plot (plotting function or attributes).
+#
+# `data`, `primary`, and `spec` work in various context. In the following we will explore
+# `DataContext`, which is introduced doing `table(df)` for any tabular data structure `df`.
+# In this context, `data` and `primary` accept symbols and integers, which correspond to
+# columns of the table.
 #
 # ## Working with tables
 
@@ -49,7 +65,8 @@ AbstractPlotting.save("semi_grouped.svg", AbstractPlotting.current_scene()); not
 #
 # ## Non tabular data
 #
-# The framework is not specific to tables, but can be used with anything that the plotting package supports.
+# The framework is not specific to tables, but can be used with anything that the plotting
+# package supports.
 
 using AlgebraOfGraphics: dims
 x = [-pi..0, 0..pi]
@@ -72,7 +89,8 @@ AbstractPlotting.save("distributions.svg", AbstractPlotting.current_scene()); no
 #
 # ## Layout
 #
-# Using the MakieLayout package it is possible to create plots where categorical variables inform the layout.
+# Using the MakieLayout package it is possible to create plots where categorical variables
+# inform the layout.
 
 using MakieLayout
 using AlgebraOfGraphics: layoutplot
@@ -87,8 +105,8 @@ AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #
 #
 # ## Slicing context
 #
-# The algebra of graphics logic can be easily extended to novel context.
-# For example, `slice` implements the "slices are series" approach of Plots.
+# The algebra of graphics logic can be easily extended to novel contexts.
+# For example, `slice` implements the "slices are series" approach.
 
 using AlgebraOfGraphics: slice
 s = slice(1) * data(rand(5, 3), rand(5, 3, 2))
