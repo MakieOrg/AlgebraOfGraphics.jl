@@ -11,19 +11,11 @@ notifications:
 git:
   depth: 99999999
 
-## uncomment and modify the following lines to manually install system packages
-#addons:
-#  apt: # apt-get for linux
-#    packages:
-#    - gfortran
-#before_script: # homebrew for mac
-#  - if [ $TRAVIS_OS_NAME = osx ]; then brew install gcc; fi
-
 after_success:
-  # push coverage results to Coveralls
-  - julia -e 'import Pkg; cd(Pkg.dir("AlgebraOfGraphics")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
-  # push coverage results to Codecov
-  - julia -e 'import Pkg; cd(Pkg.dir("AlgebraOfGraphics")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - if [[ $TRAVIS_JULIA_VERSION = 1.4 ]] && [[ $TRAVIS_OS_NAME = linux ]]; then
+      julia --project=test/coverage -e 'using Pkg; Pkg.instantiate();
+          using Coverage; Codecov.submit(Codecov.process_folder())';
+    fi
 
 jobs:
   include:
