@@ -1,33 +1,34 @@
-struct Trace{T}
+struct Spec{T} <: AbstractRoot
     args::Tuple
     kwargs::NamedTuple
 end
 
-trace(args...; kwargs...) = Trace{Any}(args, values(kwargs))
-trace(::Type{T}, args...; kwargs...) where {T} = Trace{T}(args, values(kwargs))
-plottype(::Trace{T}) where {T} = T
+spec(args...; kwargs...) = Spec{Any}(args, values(kwargs))
+spec(::Type{T}, args...; kwargs...) where {T} = Spec{T}(args, values(kwargs))
 
-function Base.merge(t1::Trace{T1}, t2::Trace{T2}) where {T1, T2}
+plottype(::Spec{T}) where {T} = T
+
+function Base.merge(t1::Spec{T1}, t2::Spec{T2}) where {T1, T2}
     T = T2 === Any ? T1 : T2
     args = (t1.args..., t2.args...)
     kwargs = merge(t1.kwargs, t2.kwargs)
-    return Trace{T}(args, kwargs)
+    return Spec{T}(args, kwargs)
 end
 
-function traces(tree::Tree, palette)
+function specs(tree::Tree, palette)
     ts = outputs(tree)
     rks = rankdicts(ts)
-    serieslist = OrderedDict{NamedTuple, Trace}[]
+    serieslist = OrderedDict{NamedTuple, Spec}[]
     for series in ts
-        d = OrderedDict{NamedTuple, Trace}()
-        m = spec(series)
+        d = OrderedDict{NamedTuple, Spec}()
+        m = series isa Series ? series.spec : spec()
         scales = Dict{Symbol, Any}()
         for (key, val) in palette
             scales[key] = get(m.kwargs, key, val)
         end
         for (primary, data) in pairs(series)
             theme = applytheme(scales, primary, rks)
-            d[primary] = merge(m, trace(positional(data)...; keyword(data)..., theme...))
+            d[primary] = merge(m, spec(positional(data)...; keyword(data)..., theme...))
         end
         push!(serieslist, d)
     end
@@ -44,3 +45,14 @@ function applytheme(scales, grp, rks)
     end
     return d
 end
+
+struct Series{T, S} <: AbstractRoot
+    spec::Spec{T}
+    series::S
+end
+
+Base.pairs(s::Series) = pairs(s.series)
+
+(t::Spec)(s) = Series(t, s)
+(t::Spec)(s::Series) = Series(merge(s.spec, t), s)
+

@@ -52,6 +52,8 @@ end
 
 rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
 
+primarytable(t) = fieldarrays(StructArray(p for (p, _) in pairs(t)))
+
 rankdicts(ts) = map(rankdict, jointable(map(primarytable, ts)))
 
 # integer naming utils
