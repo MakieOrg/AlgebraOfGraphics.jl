@@ -41,6 +41,10 @@ function Base.show(io::IO, s::DefaultContext)
     print(io, "DefaultContext {...}")
 end
 
+function Base.:(==)(s1::DefaultContext, s2::DefaultContext)
+    return s1.primary == s2.primary && s1.data == s2.data
+end
+
 # data context: integers and symbols are columns
 struct DataContext{L<:AbstractArray} <: AbstractEdge
     list::L
@@ -54,6 +58,8 @@ end
 function Base.show(io::IO, s::DataContext)
     print(io, "DataContext of length $(length(pairs(s)))")
 end
+
+Base.:(==)(s1::DataContext, s2::DataContext) = s1.list == s2.list
 
 function extract_column(t, col::Union{Symbol, Int}, wrap=false)
     v = getcolumn(t, col)
@@ -107,4 +113,8 @@ function Base.pairs(s::SliceContext)
         mapslices(v -> [v], col; dims=s.dims)
     end
     return pairs(DefaultContext(s.primary, d))
+end
+
+function Base.:(==)(s1::SliceContext, s2::SliceContext)
+    return s1.dims == s2.dims && s1.primary == s2.primary && s1.data == s2.data
 end
