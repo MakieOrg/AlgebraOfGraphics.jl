@@ -1,3 +1,10 @@
+# Interface for a context:
+#
+# `Base.pairs(c::MyContext)` iterates pairs of named tuples
+# `(s2::DefaultContext)(s1::MyContext)` returns a `MyContext`
+
+# default context: use broadcast semantics on a set of arrays
+
 struct DefaultContext{P<:NamedTuple, D<:NamedTuple} <: AbstractEdge
     primary::P
     data::D
@@ -34,9 +41,11 @@ function Base.show(io::IO, s::DefaultContext)
     print(io, "DefaultContext {...}")
 end
 
+# data context: integers and symbols are columns
 struct DataContext{L<:AbstractArray} <: AbstractEdge
     list::L
 end
+
 function Base.pairs(t::DataContext)
     itr = (pairs(DefaultContext(p, d)) for (_, (p, d)) in t.list)
     return collect(Iterators.flatten(itr))
@@ -79,3 +88,23 @@ end
 
 table(x) = DataContext([(coldict(x), NamedTuple() => NamedTuple())])
 
+# slice context: slice across dims
+struct SliceContext{P<:NamedTuple, D<:NamedTuple, N} <: AbstractEdge
+    primary::P
+    data::D
+    dims::NTuple{N, Int}
+end
+slice(args::Int...) = SliceContext(NamedTuple(), NamedTuple(), args)
+
+function (s2::DefaultContext)(s1::SliceContext)
+    p = merge(s1.primary, s2.primary)
+    d = merge(s1.data, s2.data)
+    return SliceContext(p, d, s1.dims)
+end
+
+function Base.pairs(s::SliceContext)
+    d = map(s.data) do col
+        mapslices(v -> [v], col; dims=s.dims)
+    end
+    return pairs(DefaultContext(s.primary, d))
+end

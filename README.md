@@ -95,6 +95,21 @@ table(iris) * cols * grp * geom |> layoutplot
 
 ![scatter](https://user-images.githubusercontent.com/6333339/77751711-1f9e0180-701e-11ea-85f8-608064d0f3dd.png)
 
+## Slicing context
+
+The algebra of graphics logic can be easily extended to novel context.
+For example, `slice` implements the "slices are series" approach of Plots.
+
+```julia
+using MakieLayout
+using AlgebraOfGraphics: slice, primary, data, spec, dims, layoutplot
+s = slice(1) * data(rand(5, 3), rand(5, 3, 2))
+grp = primary(color = dims(2), layout_x = dims(3))
+s * grp * spec(Scatter, markersize = 10px) |> layoutplot
+```
+
+![layout](https://user-images.githubusercontent.com/6333339/77761800-7e6c7680-7030-11ea-992c-0acc22d2d61c.png)
+
 ---
 
 *This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
