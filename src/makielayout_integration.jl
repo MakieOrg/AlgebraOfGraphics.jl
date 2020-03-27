@@ -1,6 +1,6 @@
 function layoutplot!(scene, l, s::Tree)
     palette = AbstractPlotting.current_default_theme()[:palette]
-    serieslist = traces(s, palette)
+    serieslist = specs(s, palette)
     axdict = Dict()
     for series in serieslist
         for (_, trace) in series
