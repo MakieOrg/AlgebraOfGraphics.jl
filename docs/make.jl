@@ -18,4 +18,5 @@ makedocs(
 
 deploydocs(
     repo = "github.com/JuliaPlots/AlgebraOfGraphics.jl.git",
+    push_preview = true
 )
