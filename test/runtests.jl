@@ -76,22 +76,17 @@ end
     tree = ds * s
     res = specs(tree, palette)
     @test length(res) == 2
-    dict1 = OrderedDict(
-                        (color = NamedEntry(:c, "a"),) => spec(log, [1], [10], font = 10, color = "red"),
-                        (color = NamedEntry(:c, "b"),) => spec(log, [2], [20], font = 10, color = "blue"),
-                       )
-    dict2 = OrderedDict(
-                        (color = NamedEntry(:c, "a"),) => spec([1], [10], size = [3], color = "red"),
-                        (color = NamedEntry(:c, "b"),) => spec([2], [20], size = [4], color = "blue"),
-                       )
-    @test res[1][(color = NamedEntry(:c, "a"),)] == dict1[(color = NamedEntry(:c, "a"),)]
-    @test res[1][(color = NamedEntry(:c, "b"),)] == dict1[(color = NamedEntry(:c, "b"),)]
-    @test res[2][(color = NamedEntry(:c, "a"),)] == dict2[(color = NamedEntry(:c, "a"),)]
-    @test res[2][(color = NamedEntry(:c, "b"),)] == dict2[(color = NamedEntry(:c, "b"),)]
 
-    @test res[1][(color = NamedEntry(:c, "a"),)].args[2] isa NamedDimsArray{(:x,)}
-    @test res[1][(color = NamedEntry(:c, "a"),)].args[3] isa NamedDimsArray{(:y,)}
-    @test res[2][(color = NamedEntry(:c, "a"),)].kwargs[:size] isa NamedDimsArray{(:z,)}
+    ns = (; Symbol(1) => :x, Symbol(2) => :y)
+    ns_attr = (; Symbol(1) => :x, Symbol(2) => :y, :size => :z)
+    @test res[1][(color = NamedEntry(:c, "a"),)] ==
+        spec(log, [1], [10], font = 10, color = "red", names = ns)
+    @test res[1][(color = NamedEntry(:c, "b"),)] ==
+        spec(log, [2], [20], font = 10, color = "blue", names = ns)
+    @test res[2][(color = NamedEntry(:c, "a"),)] ==
+        spec([1], [10], size = [3], color = "red", names = ns_attr)
+    @test res[2][(color = NamedEntry(:c, "b"),)] ==
+        spec([2], [20], size = [4], color = "blue", names = ns_attr)
 
     @test map(first, tree())[1] == Series(spec(log, font = 10), first(first(ds())))
 end

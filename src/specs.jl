@@ -39,7 +39,8 @@ function specs(tree::Tree, palette)
         for (primary, data) in pairs(series)
             theme = applytheme(scales, primary, rks)
             names, data = extract_names(data)
-            d[primary] = merge(m, spec(positional(data)...; keyword(data)..., theme...))
+            sp = merge(m, spec(positional(data)...; keyword(data)..., theme...))
+            d[primary] = merge(sp, spec(names=names))
         end
         push!(serieslist, d)
     end
