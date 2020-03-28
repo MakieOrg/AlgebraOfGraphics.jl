@@ -75,6 +75,7 @@ struct NamedEntry{T}
     name::Symbol
     value::T
 end
+NamedEntry(name, value) = NamedEntry(Symbol(name), value)
 
 function Base.isless(n1::NamedEntry, n2::NamedEntry)
     if n1.name != n2.name
@@ -85,7 +86,12 @@ end
 
 Base.:(==)(n1::NamedEntry, n2::NamedEntry) = n1.name == n2.name && n1.value == n2.value
 Base.hash(n::NamedEntry, h::UInt64) = hash((n.name, n.value), hash(NamedEntry, h))
+
 get_name(v::NamedDimsArray) = dimnames(v)[1]
+strip_name(v::NamedDimsArray) = parent(v)
 get_name(v::NamedEntry) = v.name
+strip_name(v::NamedEntry) = v.value
+get_name(v) = Symbol("")
+strip_name(v) = v
 
 Base.string(n::NamedEntry) = string(s.value)

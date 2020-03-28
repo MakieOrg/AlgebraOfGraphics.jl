@@ -1,6 +1,8 @@
 using Documenter, AlgebraOfGraphics, Literate, Glob
 # avoid font caching warning in docs
-using AbstractPlotting, CairoMakie; scatter(rand(10), rand(10))
+using AbstractPlotting, CairoMakie
+CairoMakie.activate!()
+scatter(rand(10), rand(10))
 
 # generate examples
 GENERATED = joinpath(@__DIR__, "src", "generated")
