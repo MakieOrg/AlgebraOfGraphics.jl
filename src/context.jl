@@ -62,7 +62,8 @@ end
 Base.:(==)(s1::DataContext, s2::DataContext) = s1.list == s2.list
 
 function extract_column(t, col::Union{Symbol, Int}, wrap=false)
-    v = getcolumn(t, col)
+    colname = col isa Symbol ? col : columnnames(t)[col]
+    v = NamedDimsArray{(colname,)}(getcolumn(t, col))
     return wrap ? fill(v) : v
 end
 extract_column(t, c::NamedTuple, wrap=false) = map(x -> extract_column(t, x, wrap), c)
@@ -78,7 +79,10 @@ function group(cols, p, d)
         map(finduniquesorted(sa)) do (k, idxs)
             v = map(t -> map(x -> view(x, idxs), t), d)
             subtable = coldict(cols, idxs)
-            (subtable, merge(p, map(fill, k)) => v)
+            namedkey = map(pv, k) do col, el
+                NamedEntry(get_name(col), el)
+            end
+            (subtable, merge(p, map(fill, namedkey)) => v)
         end
     end
 end

@@ -68,3 +68,24 @@ integerlike(x::Integer) = true
 
 positional(ps) = (val for (key, val) in pairs(ps) if integerlike(key))
 keyword(ps) = (key => val for (key, val) in pairs(ps) if !integerlike(key))
+
+# naming utils
+
+struct NamedEntry{T}
+    name::Symbol
+    value::T
+end
+
+function Base.isless(n1::NamedEntry, n2::NamedEntry)
+    if n1.name != n2.name
+        error("Cannot sort named entries with different names")
+    end
+    isless(n1.value, n2.value)
+end
+
+Base.:(==)(n1::NamedEntry, n2::NamedEntry) = n1.name == n2.name && n1.value == n2.value
+Base.hash(n::NamedEntry, h::UInt64) = hash((n.name, n.value), hash(NamedEntry, h))
+get_name(v::NamedDimsArray) = dimnames(v)[1]
+get_name(v::NamedEntry) = v.name
+
+Base.string(n::NamedEntry) = string(s.value)

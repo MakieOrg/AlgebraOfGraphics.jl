@@ -11,9 +11,11 @@ using AlgebraOfGraphics: table,
                          DataContext,
                          DefaultContext,
                          dims,
-                         outputs
+                         outputs,
+                         NamedEntry
 
 using DataStructures: OrderedDict
+using NamedDims
 using RDatasets: dataset
 
 @testset "calling" begin
@@ -46,10 +48,10 @@ end
     @test (; keyword(datas[2][2])...) == (; markersize = mpg[idx2, :Year])
 
     primaries = [map(first, pairs(res[i])) for i in 1:2]
-    @test primaries[1][1] == (; color = 1999)
-    @test primaries[1][2] == (; color = 2008)
-    @test primaries[2][1] == (; color = 1999)
-    @test primaries[2][2] == (; color = 2008)
+    @test primaries[1][1] == (; color = NamedEntry(:Year, 1999))
+    @test primaries[1][2] == (; color = NamedEntry(:Year, 2008))
+    @test primaries[2][1] == (; color = NamedEntry(:Year, 1999))
+    @test primaries[2][2] == (; color = NamedEntry(:Year, 2008))
 
     @test length(pairs(res[1])) == 2
     @test length(pairs(res[2])) == 2
@@ -61,8 +63,8 @@ end
     s = spec(color = :red, font = 10) + data(markersize = :Year)
     tree = table(mpg) * d * s
     res = outputs(tree)
-    @test rankdicts(res)[:color][2008] == 2
-    @test rankdicts(res)[:color][1999] == 1
+    @test rankdicts(res)[:color][NamedEntry(:Year, 2008)] == 2
+    @test rankdicts(res)[:color][NamedEntry(:Year, 1999)] == 1
 end
 
 @testset "specs" begin
@@ -75,16 +77,21 @@ end
     res = specs(tree, palette)
     @test length(res) == 2
     dict1 = OrderedDict(
-                        (color = "a",) => spec(log, [1], [10], font = 10, color = "red"),
-                        (color = "b",) => spec(log, [2], [20], font = 10, color = "blue"),
+                        (color = NamedEntry(:c, "a"),) => spec(log, [1], [10], font = 10, color = "red"),
+                        (color = NamedEntry(:c, "b"),) => spec(log, [2], [20], font = 10, color = "blue"),
                        )
     dict2 = OrderedDict(
-                        (color = "a",) => spec([1], [10], size = [3], color = "red"),
-                        (color = "b",) => spec([2], [20], size = [4], color = "blue"),
+                        (color = NamedEntry(:c, "a"),) => spec([1], [10], size = [3], color = "red"),
+                        (color = NamedEntry(:c, "b"),) => spec([2], [20], size = [4], color = "blue"),
                        )
-    @test res[1][(color = "a",)] == dict1[(color = "a",)]
-    @test res[1][(color = "b",)] == dict1[(color = "b",)]
-    @test res[2][(color = "a",)] == dict2[(color = "a",)]
-    @test res[2][(color = "b",)] == dict2[(color = "b",)]
+    @test res[1][(color = NamedEntry(:c, "a"),)] == dict1[(color = NamedEntry(:c, "a"),)]
+    @test res[1][(color = NamedEntry(:c, "b"),)] == dict1[(color = NamedEntry(:c, "b"),)]
+    @test res[2][(color = NamedEntry(:c, "a"),)] == dict2[(color = NamedEntry(:c, "a"),)]
+    @test res[2][(color = NamedEntry(:c, "b"),)] == dict2[(color = NamedEntry(:c, "b"),)]
+
+    @test res[1][(color = NamedEntry(:c, "a"),)].args[2] isa NamedDimsArray{(:x,)}
+    @test res[1][(color = NamedEntry(:c, "a"),)].args[3] isa NamedDimsArray{(:y,)}
+    @test res[2][(color = NamedEntry(:c, "a"),)].kwargs[:size] isa NamedDimsArray{(:z,)}
+
     @test map(first, tree())[1] == Series(spec(log, font = 10), first(first(ds())))
 end
