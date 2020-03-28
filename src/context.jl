@@ -36,9 +36,6 @@ end
 function (s2::DefaultContext)(s1::DefaultContext)
     return DefaultContext(merge(s1.primary, s2.primary), merge(s1.data, s2.data))
 end
-function (s2::DefaultContext)(s1::Series)
-    return Series(s1.spec, s2(s1.series))
-end
 
 function Base.show(io::IO, s::DefaultContext)
     print(io, "DefaultContext {...}")
