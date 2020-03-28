@@ -82,9 +82,7 @@ version = "1.0.2"
 
 [[CairoMakie]]
 deps = ["AbstractPlotting", "Cairo", "Colors", "FFTW", "FileIO", "FreeType", "GeometryTypes", "LinearAlgebra", "StaticArrays"]
-git-tree-sha1 = "9b13610b4e990dece7ae907c3fede3eb73dfadc3"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaPlots/CairoMakie.jl.git"
+git-tree-sha1 = "e8777519b306470a3edcd3873a7107477eb1f8b0"
 uuid = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 version = "0.1.3"
 
