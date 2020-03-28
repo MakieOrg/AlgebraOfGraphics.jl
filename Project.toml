@@ -6,6 +6,7 @@ version = "0.1.0"
 [deps]
 DataAPI = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+NamedDims = "356022a1-0364-5f58-8944-0da4b18d706f"
 Observables = "510215fc-4207-5dde-b226-833fc4488ee2"
 PooledArrays = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"

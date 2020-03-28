@@ -19,6 +19,12 @@ function Base.:(==)(s1::Spec, s2::Spec)
     return plottype(s1) === plottype(s2) && s1.args == s2.args && s1.kwargs == s2.kwargs
 end
 
+function extract_names(d::NamedTuple)
+    ns = map(get_name, d)
+    vs = map(strip_name, d)
+    return ns, vs
+end
+
 function specs(tree::Tree, palette)
     ts = outputs(tree)
     rks = rankdicts(ts)
@@ -32,7 +38,9 @@ function specs(tree::Tree, palette)
         end
         for (primary, data) in pairs(series)
             theme = applytheme(scales, primary, rks)
-            d[primary] = merge(m, spec(positional(data)...; keyword(data)..., theme...))
+            names, data = extract_names(data)
+            sp = merge(m, spec(positional(data)...; keyword(data)..., theme...))
+            d[primary] = merge(sp, spec(names=names))
         end
         push!(serieslist, d)
     end

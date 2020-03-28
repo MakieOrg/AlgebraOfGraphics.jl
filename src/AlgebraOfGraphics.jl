@@ -9,7 +9,8 @@ using Tables: columns, getcolumn, columnnames, istable
 using PooledArrays: PooledArray, PooledVector
 using DataAPI: refarray, refvalue
 using Observables: Observable, to_value
-using DataStructures: OrderedDict, LinkedList, Nil, nil, list, tail
+using DataStructures: OrderedDict, LinkedList, Nil, list, cons, tail
+using NamedDims: NamedDimsArray, dimnames
 using Requires: @require
 
 include("utils.jl")

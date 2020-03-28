@@ -1,10 +1,10 @@
 abstract type AbstractEdge end
 
-children(s::AbstractEdge) = list(s => nil(AbstractEdge))
+children(s::AbstractEdge) = cons(s => list(), list())
 
 # Rooted tree type
-struct Tree{T}
-    list::LinkedList{T}
+struct Tree
+    list::LinkedList{Any}
 end
 Tree(s::Tree) = s
 children(s::Tree) = s.list
@@ -12,7 +12,7 @@ children(s::Tree) = s.list
 Base.iterate(t::Tree) = iterate(t.list)
 Base.iterate(t::Tree, i) = iterate(t.list, i)
 Base.length(t::Tree) = length(t.list)
-Base.eltype(::Type{Tree{T}}) where {T} = T
+Base.eltype(::Type{Tree}) = Any
 
 function Base.show(io::IO, s::Tree)
     print(io, "Tree")
@@ -29,8 +29,8 @@ atleaves(l::LinkedList, lâ€²::LinkedList) = map(((k, v),) -> k => atleaves(v, lâ
 # Attach the second tree on each leaf of the first
 Base.:*(a::TreeLike, b::TreeLike) = Tree(atleaves(children(a), children(b)))
 
-applylist(::Nil) = nil(AbstractEdge)
-applylist(tr, ::Nil) = list(tr => nil(AbstractEdge))
+applylist(::Nil) = list()
+applylist(tr, ::Nil) = cons(tr => list(), list())
 applylist(tr, l::LinkedList) = applylist(map(((k, v),) -> k(tr) => v, l))
 applylist(l::LinkedList) = cat(applylist(first(l)...), applylist(tail(l)))
 
