@@ -22,3 +22,14 @@ data((randn(1000), rand(100))) * primary(color = 1:2) * spec(density, linewidth=
 
 # TODO fix stacking and choose edges globally
 data((randn(1000), rand(100))) * primary(color = 1:2) * spec(histogram(edges = -3:0.1:3)) |> plot
+
+using AlgebraOfGraphics: dims, primary, data, spec, table, layoutplot
+using AbstractPlotting, GLMakie, MakieLayout
+using RDatasets: dataset
+iris = dataset("datasets", "iris")
+iris.New = rand(Bool, 150)
+d = data([:SepalLength, :SepalWidth], [:PetalLength :PetalLength])
+grp = primary(color = :Species, marker = :New) * primary(layout_x = dims(1), layout_y = dims(2))
+s = spec(Scatter, markersize = 10px)
+table(iris) * d * grp * s |> layoutplot
+
