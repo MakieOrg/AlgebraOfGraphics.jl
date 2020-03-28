@@ -55,7 +55,7 @@ outputs(tree)
 # or even
 
 using AlgebraOfGraphics: spec
-using AbstractPlotting
+using AbstractPlotting, CairoMakie
 tree * spec(Scatter, markersize=1) |> plot
 AbstractPlotting.save("tree.svg", AbstractPlotting.current_scene()); nothing #hide
 
