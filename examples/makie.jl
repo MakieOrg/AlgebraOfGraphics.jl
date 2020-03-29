@@ -29,7 +29,7 @@ using AlgebraOfGraphics: dims, primary, data, spec, table, draw
 using RDatasets: dataset
 iris = dataset("datasets", "iris")
 iris.Rare = rand(Bool, 150)
-d = data([:SepalLength, :SepalWidth], [:PetalLength :PetalLength])
+d = data([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
 grp = primary(layout_x = dims(1), layout_y = dims(2), color = :Species)
 s = primary(marker = :Rare) * spec(Scatter, markersize = 10px) + spec(linear)
 table(iris) * d * grp * s |> draw
