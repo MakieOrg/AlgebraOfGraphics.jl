@@ -94,4 +94,4 @@ strip_name(v::NamedEntry) = v.value
 get_name(v) = Symbol("")
 strip_name(v) = v
 
-Base.string(n::NamedEntry) = string(s.value)
+Base.string(n::NamedEntry) = string(n.value)
