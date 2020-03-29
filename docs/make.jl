@@ -1,7 +1,7 @@
 using Documenter, AlgebraOfGraphics, Literate, Glob
 # avoid font caching warning in docs
-using AbstractPlotting, CairoMakie
-CairoMakie.activate!()
+using AbstractPlotting, GLMakie
+GLMakie.activate!()
 scatter(rand(10), rand(10))
 
 # generate examples

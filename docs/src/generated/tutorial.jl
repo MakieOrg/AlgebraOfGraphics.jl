@@ -22,7 +22,7 @@
 # ## Working with tables
 
 using RDatasets: dataset
-using AbstractPlotting, CairoMakie, MakieLayout
+using AbstractPlotting, GLMakie, MakieLayout
 using AlgebraOfGraphics: table, data, primary, spec, draw
 mpg = dataset("ggplot2", "mpg");
 cols = data(:Displ, :Hwy);
@@ -30,38 +30,38 @@ grp = primary(color = :Cyl);
 scat = spec(Scatter, markersize = 10px)
 pipeline = cols * scat
 table(mpg) * pipeline |> draw
-AbstractPlotting.save("scatter.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("scatter.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](scatter.svg)
+# ![](scatter.png)
 #
 # Now let's simply add `grp` to the pipeline to do the grouping.
 
 table(mpg) * grp * pipeline |> draw
-AbstractPlotting.save("grouped_scatter.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("grouped_scatter.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](grouped_scatter.svg)
+# ![](grouped_scatter.png)
 # Traces can be added together with `+`.
 
 using StatsMakie: linear
 lin = spec(linear, linewidth = 5)
 pipenew = cols * (scat + lin)
 table(mpg) * pipenew |> draw
-AbstractPlotting.save("linear.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("linear.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](linear.svg)
+# ![](linear.png)
 # We can put grouping in the pipeline (we filter to avoid a degenerate group).
 
 table(filter(row -> row.Cyl != 5, mpg)) * grp * pipenew |> draw
-AbstractPlotting.save("grouped_linear.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("grouped_linear.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](grouped_linear.svg)
+# ![](grouped_linear.png)
 # This is a more complex example, where we split the scatter plot,
 # but do the linear regression with all the data.
 different_grouping = grp * scat + lin
 table(mpg) * cols * different_grouping |> draw
-AbstractPlotting.save("semi_grouped.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("semi_grouped.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](semi_grouped.svg)
+# ![](semi_grouped.png)
 #
 # ## Non tabular data
 #
@@ -72,9 +72,9 @@ using AlgebraOfGraphics: dims
 x = [-pi..0, 0..pi]
 y = [sin cos] # We use broadcasting semantics on `tuple.(x, y)`.
 data(x, y) * primary(color = dims(1), linestyle = dims(2)) * spec(linewidth = 10) |> draw
-AbstractPlotting.save("functions.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("functions.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](functions.svg)
+# ![](functions.png)
 
 using Distributions
 mus = 1:4
@@ -83,9 +83,9 @@ gs = InverseGaussian.(mus, shapes')
 geom = spec(linewidth = 5)
 grp = primary(color = dims(1), linestyle = dims(2))
 data(fill(0..5), gs) * grp * geom |> draw
-AbstractPlotting.save("distributions.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("distributions.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](distributions.svg)
+# ![](distributions.png)
 #
 # ## Layout
 #
@@ -95,11 +95,11 @@ AbstractPlotting.save("distributions.svg", AbstractPlotting.current_scene()); no
 iris = dataset("datasets", "iris")
 cols = data([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
 grp = primary(layout_x = dims(1), layout_y = dims(2), color = :Species)
-geom = spec(Scatter, markersize = 0.1) + spec(linear, linewidth = 3)
+geom = spec(Scatter, markersize = 10px) + spec(linear, linewidth = 3)
 table(iris) * cols * grp * geom |> draw
-AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("layout.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](layout.svg)
+# ![](layout.png)
 #
 # ## Slicing context
 #
@@ -110,6 +110,6 @@ using AlgebraOfGraphics: slice
 s = slice(1) * data(rand(50, 3), rand(50, 3, 2))
 grp = primary(color = dims(2), layout_x = dims(3))
 s * grp * spec(Scatter, markersize = 10px) |> draw
-AbstractPlotting.save("arrays.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("arrays.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](arrays.svg)
+# ![](arrays.png)

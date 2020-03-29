@@ -1,8 +1,8 @@
 [deps]
 AbstractPlotting = "537997a7-5e4e-5d89-9595-2241ea00577e"
-CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 Glob = "c27321d9-0574-5035-807b-f59d2c89b15c"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 MakieLayout = "5a521ce4-ebb9-4793-b5b7-b334dfe8393c"

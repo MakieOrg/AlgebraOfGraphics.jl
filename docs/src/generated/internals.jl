@@ -54,20 +54,20 @@ outputs(tree)
 
 # or even
 
-using AbstractPlotting, CairoMakie, MakieLayout
+using AbstractPlotting, GLMakie, MakieLayout
 using AlgebraOfGraphics: spec, draw
 tree * spec(Scatter, markersize=10px) |> draw
-AbstractPlotting.save("tree.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("tree.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](tree.svg)
+# ![](tree.png)
 # One can give different `spec`s to the two datasets, for example a different marker:
 
 ts = table(mpg) * spec(marker=:circle) + table(mpg1) * spec(marker=:xcross)
 tree = ts * data(:Hwy, :Displ) * primary(color=:Cyl)
 tree * spec(Scatter, markersize=10px) |> draw
-AbstractPlotting.save("layoutplot.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("layoutplot.png", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](layoutplot.svg)
+# ![](layoutplot.png)
 # 
 # ## Implementing a new context
 #
