@@ -54,20 +54,17 @@ outputs(tree)
 
 # or even
 
-using AlgebraOfGraphics: spec
-using AbstractPlotting, CairoMakie
-tree * spec(Scatter, markersize=1) |> plot
+using AbstractPlotting, CairoMakie, MakieLayout
+using AlgebraOfGraphics: spec, draw
+tree * spec(Scatter, markersize=10px) |> draw
 AbstractPlotting.save("tree.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](tree.svg)
-# One can give different `spec`s to the two datasets, for example a different position
-# in the layout:
+# One can give different `spec`s to the two datasets, for example a different marker:
 
-using MakieLayout
-using AlgebraOfGraphics: layoutplot
-ts = table(mpg) * spec(layout_x=1) + table(mpg1) * spec(layout_x=2)
+ts = table(mpg) * spec(marker=:circle) + table(mpg1) * spec(marker=:xcross)
 tree = ts * data(:Hwy, :Displ) * primary(color=:Cyl)
-tree * spec(Scatter, markersize=1) |> layoutplot
+tree * spec(Scatter, markersize=10px) |> draw
 AbstractPlotting.save("layoutplot.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](layoutplot.svg)

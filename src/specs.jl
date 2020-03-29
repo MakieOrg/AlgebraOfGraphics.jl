@@ -25,9 +25,9 @@ function extract_names(d::NamedTuple)
     return ns, vs
 end
 
-function specs(tree::Tree, palette)
-    ts = outputs(tree)
-    rks = rankdicts(ts)
+specs(tree::Tree, palette) = specs(outputs(tree), palette)
+
+function specs(ts, palette, rks = rankdicts(ts))
     serieslist = OrderedDict{NamedTuple, Spec}[]
     for series in ts
         d = OrderedDict{NamedTuple, Spec}()
