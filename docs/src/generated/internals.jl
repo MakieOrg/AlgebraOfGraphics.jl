@@ -60,15 +60,7 @@ tree * spec(Scatter, markersize=10px) |> draw
 AbstractPlotting.save("tree.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](tree.svg)
-# One can give different `spec`s to the two datasets, for example a different marker:
-
-ts = table(mpg) * spec(marker=:circle) + table(mpg1) * spec(marker=:xcross)
-tree = ts * data(:Hwy, :Displ) * primary(color=:Cyl)
-tree * spec(Scatter, markersize=10px) |> draw
-AbstractPlotting.save("layoutplot.svg", AbstractPlotting.current_scene()); nothing #hide
-
-# ![](layoutplot.svg)
-# 
+#
 # ## Implementing a new context
 #
 # To implement a new context, one needs to:
