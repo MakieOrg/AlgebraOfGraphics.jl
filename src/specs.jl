@@ -70,6 +70,6 @@ Base.pairs(s::Series) = pairs(s.series)
 
 Base.:(==)(s1::Series, s2::Series) = s1.spec == s2.spec && s1.series == s2.series
 
-function (s2::DefaultContext)(s1::Series)
-    return Series(s1.spec, s2(s1.series))
+function merge_primary_data(s1::Series, pd)
+    return Series(s1.spec, merge_primary_data(s1.series, pd))
 end
