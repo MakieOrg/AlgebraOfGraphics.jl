@@ -1,8 +1,8 @@
 # # Internals
 #
-# AlgebraOfGraphics is based on *contexts*, which can be extended. Each context contains
-# a named tuple `data` (used for `x`, `y` axes or attributes in the plot) and a named
-# tuple `primary` used for grouping.
+# AlgebraOfGraphics is based on *contexts*, which can be extended. Each context is then
+# associated to a named tuple `data` (used for `x`, `y` axes or attributes in the plot)
+# and a named tuple `primary` used for grouping, forming a `ContextualPair`.
 #
 # ## Contexts
 #
@@ -13,11 +13,10 @@
 using RDatasets: dataset
 using AlgebraOfGraphics: table, data, primary
 d = data(:Cyl, :Hwy) |> primary(color = :Year)
-d.primary
 
 # The `primary => data` pairs corresponding to each group can be accessed with `Base.pairs`:
 
-pairs(d.primary)
+pairs(d)
 
 # The `DataContext` is invoked with `table(df)`, where `df` respects the Tables.jl interface.
 # `DefaultContext`s can be merged onto a `DataContext` (column names are replaced by the
@@ -27,7 +26,7 @@ mpg = dataset("ggplot2", "mpg")
 t = table(mpg)
 pairs(t |> d)
 
-# The `SliceContext` is another example. It is inoked with `slice(I::Int...)`, and signals
+# The `SliceContext` is another example. It is invoked with `slice(I::Int...)`, and signals
 # along which dimension on the data to slice to extract series.
 
 using AlgebraOfGraphics: slice, dims
@@ -38,7 +37,7 @@ pairs(slice(1) |> data(x, y) |> primary(color=dims(2), marker=dims(3)))
 
 # ## Combining operations using trees
 #
-# Under the hood, `DefaultContext`, `DataContext`, and `SliceContext` all inherit from
+# Under the hood, all outputs of `primary`, `data`, `table`, and `slice` inherit from
 # (oriented) `AbstractEdge`. `AbstractEdge`s (and more generally `Tree`s) can be combined
 # using `+` (join at the root), or `*` (attach the root of one at the leaf of the other).
 

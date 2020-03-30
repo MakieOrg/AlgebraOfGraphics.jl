@@ -73,3 +73,5 @@ Base.:(==)(s1::Series, s2::Series) = s1.spec == s2.spec && s1.series == s2.serie
 function merge_primary_data(s1::Series, pd)
     return Series(s1.spec, merge_primary_data(s1.series, pd))
 end
+
+function draw end

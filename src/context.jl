@@ -11,11 +11,19 @@ function Base.:(==)(s1::ContextualPair, s2::ContextualPair)
     s1.context == s2.context && s1.primary == s2.primary && s1.data == s2.data
 end
 
+function Base.show(io::IO, c::ContextualPair{C}) where {C}
+    Base.print(io, "ContextualPair of context type $C")
+end
+
 struct ContextualMap{L<:ContextualPair} <: AbstractEdge
     list::Vector{L}
 end
 ContextualMap(c::ContextualMap) = c
 ContextualMap(c::ContextualPair) = ContextualMap([c])
+
+function Base.show(io::IO, c::ContextualMap)
+    Base.print(io, "ContextualMap of length $(length(c.list))")
+end
 
 Base.:(==)(s1::ContextualMap, s2::ContextualMap) = s1.list == s2.list
 
@@ -25,8 +33,29 @@ function merge_primary_data(c::ContextualMap, pd)
 end
 
 function Base.pairs(c::ContextualMap)
-    l = [collect(pairs(cp)) for cp in c.list]
+    l = [vec(collect(pairs(cp))) for cp in c.list]
     return reduce(vcat, l)
+end
+
+# Constructors
+
+function (c::ContextualMap)(d::ContextualMap)
+    list = [ContextualMap(cp(d)).list for cp in c.list]
+    return ContextualMap(reduce(vcat, list))
+end
+
+function (c::ContextualPair{Nothing})(d::ContextualMap)
+    return merge_primary_data(d, c.primary => c.data)
+end
+
+function primary(; kwargs...)
+    cp = ContextualPair(nothing, values(kwargs), NamedTuple())
+    return ContextualMap(cp)
+end
+
+function data(args...; kwargs...)
+    cp = ContextualPair(nothing, NamedTuple(), namedtuple(args...; kwargs...))
+    return ContextualMap(cp)
 end
 
 # Default: broadcast context
@@ -106,30 +135,11 @@ end
 slice(args::Int...) = ContextualMap([ContextualPair(SliceContext(args))])
 
 function Base.pairs(c::ContextualPair{<:SliceContext})
-    d = map(s.data) do col
-        mapslices(v -> [v], col; dims=s.dims)
+    d = map(c.data) do col
+        mapslices(v -> [v], col; dims=c.context.dims)
     end
-    return pairs(ContextualPair(nothing, s.primary, d))
+    return pairs(ContextualPair(nothing, c.primary, d))
 end
 
 Base.:(==)(s1::SliceContext, s2::SliceContext) = s1.dims == s2.dims
 
-# Constructors
-
-function (c::ContextualMap)(d::ContextualMap)
-    list = [ContextualMap(cp(d)).list for cp in c.list]
-    return ContextualMap(reduce(vcat, list))
-end
-
-function (c::ContextualPair{Nothing})(d::ContextualMap)
-    return merge_primary_data(d, c.primary => c.data)
-end
-
-function primary(; kwargs...)
-    cp = ContextualPair(nothing, values(kwargs), NamedTuple())
-    return ContextualMap(cp)
-end
-function data(args...; kwargs...)
-    cp = ContextualPair(nothing, NamedTuple(), namedtuple(args...; kwargs...))
-    return ContextualMap(cp)
-end
