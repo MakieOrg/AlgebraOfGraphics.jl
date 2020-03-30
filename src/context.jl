@@ -1,6 +1,6 @@
 # contextual pair and map
 
-struct ContextualPair{C, P<:NamedTuple, D<:NamedTuple} <: AbstractEdge
+struct ContextualPair{C, P<:NamedTuple, D<:NamedTuple}
     context::C
     primary::P
     data::D
@@ -15,11 +15,12 @@ function Base.show(io::IO, c::ContextualPair{C}) where {C}
     Base.print(io, "ContextualPair of context type $C")
 end
 
-struct ContextualMap{L<:ContextualPair} <: AbstractEdge
+struct ContextualMap{L<:ContextualPair}
     list::Vector{L}
 end
 ContextualMap(c::ContextualMap) = c
 ContextualMap(c::ContextualPair) = ContextualMap([c])
+ContextualMap() = ContextualMap([ContextualPair(nothing, NamedTuple(), NamedTuple())])
 
 function Base.show(io::IO, c::ContextualMap)
     Base.print(io, "ContextualMap of length $(length(c.list))")
@@ -37,15 +38,20 @@ function Base.pairs(c::ContextualMap)
     return reduce(vcat, l)
 end
 
-# Constructors
+# Algebra and constructors
 
-function (c::ContextualMap)(d::ContextualMap)
-    list = [ContextualMap(cp(d)).list for cp in c.list]
-    return ContextualMap(reduce(vcat, list))
+function Base.:+(c1::ContextualMap, c2::ContextualMap)
+    return ContextualMap(vcat(c1.list, c2.list))
 end
 
-function (c::ContextualPair{Nothing})(d::ContextualMap)
-    return merge_primary_data(d, c.primary => c.data)
+function Base.:*(c1::ContextualMap, c2::ContextualMap)
+    l = [ContextualMap(cp1 * cp2).list for cp1 in c1.list for cp2 in c2.list]
+    return ContextualMap(reduce(vcat, l))
+end
+
+# TODO: deal with context more carefully here?
+function Base.:*(c1::ContextualPair, c2::ContextualPair)
+    return merge_primary_data(c1, c2.primary => c2.data)
 end
 
 function primary(; kwargs...)
