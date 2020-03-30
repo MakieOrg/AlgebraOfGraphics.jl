@@ -29,10 +29,10 @@ function create_legend(scene, legdict::AbstractDict)
     MakieLayout.LLegend(scene, plts_list, entries_list, names)
 end
 
-function layoutplot!(scene, layout, s::Tree)
+function layoutplot!(scene, layout, s::Union{SeriesList, ContextualMap})
     palette = AbstractPlotting.current_default_theme()[:palette]
     facetlayout = layout[1, 1] = GridLayout()
-    ts = outputs(s)
+    ts = SeriesList(s)
     rks = rankdicts(ts)
     serieslist = specs(ts, palette, rks)
     Nx, Ny = 1, 1
@@ -80,7 +80,7 @@ function layoutplot!(scene, layout, s::Tree)
     return scene
 end
 
-function layoutplot(s::Tree; kwargs...)
+function layoutplot(s; kwargs...)
     scene, layout = MakieLayout.layoutscene(; kwargs...)
     return layoutplot!(scene, layout, s)
 end

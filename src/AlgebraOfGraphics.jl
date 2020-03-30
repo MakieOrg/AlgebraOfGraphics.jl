@@ -14,9 +14,10 @@ using NamedDims: NamedDimsArray, dimnames
 using Requires: @require
 
 include("utils.jl")
-include("tree.jl")
 include("context.jl")
 include("specs.jl")
+
+function draw end
 
 function __init__()
     @require AbstractPlotting="537997a7-5e4e-5d89-9595-2241ea00577e" begin
