@@ -3,9 +3,9 @@
 # Below are some examples on how to use AlgebraOfGraphics to create plots based on tables
 # or other data formats.
 # The most important functions are `primary`, `data`, and `spec`. They generate
-# `AbstractEdge` objects, whic can be combined into trees with `*` (vertical composition),
-# or `+` (horizontal composition). The resulting `Tree` can then be plotted with a package
-# that supports it (so far MakieLayout).
+# `SeriesList` objects, which can be combined with `*` (merge information),
+# or `+` (add as separate layers). The resulting `SeriesList` can then be plotted with a
+# package that supports it (so far MakieLayout).
 #
 # `data` determines what is the data to be plotted. Its positional arguments correspond to
 # the `x`, `y.` or `z` axes of the plot, whereas the keyword arguments correspond to plot

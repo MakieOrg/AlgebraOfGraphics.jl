@@ -49,6 +49,7 @@ function Base.:*(c1::ContextualMap, c2::ContextualMap)
     return ContextualMap(reduce(vcat, l))
 end
 
+# TODO: deal with context more carefully here?
 function Base.:*(c1::ContextualPair, c2::ContextualPair)
     return merge_primary_data(c1, c2.primary => c2.data)
 end
