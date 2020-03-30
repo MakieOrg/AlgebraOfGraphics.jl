@@ -27,7 +27,6 @@ atleaves(::Nil, l::LinkedList) = l
 atleaves(l::LinkedList, l′::LinkedList) = map(((k, v),) -> k => atleaves(v, l′), l)
 
 # Attach the second tree on each leaf of the first
-# TODO: define product for edges and trees differently, allow recursion
 Base.:*(a::TreeLike, b::TreeLike) = Tree(atleaves(children(a), children(b)))
 
 applylist(::Nil) = list()
