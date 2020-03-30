@@ -1,21 +1,64 @@
-# Interface for a context:
-#
-# `Base.pairs(c::MyContext)` iterates pairs of named tuples
-# `(s2::DefaultContext)(s1::MyContext)` returns a `MyContext`
+# contextual pair and map
 
-# default context: use broadcast semantics on a set of arrays
-
-struct DefaultContext{P<:NamedTuple, D<:NamedTuple} <: AbstractEdge
+struct ContextualPair{C, P<:NamedTuple, D<:NamedTuple} <: AbstractEdge
+    context::C
     primary::P
     data::D
 end
+ContextualPair(context) = ContextualPair(context, NamedTuple(), NamedTuple())
 
-primary(; kwargs...)     = DefaultContext(primary=values(kwargs))
-data(args...; kwargs...) = DefaultContext(data=namedtuple(args...; kwargs...))
-
-function DefaultContext(; primary=NamedTuple(), data=NamedTuple())
-    return DefaultContext(primary, data)
+function Base.:(==)(s1::ContextualPair, s2::ContextualPair)
+    s1.context == s2.context && s1.primary == s2.primary && s1.data == s2.data
 end
+
+function Base.show(io::IO, c::ContextualPair{C}) where {C}
+    Base.print(io, "ContextualPair of context type $C")
+end
+
+struct ContextualMap{L<:ContextualPair} <: AbstractEdge
+    list::Vector{L}
+end
+ContextualMap(c::ContextualMap) = c
+ContextualMap(c::ContextualPair) = ContextualMap([c])
+
+function Base.show(io::IO, c::ContextualMap)
+    Base.print(io, "ContextualMap of length $(length(c.list))")
+end
+
+Base.:(==)(s1::ContextualMap, s2::ContextualMap) = s1.list == s2.list
+
+function merge_primary_data(c::ContextualMap, pd)
+    l = [ContextualMap(merge_primary_data(cp, pd)).list for cp in c.list]
+    return ContextualMap(reduce(vcat, l))
+end
+
+function Base.pairs(c::ContextualMap)
+    l = [vec(collect(pairs(cp))) for cp in c.list]
+    return reduce(vcat, l)
+end
+
+# Constructors
+
+function (c::ContextualMap)(d::ContextualMap)
+    list = [ContextualMap(cp(d)).list for cp in c.list]
+    return ContextualMap(reduce(vcat, list))
+end
+
+function (c::ContextualPair{Nothing})(d::ContextualMap)
+    return merge_primary_data(d, c.primary => c.data)
+end
+
+function primary(; kwargs...)
+    cp = ContextualPair(nothing, values(kwargs), NamedTuple())
+    return ContextualMap(cp)
+end
+
+function data(args...; kwargs...)
+    cp = ContextualPair(nothing, NamedTuple(), namedtuple(args...; kwargs...))
+    return ContextualMap(cp)
+end
+
+# Default: broadcast context
 
 struct DimsSelector{T}
     x::T
@@ -27,39 +70,25 @@ _adjust(x, shape) = x
 _adjust(d::DimsSelector, shape) = [_adjust(d, c) for c in CartesianIndices(shape)]
 _adjust(d::DimsSelector, c::CartesianIndex) = c[d.x...]
 
-function Base.pairs(s::DefaultContext)
+function Base.pairs(s::ContextualPair)
     d = aos(s.data)
     p = aos(_adjust(s.primary, axes(d)))
     return wrapif(p .=> d, Pair)
 end
 
-function (s2::DefaultContext)(s1::DefaultContext)
-    return DefaultContext(merge(s1.primary, s2.primary), merge(s1.data, s2.data))
-end
-
-function Base.show(io::IO, s::DefaultContext)
-    print(io, "DefaultContext {...}")
-end
-
-function Base.:(==)(s1::DefaultContext, s2::DefaultContext)
-    return s1.primary == s2.primary && s1.data == s2.data
+function merge_primary_data(c::ContextualPair, (p, d))
+    return ContextualPair(c.context, merge(c.primary, p), merge(c.data, d))
 end
 
 # data context: integers and symbols are columns
-struct DataContext{L<:AbstractArray} <: AbstractEdge
-    list::L
+
+struct DataContext{T}
+    table::T
 end
 
-function Base.pairs(t::DataContext)
-    itr = (pairs(DefaultContext(p, d)) for (_, (p, d)) in t.list)
-    return collect(Iterators.flatten(itr))
-end
+Base.:(==)(s1::DataContext, s2::DataContext) = s1.table == s2.table
 
-function Base.show(io::IO, s::DataContext)
-    print(io, "DataContext of length $(length(pairs(s)))")
-end
-
-Base.:(==)(s1::DataContext, s2::DataContext) = s1.list == s2.list
+Base.pairs(t::ContextualPair{<:DataContext}) = pairs(ContextualPair(nothing, t.primary, t.data))
 
 function extract_column(t, col::Union{Symbol, Int}, wrap=false)
     colname = col isa Symbol ? col : columnnames(t)[col]
@@ -73,7 +102,7 @@ extract_column(t, c::DimsSelector, wrap=false) = c
 function group(cols, p, d)
     pv = keepvectors(p)
     list = if isempty(pv)
-        [(cols, p => d)]
+        [ContextualPair(DataContext(cols), p, d)]
     else
         sa = StructArray(map(pool, pv))
         map(finduniquesorted(sa)) do (k, idxs)
@@ -82,43 +111,35 @@ function group(cols, p, d)
             namedkey = map(pv, k) do col, el
                 NamedEntry(get_name(col), el)
             end
-            (subtable, merge(p, map(fill, namedkey)) => v)
+            newkey = merge(p, map(fill, namedkey))
+            ContextualPair(DataContext(subtable), newkey, v)
         end
     end
+    return ContextualMap(list)
 end
 
-function (s2::DefaultContext)(s1::DataContext)
-    itr = Base.Generator(s1.list) do (cols, (p, d))
-        p2 = extract_column(cols, s2.primary)
-        d2 = extract_column(cols, s2.data, true)
-        return group(cols, merge(p, p2), merge(d, d2))
-    end
-    return DataContext(collect(Iterators.flatten(itr)))
+function merge_primary_data(s::ContextualPair{<:DataContext}, (primary, data))
+    cols, p, d = s.context.table, s.primary, s.data
+    p2 = extract_column(cols, primary)
+    d2 = extract_column(cols, data, true)
+    return group(cols, merge(p, p2), merge(d, d2))
 end
 
-table(x) = DataContext([(coldict(x), NamedTuple() => NamedTuple())])
+table(x) = ContextualMap([ContextualPair(DataContext(coldict(x)))])
 
 # slice context: slice across dims
-struct SliceContext{P<:NamedTuple, D<:NamedTuple, N} <: AbstractEdge
-    primary::P
-    data::D
+
+struct SliceContext{N}
     dims::NTuple{N, Int}
 end
-slice(args::Int...) = SliceContext(NamedTuple(), NamedTuple(), args)
+slice(args::Int...) = ContextualMap([ContextualPair(SliceContext(args))])
 
-function (s2::DefaultContext)(s1::SliceContext)
-    p = merge(s1.primary, s2.primary)
-    d = merge(s1.data, s2.data)
-    return SliceContext(p, d, s1.dims)
-end
-
-function Base.pairs(s::SliceContext)
-    d = map(s.data) do col
-        mapslices(v -> [v], col; dims=s.dims)
+function Base.pairs(c::ContextualPair{<:SliceContext})
+    d = map(c.data) do col
+        mapslices(v -> [v], col; dims=c.context.dims)
     end
-    return pairs(DefaultContext(s.primary, d))
+    return pairs(ContextualPair(nothing, c.primary, d))
 end
 
-function Base.:(==)(s1::SliceContext, s2::SliceContext)
-    return s1.dims == s2.dims && s1.primary == s2.primary && s1.data == s2.data
-end
+Base.:(==)(s1::SliceContext, s2::SliceContext) = s1.dims == s2.dims
+

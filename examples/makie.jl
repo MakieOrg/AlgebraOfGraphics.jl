@@ -1,4 +1,4 @@
-using AbstractPlotting, CairoMakie
+using AbstractPlotting, GLMakie, MakieLayout
 using StatsMakie: linear, density, histogram
 
 using AlgebraOfGraphics: data, spec, primary, dims, table, draw
@@ -33,4 +33,8 @@ d = data([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
 grp = primary(layout_x = dims(1), layout_y = dims(2), color = :Species)
 s = primary(marker = :Rare) * spec(Scatter, markersize = 10px) + spec(linear)
 table(iris) * d * grp * s |> draw
+
+using AlgebraOfGraphics: slice
+
+slice(1) * data(rand(5, 3, 2), rand(5, 3)) * primary(color=dims(2)) * spec(Scatter) |> draw
 

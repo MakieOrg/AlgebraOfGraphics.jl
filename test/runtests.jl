@@ -3,16 +3,17 @@ using AlgebraOfGraphics: table,
                          data,
                          spec,
                          specs,
+                         slice,
                          primary,
                          Series,
                          rankdicts,
                          positional,
                          keyword,
-                         DataContext,
-                         DefaultContext,
                          dims,
                          outputs,
-                         NamedEntry
+                         NamedEntry,
+                         ContextualPair,
+                         ContextualMap
 
 using DataStructures: OrderedDict
 using NamedDims
@@ -20,7 +21,12 @@ using RDatasets: dataset
 
 @testset "calling" begin
     s = data(1:2, ["a", "b"]) |> primary(color = dims(1))
-    exp = DefaultContext((; color = dims(1)), (; Symbol(1) => 1:2, Symbol(2) => ["a", "b"]))
+    exp = ContextualMap(ContextualPair(
+                                       nothing,
+                                       (; color = dims(1)),
+                                       (; Symbol(1) => 1:2, Symbol(2) => ["a", "b"])
+                                      )
+                       )
     @test s == exp
 end
 
@@ -31,7 +37,6 @@ end
     tree = table(mpg) * d * s
     res = outputs(tree)
     @test res[1].spec == spec(color = :red, font = 10)
-    @test res[2] isa DataContext
 
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
@@ -55,6 +60,19 @@ end
 
     @test length(pairs(res[1])) == 2
     @test length(pairs(res[2])) == 2
+
+    x = rand(5, 3, 2)
+    y = rand(5, 3)
+    s = slice(1) * data(x, y) * primary(color = dims(2)) 
+
+    @test length(outputs(s)) == 1
+    res = pairs(outputs(s)[1])
+    for i = 1:6
+        @test first(res[i]) == (; color = mod1(i, 3))
+        xsl = x[:, mod1(i, 3), (i > 3) + 1]
+        ysl = y[:, mod1(i, 3)]
+        @test last(res[i]) == (; Symbol(1) => xsl, Symbol(2) => ysl)
+    end
 end
 
 @testset "rankdicts" begin
