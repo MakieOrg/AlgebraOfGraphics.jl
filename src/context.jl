@@ -116,8 +116,20 @@ Base.:(==)(s1::SliceContext, s2::SliceContext) = s1.dims == s2.dims
 
 # Constructors
 
-callabletree(pd::Pair) = trivialtree(x -> merge_primary_data(x, pd))
-trivialtree(f) = Tree(cons(f => list(), list()))
+function (c::ContextualMap)(d::ContextualMap)
+    list = [ContextualMap(cp(d)).list for cp in c.list]
+    return ContextualMap(reduce(vcat, list))
+end
 
-primary(; kwargs...) = callabletree(values(kwargs) => NamedTuple())
-data(args...; kwargs...) = callabletree(NamedTuple() => namedtuple(args...; kwargs...))
+function (c::ContextualPair{Nothing})(d::ContextualMap)
+    return merge_primary_data(d, c.primary => c.data)
+end
+
+function primary(; kwargs...)
+    cp = ContextualPair(nothing, values(kwargs), NamedTuple())
+    return ContextualMap(cp)
+end
+function data(args...; kwargs...)
+    cp = ContextualPair(nothing, NamedTuple(), namedtuple(args...; kwargs...))
+    return ContextualMap(cp)
+end

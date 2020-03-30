@@ -8,11 +8,11 @@ using AlgebraOfGraphics: table,
                          rankdicts,
                          positional,
                          keyword,
-                         DataContext,
-                         DefaultContext,
                          dims,
                          outputs,
-                         NamedEntry
+                         NamedEntry,
+                         ContextualPair,
+                         ContextualMap
 
 using DataStructures: OrderedDict
 using NamedDims
@@ -20,7 +20,12 @@ using RDatasets: dataset
 
 @testset "calling" begin
     s = data(1:2, ["a", "b"]) |> primary(color = dims(1))
-    exp = DefaultContext((; color = dims(1)), (; Symbol(1) => 1:2, Symbol(2) => ["a", "b"]))
+    exp = ContextualMap(ContextualPair(
+                                       nothing,
+                                       (; color = dims(1)),
+                                       (; Symbol(1) => 1:2, Symbol(2) => ["a", "b"])
+                                      )
+                       )
     @test s == exp
 end
 
@@ -31,7 +36,6 @@ end
     tree = table(mpg) * d * s
     res = outputs(tree)
     @test res[1].spec == spec(color = :red, font = 10)
-    @test res[2] isa DataContext
 
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
