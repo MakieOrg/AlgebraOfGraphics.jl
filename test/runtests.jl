@@ -56,19 +56,20 @@ end
     @test primaries[2][1] == (; color = NamedEntry(:Year, 1999))
     @test primaries[2][2] == (; color = NamedEntry(:Year, 2008))
 
-    @test length(pairs(last(res[1]))) == 2
-    @test length(pairs(last(res[2]))) == 2
+    @test length(collect(pairs(last(res[1])))) == 2
+    @test length(collect(pairs(last(res[2])))) == 2
 
     x = rand(5, 3, 2)
     y = rand(5, 3)
     s = dims(1) * data(x, y) * primary(color = dims(2)) 
 
     res = pairs(s)
-    for i = 1:6
-        @test first(res[i]) == (; color = mod1(i, 3))
+    for (i, r) in enumerate(res)
+        primary, data = r
+        @test primary == (; color = mod1(i, 3))
         xsl = x[:, mod1(i, 3), (i > 3) + 1]
         ysl = y[:, mod1(i, 3)]
-        @test last(res[i]) == (; Symbol(1) => xsl, Symbol(2) => ysl)
+        @test data == (; Symbol(1) => xsl, Symbol(2) => ysl)
     end
 end
 

@@ -37,15 +37,7 @@ end
 
 Base.:(==)(s1::ContextualMap, s2::ContextualMap) = entries(s1) == entries(s2)
 
-function merge_primary_data(c::ContextualMap, pd)
-    l = [entries(merge_primary_data(cp, pd)) for cp in entries(c)]
-    return ContextualMap(reduce(vcat, l))
-end
-
-function Base.pairs(c::ContextualMap)
-    l = [vec(collect(pairs(cp))) for cp in entries(c)]
-    return reduce(vcat, l)
-end
+Base.pairs(c::ContextualMap) = Iterators.flatten(pairs(cp) for cp in entries(c))
 
 # Algebra and constructors
 
@@ -72,13 +64,13 @@ adjust(x, d) = x
 
 function aos(d::NamedTuple{names}) where names
     v = broadcast((args...) -> NamedTuple{names}(args), d...)
-    return v isa NamedTuple ? fill(v) : v
+    return v isa NamedTuple ? [v] : v
 end
 
 function Base.pairs(s::ContextualPair)
     d = aos(s.data)
     p = aos(map(v -> adjust(v, d), s.primary))
-    return Broadcast.broadcastable(p .=> d)
+    return p .=> d
 end
 
 function merge_primary_data(c::ContextualPair, (p, d))
