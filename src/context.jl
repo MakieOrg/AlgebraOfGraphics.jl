@@ -72,7 +72,7 @@ adjust(x, d) = x
 
 function aos(d::NamedTuple{names}) where names
     v = broadcast((args...) -> NamedTuple{names}(args), d...)
-    return v isa AbstractArray ? v : fill(v)
+    return v isa NamedTuple ? fill(v) : v
 end
 
 function Base.pairs(s::ContextualPair)
