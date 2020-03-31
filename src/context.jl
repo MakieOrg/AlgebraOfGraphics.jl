@@ -73,7 +73,7 @@ struct DimsSelector{T}
 end
 dims(args...) = DimsSelector(args)
 
-adjust(x::DimsSelector, d) = [c[d.x...] for c in CartesianIndices(d)]
+adjust(ds::DimsSelector, d) = [c[ds.x...] for c in CartesianIndices(d)]
 
 function aos(d::NamedTuple{names}) where names
     v = broadcast((args...) -> NamedTuple{names}(args), d...)
