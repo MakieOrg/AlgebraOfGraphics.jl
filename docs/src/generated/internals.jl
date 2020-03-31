@@ -25,18 +25,18 @@ mpg = dataset("ggplot2", "mpg")
 t = table(mpg)
 pairs(t * d)
 
-# The `SliceContext` is another example. It is invoked with `slice(I::Int...)`, and signals
-# along which dimension on the data to slice to extract series.
+# The slicing context is another example. It is invoked with `dims(I::Int...)`, and signals
+# along which dimension on the data to dims to extract series.
 
-using AlgebraOfGraphics: slice, dims
-ctx = slice(1)
+using AlgebraOfGraphics: dims
+ctx = dims(1)
 x = rand(5, 3, 2)
 y = rand(5, 3)
-pairs(slice(1) * data(x, y) * primary(color=dims(2), marker=dims(3)))
+pairs(dims(1) * data(x, y) * primary(color=dims(2), marker=dims(3)))
 
 # ## Combining operations using trees
 #
-# All outputs of `primary`, `data`, `table`, and `slice` inherit can be combined using `+`
+# All outputs of `primary`, `data`, `table`, and `dims` inherit can be combined using `+`
 # (adding a new layer), or `*` (merge information in existing layer).
 
 using AbstractPlotting, CairoMakie, MakieLayout

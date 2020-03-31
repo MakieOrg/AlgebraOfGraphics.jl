@@ -3,8 +3,8 @@
 # Below are some examples on how to use AlgebraOfGraphics to create plots based on tables
 # or other data formats.
 # The most important functions are `primary`, `data`, and `spec`. They generate
-# `SeriesList` objects, which can be combined with `*` (merge information),
-# or `+` (add as separate layers). The resulting `SeriesList` can then be plotted with a
+# `Traces` objects, which can be combined with `*` (merge information),
+# or `+` (add as separate layers). The resulting `Traces` can then be plotted with a
 # package that supports it (so far MakieLayout).
 #
 # `data` determines what is the data to be plotted. Its positional arguments correspond to
@@ -104,10 +104,9 @@ AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #
 # ## Slicing context
 #
 # The algebra of graphics logic can be easily extended to novel contexts.
-# For example, `slice` implements the "slices are series" approach.
+# For example, `dims` implements the "slices are series" approach.
 
-using AlgebraOfGraphics: slice
-s = slice(1) * data(rand(50, 3), rand(50, 3, 2))
+s = dims(1) * data(rand(50, 3), rand(50, 3, 2))
 grp = primary(color = dims(2), layout_x = dims(3))
 s * grp * spec(Scatter, markersize = 10px) |> draw
 AbstractPlotting.save("arrays.svg", AbstractPlotting.current_scene()); nothing #hide
