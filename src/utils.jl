@@ -1,6 +1,6 @@
 # PooledArrays utils
 
-function pool(v)
+function pool(v::AbstractVector)
     s = refarray(v)
     pv = PooledArray(s)
     map(pv) do el
@@ -13,16 +13,6 @@ pool(v::PooledVector) = v
 pool(v::AbstractVector{<:Integer}) = v
 
 # tabular utils
-
-wrapif(v::T, ::Type{T}) where {T} = fill(v)
-wrapif(v, ::Type) = v
-
-addnames(::NamedTuple{names}, args...) where {names} = NamedTuple{names}(args)
-
-function aos(n::NamedTuple)
-    res = addnames.(Ref(n), n...)
-    return wrapif(res, NamedTuple)
-end
 
 function mapcols(f, t)
     cols = columns(t)
@@ -66,6 +56,7 @@ end
 integerlike(x::Symbol) = tryparse(Int, String(x)) !== nothing
 integerlike(x::Integer) = true
 
+# TODO: keep order from parsed symbols
 positional(ps) = (val for (key, val) in pairs(ps) if integerlike(key))
 keyword(ps) = (key => val for (key, val) in pairs(ps) if !integerlike(key))
 

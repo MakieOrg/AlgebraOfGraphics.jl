@@ -66,20 +66,24 @@ end
 
 # Default: broadcast context
 
+adjust(x, d) = x
+
 struct DimsSelector{T}
     x::T
 end
 dims(args...) = DimsSelector(args)
 
-_adjust(x::NamedTuple, shape) = map(t -> _adjust(t, shape), x)
-_adjust(x, shape) = x
-_adjust(d::DimsSelector, shape) = [_adjust(d, c) for c in CartesianIndices(shape)]
-_adjust(d::DimsSelector, c::CartesianIndex) = c[d.x...]
+adjust(x::DimsSelector, d) = [c[d.x...] for c in CartesianIndices(d)]
+
+function aos(d::NamedTuple{names}) where names
+    v = broadcast((args...) -> NamedTuple{names}(args), d...)
+    return v isa AbstractArray ? v : fill(v)
+end
 
 function Base.pairs(s::ContextualPair)
     d = aos(s.data)
-    p = aos(_adjust(s.primary, axes(d)))
-    return wrapif(p .=> d, Pair)
+    p = aos(map(v -> adjust(v, d), s.primary))
+    return Broadcast.broadcastable(p .=> d)
 end
 
 function merge_primary_data(c::ContextualPair, (p, d))

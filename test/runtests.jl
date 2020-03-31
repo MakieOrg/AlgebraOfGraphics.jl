@@ -19,7 +19,7 @@ using DataStructures: OrderedDict
 using NamedDims
 using RDatasets: dataset
 
-@testset "calling" begin
+@testset "product" begin
     s = data(1:2, ["a", "b"]) * primary(color = dims(1))
     exp = ContextualMap(ContextualPair(
                                        nothing,
