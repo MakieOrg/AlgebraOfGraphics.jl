@@ -8,7 +8,7 @@
 # ## Contexts
 #
 # In the default context, all variables in `data` are broadcasted to a common shape, and
-# each entry correspond to a separate trace. The syntax `dims` exists to allow setting 
+# each entry corresponds to a separate trace. The syntax `dims` exists to allow setting 
 # `primary` variables that only vary with one of the dimensions.
 # The `primary => data` pairs corresponding to each group can be accessed with `Base.pairs`:
 

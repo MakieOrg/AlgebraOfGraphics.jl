@@ -1,14 +1,13 @@
 # # Tutorial
 #
-# Below are some examples on how to use AlgebraOfGraphics to create plots based on tables
-# or other data formats.
-# The most important functions are `primary`, `data`, and `spec`. They generate
-# `Traces` objects, which can be combined with `*` (merge information),
-# or `+` (add as separate layers). The resulting `Traces` can then be plotted with a
-# package that supports it (so far MakieLayout).
+# Here we will see what are the basic building blocks of AlgebraOfGraphics, and how to
+# combine them to create complex plots based on tables or other data formats.
 #
+# ## Basic building blocks
+#
+# The most important functions are `primary`, `data`, and `spec`.
 # `data` determines what is the data to be plotted. Its positional arguments correspond to
-# the `x`, `y.` or `z` axes of the plot, whereas the keyword arguments correspond to plot
+# the `x`, `y` or `z` axes of the plot, whereas the keyword arguments correspond to plot
 # attributes that can vary continuously, such as `color` or `markersize`. `primary`
 # determines the grouping of the data. The data is split according to the variables listed
 # in `primary`, and then styled using a default palette. Finally `spec` can be used to
@@ -18,6 +17,21 @@
 # `DataContext`, which is introduced doing `table(df)` for any tabular data structure `df`.
 # In this context, `data` and `primary` accept symbols and integers, which correspond to
 # columns of the table.
+#
+# ## Operations
+#
+# The outputs of `data`, `primary`, `spec`, and `table` can be combined with `+` or `*`,
+# to generate a `Layers` object, which can then be plotted with a package that supports it
+# (so far MakieLayout).
+#
+# The operation `+` is used to create separate layer. `a + b` has as many layers as `la + lb`,
+# where `la` and `lb` are the number of layers in `a` and `b` respectively.
+#
+# The operation `a * b` create `la * lb` layers, where `la` and `lb` are the number of layers
+# in `a` and `b` respectively. Each layer of `a * b` contains the combined information of
+# the corresponding layer in `a` and the corresponding layer in `b`. In simple cases,
+# however, both `a` and `b` will only have one layer, and `a * b` simply combines the
+# information.
 #
 # ## Working with tables
 
@@ -43,7 +57,7 @@ AbstractPlotting.save("grouped_scatter.svg", AbstractPlotting.current_scene()); 
 # Traces can be added together with `+`.
 
 using StatsMakie: linear
-lin = spec(linear, linewidth = 5)
+lin = spec(linear, linewidth = 3)
 pipenew = cols * (scat + lin)
 table(mpg) * pipenew |> draw
 AbstractPlotting.save("linear.svg", AbstractPlotting.current_scene()); nothing #hide
@@ -71,7 +85,7 @@ AbstractPlotting.save("semi_grouped.svg", AbstractPlotting.current_scene()); not
 using AlgebraOfGraphics: dims
 x = [-pi..0, 0..pi]
 y = [sin cos] # We use broadcasting semantics on `tuple.(x, y)`.
-data(x, y) * primary(color = dims(1), linestyle = dims(2)) * spec(linewidth = 10) |> draw
+data(x, y) * primary(color = dims(1), linestyle = dims(2)) * spec(linewidth = 3) |> draw
 AbstractPlotting.save("functions.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](functions.svg)
@@ -80,7 +94,7 @@ using Distributions
 mus = 1:4
 shapes = [6, 10]
 gs = InverseGaussian.(mus, shapes')
-geom = spec(linewidth = 5)
+geom = spec(linewidth = 3)
 grp = primary(color = dims(1), linestyle = dims(2))
 data(fill(0..5), gs) * grp * geom |> draw
 AbstractPlotting.save("distributions.svg", AbstractPlotting.current_scene()); nothing #hide

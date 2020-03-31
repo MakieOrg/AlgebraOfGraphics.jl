@@ -24,31 +24,31 @@ function Base.:(==)(s1::Spec, s2::Spec)
     return plottype(s1) === plottype(s2) && s1.args == s2.args && s1.kwargs == s2.kwargs
 end
 
-struct Traces <: AbstractGraphical
-    traces::Vector{Pair{Spec, ContextualMap}}
+struct Layers <: AbstractGraphical
+    layers::Vector{Pair{Spec, ContextualMap}}
 end
-Traces(s::GraphicalOrContextual) = Traces(traces(s))
+Layers(s::GraphicalOrContextual) = Layers(layers(s))
 
-traces(s::Traces)             = s.traces
-traces(s::Spec)               = Pair{Spec, ContextualMap}[s => ContextualMap()]
-traces(s::AbstractContextual) = Pair{Spec, ContextualMap}[Spec() => ContextualMap(s)]
+layers(s::Layers)             = s.layers
+layers(s::Spec)               = Pair{Spec, ContextualMap}[s => ContextualMap()]
+layers(s::AbstractContextual) = Pair{Spec, ContextualMap}[Spec() => ContextualMap(s)]
 
-Base.:(==)(s1::Traces, s2::Traces) = traces(s1) == traces(s2)
+Base.:(==)(s1::Layers, s2::Layers) = layers(s1) == layers(s2)
 
 function Base.:*(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
-    l1, l2 = traces(s1), traces(s2)
+    l1, l2 = layers(s1), layers(s2)
     v = Pair{Spec, ContextualMap}[]
     for el1 in l1
         for el2 in l2
             push!(v, merge(first(el1), first(el2)) => last(el1) * last(el2))
         end
     end
-    return Traces(v)
+    return Layers(v)
 end
 
 function Base.:+(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
-    l1, l2 = traces(s1), traces(s2)
-    return Traces(vcat(l1, l2))
+    l1, l2 = layers(s1), layers(s2)
+    return Layers(vcat(l1, l2))
 end
 
 # plotting tools
@@ -68,7 +68,7 @@ each `key` used as primary (e.g., `color`, `marker`, `linestyle`).
 """
 function specs(ts::GraphicalOrContextual, palette, rks = rankdicts(ts))
     serieslist = OrderedDict{NamedTuple, Spec}[]
-    for (m, ctxmap) in traces(ts)
+    for (m, ctxmap) in layers(ts)
         d = OrderedDict{NamedTuple, Spec}()
         scales = Dict{Symbol, Any}()
         for (key, val) in palette
@@ -96,4 +96,4 @@ function applytheme(scales, grp, rks)
     return d
 end
 
-rankdicts(ts::GraphicalOrContextual) = rankdicts(map(last, traces(ts)))
+rankdicts(ts::GraphicalOrContextual) = rankdicts(map(last, layers(ts)))

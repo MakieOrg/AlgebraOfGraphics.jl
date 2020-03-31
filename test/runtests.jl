@@ -4,7 +4,7 @@ using AlgebraOfGraphics: table,
                          Spec,
                          spec,
                          specs,
-                         traces,
+                         layers,
                          primary,
                          rankdicts,
                          positional,
@@ -33,7 +33,7 @@ end
     d = data(:Cyl, :Hwy) * primary(color = :Year)
     s = spec(color = :red, font = 10) + data(markersize = :Year)
     sl = table(mpg) * d * s
-    res = traces(sl)
+    res = layers(sl)
     @test first(res[1]) == Spec{Any}((), (color = :red, font = 10))
 
     idx1 = mpg.Year .== 1999
@@ -102,5 +102,5 @@ end
     @test res[2][(color = NamedEntry(:c, "b"),)] ==
         Spec{Any}(([2], [20]), (size = [4], color = "blue", names = ns_attr))
 
-    @test traces(sl)[1] == (Spec{Any}((log,), (; font = 10)) => ds)
+    @test layers(sl)[1] == (Spec{Any}((log,), (; font = 10)) => ds)
 end
