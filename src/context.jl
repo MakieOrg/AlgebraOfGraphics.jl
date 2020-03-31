@@ -1,6 +1,12 @@
+# abstract type architecture
+
+abstract type AbstractContextual end
+
+abstract type AbstractContext <: AbstractContextual end
+
 # contextual pair and map
 
-struct ContextualPair{C, P<:NamedTuple, D<:NamedTuple}
+struct ContextualPair{C, P<:NamedTuple, D<:NamedTuple} <: AbstractContextual
     context::C
     primary::P
     data::D
@@ -15,37 +21,32 @@ function Base.show(io::IO, c::ContextualPair{C}) where {C}
     Base.print(io, "ContextualPair of context type $C")
 end
 
-struct ContextualMap{L<:ContextualPair}
-    list::Vector{L}
+struct ContextualMap{L<:ContextualPair} <: AbstractContextual
+    entries::Vector{L}
 end
-ContextualMap(c::ContextualMap) = c
-ContextualMap(c::ContextualPair) = ContextualMap([c])
-ContextualMap() = ContextualMap([ContextualPair(nothing, NamedTuple(), NamedTuple())])
+ContextualMap() = ContextualMap(ContextualPair(nothing))
+ContextualMap(c::AbstractContextual) = ContextualMap(entries(c))
+
+entries(c::ContextualMap)   = c.entries
+entries(c::ContextualPair)  = [c]
+entries(c::AbstractContext) = entries(ContextualPair(c))
 
 function Base.show(io::IO, c::ContextualMap)
-    Base.print(io, "ContextualMap of length $(length(c.list))")
+    Base.print(io, "ContextualMap of length $(length(entries(c)))")
 end
 
-Base.:(==)(s1::ContextualMap, s2::ContextualMap) = s1.list == s2.list
+Base.:(==)(s1::ContextualMap, s2::ContextualMap) = entries(s1) == entries(s2)
 
-function merge_primary_data(c::ContextualMap, pd)
-    l = [ContextualMap(merge_primary_data(cp, pd)).list for cp in c.list]
-    return ContextualMap(reduce(vcat, l))
-end
-
-function Base.pairs(c::ContextualMap)
-    l = [vec(collect(pairs(cp))) for cp in c.list]
-    return reduce(vcat, l)
-end
+Base.pairs(c::ContextualMap) = Iterators.flatten(pairs(cp) for cp in entries(c))
 
 # Algebra and constructors
 
-function Base.:+(c1::ContextualMap, c2::ContextualMap)
-    return ContextualMap(vcat(c1.list, c2.list))
+function Base.:+(c1::AbstractContextual, c2::AbstractContextual)
+    return ContextualMap(vcat(map(entries, (c1, c2))...))
 end
 
-function Base.:*(c1::ContextualMap, c2::ContextualMap)
-    l = [ContextualMap(cp1 * cp2).list for cp1 in c1.list for cp2 in c2.list]
+function Base.:*(c1::AbstractContextual, c2::AbstractContextual)
+    l = [entries(cp1 * cp2) for cp1 in entries(c1) for cp2 in entries(c2)]
     return ContextualMap(reduce(vcat, l))
 end
 
@@ -54,43 +55,53 @@ function Base.:*(c1::ContextualPair, c2::ContextualPair)
     return merge_primary_data(c1, c2.primary => c2.data)
 end
 
-function primary(; kwargs...)
-    cp = ContextualPair(nothing, values(kwargs), NamedTuple())
-    return ContextualMap(cp)
-end
-
-function data(args...; kwargs...)
-    cp = ContextualPair(nothing, NamedTuple(), namedtuple(args...; kwargs...))
-    return ContextualMap(cp)
-end
+primary(; kwargs...) = ContextualPair(nothing, values(kwargs), NamedTuple())
+data(t...; nt...) = ContextualPair(nothing, NamedTuple(), namedtuple(t...; nt...))
 
 # Default: broadcast context
 
-struct DimsSelector{T}
-    x::T
-end
-dims(args...) = DimsSelector(args)
+adjust(x, d) = x
 
-_adjust(x::NamedTuple, shape) = map(t -> _adjust(t, shape), x)
-_adjust(x, shape) = x
-_adjust(d::DimsSelector, shape) = [_adjust(d, c) for c in CartesianIndices(shape)]
-_adjust(d::DimsSelector, c::CartesianIndex) = c[d.x...]
+function aos(d::NamedTuple{names}) where names
+    v = broadcast((args...) -> NamedTuple{names}(args), d...)
+    return v isa NamedTuple ? [v] : v
+end
 
 function Base.pairs(s::ContextualPair)
     d = aos(s.data)
-    p = aos(_adjust(s.primary, axes(d)))
-    return wrapif(p .=> d, Pair)
+    p = aos(map(v -> adjust(v, d), s.primary))
+    return p .=> d
 end
 
 function merge_primary_data(c::ContextualPair, (p, d))
     return ContextualPair(c.context, merge(c.primary, p), merge(c.data, d))
 end
 
+# slicing context
+
+struct DimsSelector{N} <: AbstractContext
+    dims::NTuple{N, Int}
+end
+dims(args...) = DimsSelector(args)
+
+Base.:(==)(s1::DimsSelector, s2::DimsSelector) = s1.dims == s2.dims
+
+adjust(ds::DimsSelector, d) = [c[ds.dims...] for c in CartesianIndices(d)]
+
+function Base.pairs(c::ContextualPair{<:DimsSelector})
+    d = map(c.data) do col
+        mapslices(v -> [v], col; dims=c.context.dims)
+    end
+    return pairs(ContextualPair(nothing, c.primary, d))
+end
+
 # data context: integers and symbols are columns
 
-struct DataContext{T}
+struct DataContext{T} <: AbstractContext
     table::T
 end
+
+table(x) = DataContext(coldict(x))
 
 Base.:(==)(s1::DataContext, s2::DataContext) = s1.table == s2.table
 
@@ -130,22 +141,4 @@ function merge_primary_data(s::ContextualPair{<:DataContext}, (primary, data))
     d2 = extract_column(cols, data, true)
     return group(cols, merge(p, p2), merge(d, d2))
 end
-
-table(x) = ContextualMap([ContextualPair(DataContext(coldict(x)))])
-
-# slice context: slice across dims
-
-struct SliceContext{N}
-    dims::NTuple{N, Int}
-end
-slice(args::Int...) = ContextualMap([ContextualPair(SliceContext(args))])
-
-function Base.pairs(c::ContextualPair{<:SliceContext})
-    d = map(c.data) do col
-        mapslices(v -> [v], col; dims=c.context.dims)
-    end
-    return pairs(ContextualPair(nothing, c.primary, d))
-end
-
-Base.:(==)(s1::SliceContext, s2::SliceContext) = s1.dims == s2.dims
 

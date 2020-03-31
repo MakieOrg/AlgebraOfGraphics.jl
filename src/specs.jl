@@ -1,8 +1,15 @@
-struct Spec{T}
+abstract type AbstractGraphical end
+
+const GraphicalOrContextual = Union{AbstractGraphical, AbstractContextual}
+
+struct Spec{T} <: AbstractGraphical
     args::Tuple
     kwargs::NamedTuple
 end
 Spec() = Spec{Any}((), NamedTuple())
+
+spec(args...; kwargs...) = Spec{Any}(args, values(kwargs))
+spec(::Type{T}, args...; kwargs...) where {T} = Spec{T}(args, values(kwargs))
 
 plottype(::Spec{T}) where {T} = T
 
@@ -17,41 +24,32 @@ function Base.:(==)(s1::Spec, s2::Spec)
     return plottype(s1) === plottype(s2) && s1.args == s2.args && s1.kwargs == s2.kwargs
 end
 
-struct SeriesList
-    list::Vector{Pair{Spec, ContextualMap}}
+struct Layers <: AbstractGraphical
+    layers::Vector{Pair{Spec, ContextualMap}}
 end
-SeriesList(s::SeriesList) = s
-SeriesList(c::ContextualMap) = SeriesList(Pair{Spec, ContextualMap}[Spec() => c])
-SeriesList(c::Spec) = SeriesList(Pair{Spec, ContextualMap}[c => ContextualMap()])
+Layers(s::GraphicalOrContextual) = Layers(layers(s))
 
-function Base.:*(
-                 s1::Union{ContextualMap, SeriesList},
-                 s2::Union{ContextualMap, SeriesList}
-                )
-    s1, s2 = SeriesList(s1), SeriesList(s2)
-    l1, l2 = s1.list, s2.list
+layers(s::Layers)             = s.layers
+layers(s::Spec)               = Pair{Spec, ContextualMap}[s => ContextualMap()]
+layers(s::AbstractContextual) = Pair{Spec, ContextualMap}[Spec() => ContextualMap(s)]
+
+Base.:(==)(s1::Layers, s2::Layers) = layers(s1) == layers(s2)
+
+function Base.:*(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
+    l1, l2 = layers(s1), layers(s2)
     v = Pair{Spec, ContextualMap}[]
     for el1 in l1
         for el2 in l2
             push!(v, merge(first(el1), first(el2)) => last(el1) * last(el2))
         end
     end
-    return SeriesList(v)
+    return Layers(v)
 end
 
-function Base.:+(
-                 s1::Union{ContextualMap, SeriesList},
-                 s2::Union{ContextualMap, SeriesList}
-                )
-    s1, s2 = SeriesList(s1), SeriesList(s2)
-    l1, l2 = s1.list, s2.list
-    return SeriesList(vcat(l1, l2))
+function Base.:+(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
+    l1, l2 = layers(s1), layers(s2)
+    return Layers(vcat(l1, l2))
 end
-
-Base.:(==)(s1::SeriesList, s2::SeriesList) = s1.list == s2.list
-
-spec(args...; kwargs...) = SeriesList(Spec{Any}(args, values(kwargs)))
-spec(::Type{T}, args...; kwargs...) where {T} = SeriesList(Spec{T}(args, values(kwargs)))
 
 # plotting tools
 
@@ -61,11 +59,16 @@ function extract_names(d::NamedTuple)
     return ns, vs
 end
 
-specs(c::ContextualMap, palette) = specs(SeriesList(c), palette)
+"""
+    specs(ts::GraphicalOrContextual, palette)
 
-function specs(ts::SeriesList, palette, rks = rankdicts(ts))
+Compute a vector of `OrderedDict{NamedTuple, Spec}` to be passed to the
+plotting package. `palette[key]` must return a finite list of options, for
+each `key` used as primary (e.g., `color`, `marker`, `linestyle`).
+"""
+function specs(ts::GraphicalOrContextual, palette, rks = rankdicts(ts))
     serieslist = OrderedDict{NamedTuple, Spec}[]
-    for (m, ctxmap) in ts.list
+    for (m, ctxmap) in layers(ts)
         d = OrderedDict{NamedTuple, Spec}()
         scales = Dict{Symbol, Any}()
         for (key, val) in palette
@@ -93,4 +96,4 @@ function applytheme(scales, grp, rks)
     return d
 end
 
-rankdicts(ts::SeriesList) = rankdicts(map(last, ts.list))
+rankdicts(ts::GraphicalOrContextual) = rankdicts(map(last, layers(ts)))

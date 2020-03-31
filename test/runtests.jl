@@ -4,9 +4,8 @@ using AlgebraOfGraphics: table,
                          Spec,
                          spec,
                          specs,
-                         slice,
+                         layers,
                          primary,
-                         SeriesList,
                          rankdicts,
                          positional,
                          keyword,
@@ -15,18 +14,17 @@ using AlgebraOfGraphics: table,
                          ContextualPair,
                          ContextualMap
 
-using DataStructures: OrderedDict
+using OrderedCollections: OrderedDict
 using NamedDims
 using RDatasets: dataset
 
-@testset "calling" begin
+@testset "product" begin
     s = data(1:2, ["a", "b"]) * primary(color = dims(1))
-    exp = ContextualMap(ContextualPair(
-                                       nothing,
-                                       (; color = dims(1)),
-                                       (; Symbol(1) => 1:2, Symbol(2) => ["a", "b"])
-                                      )
-                       )
+    exp = ContextualPair(
+                         nothing,
+                         (; color = dims(1)),
+                         (; Symbol(1) => 1:2, Symbol(2) => ["a", "b"])
+                        )
     @test s == exp
 end
 
@@ -35,7 +33,7 @@ end
     d = data(:Cyl, :Hwy) * primary(color = :Year)
     s = spec(color = :red, font = 10) + data(markersize = :Year)
     sl = table(mpg) * d * s
-    res = sl.list
+    res = layers(sl)
     @test first(res[1]) == Spec{Any}((), (color = :red, font = 10))
 
     idx1 = mpg.Year .== 1999
@@ -58,19 +56,20 @@ end
     @test primaries[2][1] == (; color = NamedEntry(:Year, 1999))
     @test primaries[2][2] == (; color = NamedEntry(:Year, 2008))
 
-    @test length(pairs(last(res[1]))) == 2
-    @test length(pairs(last(res[2]))) == 2
+    @test length(collect(pairs(last(res[1])))) == 2
+    @test length(collect(pairs(last(res[2])))) == 2
 
     x = rand(5, 3, 2)
     y = rand(5, 3)
-    s = slice(1) * data(x, y) * primary(color = dims(2)) 
+    s = dims(1) * data(x, y) * primary(color = dims(2)) 
 
     res = pairs(s)
-    for i = 1:6
-        @test first(res[i]) == (; color = mod1(i, 3))
+    for (i, r) in enumerate(res)
+        primary, data = r
+        @test primary == (; color = mod1(i, 3))
         xsl = x[:, mod1(i, 3), (i > 3) + 1]
         ysl = y[:, mod1(i, 3)]
-        @test last(res[i]) == (; Symbol(1) => xsl, Symbol(2) => ysl)
+        @test data == (; Symbol(1) => xsl, Symbol(2) => ysl)
     end
 end
 
@@ -104,5 +103,5 @@ end
     @test res[2][(color = NamedEntry(:c, "b"),)] ==
         Spec{Any}(([2], [20]), (size = [4], color = "blue", names = ns_attr))
 
-    @test sl.list[1] == (Spec{Any}((log,), (; font = 10)) => ds)
+    @test layers(sl)[1] == (Spec{Any}((log,), (; font = 10)) => ds)
 end
