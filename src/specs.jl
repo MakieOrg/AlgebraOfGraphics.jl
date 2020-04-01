@@ -89,9 +89,7 @@ function applytheme(scales, grp::NamedTuple{names}, rks) where names
     res = map(names) do key
         val = grp[key]
         if val isa NamedTuple
-            scales = to_value(get(scales, key, NamedTuple()))
-            rks = rks[key]
-            applytheme(scales, val, rks)
+            applytheme(to_value(get(scales, key, NamedTuple())), val, rks[key])
         else
             # let's worry about interactivity later
             scale = to_value(get(scales, key, nothing))

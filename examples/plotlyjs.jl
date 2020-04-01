@@ -19,6 +19,10 @@ cols = data(x = [:PetalLength, :PetalWidth], y = [:SepalLength :SepalWidth])
 style = primary(marker = (color = dims(1), symbol = dims(2),)) * spec(mode = "markers", type = "scatter")
 table(iris) * cols * style |> myplot
 
+style = primary(marker = (color = :Species,), layout_x = dims(1), layout_y = dims(2)) *
+    spec(mode = "markers", type = "scatter")
+table(iris) * cols * style |> myplot
+
 dims(1) *
     data(x = rand(5, 3, 2), y = rand(5, 3)) *
     primary(marker = (color = dims(2),)) *

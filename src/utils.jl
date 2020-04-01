@@ -1,13 +1,18 @@
 # Recursive utils
 
-function merge_rec(a::NamedTuple, b::NamedTuple)
-    s = merge(a, b)
-    vals = map(keys(s)) do key
-        merge_rec(get(a, key, missing), get(b, key, missing))
+function merge_combine_rec(op, a::NamedTuple, b::NamedTuple)
+    ab = merge(a, b)
+    names = keys(ab)
+    vals = map(names) do name
+        haskey(a, name) || return b[name]
+        haskey(b, name) || return a[name]
+        merge_combine_rec(op, a[name], b[name])
     end
-    return (; zip(keys(s), vals)...)
+    return (; zip(names, vals)...)
 end
-merge_rec(a, b) = coalesce(b, a)
+merge_combine_rec(op, a, b) = op(a, b)
+
+merge_rec(a, b) = merge_combine_rec((_, x) -> x, a, b)
 
 # PooledArrays utils
 
@@ -40,17 +45,7 @@ rankdict(d::NamedTuple) = map(rankdict, d)
 
 # TODO: is this a performance issue in practice?
 jointables(ts) = foldl(merge_vcat, ts)
-merge_vcat(a, b) = vcat(a, b)
-function merge_vcat(t1::NamedTuple, t2::NamedTuple)
-    t3 = merge(t1, t2)
-    names = keys(t3)
-    res = map(names) do key
-        haskey(t1, key) || return t2
-        haskey(t2, key) || return t1
-        return merge_vcat(t1[key], t2[key])
-    end
-    return NamedTuple{names}(res)
-end
+merge_vcat(a, b) = merge_combine_rec(vcat, a, b)
 
 fieldarrays_rec(s::StructArray) = map(fieldarrays_rec, fieldarrays(s))
 fieldarrays_rec(v) = v
