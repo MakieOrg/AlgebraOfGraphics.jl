@@ -1,3 +1,14 @@
+# Recursive utils
+
+function merge_rec(a::NamedTuple, b::NamedTuple)
+    s = merge(a, b)
+    vals = map(keys(s)) do key
+        merge_rec(get(a, key, missing), get(b, key, missing))
+    end
+    return (; zip(keys(s), vals)...)
+end
+merge_rec(a, b) = coalesce(b, a)
+
 # PooledArrays utils
 
 function pool(v::AbstractVector)
@@ -21,13 +32,6 @@ function mapcols(f, t)
 end
 coldict(t) = mapcols(identity, t)
 coldict(t, idxs) = mapcols(v -> view(v, idxs), t)
-
-function keepvectors(t::NamedTuple{names}) where names
-    f, ls = first(t), NamedTuple{Base.tail(names)}(t)
-    ff = f isa AbstractVector ? NamedTuple{(first(names),)}((f,)) : NamedTuple()
-    return merge(ff, keepvectors(ls))
-end
-keepvectors(::NamedTuple{()}) = NamedTuple()
 
 # ranking
 

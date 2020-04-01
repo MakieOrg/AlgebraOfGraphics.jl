@@ -14,12 +14,23 @@ const wong_colors = [
 ]
 
 const default_palettes = Dict(
-    :color     => wong_colors,
-    :marker    => [:circle, :xcross, :utriangle, :diamond, :dtriangle, :star8, :pentagon, :rect],
-    :linestyle => [nothing, :dash, :dot, :dashdot, :dashdotdot],
-    :side      => [:left, :right]
-)
-
+                              :marker => Dict(
+                                              :color => wong_colors,
+                                              :symbol => [
+                                                          "circle",
+                                                          "cross",
+                                                          "square",
+                                                          "triangle-up",
+                                                          "diamond",
+                                                          "triangle-down"
+                                                         ]
+                                             ),
+                              :line => Dict(
+                                            :color => wong_colors,
+                                            :das => ["solid", "dash", "dot", "dashdot"]
+                                           ),
+                              :side => ["left", "right"]
+                             )
 
 function to_dict(ts::GraphicalOrContextual)
     rks = rankdicts(ts)
@@ -44,9 +55,6 @@ function to_dict(ts::GraphicalOrContextual)
             counter = x_pos + Nx * (y_pos - 1)
             push!(traces, (;
                            attrs...,
-                           type = "scatter",
-                           mode = "markers",
-                           marker = (; color = "black"),
                            xaxis = "x$counter",
                            yaxis = "y$counter",
                           )
@@ -75,7 +83,6 @@ const post_html = """
   </body>
 </html>
 """
-
 
 function writeplot(s::GraphicalOrContextual, file::AbstractString)
     ts, l = to_dict(s)
