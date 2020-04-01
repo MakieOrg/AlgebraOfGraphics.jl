@@ -35,20 +35,38 @@ coldict(t, idxs) = mapcols(v -> view(v, idxs), t)
 
 # ranking
 
-jointable(ts) = jointable(ts, foldl(merge, ts))
+rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
+rankdict(d::NamedTuple) = map(rankdict, d)
 
-function jointable(ts, ::NamedTuple{names}) where names
-    vals = map(names) do name
-        vcat((get(table, name, Union{}[]) for table in ts)...)
+# TODO: is this a performance issue in practice?
+jointables(ts) = foldl(merge_vcat, ts)
+merge_vcat(a, b) = vcat(a, b)
+function merge_vcat(t1::NamedTuple, t2::NamedTuple)
+    t3 = merge(t1, t2)
+    names = keys(t3)
+    res = map(names) do key
+        haskey(t1, key) || return t2
+        haskey(t2, key) || return t1
+        return merge_vcat(t1[key], t2[key])
     end
-    NamedTuple{names}(vals)
+    return NamedTuple{names}(res)
 end
 
-rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
+fieldarrays_rec(s::StructArray) = map(fieldarrays_rec, fieldarrays(s))
+fieldarrays_rec(v) = v
 
-primarytable(t) = fieldarrays(StructArray(p for (p, _) in pairs(t)))
+function primarytable(t)
+    s = StructArray(
+                    (p for (p, _) in pairs(t)),
+                    unwrap = t -> t <: NamedTuple
+                   )
+    return fieldarrays_rec(s)
+end
 
-rankdicts(ts) = map(rankdict, jointable(map(primarytable, ts)))
+function rankdicts(ts)
+    t = jointables(map(primarytable, ts))
+    return rankdict(t)
+end
 
 # integer naming utils
 

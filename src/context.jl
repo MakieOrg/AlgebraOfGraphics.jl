@@ -136,6 +136,7 @@ pool_rec(v) = pool(v)
 pool_rec(v::NamedTuple) = map(pool_rec, v)
 
 rename_rec(col, el) = fill(NamedEntry(get_name(col), el))
+rename_rec(col, el::DimsSelector) = el
 rename_rec(cols::NamedTuple, els::NamedTuple) = map(rename_rec, cols, els)
 
 function group(cols, p1, p2, d)
