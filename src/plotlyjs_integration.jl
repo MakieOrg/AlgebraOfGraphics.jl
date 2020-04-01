@@ -32,6 +32,7 @@ const default_palettes = Dict(
                               :side => ["left", "right"]
                              )
 
+# TODO deal with names, link axes, and avoid default color cycling
 function to_dict(ts::GraphicalOrContextual)
     rks = rankdicts(ts)
     serieslist = specs(ts, default_palettes, rks)
@@ -74,7 +75,7 @@ const pre_html = """
     <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
   </head>
   <body>
-    <div id='plotdiv'></div>
+    <div id='plotdiv' style="width: 800px"></div>
     <script>
 """
 
