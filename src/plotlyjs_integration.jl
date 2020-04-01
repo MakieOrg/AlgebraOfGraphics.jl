@@ -1,0 +1,70 @@
+function to_dict(ts::GraphicalOrContextual)
+    rks = rankdicts(ts)
+    serieslist = specs(ts, default_palettes, rks)
+    Nx, Ny = 1, 1
+    for series in serieslist
+        for (primary, trace) in series
+            Nx = max(Nx, get(trace.kwargs, :layout_x, Nx))
+            Ny = max(Ny, get(trace.kwargs, :layout_y, Ny))
+        end
+    end
+
+    layout = (; grid = (rows = Ny, columns = Nx, pattern = "independent"))
+    traces = []
+    for series in serieslist
+        for (primary, trace) in series
+            args = trace.args
+            attrs = Dict(pairs(trace.kwargs))
+            pop!(attrs, :names)
+            x_pos = pop!(attrs, :layout_x, 1) |> to_value
+            y_pos = pop!(attrs, :layout_y, 1) |> to_value
+            counter = x_pos + Nx * (y_pos - 1)
+            push!(traces, (;
+                           attrs...,
+                           type = "scatter",
+                           mode = "markers",
+                           marker = (; color = "black"),
+                           xaxis = "x$counter",
+                           yaxis = "y$counter",
+                          )
+                 )
+        end
+    end
+    return (data = traces, layout = layout)
+end
+
+const pre_html = """
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>test plot</title>
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+  </head>
+  <body>
+    <div id='plotdiv'></div>
+    <script>
+"""
+
+const post_html = """
+    </script>
+  </body>
+</html>
+"""
+
+
+function writeplot(s::GraphicalOrContextual, file::AbstractString)
+    ts, l = to_dict(s)
+    open(file, "w") do io
+        print(io, pre_html)
+        print(io, "var data = ")
+        JSON.print(io, ts)
+        println(io, ";")
+        print(io, "var layout = ")
+        JSON.print(io, l)
+        println(io, ";")
+        println(io, "Plotly.newPlot('plotdiv', data, layout);")
+        print(io, post_html)
+    end
+end
