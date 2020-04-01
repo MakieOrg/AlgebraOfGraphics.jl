@@ -15,7 +15,6 @@ using Colors: RGB
 import JSON
 using Requires: @require
 
-include("palette.jl")
 include("utils.jl")
 include("context.jl")
 include("specs.jl")
