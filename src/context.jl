@@ -129,25 +129,22 @@ function extract_view(t::Union{NamedTuple, Tuple}, idxs)
     map(v -> extract_view(v, idxs), t)
 end
 
-structarray_rec(v) = v
-structarray_rec(v::NamedTuple) = StructArray(map(structarray_rec, v))
+pool_many(v) = pool(v)
+pool_many(v::NamedTuple) = StructArray(map(pool_many, v))
 
-pool_rec(v) = pool(v)
-pool_rec(v::NamedTuple) = map(pool_rec, v)
-
-rename_rec(col, el) = fill(NamedEntry(get_name(col), el))
-rename_rec(col, el::DimsSelector) = el
-rename_rec(cols::NamedTuple, els::NamedTuple) = map(rename_rec, cols, els)
+_addname(col, el) = fill(NamedEntry(get_name(col), el))
+_addname(col, el::DimsSelector) = el
+_addname(cols::NamedTuple, els::NamedTuple) = map(_addname, cols, els)
 
 function group(cols, p1, p2, d)
     list = if isempty(p2)
         [ContextualPair(DataContext(cols), p1, d)]
     else
-        sa = structarray_rec(pool_rec(p2))
+        sa = pool_many(p2)
         map(finduniquesorted(sa)) do (k, idxs)
             v = extract_view(d, idxs)
             subtable = coldict(cols, idxs)
-            newkey = rename_rec(p2, k)
+            newkey = _addname(p2, k)
             ContextualPair(DataContext(subtable), merge_rec(p1, newkey), v)
         end
     end

@@ -1,18 +1,18 @@
 # Recursive utils
 
-function merge_combine_rec(op, a::NamedTuple, b::NamedTuple)
+function mergewith_rec(op, a::NamedTuple, b::NamedTuple)
     ab = merge(a, b)
     names = keys(ab)
     vals = map(names) do name
         haskey(a, name) || return b[name]
         haskey(b, name) || return a[name]
-        merge_combine_rec(op, a[name], b[name])
+        mergewith_rec(op, a[name], b[name])
     end
     return (; zip(names, vals)...)
 end
-merge_combine_rec(op, a, b) = op(a, b)
+mergewith_rec(op, a, b) = op(a, b)
 
-merge_rec(a, b) = merge_combine_rec((_, x) -> x, a, b)
+merge_rec(a, b) = mergewith_rec((_, x) -> x, a, b)
 
 # PooledArrays utils
 
@@ -44,8 +44,7 @@ rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
 rankdict(d::NamedTuple) = map(rankdict, d)
 
 # TODO: is this a performance issue in practice?
-jointables(ts) = foldl(merge_vcat, ts)
-merge_vcat(a, b) = merge_combine_rec(vcat, a, b)
+jointables(ts) = foldl((a, b) -> mergewith_rec(vcat, a, b), ts)
 
 fieldarrays_rec(s::StructArray) = map(fieldarrays_rec, fieldarrays(s))
 fieldarrays_rec(v) = v
