@@ -16,7 +16,7 @@ plottype(::Spec{T}) where {T} = T
 function Base.merge(t1::Spec{T1}, t2::Spec{T2}) where {T1, T2}
     T = T2 === Any ? T1 : T2
     args = (t1.args..., t2.args...)
-    kwargs = merge(t1.kwargs, t2.kwargs)
+    kwargs = merge_rec(t1.kwargs, t2.kwargs)
     return Spec{T}(args, kwargs)
 end
 
@@ -85,15 +85,19 @@ function specs(ts::GraphicalOrContextual, palette, rks = rankdicts(ts))
     return serieslist
 end
 
-function applytheme(scales, grp, rks)
-    d = Dict{Symbol, Any}()
-    for (key, val) in pairs(grp)
-        # let's worry about interactivity later
-        scale = to_value(get(scales, key, nothing))
-        idx = rks[key][val]
-        d[key] = scale === nothing ? idx : scale[mod1(idx, length(scale))]
+function applytheme(scales, grp::NamedTuple{names}, rks) where names
+    res = map(names) do key
+        val = grp[key]
+        if val isa NamedTuple
+            applytheme(to_value(get(scales, key, NamedTuple())), val, rks[key])
+        else
+            # let's worry about interactivity later
+            scale = to_value(get(scales, key, nothing))
+            idx = rks[key][val]
+            scale === nothing ? idx : scale[mod1(idx, length(scale))]
+        end
     end
-    return d
+    return NamedTuple{names}(res)
 end
 
 rankdicts(ts::GraphicalOrContextual) = rankdicts(map(last, layers(ts)))

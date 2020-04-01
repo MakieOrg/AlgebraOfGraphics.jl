@@ -37,7 +37,7 @@ end
 
 Base.:(==)(s1::ContextualMap, s2::ContextualMap) = entries(s1) == entries(s2)
 
-Base.pairs(c::ContextualMap) = Iterators.flatten(pairs(cp) for cp in entries(c))
+Base.pairs(c::ContextualMap) = collect(Iterators.flatten(pairs(cp) for cp in entries(c)))
 
 # Algebra and constructors
 
@@ -61,20 +61,23 @@ data(t...; nt...) = ContextualPair(nothing, NamedTuple(), namedtuple(t...; nt...
 # Default: broadcast context
 
 adjust(x, d) = x
+adjust(x::NamedTuple, d) = map(v -> adjust(v, d), x)
 
 function aos(d::NamedTuple{names}) where names
+    d = map(aos, d)
     v = broadcast((args...) -> NamedTuple{names}(args), d...)
     return v isa NamedTuple ? [v] : v
 end
+aos(v) = v
 
 function Base.pairs(s::ContextualPair)
     d = aos(s.data)
-    p = aos(map(v -> adjust(v, d), s.primary))
+    p = aos(adjust(s.primary, d))
     return p .=> d
 end
 
 function merge_primary_data(c::ContextualPair, (p, d))
-    return ContextualPair(c.context, merge(c.primary, p), merge(c.data, d))
+    return ContextualPair(c.context, merge_rec(c.primary, p), merge_rec(c.data, d))
 end
 
 # slicing context
@@ -85,6 +88,7 @@ end
 dims(args...) = DimsSelector(args)
 
 Base.:(==)(s1::DimsSelector, s2::DimsSelector) = s1.dims == s2.dims
+Base.isless(s1::DimsSelector, s2::DimsSelector) = isless(s1.dims, s2.dims)
 
 adjust(ds::DimsSelector, d) = [c[ds.dims...] for c in CartesianIndices(d)]
 
@@ -112,24 +116,36 @@ function extract_column(t, col::Union{Symbol, Int}, wrap=false)
     v = NamedDimsArray{(colname,)}(getcolumn(t, col))
     return wrap ? fill(v) : v
 end
+function extract_column(t, c::DimsSelector, wrap=false)
+    ra = RefArray(fill(UInt8(1), length(getcolumn(t, 1))))
+    return PooledArray(ra, Dict(c => UInt8(1)))
+end
 extract_column(t, c::NamedTuple, wrap=false) = map(x -> extract_column(t, x, wrap), c)
 extract_column(t, c::AbstractArray, wrap=false) = map(x -> extract_column(t, x, false), c)
-extract_column(t, c::DimsSelector, wrap=false) = c
 
-function group(cols, p, d)
-    pv = keepvectors(p)
-    list = if isempty(pv)
-        [ContextualPair(DataContext(cols), p, d)]
+extract_view(t, idxs) = view(t, idxs)
+extract_view(t::AbstractArray, idxs) = map(v -> view(v, idxs), t)
+function extract_view(t::Union{NamedTuple, Tuple}, idxs)
+    map(v -> extract_view(v, idxs), t)
+end
+
+pool_many(v) = pool(v)
+pool_many(v::NamedTuple) = StructArray(map(pool_many, v))
+
+_addname(col, el) = fill(NamedEntry(get_name(col), el))
+_addname(col, el::DimsSelector) = el
+_addname(cols::NamedTuple, els::NamedTuple) = map(_addname, cols, els)
+
+function group(cols, p1, p2, d)
+    list = if isempty(p2)
+        [ContextualPair(DataContext(cols), p1, d)]
     else
-        sa = StructArray(map(pool, pv))
+        sa = pool_many(p2)
         map(finduniquesorted(sa)) do (k, idxs)
-            v = map(t -> map(x -> view(x, idxs), t), d)
+            v = extract_view(d, idxs)
             subtable = coldict(cols, idxs)
-            namedkey = map(pv, k) do col, el
-                NamedEntry(get_name(col), el)
-            end
-            newkey = merge(p, map(fill, namedkey))
-            ContextualPair(DataContext(subtable), newkey, v)
+            newkey = _addname(p2, k)
+            ContextualPair(DataContext(subtable), merge_rec(p1, newkey), v)
         end
     end
     return ContextualMap(list)
@@ -139,6 +155,6 @@ function merge_primary_data(s::ContextualPair{<:DataContext}, (primary, data))
     cols, p, d = s.context.table, s.primary, s.data
     p2 = extract_column(cols, primary)
     d2 = extract_column(cols, data, true)
-    return group(cols, merge(p, p2), merge(d, d2))
+    return group(cols, p, p2, merge_rec(d, d2))
 end
 

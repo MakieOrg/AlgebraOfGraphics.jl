@@ -1,3 +1,19 @@
+# Recursive utils
+
+function mergewith_rec(op, a::NamedTuple, b::NamedTuple)
+    ab = merge(a, b)
+    names = keys(ab)
+    vals = map(names) do name
+        haskey(a, name) || return b[name]
+        haskey(b, name) || return a[name]
+        mergewith_rec(op, a[name], b[name])
+    end
+    return (; zip(names, vals)...)
+end
+mergewith_rec(op, a, b) = op(a, b)
+
+merge_rec(a, b) = mergewith_rec((_, x) -> x, a, b)
+
 # PooledArrays utils
 
 function pool(v::AbstractVector)
@@ -22,29 +38,29 @@ end
 coldict(t) = mapcols(identity, t)
 coldict(t, idxs) = mapcols(v -> view(v, idxs), t)
 
-function keepvectors(t::NamedTuple{names}) where names
-    f, ls = first(t), NamedTuple{Base.tail(names)}(t)
-    ff = f isa AbstractVector ? NamedTuple{(first(names),)}((f,)) : NamedTuple()
-    return merge(ff, keepvectors(ls))
-end
-keepvectors(::NamedTuple{()}) = NamedTuple()
-
 # ranking
 
-jointable(ts) = jointable(ts, foldl(merge, ts))
+rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
+rankdict(d::NamedTuple) = map(rankdict, d)
 
-function jointable(ts, ::NamedTuple{names}) where names
-    vals = map(names) do name
-        vcat((get(table, name, Union{}[]) for table in ts)...)
-    end
-    NamedTuple{names}(vals)
+# TODO: is this a performance issue in practice?
+jointables(ts) = foldl((a, b) -> mergewith_rec(vcat, a, b), ts)
+
+fieldarrays_rec(s::StructArray) = map(fieldarrays_rec, fieldarrays(s))
+fieldarrays_rec(v) = v
+
+function primarytable(t)
+    s = StructArray(
+                    (p for (p, _) in pairs(t)),
+                    unwrap = t -> t <: NamedTuple
+                   )
+    return fieldarrays_rec(s)
 end
 
-rankdict(d) = Dict(val => i for (i, val) in enumerate(uniquesorted(vec(d))))
-
-primarytable(t) = fieldarrays(StructArray(p for (p, _) in pairs(t)))
-
-rankdicts(ts) = map(rankdict, jointable(map(primarytable, ts)))
+function rankdicts(ts)
+    t = jointables(map(primarytable, ts))
+    return rankdict(t)
+end
 
 # integer naming utils
 
