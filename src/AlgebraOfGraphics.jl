@@ -11,7 +11,6 @@ using DataAPI: refarray, refvalue
 using Observables: Observable, to_value
 using OrderedCollections: OrderedDict
 using NamedDims: NamedDimsArray, dimnames
-using Colors: RGB
 import JSON
 using Requires: @require
 
