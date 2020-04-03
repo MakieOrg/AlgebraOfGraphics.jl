@@ -8,7 +8,7 @@ using StructArrays: uniquesorted,
 using Tables: columns, getcolumn, columnnames, istable
 using PooledArrays: PooledArray, PooledVector, RefArray
 using DataAPI: refarray, refvalue
-using Observables: Observable, to_value
+using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict
 using NamedDims: NamedDimsArray, dimnames
 import JSON

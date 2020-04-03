@@ -13,32 +13,35 @@ const wong_colors = [
     "rgb(204, 121, 167)",
 ]
 
-const default_palettes = Dict(
-                              :marker => Dict(
-                                              :color => wong_colors,
-                                              :symbol => [
-                                                          "circle",
-                                                          "cross",
-                                                          "square",
-                                                          "triangle-up",
-                                                          "diamond",
-                                                          "triangle-down"
-                                                         ]
-                                             ),
-                              :line => Dict(
-                                            :color => wong_colors,
-                                            :das => ["solid", "dash", "dot", "dashdot"]
-                                           ),
-                              :side => ["left", "right"]
-                             )
+const default_palettes = (
+                          marker = (
+                                    color = wong_colors,
+                                    symbol = [
+                                              "circle",
+                                              "cross",
+                                              "square",
+                                              "triangle-up",
+                                              "diamond",
+                                              "triangle-down"
+                                             ]
+                                   ),
+                          line = (
+                                  color = wong_colors,
+                                  dash = ["solid", "dash", "dot", "dashdot"]
+                                 )
+                         )
+
+_to_value(s::Spec{T}) where {T} = Spec{T}(_to_value(s.args), _to_value(s.kwargs))
+_to_value(s::Union{Tuple, NamedTuple}) = map(_to_value, s)
+_to_value(s) = to_value(s)
 
 # TODO deal with names, link axes, and avoid default color cycling
 function to_dict(ts::GraphicalOrContextual)
-    rks = rankdicts(ts)
-    serieslist = specs(ts, default_palettes, rks)
+    serieslist = specs(ts, default_palettes)
     Nx, Ny = 1, 1
     for series in serieslist
         for (primary, trace) in series
+            trace = _to_value(trace)
             Nx = max(Nx, get(trace.kwargs, :layout_x, Nx))
             Ny = max(Ny, get(trace.kwargs, :layout_y, Ny))
         end
@@ -48,6 +51,7 @@ function to_dict(ts::GraphicalOrContextual)
     traces = []
     for series in serieslist
         for (primary, trace) in series
+            trace = _to_value(trace)
             args = trace.args
             attrs = Dict(pairs(trace.kwargs))
             pop!(attrs, :names)
