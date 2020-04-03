@@ -36,8 +36,8 @@ function layoutplot!(scene, layout, ts::GraphicalOrContextual)
     Nx, Ny = 1, 1
     for series in serieslist
         for (primary, trace) in series
-            Nx = max(Nx, get(trace.kwargs, :layout_x, Nx))
-            Ny = max(Ny, get(trace.kwargs, :layout_y, Ny))
+            Nx = max(Nx, to_value(get(trace.kwargs, :layout_x, Nx)))
+            Ny = max(Ny, to_value(get(trace.kwargs, :layout_y, Ny)))
         end
     end
     axs = facetlayout[1:Ny, 1:Nx] = [LAxis(scene) for i in 1:Ny, j in 1:Nx]
@@ -55,7 +55,6 @@ function layoutplot!(scene, layout, ts::GraphicalOrContextual)
             P = plottype(trace)
             args = trace.args
             attrs = Attributes(trace.kwargs)
-            # TODO also deal with names here
             pop!(attrs, :names)
             x_pos = pop!(attrs, :layout_x, 1) |> to_value
             y_pos = pop!(attrs, :layout_y, 1) |> to_value

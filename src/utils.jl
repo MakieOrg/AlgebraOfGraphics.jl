@@ -9,6 +9,7 @@ function merge_rec(a::NamedTuple, b::NamedTuple)
     return (; zip(names, vals)...)
 end
 merge_rec(a, b) = coalesce(b, a)
+merge_rec(a, b, as...) = merge_rec(merge_rec(a, b), as...)
 
 # PooledArrays utils
 

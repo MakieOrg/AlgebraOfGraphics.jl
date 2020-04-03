@@ -96,7 +96,8 @@ function specs(ts::GraphicalOrContextual, palette)
     serieslist = OrderedDict{NamedTuple, Spec}[]
     for (m, ctxmap) in layers(ts)
         d = OrderedDict{NamedTuple, Spec}()
-        scales = to_scale(merge_rec(palette, m.kwargs))
+        l = (layout_x = nothing, layout_y = nothing)
+        scales = to_scale(merge_rec(palette, m.kwargs, l))
         for (primary, data) in pairs(ctxmap)
             theme = applytheme(scales, primary)
             names, data = extract_names(data)
@@ -111,9 +112,7 @@ end
 applytheme(scale, val) = attr!(scale, val)
 function applytheme(scales, grp::NamedTuple{names}) where names
     res = map(names) do key
-        val = grp[key]
-        def = val isa NamedTuple ? NamedTuple() : to_scale()
-        applytheme(get(scales, key, def), val)
+        applytheme(scales[key], grp[key])
     end
     return NamedTuple{names}(res)
 end

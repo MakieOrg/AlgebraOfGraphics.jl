@@ -52,7 +52,6 @@ function to_dict(ts::GraphicalOrContextual)
     for series in serieslist
         for (primary, trace) in series
             trace = _to_value(trace)
-            @show trace.kwargs.marker.symbol
             args = trace.args
             attrs = Dict(pairs(trace.kwargs))
             pop!(attrs, :names)
