@@ -1,25 +1,18 @@
 module AlgebraOfGraphics
 
-using StructArrays: uniquesorted,
-                    finduniquesorted,
-                    fieldarrays,
-                    StructArray
-
 using Tables: columns, getcolumn, columnnames, istable
 using PooledArrays: PooledArray, PooledVector, RefArray
 using DataAPI: refarray, refvalue
 using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict, LittleDict
 using NamedDims: NamedDimsArray, dimnames
-import JSON
 import GLM, Loess
 using Requires: @require
 
-include("utils.jl")
 include("context.jl")
 include("specs.jl")
+include("utils.jl")
 include("analysis/smooth.jl")
-include("plotlyjs_integration.jl")
 
 function draw end
 

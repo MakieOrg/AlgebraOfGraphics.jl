@@ -4,7 +4,6 @@ using AlgebraOfGraphics: table,
                          Spec,
                          spec,
                          specs,
-                         _to_value,
                          layers,
                          primary,
                          positional,
@@ -17,6 +16,7 @@ using AlgebraOfGraphics: table,
 using OrderedCollections: OrderedDict
 using NamedDims
 using RDatasets: dataset
+using Observables: to_value
 
 @testset "product" begin
     s = data(1:2, ["a", "b"]) * primary(color = dims(1))
@@ -72,6 +72,10 @@ end
         @test data == (; Symbol(1) => xsl, Symbol(2) => ysl)
     end
 end
+
+_to_value(s::Spec{T}) where {T} = Spec{T}(_to_value(s.args), _to_value(s.kwargs))
+_to_value(s::Union{Tuple, NamedTuple}) = map(_to_value, s)
+_to_value(s) = to_value(s)
 
 @testset "specs" begin
     palette = (color = ["red", "blue"],)

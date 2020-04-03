@@ -16,7 +16,7 @@ plottype(::Spec{T}) where {T} = T
 function Base.merge(t1::Spec{T1}, t2::Spec{T2}) where {T1, T2}
     T = T2 === Any ? T1 : T2
     args = (t1.args..., t2.args...)
-    kwargs = merge_rec(t1.kwargs, t2.kwargs)
+    kwargs = merge(t1.kwargs, t2.kwargs)
     return Spec{T}(args, kwargs)
 end
 
@@ -85,7 +85,7 @@ end
 to_scale() = to_scale(Observable(nothing))
 
 function getrank(value, values)
-    for (i, v) in enumerate(uniquesorted(values))
+    for (i, v) in enumerate(unique(sort(values)))
         v == value && return i
     end
     return nothing
@@ -133,7 +133,7 @@ function specs(ts::GraphicalOrContextual, palette)
     for (m, itr) in spec_dict(ts)
         d = OrderedDict{NamedTuple, Spec}()
         l = (layout_x = nothing, layout_y = nothing)
-        scales = to_scale(merge_rec(palette, m.kwargs, l))
+        scales = to_scale(merge(palette, m.kwargs, l))
         for (primary, data) in itr
             theme = applytheme(scales, primary)
             names, data = extract_names(data)

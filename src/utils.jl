@@ -1,16 +1,3 @@
-# Recursive utils
-
-function merge_rec(a::NamedTuple, b::NamedTuple)
-    ab = merge(a, b)
-    names = keys(ab)
-    vals = map(names) do name
-        merge_rec(get(a, name, missing), get(b, name, missing))
-    end
-    return (; zip(names, vals)...)
-end
-merge_rec(a, b) = coalesce(b, a)
-merge_rec(a, b, as...) = merge_rec(merge_rec(a, b), as...)
-
 # PooledArrays utils
 
 function pool(v::AbstractVector)
@@ -75,3 +62,4 @@ get_name(v) = Symbol("")
 strip_name(v) = v
 
 Base.string(n::NamedEntry) = string(n.value)
+
