@@ -12,7 +12,7 @@ using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict, LittleDict
 using NamedDims: NamedDimsArray, dimnames
 import JSON
-import GLM
+import GLM, Loess
 using Requires: @require
 
 include("utils.jl")

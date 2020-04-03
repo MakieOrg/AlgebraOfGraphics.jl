@@ -1,4 +1,5 @@
 # From StatsMakie
+# TODO refactor common part as a fallback for Analysis
 function _linear(x::AbstractVector{T}, y::AbstractVector;
                  n_points = 100, interval = :confidence) where T
     try
@@ -12,7 +13,7 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
                                           interval=interval)
         # the GLM predictions always return matrices
         x, y, l, u = x_new, vec(y_new), vec(lower), vec(upper)
-        return (x, y), (x, l, u)
+        return namedtuple(x, y), namedtuple(x, l, u)
     catch e
         @warn "Linear fit not possible for the given data"
         return nothing
@@ -23,9 +24,11 @@ function _linear(c::AbstractDict; kwargs...)
     d = OrderedDict{Spec, PairList}()
     for (sp, itr) in c
         for (primary, data) in itr
-            l, b = _linear(positional(data)...; keyword(data)..., kwargs...)
-            pushat!(d, sp * spec(:Lines), primary => l)
-            pushat!(d, sp * spec(:Band), primary => b)
+            res = _linear(positional(data)...; keyword(data)..., kwargs...)
+            res === nothing && continue
+            l, b = res
+            pushat!(d, merge(sp, spec(:Lines)), primary => l)
+            pushat!(d, merge(sp, spec(:Band)), primary => b)
         end
     end
     return d
@@ -33,20 +36,24 @@ end
 
 const linear = Analysis(_linear)
 
-# struct Smooth{S, T}
-#     x::Vector{S}
-#     y::Vector{T}
-# end
+function _smooth(x, y; length = 100, kwargs...)
+    model = Loess.loess(x, y; kwargs...)
+    min, max = extrema(x)
+    us = collect(range(min, stop = max, length = length))
+    vs = Loess.predict(model, us)
+    return namedtuple(us, vs)
+end
 
-# convert_arguments(P::PlotFunc, l::Smooth) = PlotSpec{Lines}(Point2f0.(l.x,l.y))
+function _smooth(c::AbstractDict; kwargs...)
+    d = OrderedDict{Spec, PairList}()
+    for (sp, itr) in c
+        for (primary, data) in itr
+            res = _smooth(positional(data)...; keyword(data)..., kwargs...)
+            pushat!(d, merge(sp, spec(:Lines)), primary => res)
+        end
+    end
+    return d
+end
 
-# function smooth(x, y; length = 100, kwargs...)
-#     model = loess(x, y; kwargs...)
-#     min, max = extrema(x)
-#     us = collect(range(min, stop = max, length = length))
-#     vs = Loess.predict(model, us)
-#     return Smooth(us, vs)
-# end
-
-# smooth(; kwargs...) = (args...) -> smooth(args...; kwargs...)
+const smooth = Analysis(_smooth)
 
