@@ -24,6 +24,8 @@ function Base.:(==)(s1::Spec, s2::Spec)
     return plottype(s1) === plottype(s2) && s1.args == s2.args && s1.kwargs == s2.kwargs
 end
 
+Base.hash(a::Spec, h::UInt64) = hash((a.args, a.kwargs), hash(typeof(a), h))
+
 struct Analysis{F} <: AbstractGraphical
     f::F
     kwargs::NamedTuple
@@ -97,13 +99,26 @@ function attr!(s::Scale, value)
     end
 end
 
-run_spec(g::GraphicalOrContextual) = reduce(vcat, map(run_spec, layers(g)))
+const PairList = Vector{Pair{<:NamedTuple, <:NamedTuple}}
 
-function run_spec((spec, c)::Pair)
-    isempty(spec.args) && return Pair{Spec, AbstractContextual}[spec => c]
-    T = plottype(spec)
-    spec′ = Spec{T}(Base.tail(spec.args), spec.kwargs)
-    return run_spec(first(spec.args)(c) * spec′)
+for (f!, f_at!) in [(:push!, :pushat!), (:append!, :appendat!)]
+    @eval function $f_at!(d::AbstractDict{<:Any, T}, key, val) where {T <: AbstractVector}
+        v = get!(d, key, T[])
+        $f!(v, val)
+    end
+end
+
+function spec_dict(ts::GraphicalOrContextual)
+    d = OrderedDict{Spec, PairList}()
+    for (sp, ctx) in layers(ts)
+        f = foldl((a, b) -> b ∘ a, sp.args, init=identity)
+        sp0 = Spec{plottype(sp)}((), sp.kwargs)
+        res = f(LittleDict(sp0 => pairs(ctx)))
+        for (key, val) in pairs(res)
+            appendat!(d, key, val)
+        end
+    end
+    return d
 end
 
 """
@@ -115,11 +130,11 @@ each `key` used as primary (e.g., `color`, `marker`, `linestyle`).
 """
 function specs(ts::GraphicalOrContextual, palette)
     serieslist = OrderedDict{NamedTuple, Spec}[]
-    for (m, ctxmap) in run_spec(ts)
+    for (m, itr) in spec_dict(ts)
         d = OrderedDict{NamedTuple, Spec}()
         l = (layout_x = nothing, layout_y = nothing)
         scales = to_scale(merge_rec(palette, m.kwargs, l))
-        for (primary, data) in pairs(ctxmap)
+        for (primary, data) in itr
             theme = applytheme(scales, primary)
             names, data = extract_names(data)
             sp = merge(m, Spec{Any}(Tuple(positional(data)), (; keyword(data)..., theme...)))

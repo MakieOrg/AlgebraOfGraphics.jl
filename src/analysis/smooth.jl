@@ -19,15 +19,16 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
     end
 end
 
-_push!(acc, c) = map(push!, acc, c)
-_push!(::Nothing, c) = map(StructArray∘vcat, c)
-_wrap(c) = map(vcat, c)
-function _linear(c::AbstractContextual; kwargs...)
-    acc = mapfoldl(_push!, pairs(c), init=nothing) do (p, d)
-        (p, _wrap.(_linear(positional(d)...; keyword(d)..., kwargs...))...)
+function _linear(c::AbstractDict; kwargs...)
+    d = OrderedDict{Spec, PairList}()
+    for (sp, itr) in c
+        for (primary, data) in itr
+            l, b = _linear(positional(data)...; keyword(data)..., kwargs...)
+            pushat!(d, sp * spec(:Lines), primary => l)
+            pushat!(d, sp * spec(:Band), primary => b)
+        end
     end
-    ps, ls, bs = map(fieldarrays, acc)
-    return primary(; ps...) * (data(ls...) * spec(:Lines) + data(bs...) * spec(:Band, alpha=0.5))
+    return d
 end
 
 const linear = Analysis(_linear)

@@ -9,7 +9,7 @@ using Tables: columns, getcolumn, columnnames, istable
 using PooledArrays: PooledArray, PooledVector, RefArray
 using DataAPI: refarray, refvalue
 using Observables: AbstractObservable, Observable, to_value
-using OrderedCollections: OrderedDict
+using OrderedCollections: OrderedDict, LittleDict
 using NamedDims: NamedDimsArray, dimnames
 import JSON
 import GLM
