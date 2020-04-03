@@ -77,7 +77,7 @@ end
     palette = (color = ["red", "blue"],)
     t = (x = [1, 2], y = [10, 20], z = [3, 4], c = ["a", "b"])
     d = data(:x, :y) * primary(color = :c)
-    s = spec(log) * spec(font = 10) + data(size = :z)
+    s = spec(:log) * spec(font = 10) + data(size = :z)
     ds = table(t) * d
     sl = ds * s
     res = specs(sl, palette)
@@ -86,13 +86,13 @@ end
     ns = (; Symbol(1) => :x, Symbol(2) => :y)
     ns_attr = (; Symbol(1) => :x, Symbol(2) => :y, :size => :z)
     @test _to_value(res[1][(color = NamedEntry(:c, "a"),)]) ==
-        Spec{Any}((log, [1], [10]), (font = 10, color = "red", names = ns))
+        Spec{:log}(([1], [10]), (font = 10, color = "red", names = ns))
     @test _to_value(res[1][(color = NamedEntry(:c, "b"),)]) ==
-        Spec{Any}((log, [2], [20]), (font = 10, color = "blue", names = ns))
+        Spec{:log}(([2], [20]), (font = 10, color = "blue", names = ns))
     @test _to_value(res[2][(color = NamedEntry(:c, "a"),)]) ==
         Spec{Any}(([1], [10]), (size = [3], color = "red", names = ns_attr))
     @test _to_value(res[2][(color = NamedEntry(:c, "b"),)]) ==
         Spec{Any}(([2], [20]), (size = [4], color = "blue", names = ns_attr))
 
-    @test layers(sl)[1] == (Spec{Any}((log,), (; font = 10)) => ds)
+    @test layers(sl)[1] == (Spec{:log}((), (; font = 10)) => ds)
 end

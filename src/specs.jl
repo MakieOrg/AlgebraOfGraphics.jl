@@ -115,7 +115,7 @@ each `key` used as primary (e.g., `color`, `marker`, `linestyle`).
 """
 function specs(ts::GraphicalOrContextual, palette)
     serieslist = OrderedDict{NamedTuple, Spec}[]
-    for (m, ctxmap) in layers(ts)
+    for (m, ctxmap) in run_spec(ts)
         d = OrderedDict{NamedTuple, Spec}()
         l = (layout_x = nothing, layout_y = nothing)
         scales = to_scale(merge_rec(palette, m.kwargs, l))
