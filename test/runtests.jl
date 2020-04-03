@@ -4,9 +4,9 @@ using AlgebraOfGraphics: table,
                          Spec,
                          spec,
                          specs,
+                         _to_value,
                          layers,
                          primary,
-                         rankdicts,
                          positional,
                          keyword,
                          dims,
@@ -73,17 +73,8 @@ end
     end
 end
 
-@testset "rankdicts" begin
-    mpg = dataset("ggplot2", "mpg")
-    d = data(:Cyl, :Hwy) * primary(color = :Year)
-    s = spec(color = :red, font = 10) + data(markersize = :Year)
-    sl = table(mpg) * d * s
-    @test rankdicts(sl)[:color][NamedEntry(:Year, 2008)] == 2
-    @test rankdicts(sl)[:color][NamedEntry(:Year, 1999)] == 1
-end
-
 @testset "specs" begin
-    palette = Dict(:color => ["red", "blue"])
+    palette = (color = ["red", "blue"],)
     t = (x = [1, 2], y = [10, 20], z = [3, 4], c = ["a", "b"])
     d = data(:x, :y) * primary(color = :c)
     s = spec(log) * spec(font = 10) + data(size = :z)
@@ -94,13 +85,13 @@ end
 
     ns = (; Symbol(1) => :x, Symbol(2) => :y)
     ns_attr = (; Symbol(1) => :x, Symbol(2) => :y, :size => :z)
-    @test res[1][(color = NamedEntry(:c, "a"),)] ==
+    @test _to_value(res[1][(color = NamedEntry(:c, "a"),)]) ==
         Spec{Any}((log, [1], [10]), (font = 10, color = "red", names = ns))
-    @test res[1][(color = NamedEntry(:c, "b"),)] ==
+    @test _to_value(res[1][(color = NamedEntry(:c, "b"),)]) ==
         Spec{Any}((log, [2], [20]), (font = 10, color = "blue", names = ns))
-    @test res[2][(color = NamedEntry(:c, "a"),)] ==
+    @test _to_value(res[2][(color = NamedEntry(:c, "a"),)]) ==
         Spec{Any}(([1], [10]), (size = [3], color = "red", names = ns_attr))
-    @test res[2][(color = NamedEntry(:c, "b"),)] ==
+    @test _to_value(res[2][(color = NamedEntry(:c, "b"),)]) ==
         Spec{Any}(([2], [20]), (size = [4], color = "blue", names = ns_attr))
 
     @test layers(sl)[1] == (Spec{Any}((log,), (; font = 10)) => ds)

@@ -59,6 +59,32 @@ function extract_names(d::NamedTuple)
     return ns, vs
 end
 
+struct Scale
+    scale::Observable
+    values::Observable
+end
+
+to_scale(nt::NamedTuple) = map(to_scale, nt)
+function to_scale(v)
+    Scale(convert(Observable, v), Observable(Any[]))
+end
+to_scale() = to_scale(Observable(nothing))
+
+function getrank(value, values)
+    for (i, v) in enumerate(uniquesorted(values))
+        v == value && return i
+    end
+    return nothing
+end
+
+function attr!(s::Scale, value)
+    value in s.values[] || (s.values[] = push!(s.values[], value))
+    map(s.scale, s.values) do scale, values
+        n = getrank(value, values)
+        scale === nothing ? n : scale[mod1(n, length(scale))]
+    end
+end
+
 """
     specs(ts::GraphicalOrContextual, palette)
 
@@ -66,16 +92,13 @@ Compute a vector of `OrderedDict{NamedTuple, Spec}` to be passed to the
 plotting package. `palette[key]` must return a finite list of options, for
 each `key` used as primary (e.g., `color`, `marker`, `linestyle`).
 """
-function specs(ts::GraphicalOrContextual, palette, rks = rankdicts(ts))
+function specs(ts::GraphicalOrContextual, palette)
     serieslist = OrderedDict{NamedTuple, Spec}[]
     for (m, ctxmap) in layers(ts)
         d = OrderedDict{NamedTuple, Spec}()
-        scales = Dict{Symbol, Any}()
-        for (key, val) in palette
-            scales[key] = get(m.kwargs, key, val)
-        end
+        scales = to_scale(merge_rec(palette, m.kwargs))
         for (primary, data) in pairs(ctxmap)
-            theme = applytheme(scales, primary, rks)
+            theme = applytheme(scales, primary)
             names, data = extract_names(data)
             sp = merge(m, Spec{Any}(Tuple(positional(data)), (; keyword(data)..., theme...)))
             d[primary] = merge(sp, Spec{Any}((), (; names=names)))
@@ -85,19 +108,12 @@ function specs(ts::GraphicalOrContextual, palette, rks = rankdicts(ts))
     return serieslist
 end
 
-function applytheme(scales, grp::NamedTuple{names}, rks) where names
+applytheme(scale, val) = attr!(scale, val)
+function applytheme(scales, grp::NamedTuple{names}) where names
     res = map(names) do key
         val = grp[key]
-        if val isa NamedTuple
-            applytheme(to_value(get(scales, key, NamedTuple())), val, rks[key])
-        else
-            # let's worry about interactivity later
-            scale = to_value(get(scales, key, nothing))
-            idx = rks[key][val]
-            scale === nothing ? idx : scale[mod1(idx, length(scale))]
-        end
+        def = val isa NamedTuple ? NamedTuple() : to_scale()
+        applytheme(get(scales, key, def), val)
     end
     return NamedTuple{names}(res)
 end
-
-rankdicts(ts::GraphicalOrContextual) = rankdicts(map(last, layers(ts)))

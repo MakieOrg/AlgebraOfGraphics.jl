@@ -30,7 +30,7 @@ function create_legend(scene, legdict::AbstractDict)
 end
 
 function layoutplot!(scene, layout, ts::GraphicalOrContextual)
-    palette = AbstractPlotting.current_default_theme()[:palette]
+    palette = (; AbstractPlotting.current_default_theme()[:palette]...)
     facetlayout = layout[1, 1] = GridLayout()
     serieslist = specs(ts, palette)
     Nx, Ny = 1, 1
