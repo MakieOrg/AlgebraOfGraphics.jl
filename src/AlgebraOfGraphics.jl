@@ -12,11 +12,13 @@ using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict
 using NamedDims: NamedDimsArray, dimnames
 import JSON
+import GLM
 using Requires: @require
 
 include("utils.jl")
 include("context.jl")
 include("specs.jl")
+include("analysis/smooth.jl")
 include("plotlyjs_integration.jl")
 
 function draw end

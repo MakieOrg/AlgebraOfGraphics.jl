@@ -1,7 +1,6 @@
 using AbstractPlotting, GLMakie, MakieLayout
-using StatsMakie: linear, density, histogram
 
-using AlgebraOfGraphics: data, spec, primary, dims, table, draw
+using AlgebraOfGraphics: data, spec, primary, dims, table, draw, linear, AlgebraOfGraphics
 
 using RDatasets: dataset
 

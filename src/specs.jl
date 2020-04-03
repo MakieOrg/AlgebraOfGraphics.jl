@@ -9,7 +9,7 @@ end
 Spec() = Spec{Any}((), NamedTuple())
 
 spec(args...; kwargs...) = Spec{Any}(args, values(kwargs))
-spec(::Type{T}, args...; kwargs...) where {T} = Spec{T}(args, values(kwargs))
+spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}(args, values(kwargs))
 
 plottype(::Spec{T}) where {T} = T
 
@@ -24,12 +24,24 @@ function Base.:(==)(s1::Spec, s2::Spec)
     return plottype(s1) === plottype(s2) && s1.args == s2.args && s1.kwargs == s2.kwargs
 end
 
+struct Analysis{F} <: AbstractGraphical
+    f::F
+    kwargs::NamedTuple
+end
+
+Analysis(f; kwargs...) = Analysis(f, values(kwargs))
+
+(a::Analysis)(; kwargs...) = Analysis(a.f, merge(a.kwargs, values(kwargs)))
+
+(a::Analysis)(c) = a.f(c)
+
 struct Layers <: AbstractGraphical
     layers::Vector{Pair{Spec, ContextualMap}}
 end
 Layers(s::GraphicalOrContextual) = Layers(layers(s))
 
 layers(s::Layers)             = s.layers
+layers(s::Analysis)           = layers(Spec{Any}((s,), NamedTuple()))
 layers(s::Spec)               = Pair{Spec, ContextualMap}[s => ContextualMap()]
 layers(s::AbstractContextual) = Pair{Spec, ContextualMap}[Spec() => ContextualMap(s)]
 
@@ -83,6 +95,15 @@ function attr!(s::Scale, value)
         n = getrank(value, values)
         scale === nothing ? n : scale[mod1(n, length(scale))]
     end
+end
+
+run_spec(g::GraphicalOrContextual) = reduce(vcat, map(run_spec, layers(g)))
+
+function run_spec((spec, c)::Pair)
+    isempty(spec.args) && return Pair{Spec, AbstractContextual}[spec => c]
+    T = plottype(spec)
+    spec′ = Spec{T}(Base.tail(spec.args), spec.kwargs)
+    return run_spec(first(spec.args)(c) * spec′)
 end
 
 """

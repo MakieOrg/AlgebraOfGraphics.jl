@@ -53,6 +53,7 @@ function layoutplot!(scene, layout, ts::GraphicalOrContextual)
     for series in serieslist
         for (primary, trace) in series
             P = plottype(trace)
+            P isa Symbol && (P = getproperty(AbstractPlotting, P))
             args = trace.args
             attrs = Attributes(trace.kwargs)
             pop!(attrs, :names)
