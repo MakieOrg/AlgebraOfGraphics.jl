@@ -32,8 +32,7 @@ end
 function layoutplot!(scene, layout, ts::GraphicalOrContextual)
     palette = AbstractPlotting.current_default_theme()[:palette]
     facetlayout = layout[1, 1] = GridLayout()
-    rks = rankdicts(ts)
-    serieslist = specs(ts, palette, rks)
+    serieslist = specs(ts, palette)
     Nx, Ny = 1, 1
     for series in serieslist
         for (primary, trace) in series

@@ -34,8 +34,7 @@ const default_palettes = Dict(
 
 # TODO deal with names, link axes, and avoid default color cycling
 function to_dict(ts::GraphicalOrContextual)
-    rks = rankdicts(ts)
-    serieslist = specs(ts, default_palettes, rks)
+    serieslist = specs(ts, default_palettes)
     Nx, Ny = 1, 1
     for series in serieslist
         for (primary, trace) in series
