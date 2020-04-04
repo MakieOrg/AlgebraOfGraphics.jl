@@ -6,7 +6,7 @@
 # ## Basic building blocks
 #
 # The most important functions are `group`, `style`, and `spec`.
-# `style` determines what is the style to be plotted. Its positional arguments correspond to
+# `style` determines the mapping from data to plot. Its positional arguments correspond to
 # the `x`, `y` or `z` axes of the plot, whereas the keyword arguments correspond to plot
 # attributes that can vary continuously, such as `color` or `markersize`. `group`
 # determines the grouping of the style. The style is split according to the variables listed
