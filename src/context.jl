@@ -129,41 +129,16 @@ end
 
 addname(name, el) = fill(NamedEntry(name, el))
 addname(_, el::DimsSelector) = el
-
-function sortperm_many(pcols::Union{Tuple, NamedTuple})
-    x = pcols[1]
-    p = sortperm(x)
-    if length(pcols) > 1
-        y = pcols[2]
-        refine_perm!(p, pcols, 1, x, y, 1, length(x))
-    end
-    return p
-end
-function is_eq(refs, vals, perm, i1)
-    @inbounds feq = first(refs)[perm[i1]] == first(vals)
-    feq ? is_eq(Base.tail(refs), Base.tail(vals), perm, i1) : false
-end
-is_eq(::Tuple{}, ::Tuple{}, perm, i1) = true
+addname(names::NamedTuple, els::NamedTuple) = map(addname, names, els)
 
 # TODO consider further optimizations with refine_perm!
 function group(cols, p, d, pcols, names)
-    refs = map(refarray, Tuple(pcols))
-    perm = sortperm_many(pcols)
-    list = ContextualPair[]
-    i, i1 = 1, 1
-    while i ≤ length(perm)
-        vals = map(t -> t[perm[i]], refs)
-        while i1 ≤ length(perm) && is_eq(refs, vals, perm, i1)
-            i1 += 1
-        end
-        idxs = perm[i:(i1-1)]
-        i = i1
+    sa = StructArray(pcols)
+    list = map(finduniquesorted(sa)) do (k, idxs)
         v = extract_view(d, idxs)
         subtable = coldict(cols, idxs)
-        k = map((col, name) -> addname(name, col[first(idxs)]), pcols, names)
-        newkey = merge(p, k)
-        ctx = ContextualPair(DataContext(subtable), newkey, v)
-        push!(list, ctx)
+        newkey = merge(p, addname(names, k))
+        ContextualPair(DataContext(subtable), newkey, v)
     end
     return ContextualMap(list)
 end
