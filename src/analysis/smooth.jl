@@ -14,7 +14,7 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
         x, y, l, u = x_new, vec(y_new), vec(lower), vec(upper)
         return LittleDict(
                           spec(:Lines) => namedtuple(x, y),
-                          spec(:Band, alpha = 0.5) => namedtuple(x, l, u)
+                          spec(:Band, alpha = 0.2) => namedtuple(x, l, u)
                          )
     catch e
         error("Linear fit not possible for the given data")
