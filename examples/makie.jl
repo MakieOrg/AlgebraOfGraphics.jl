@@ -1,4 +1,4 @@
-using GLMakie
+using AbstractPlotting, GLMakie
 
 using AlgebraOfGraphics
 using AlgebraOfGraphics: linear, smooth
@@ -7,7 +7,7 @@ using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
 d = style(:SepalLength, :SepalWidth) * group(color = :Species)
-s = spec(Scatter, markersize = 10px) + spec(smooth, linewidth = 3)
+s = spec(Scatter) + spec(smooth, linewidth = 3)
 data(iris) * d * s |> draw
 
 # data(iris) * d * spec(Wireframe, density) |> draw

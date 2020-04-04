@@ -126,7 +126,6 @@ function apply(f, c::AbstractDict)
     for (sp, itr) in c
         for (group, style) in itr
             res = f(positional(style)...; keyword(style)...)
-            res === nothing && continue
             res isa Union{Tuple, NamedTuple, AbstractDict} || (res = (res,))
             res isa Tuple && (res = namedtuple(res...))
             res isa NamedTuple && (res = LittleDict(spec() => res))

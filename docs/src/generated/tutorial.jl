@@ -36,12 +36,11 @@
 # ## Working with datas
 
 using RDatasets: dataset
-using AbstractPlotting, CairoMakie, MakieLayout
-using AlgebraOfGraphics
+using AlgebraOfGraphics, AbstractPlotting, CairoMakie
 mpg = dataset("ggplot2", "mpg");
 cols = style(:Displ, :Hwy);
 grp = group(color = :Cyl);
-scat = spec(Scatter, markersize = 10px)
+scat = spec(Scatter)
 pipeline = cols * scat
 data(mpg) * pipeline |> draw
 AbstractPlotting.save("scatter.svg", AbstractPlotting.current_scene()); nothing #hide
@@ -65,17 +64,41 @@ AbstractPlotting.save("linear.svg", AbstractPlotting.current_scene()); nothing #
 # ![](linear.svg)
 # We can put grouping in the pipeline (we filter to avoid a degenerate group).
 
-data(filter(row -> row.Cyl != 5, mpg)) * grp * pipenew |> draw
+filtered = data(filter(row -> row.Cyl != 5, mpg))
+filtered * grp * pipenew |> draw
 AbstractPlotting.save("grouped_linear.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](grouped_linear.svg)
 # This is a more complex example, where we split the scatter plot,
 # but do the linear regression with all the style.
+
 different_grouping = grp * scat + lin
 data(mpg) * cols * different_grouping |> draw
 AbstractPlotting.save("semi_grouped.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](semi_grouped.svg)
+#
+# Different analyses are also possible, always with the same syntax (again we filter
+# out the degenerate group):
+
+using AlgebraOfGraphics: smooth
+filtered * cols * grp * (scat + spec(smooth(span = 0.8), linewidth = 3)) |> draw
+AbstractPlotting.save("loess.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](loess.svg)
+# ## Layout
+#
+# Thanks to the MakieLayout package it is possible to create plots where categorical variables
+# inform the layout.
+
+iris = dataset("datasets", "iris")
+cols = style([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
+grp = group(layout_x = dims(1), layout_y = dims(2), color = :Species)
+geom = spec(Scatter) + spec(linear, linewidth = 3)
+data(iris) * cols * grp * geom |> draw
+AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](layout.svg)
 #
 # ## Non tabular style
 #
@@ -101,20 +124,6 @@ AbstractPlotting.save("distributions.svg", AbstractPlotting.current_scene()); no
 
 # ![](distributions.svg)
 #
-# ## Layout
-#
-# Thanks to the MakieLayout package it is possible to create plots where categorical variables
-# inform the layout.
-
-iris = dataset("datasets", "iris")
-cols = style([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
-grp = group(layout_x = dims(1), layout_y = dims(2), color = :Species)
-geom = spec(Scatter, markersize = 10px) + spec(linear, linewidth = 3)
-data(iris) * cols * grp * geom |> draw
-AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #hide
-
-# ![](layout.svg)
-#
 # ## Slicing context
 #
 # The algebra of graphics logic can be easily extended to novel contexts.
@@ -122,7 +131,7 @@ AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #
 
 s = dims(1) * style(rand(50, 3), rand(50, 3, 2))
 grp = group(color = dims(2), layout_x = dims(3))
-s * grp * spec(Scatter, markersize = 10px) |> draw
+s * grp * spec(Scatter) |> draw
 AbstractPlotting.save("arrays.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](arrays.svg)

@@ -1,4 +1,4 @@
-using AbstractPlotting: Attributes, AbstractPlot, AbstractPlotting
+using AbstractPlotting: px, Attributes, AbstractPlot, AbstractPlotting
 using MakieLayout: LAxis,
                    GridLayout,
                    linkxaxes!,
@@ -28,6 +28,14 @@ function create_legend(scene, legdict::AbstractDict)
     MakieLayout.LLegend(scene, plts_list, entries_list, names)
 end
 
+function set_defaults!(attrs::Attributes)
+    # manually implement alpha values
+    col = get(attrs, :color, Observable(:black))
+    alpha = get(attrs, :alpha, Observable(1))
+    attrs[:color] = map(tuple, col, alpha)
+    get!(attrs, :markersize, Observable(8px))
+end
+
 function layoutplot!(scene, layout, ts::GraphicalOrContextual)
     palette = (; AbstractPlotting.current_default_theme()[:palette]...)
     facetlayout = layout[1, 1] = GridLayout()
@@ -55,6 +63,7 @@ function layoutplot!(scene, layout, ts::GraphicalOrContextual)
             P isa Symbol && (P = getproperty(AbstractPlotting, P))
             args = trace.args
             attrs = Attributes(trace.kwargs)
+            set_defaults!(attrs)
             pop!(attrs, :names)
             x_pos = pop!(attrs, :layout_x, 1) |> to_value
             y_pos = pop!(attrs, :layout_y, 1) |> to_value
