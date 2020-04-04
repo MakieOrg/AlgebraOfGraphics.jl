@@ -8,13 +8,13 @@ abstract type AbstractContext <: AbstractContextual end
 
 struct ContextualPair{C, P<:NamedTuple, D<:NamedTuple} <: AbstractContextual
     context::C
-    primary::P
-    data::D
+    group::P
+    style::D
 end
 ContextualPair(context) = ContextualPair(context, NamedTuple(), NamedTuple())
 
 function Base.:(==)(s1::ContextualPair, s2::ContextualPair)
-    s1.context == s2.context && s1.primary == s2.primary && s1.data == s2.data
+    s1.context == s2.context && s1.group == s2.group && s1.style == s2.style
 end
 
 function Base.show(io::IO, c::ContextualPair{C}) where {C}
@@ -52,11 +52,11 @@ end
 
 # TODO: deal with context more carefully here?
 function Base.:*(c1::ContextualPair, c2::ContextualPair)
-    return merge_primary_data(c1, c2.primary => c2.data)
+    return merge_group_style(c1, c2.group => c2.style)
 end
 
-primary(; kwargs...) = ContextualPair(nothing, values(kwargs), NamedTuple())
-data(t...; nt...) = ContextualPair(nothing, NamedTuple(), namedtuple(t...; nt...))
+group(; kwargs...) = ContextualPair(nothing, values(kwargs), NamedTuple())
+style(t...; nt...) = ContextualPair(nothing, NamedTuple(), namedtuple(t...; nt...))
 
 # Default: broadcast context
 
@@ -69,13 +69,13 @@ function aos(d::NamedTuple{names}) where names
 end
 
 function Base.pairs(s::ContextualPair)
-    d = aos(s.data)
-    p = aos(adjust(s.primary, d))
+    d = aos(s.style)
+    p = aos(adjust(s.group, d))
     return p .=> d
 end
 
-function merge_primary_data(c::ContextualPair, (p, d))
-    return ContextualPair(c.context, merge(c.primary, p), merge(c.data, d))
+function merge_group_style(c::ContextualPair, (p, d))
+    return ContextualPair(c.context, merge(c.group, p), merge(c.style, d))
 end
 
 # slicing context
@@ -91,23 +91,23 @@ Base.isless(s1::DimsSelector, s2::DimsSelector) = isless(s1.dims, s2.dims)
 adjust(ds::DimsSelector, d) = [c[ds.dims...] for c in CartesianIndices(d)]
 
 function Base.pairs(c::ContextualPair{<:DimsSelector})
-    d = map(c.data) do col
+    d = map(c.style) do col
         mapslices(v -> [v], col; dims=c.context.dims)
     end
-    return pairs(ContextualPair(nothing, c.primary, d))
+    return pairs(ContextualPair(nothing, c.group, d))
 end
 
-# data context: integers and symbols are columns
+# style context: integers and symbols are columns
 
 struct DataContext{T} <: AbstractContext
-    table::T
+    data::T
 end
 
-table(x) = DataContext(coldict(x))
+data(x) = DataContext(coldict(x))
 
-Base.:(==)(s1::DataContext, s2::DataContext) = s1.table == s2.table
+Base.:(==)(s1::DataContext, s2::DataContext) = s1.data == s2.data
 
-Base.pairs(t::ContextualPair{<:DataContext}) = pairs(ContextualPair(nothing, t.primary, t.data))
+Base.pairs(t::ContextualPair{<:DataContext}) = pairs(ContextualPair(nothing, t.group, t.style))
 
 function extract_column(t, col::Union{Symbol, Int}, wrap=false)
     colname = col isa Symbol ? col : columnnames(t)[col]
@@ -132,24 +132,24 @@ addname(_, el::DimsSelector) = el
 addname(names::NamedTuple, els::NamedTuple) = map(addname, names, els)
 
 # TODO consider further optimizations with refine_perm!
-function group(cols, p, d, pcols, names)
+function _group(cols, p, d, pcols, names)
     sa = StructArray(pcols)
     list = map(finduniquesorted(sa)) do (k, idxs)
         v = extract_view(d, idxs)
-        subtable = coldict(cols, idxs)
+        subdata = coldict(cols, idxs)
         newkey = merge(p, addname(names, k))
-        ContextualPair(DataContext(subtable), newkey, v)
+        ContextualPair(DataContext(subdata), newkey, v)
     end
     return ContextualMap(list)
 end
 
-function merge_primary_data(s::ContextualPair{<:DataContext}, (primary, data))
-    ctx, p, d = s.context, s.primary, s.data
-    cols = ctx.table
-    d′ = extract_column(cols, data, true)
+function merge_group_style(s::ContextualPair{<:DataContext}, (group, style))
+    ctx, p, d = s.context, s.group, s.style
+    cols = ctx.data
+    d′ = extract_column(cols, style, true)
     d′′ = merge(d, d′)
-    p′ = extract_column(cols, primary)
+    p′ = extract_column(cols, group)
     ns = map(get_name, p′)
-    isempty(p′) ? ContextualPair(ctx, p, d′′) : group(cols, p, d′′, map(pool, p′), ns)
+    isempty(p′) ? ContextualPair(ctx, p, d′′) : _group(cols, p, d′′, map(pool, p′), ns)
 end
 

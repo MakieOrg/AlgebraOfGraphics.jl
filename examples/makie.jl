@@ -1,40 +1,40 @@
 using AbstractPlotting, GLMakie, MakieLayout
 
-using AlgebraOfGraphics: data, spec, primary, dims, table, draw, linear, smooth, AlgebraOfGraphics
+using AlgebraOfGraphics: style, spec, group, dims, data, draw, linear, smooth, AlgebraOfGraphics
 
 using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
-d = data(:SepalLength, :SepalWidth) * primary(color = :Species)
+d = style(:SepalLength, :SepalWidth) * group(color = :Species)
 s = spec(Scatter, markersize = 10px) + spec(smooth, linewidth = 3)
-table(iris) * d * s |> draw
+data(iris) * d * s |> draw
 
-table(iris) * d * spec(Wireframe, density) |> draw
+data(iris) * d * spec(Wireframe, density) |> draw
 
-cols = data([:PetalLength, :PetalWidth], [:SepalLength :SepalWidth])
-style = primary(color = dims(1), marker = dims(2))
-table(iris) * cols * style * spec(Scatter) |> draw
+cols = style([:PetalLength, :PetalWidth], [:SepalLength :SepalWidth])
+style = group(color = dims(1), marker = dims(2))
+data(iris) * cols * style * spec(Scatter) |> draw
 
-data([rand(100), rand(100)], Ref(rand(100)), color = Ref(rand(100))) * primary(marker = 1:2) * spec(Scatter, markersize=10px) |> draw
+style([rand(100), rand(100)], Ref(rand(100)), color = Ref(rand(100))) * group(marker = 1:2) * spec(Scatter, markersize=10px) |> draw
 
-data((randn(1000), rand(100))) * primary(color = 1:2) * spec(density, linewidth=10) |> draw
+style((randn(1000), rand(100))) * group(color = 1:2) * spec(density, linewidth=10) |> draw
 
 # TODO fix stacking and choose edges globally
-data((randn(1000), rand(100))) * primary(color = 1:2) * spec(histogram(edges = -3:0.1:3)) |> draw
+style((randn(1000), rand(100))) * group(color = 1:2) * spec(histogram(edges = -3:0.1:3)) |> draw
 
 using AbstractPlotting, GLMakie, MakieLayout
 using StatsMakie: linear
-using AlgebraOfGraphics: dims, primary, data, spec, table, draw
+using AlgebraOfGraphics: dims, group, style, spec, data, draw
 using RDatasets: dataset
 iris = dataset("datasets", "iris")
 iris.Rare = rand(Bool, 150)
-d = data([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
-grp = primary(layout_x = dims(1), layout_y = dims(2), color = :Species)
-s = primary(marker = :Rare) * spec(Scatter, markersize = 10px) + spec(linear)
-table(iris) * d * grp * s |> draw
+d = style([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
+grp = group(layout_x = dims(1), layout_y = dims(2), color = :Species)
+s = group(marker = :Rare) * spec(Scatter, markersize = 10px) + spec(linear)
+data(iris) * d * grp * s |> draw
 
 dims(1) *
-    data(rand(5, 3, 2), rand(5, 3)) *
-    primary(color=dims(2)) *
+    style(rand(5, 3, 2), rand(5, 3)) *
+    group(color=dims(2)) *
     spec(Scatter, markersize = 20px) |> draw
 

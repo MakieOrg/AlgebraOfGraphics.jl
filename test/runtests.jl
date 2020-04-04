@@ -1,11 +1,11 @@
 using AlgebraOfGraphics, Test
-using AlgebraOfGraphics: table,
-                         data,
+using AlgebraOfGraphics: data,
+                         style,
                          Spec,
                          spec,
                          specs,
                          layers,
-                         primary,
+                         group,
                          positional,
                          keyword,
                          dims,
@@ -19,7 +19,7 @@ using RDatasets: dataset
 using Observables: to_value
 
 @testset "product" begin
-    s = data(1:2, ["a", "b"]) * primary(color = dims(1))
+    s = style(1:2, ["a", "b"]) * group(color = dims(1))
     exp = ContextualPair(
                          nothing,
                          (; color = dims(1)),
@@ -30,25 +30,25 @@ end
 
 @testset "lazy spec" begin
     mpg = dataset("ggplot2", "mpg")
-    d = data(:Cyl, :Hwy) * primary(color = :Year)
-    s = spec(color = :red, font = 10) + data(markersize = :Year)
-    sl = table(mpg) * d * s
+    d = style(:Cyl, :Hwy) * group(color = :Year)
+    s = spec(color = :red, font = 10) + style(markersize = :Year)
+    sl = data(mpg) * d * s
     res = layers(sl)
     @test first(res[1]) == Spec{Any}((), (color = :red, font = 10))
 
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
 
-    datas = [map(last, pairs(last(res[i]))) for i in 1:2]
-    @test Tuple(positional(datas[1][1])) == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test Tuple(positional(datas[1][2])) == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
-    @test Tuple(positional(datas[2][1])) == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test Tuple(positional(datas[2][2])) == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    styles = [map(last, pairs(last(res[i]))) for i in 1:2]
+    @test Tuple(positional(styles[1][1])) == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test Tuple(positional(styles[1][2])) == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    @test Tuple(positional(styles[2][1])) == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
+    @test Tuple(positional(styles[2][2])) == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
 
-    @test (; keyword(datas[1][1])...) == NamedTuple()
-    @test (; keyword(datas[1][2])...) == NamedTuple()
-    @test (; keyword(datas[2][1])...) == (; markersize = mpg[idx1, :Year])
-    @test (; keyword(datas[2][2])...) == (; markersize = mpg[idx2, :Year])
+    @test (; keyword(styles[1][1])...) == NamedTuple()
+    @test (; keyword(styles[1][2])...) == NamedTuple()
+    @test (; keyword(styles[2][1])...) == (; markersize = mpg[idx1, :Year])
+    @test (; keyword(styles[2][2])...) == (; markersize = mpg[idx2, :Year])
 
     primaries = [map(first, pairs(last(res[i]))) for i in 1:2]
     @test primaries[1][1] == (; color = NamedEntry(:Year, 1999))
@@ -61,15 +61,15 @@ end
 
     x = rand(5, 3, 2)
     y = rand(5, 3)
-    s = dims(1) * data(x, y) * primary(color = dims(2)) 
+    s = dims(1) * style(x, y) * group(color = dims(2)) 
 
     res = pairs(s)
     for (i, r) in enumerate(res)
-        primary, data = r
-        @test primary == (; color = mod1(i, 3))
+        group, style = r
+        @test group == (; color = mod1(i, 3))
         xsl = x[:, mod1(i, 3), (i > 3) + 1]
         ysl = y[:, mod1(i, 3)]
-        @test data == (; Symbol(1) => xsl, Symbol(2) => ysl)
+        @test style == (; Symbol(1) => xsl, Symbol(2) => ysl)
     end
 end
 
@@ -80,9 +80,9 @@ _to_value(s) = to_value(s)
 @testset "specs" begin
     palette = (color = ["red", "blue"],)
     t = (x = [1, 2], y = [10, 20], z = [3, 4], c = ["a", "b"])
-    d = data(:x, :y) * primary(color = :c)
-    s = spec(:log) * spec(font = 10) + data(size = :z)
-    ds = table(t) * d
+    d = style(:x, :y) * group(color = :c)
+    s = spec(:log) * spec(font = 10) + style(size = :z)
+    ds = data(t) * d
     sl = ds * s
     res = specs(sl, palette)
     @test length(res) == 2
