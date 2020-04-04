@@ -1,6 +1,7 @@
-using AbstractPlotting, GLMakie, MakieLayout
+using GLMakie
 
-using AlgebraOfGraphics: style, spec, group, dims, data, draw, linear, smooth, AlgebraOfGraphics
+using AlgebraOfGraphics
+using AlgebraOfGraphics: linear, smooth
 
 using RDatasets: dataset
 
@@ -23,7 +24,6 @@ style((randn(1000), rand(100))) * group(color = 1:2) * spec(density, linewidth=1
 style((randn(1000), rand(100))) * group(color = 1:2) * spec(histogram(edges = -3:0.1:3)) |> draw
 
 using AbstractPlotting, GLMakie, MakieLayout
-using StatsMakie: linear
 using AlgebraOfGraphics: dims, group, style, spec, data, draw
 using RDatasets: dataset
 iris = dataset("datasets", "iris")

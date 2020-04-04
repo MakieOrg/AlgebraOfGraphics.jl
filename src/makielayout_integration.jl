@@ -1,12 +1,11 @@
-const Attributes   = AbstractPlotting.Attributes
-const AbstractPlot = AbstractPlotting.AbstractPlot
-
-const LAxis = MakieLayout.LAxis
-const GridLayout = MakieLayout.GridLayout
-const linkxaxes! = MakieLayout.linkxaxes!
-const linkyaxes! = MakieLayout.linkyaxes!
-const hideydecorations! = MakieLayout.hideydecorations!
-const hidexdecorations! = MakieLayout.hidexdecorations!
+using AbstractPlotting: Attributes, AbstractPlot, AbstractPlotting
+using MakieLayout: LAxis,
+                   GridLayout,
+                   linkxaxes!,
+                   linkyaxes!,
+                   hidexdecorations!,
+                   hideydecorations!,
+                   MakieLayout
 
 function set_names!(ax, trace)
     for (nm, prop) in zip(positional(trace.kwargs.names), (:xlabel, :ylabel, :zlabel))
