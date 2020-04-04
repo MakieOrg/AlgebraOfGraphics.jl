@@ -35,7 +35,7 @@ Analysis(f; kwargs...) = Analysis(f, values(kwargs))
 
 (a::Analysis)(; kwargs...) = Analysis(a.f, merge(a.kwargs, values(kwargs)))
 
-(a::Analysis)(c) = a.f(c)
+(a::Analysis)(args...; kwargs...) = a.f(args...; merge(a.kwargs, values(kwargs))...)
 
 struct Layers <: AbstractGraphical
     layers::Vector{Pair{Spec, ContextualMap}}
@@ -111,11 +111,28 @@ end
 function spec_dict(ts::GraphicalOrContextual)
     d = OrderedDict{Spec, PairList}()
     for (sp, ctx) in layers(ts)
-        f = foldl((a, b) -> b ∘ a, sp.args, init=identity)
         sp0 = Spec{plottype(sp)}((), sp.kwargs)
-        res = f(LittleDict(sp0 => pairs(ctx)))
+        init = LittleDict(sp0 => pairs(ctx))
+        res = foldl((v, f) -> apply(f, v), sp.args, init=init)
         for (key, val) in pairs(res)
             appendat!(d, key, val)
+        end
+    end
+    return d
+end
+
+function apply(f, c::AbstractDict)
+    d = OrderedDict{Spec, PairList}()
+    for (sp, itr) in c
+        for (primary, data) in itr
+            res = f(positional(data)...; keyword(data)...)
+            res === nothing && continue
+            res isa Union{Tuple, NamedTuple, AbstractDict} || (res = (res,))
+            res isa Tuple && (res = namedtuple(res...))
+            res isa NamedTuple && (res = LittleDict(spec() => res))
+            for (key, val) in pairs(res)
+                pushat!(d, merge(sp, key), primary => val)
+            end
         end
     end
     return d

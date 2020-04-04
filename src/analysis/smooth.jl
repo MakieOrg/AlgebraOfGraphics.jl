@@ -1,7 +1,5 @@
 # From StatsMakie
-# TODO refactor common part as a fallback for Analysis
-# TODO make sure documentation at least runs
-# TODO PRs for Band in AbstractPlotting
+# TODO PR for Band in AbstractPlotting
 function _linear(x::AbstractVector{T}, y::AbstractVector;
                  n_points = 100, interval = :confidence) where T
     try
@@ -15,25 +13,14 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
                                           interval=interval)
         # the GLM predictions always return matrices
         x, y, l, u = x_new, vec(y_new), vec(lower), vec(upper)
-        return namedtuple(x, y), namedtuple(x, l, u)
+        return LittleDict(
+                          spec(:Lines) => namedtuple(x, y),
+                          spec(:Band) => namedtuple(x, l, u)
+                         )
     catch e
         @warn "Linear fit not possible for the given data"
         return nothing
     end
-end
-
-function _linear(c::AbstractDict; kwargs...)
-    d = OrderedDict{Spec, PairList}()
-    for (sp, itr) in c
-        for (primary, data) in itr
-            res = _linear(positional(data)...; keyword(data)..., kwargs...)
-            res === nothing && continue
-            l, b = res
-            pushat!(d, merge(sp, spec(:Lines)), primary => l)
-            pushat!(d, merge(sp, spec(:Band)), primary => b)
-        end
-    end
-    return d
 end
 
 const linear = Analysis(_linear)
@@ -43,18 +30,7 @@ function _smooth(x, y; length = 100, kwargs...)
     min, max = extrema(x)
     us = collect(range(min, stop = max, length = length))
     vs = Loess.predict(model, us)
-    return namedtuple(us, vs)
-end
-
-function _smooth(c::AbstractDict; kwargs...)
-    d = OrderedDict{Spec, PairList}()
-    for (sp, itr) in c
-        for (primary, data) in itr
-            res = _smooth(positional(data)...; keyword(data)..., kwargs...)
-            pushat!(d, merge(sp, spec(:Lines)), primary => res)
-        end
-    end
-    return d
+    return LittleDict(spec(:Lines) => namedtuple(us, vs))
 end
 
 const smooth = Analysis(_smooth)
