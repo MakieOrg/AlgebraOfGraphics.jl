@@ -10,7 +10,7 @@ end
 
 pool(v::PooledVector) = v
 
-pool(v::AbstractVector{<:Integer}) = v
+pool(v::Vector{<:Integer}) = v
 
 # tabular utils
 
