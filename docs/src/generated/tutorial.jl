@@ -56,7 +56,7 @@ AbstractPlotting.save("grouped_scatter.svg", AbstractPlotting.current_scene()); 
 # ![](grouped_scatter.svg)
 # Traces can be added together with `+`.
 
-using StatsMakie: linear
+using AlgebraOfGraphics: linear
 lin = spec(linear, linewidth = 3)
 pipenew = cols * (scat + lin)
 table(mpg) * pipenew |> draw
@@ -90,6 +90,7 @@ AbstractPlotting.save("functions.svg", AbstractPlotting.current_scene()); nothin
 
 # ![](functions.svg)
 
+import StatsMakie
 using Distributions
 mus = 1:4
 shapes = [6, 10]

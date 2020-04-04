@@ -9,14 +9,14 @@ end
 Spec() = Spec{Any}((), NamedTuple())
 
 spec(args...; kwargs...) = Spec{Any}(args, values(kwargs))
-spec(::Type{T}, args...; kwargs...) where {T} = Spec{T}(args, values(kwargs))
+spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}(args, values(kwargs))
 
 plottype(::Spec{T}) where {T} = T
 
 function Base.merge(t1::Spec{T1}, t2::Spec{T2}) where {T1, T2}
     T = T2 === Any ? T1 : T2
     args = (t1.args..., t2.args...)
-    kwargs = merge_rec(t1.kwargs, t2.kwargs)
+    kwargs = merge(t1.kwargs, t2.kwargs)
     return Spec{T}(args, kwargs)
 end
 
@@ -24,12 +24,26 @@ function Base.:(==)(s1::Spec, s2::Spec)
     return plottype(s1) === plottype(s2) && s1.args == s2.args && s1.kwargs == s2.kwargs
 end
 
+Base.hash(a::Spec, h::UInt64) = hash((a.args, a.kwargs), hash(typeof(a), h))
+
+struct Analysis{F} <: AbstractGraphical
+    f::F
+    kwargs::NamedTuple
+end
+
+Analysis(f; kwargs...) = Analysis(f, values(kwargs))
+
+(a::Analysis)(; kwargs...) = Analysis(a.f, merge(a.kwargs, values(kwargs)))
+
+(a::Analysis)(args...; kwargs...) = a.f(args...; merge(a.kwargs, values(kwargs))...)
+
 struct Layers <: AbstractGraphical
     layers::Vector{Pair{Spec, ContextualMap}}
 end
 Layers(s::GraphicalOrContextual) = Layers(layers(s))
 
 layers(s::Layers)             = s.layers
+layers(s::Analysis)           = layers(Spec{Any}((s,), NamedTuple()))
 layers(s::Spec)               = Pair{Spec, ContextualMap}[s => ContextualMap()]
 layers(s::AbstractContextual) = Pair{Spec, ContextualMap}[Spec() => ContextualMap(s)]
 
@@ -71,7 +85,7 @@ end
 to_scale() = to_scale(Observable(nothing))
 
 function getrank(value, values)
-    for (i, v) in enumerate(uniquesorted(values))
+    for (i, v) in enumerate(unique(sort(values)))
         v == value && return i
     end
     return nothing
@@ -85,6 +99,45 @@ function attr!(s::Scale, value)
     end
 end
 
+const PairList = Vector{Pair{<:NamedTuple, <:NamedTuple}}
+
+for (f!, f_at!) in [(:push!, :pushat!), (:append!, :appendat!)]
+    @eval function $f_at!(d::AbstractDict{<:Any, T}, key, val) where {T <: AbstractVector}
+        v = get!(d, key, T[])
+        $f!(v, val)
+    end
+end
+
+function spec_dict(ts::GraphicalOrContextual)
+    d = OrderedDict{Spec, PairList}()
+    for (sp, ctx) in layers(ts)
+        sp0 = Spec{plottype(sp)}((), sp.kwargs)
+        init = LittleDict(sp0 => pairs(ctx))
+        res = foldl((v, f) -> apply(f, v), sp.args, init=init)
+        for (key, val) in pairs(res)
+            appendat!(d, key, val)
+        end
+    end
+    return d
+end
+
+function apply(f, c::AbstractDict)
+    d = OrderedDict{Spec, PairList}()
+    for (sp, itr) in c
+        for (primary, data) in itr
+            res = f(positional(data)...; keyword(data)...)
+            res === nothing && continue
+            res isa Union{Tuple, NamedTuple, AbstractDict} || (res = (res,))
+            res isa Tuple && (res = namedtuple(res...))
+            res isa NamedTuple && (res = LittleDict(spec() => res))
+            for (key, val) in pairs(res)
+                pushat!(d, merge(sp, key), primary => val)
+            end
+        end
+    end
+    return d
+end
+
 """
     specs(ts::GraphicalOrContextual, palette)
 
@@ -94,11 +147,11 @@ each `key` used as primary (e.g., `color`, `marker`, `linestyle`).
 """
 function specs(ts::GraphicalOrContextual, palette)
     serieslist = OrderedDict{NamedTuple, Spec}[]
-    for (m, ctxmap) in layers(ts)
+    for (m, itr) in spec_dict(ts)
         d = OrderedDict{NamedTuple, Spec}()
         l = (layout_x = nothing, layout_y = nothing)
-        scales = to_scale(merge_rec(palette, m.kwargs, l))
-        for (primary, data) in pairs(ctxmap)
+        scales = to_scale(merge(palette, m.kwargs, l))
+        for (primary, data) in itr
             theme = applytheme(scales, primary)
             names, data = extract_names(data)
             sp = merge(m, Spec{Any}(Tuple(positional(data)), (; keyword(data)..., theme...)))

@@ -1,13 +1,12 @@
 using AbstractPlotting, GLMakie, MakieLayout
-using StatsMakie: linear, density, histogram
 
-using AlgebraOfGraphics: data, spec, primary, dims, table, draw
+using AlgebraOfGraphics: data, spec, primary, dims, table, draw, linear, smooth, AlgebraOfGraphics
 
 using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
 d = data(:SepalLength, :SepalWidth) * primary(color = :Species)
-s = spec(Scatter, markersize = 10px) + spec(linear)
+s = spec(Scatter, markersize = 10px) + spec(smooth, linewidth = 3)
 table(iris) * d * s |> draw
 
 table(iris) * d * spec(Wireframe, density) |> draw

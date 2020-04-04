@@ -64,11 +64,9 @@ adjust(x, d) = x
 adjust(x::NamedTuple, d) = map(v -> adjust(v, d), x)
 
 function aos(d::NamedTuple{names}) where names
-    d = map(aos, d)
     v = broadcast((args...) -> NamedTuple{names}(args), d...)
     return v isa NamedTuple ? [v] : v
 end
-aos(v) = v
 
 function Base.pairs(s::ContextualPair)
     d = aos(s.data)
@@ -77,7 +75,7 @@ function Base.pairs(s::ContextualPair)
 end
 
 function merge_primary_data(c::ContextualPair, (p, d))
-    return ContextualPair(c.context, merge_rec(c.primary, p), merge_rec(c.data, d))
+    return ContextualPair(c.context, merge(c.primary, p), merge(c.data, d))
 end
 
 # slicing context
@@ -129,32 +127,29 @@ function extract_view(t::Union{NamedTuple, Tuple}, idxs)
     map(v -> extract_view(v, idxs), t)
 end
 
-pool_many(v) = pool(v)
-pool_many(v::NamedTuple) = StructArray(map(pool_many, v))
+addname(name, el) = fill(NamedEntry(name, el))
+addname(_, el::DimsSelector) = el
+addname(names::NamedTuple, els::NamedTuple) = map(addname, names, els)
 
-_addname(col, el) = fill(NamedEntry(get_name(col), el))
-_addname(col, el::DimsSelector) = el
-_addname(cols::NamedTuple, els::NamedTuple) = map(_addname, cols, els)
-
-function group(cols, p1, p2, d)
-    list = if isempty(p2)
-        [ContextualPair(DataContext(cols), p1, d)]
-    else
-        sa = pool_many(p2)
-        map(finduniquesorted(sa)) do (k, idxs)
-            v = extract_view(d, idxs)
-            subtable = coldict(cols, idxs)
-            newkey = _addname(p2, k)
-            ContextualPair(DataContext(subtable), merge_rec(p1, newkey), v)
-        end
+# TODO consider further optimizations with refine_perm!
+function group(cols, p, d, pcols, names)
+    sa = StructArray(pcols)
+    list = map(finduniquesorted(sa)) do (k, idxs)
+        v = extract_view(d, idxs)
+        subtable = coldict(cols, idxs)
+        newkey = merge(p, addname(names, k))
+        ContextualPair(DataContext(subtable), newkey, v)
     end
     return ContextualMap(list)
 end
 
 function merge_primary_data(s::ContextualPair{<:DataContext}, (primary, data))
-    cols, p, d = s.context.table, s.primary, s.data
-    p2 = extract_column(cols, primary)
-    d2 = extract_column(cols, data, true)
-    return group(cols, p, p2, merge_rec(d, d2))
+    ctx, p, d = s.context, s.primary, s.data
+    cols = ctx.table
+    d′ = extract_column(cols, data, true)
+    d′′ = merge(d, d′)
+    p′ = extract_column(cols, primary)
+    ns = map(get_name, p′)
+    isempty(p′) ? ContextualPair(ctx, p, d′′) : group(cols, p, d′′, map(pool, p′), ns)
 end
 
