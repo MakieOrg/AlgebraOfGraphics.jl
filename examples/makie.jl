@@ -1,6 +1,7 @@
-using AbstractPlotting, GLMakie, MakieLayout
+using GLMakie
 
-using AlgebraOfGraphics: style, spec, group, dims, data, draw, linear, smooth, AlgebraOfGraphics
+using AlgebraOfGraphics
+using AlgebraOfGraphics: linear, smooth
 
 using RDatasets: dataset
 
@@ -9,11 +10,11 @@ d = style(:SepalLength, :SepalWidth) * group(color = :Species)
 s = spec(Scatter, markersize = 10px) + spec(smooth, linewidth = 3)
 data(iris) * d * s |> draw
 
-data(iris) * d * spec(Wireframe, density) |> draw
+# data(iris) * d * spec(Wireframe, density) |> draw
 
 cols = style([:PetalLength, :PetalWidth], [:SepalLength :SepalWidth])
-style = group(color = dims(1), marker = dims(2))
-data(iris) * cols * style * spec(Scatter) |> draw
+st = group(color = dims(1), marker = dims(2))
+data(iris) * cols * st * spec(Scatter) |> draw
 
 style([rand(100), rand(100)], Ref(rand(100)), color = Ref(rand(100))) * group(marker = 1:2) * spec(Scatter, markersize=10px) |> draw
 
@@ -23,7 +24,6 @@ style((randn(1000), rand(100))) * group(color = 1:2) * spec(density, linewidth=1
 style((randn(1000), rand(100))) * group(color = 1:2) * spec(histogram(edges = -3:0.1:3)) |> draw
 
 using AbstractPlotting, GLMakie, MakieLayout
-using StatsMakie: linear
 using AlgebraOfGraphics: dims, group, style, spec, data, draw
 using RDatasets: dataset
 iris = dataset("datasets", "iris")
