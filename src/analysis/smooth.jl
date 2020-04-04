@@ -17,8 +17,7 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
                           spec(:Band, alpha = 0.5) => namedtuple(x, l, u)
                          )
     catch e
-        @warn "Linear fit not possible for the given style"
-        return nothing
+        error("Linear fit not possible for the given data")
     end
 end
 
