@@ -6,6 +6,7 @@ using DataAPI: refarray, refvalue
 using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict, LittleDict
 using NamedDims: NamedDimsArray, dimnames
+using StructArrays: refine_perm!
 import GLM, Loess
 using Requires: @require
 

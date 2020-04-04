@@ -1,6 +1,9 @@
 # PooledArrays utils
 
-function pool(v::AbstractVector)
+pool(v::AbstractVector) = pool(v, eltype(v))
+pool(v::PooledVector) = v
+
+function pool(v::AbstractVector, ::Type)
     s = refarray(v)
     pv = PooledArray(s)
     map(pv) do el
@@ -8,9 +11,8 @@ function pool(v::AbstractVector)
     end
 end
 
-pool(v::PooledVector) = v
-
-pool(v::Vector{<:Integer}) = v
+pool(v::Vector, ::Type{<:Integer}) = v
+pool(v::AbstractVector, ::Type{<:Integer}) = collect(v)
 
 # tabular utils
 

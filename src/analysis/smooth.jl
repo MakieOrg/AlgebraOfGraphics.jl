@@ -1,5 +1,7 @@
 # From StatsMakie
 # TODO refactor common part as a fallback for Analysis
+# TODO make sure documentation at least runs
+# TODO PRs for Band in AbstractPlotting
 function _linear(x::AbstractVector{T}, y::AbstractVector;
                  n_points = 100, interval = :confidence) where T
     try

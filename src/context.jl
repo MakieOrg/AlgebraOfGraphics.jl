@@ -127,26 +127,41 @@ function extract_view(t::Union{NamedTuple, Tuple}, idxs)
     map(v -> extract_view(v, idxs), t)
 end
 
-addname(col, el) = fill(NamedEntry(get_name(col), el))
-addname(col, el::DimsSelector) = el
+addname(name, el) = fill(NamedEntry(name, el))
+addname(_, el::DimsSelector) = el
 
-function group(cols, name, col, p, d)
-    sa = pool(col)
-    perm = sortperm(sa)
-    refs = refarray(sa)
+function sortperm_many(pcols::Union{Tuple, NamedTuple})
+    x = pcols[1]
+    p = sortperm(x)
+    if length(pcols) > 1
+        y = pcols[2]
+        refine_perm!(p, pcols, 1, x, y, 1, length(x))
+    end
+    return p
+end
+function is_eq(refs, vals, perm, i1)
+    @inbounds feq = first(refs)[perm[i1]] == first(vals)
+    feq ? is_eq(Base.tail(refs), Base.tail(vals), perm, i1) : false
+end
+is_eq(::Tuple{}, ::Tuple{}, perm, i1) = true
+
+# TODO consider further optimizations with refine_perm!
+function group(cols, p, d, pcols, names)
+    refs = map(refarray, Tuple(pcols))
+    perm = sortperm_many(pcols)
     list = ContextualPair[]
     i, i1 = 1, 1
     while i ≤ length(perm)
-        val = refs[perm[i]]
-        @inbounds while i1 ≤ length(perm) && val == refs[perm[i1]]
+        vals = map(t -> t[perm[i]], refs)
+        while i1 ≤ length(perm) && is_eq(refs, vals, perm, i1)
             i1 += 1
         end
         idxs = perm[i:(i1-1)]
-        k = sa[first(idxs)]
         i = i1
         v = extract_view(d, idxs)
         subtable = coldict(cols, idxs)
-        newkey = Base.setindex(p, addname(col, k), name)
+        k = map((col, name) -> addname(name, col[first(idxs)]), pcols, names)
+        newkey = merge(p, k)
         ctx = ContextualPair(DataContext(subtable), newkey, v)
         push!(list, ctx)
     end
@@ -156,17 +171,10 @@ end
 function merge_primary_data(s::ContextualPair{<:DataContext}, (primary, data))
     ctx, p, d = s.context, s.primary, s.data
     cols = ctx.table
-    if !isempty(data)
-        d2 = extract_column(cols, data, true)
-        cp = ContextualPair(ctx, p, merge(d, d2))
-        merge_primary_data(cp, primary => NamedTuple())
-    elseif isempty(primary)
-        ContextualPair(ctx, p, d)
-    else
-        col = extract_column(cols, first(primary))
-        name = first(keys(primary))
-        cm = group(cols, name, col, p, d)
-        return cm * ContextualPair(nothing, Base.tail(primary), NamedTuple())
-    end
+    d′ = extract_column(cols, data, true)
+    d′′ = merge(d, d′)
+    p′ = extract_column(cols, primary)
+    ns = map(get_name, p′)
+    isempty(p′) ? ContextualPair(ctx, p, d′′) : group(cols, p, d′′, map(pool, p′), ns)
 end
 
