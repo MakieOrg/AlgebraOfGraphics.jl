@@ -55,6 +55,10 @@ function layoutplot!(scene, layout, ts::GraphicalOrContextual)
             P isa Symbol && (P = getproperty(AbstractPlotting, P))
             args = trace.args
             attrs = Attributes(trace.kwargs)
+            # manually implement alpha values
+            col = get(attrs, :color, Observable(:black))
+            alpha = get(attrs, :alpha, Observable(1))
+            attrs[:color] = map(tuple, col, alpha)
             pop!(attrs, :names)
             x_pos = pop!(attrs, :layout_x, 1) |> to_value
             y_pos = pop!(attrs, :layout_y, 1) |> to_value

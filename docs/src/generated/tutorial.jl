@@ -36,8 +36,7 @@
 # ## Working with datas
 
 using RDatasets: dataset
-using AbstractPlotting, CairoMakie, MakieLayout
-using AlgebraOfGraphics
+using AlgebraOfGraphics, AbstractPlotting, CairoMakie
 mpg = dataset("ggplot2", "mpg");
 cols = style(:Displ, :Hwy);
 grp = group(color = :Cyl);
@@ -77,6 +76,20 @@ AbstractPlotting.save("semi_grouped.svg", AbstractPlotting.current_scene()); not
 
 # ![](semi_grouped.svg)
 #
+# ## Layout
+#
+# Thanks to the MakieLayout package it is possible to create plots where categorical variables
+# inform the layout.
+
+iris = dataset("datasets", "iris")
+cols = style([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
+grp = group(layout_x = dims(1), layout_y = dims(2), color = :Species)
+geom = spec(Scatter, markersize = 10px) + spec(linear, linewidth = 3)
+data(iris) * cols * grp * geom |> draw
+AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](layout.svg)
+#
 # ## Non tabular style
 #
 # The framework is not specific to datas, but can be used with anything that the plotting
@@ -100,20 +113,6 @@ style(fill(0..5), gs) * grp * geom |> draw
 AbstractPlotting.save("distributions.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](distributions.svg)
-#
-# ## Layout
-#
-# Thanks to the MakieLayout package it is possible to create plots where categorical variables
-# inform the layout.
-
-iris = dataset("datasets", "iris")
-cols = style([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
-grp = group(layout_x = dims(1), layout_y = dims(2), color = :Species)
-geom = spec(Scatter, markersize = 10px) + spec(linear, linewidth = 3)
-data(iris) * cols * grp * geom |> draw
-AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #hide
-
-# ![](layout.svg)
 #
 # ## Slicing context
 #

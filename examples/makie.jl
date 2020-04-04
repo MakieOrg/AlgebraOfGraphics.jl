@@ -1,4 +1,4 @@
-using GLMakie
+using AbstractPlotting, GLMakie
 
 using AlgebraOfGraphics
 using AlgebraOfGraphics: linear, smooth

@@ -39,7 +39,7 @@ pairs(dims(1) * style(x, y) * group(color=dims(2), marker=dims(3)))
 # All outputs of `group`, `style`, `data`, and `dims` inherit can be combined using `+`
 # (adding a new layer), or `*` (merge information in existing layer).
 
-using AbstractPlotting, CairoMakie, MakieLayout
+using AbstractPlotting, CairoMakie
 using AlgebraOfGraphics: spec
 mpg1 = copy(mpg)
 mpg1.Displ = mpg.Displ .* 0.1
@@ -48,7 +48,6 @@ sl = ts * style(:Hwy, :Displ) * group(color=:Cyl)
 
 # The result can then be plotted using the `draw` function:
 
-using AlgebraOfGraphics: draw
 sl * spec(Scatter) |> draw
 AbstractPlotting.save("tree.svg", AbstractPlotting.current_scene()); nothing #hide
 
