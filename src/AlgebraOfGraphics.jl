@@ -1,6 +1,6 @@
 module AlgebraOfGraphics
 
-using Tables: columns, getcolumn, columnnames, istable
+using Tables: columns, getcolumn, columnnames, isdata
 using PooledArrays: PooledArray, PooledVector, RefArray
 using DataAPI: refarray, refvalue
 using Observables: AbstractObservable, Observable, to_value
@@ -9,6 +9,8 @@ using NamedDims: NamedDimsArray, dimnames
 using StructArrays: finduniquesorted, StructArray
 import GLM, Loess
 using Requires: @require
+
+export group, style, data, spec, dims, draw
 
 include("context.jl")
 include("specs.jl")

@@ -1,4 +1,4 @@
-using AlgebraOfGraphics: data, spec, primary, dims, table, draw, to_dict
+using AlgebraOfGraphics: style, spec, group, dims, data, draw, to_dict
 using AlgebraOfGraphics
 import DefaultApplication
 
@@ -12,19 +12,19 @@ function myplot(s)
 end
 
 iris = dataset("datasets", "iris")
-d = data(x = :SepalLength, y = :SepalWidth) * primary(layout_x = :Species) * spec(mode = "markers")
-table(iris) * d |> myplot
+d = style(x = :SepalLength, y = :SepalWidth) * group(layout_x = :Species) * spec(mode = "markers")
+data(iris) * d |> myplot
 
-cols = data(x = [:PetalLength, :PetalWidth], y = [:SepalLength :SepalWidth])
-style = primary(marker = (color = dims(1), symbol = dims(2),)) * spec(mode = "markers", type = "scatter")
-table(iris) * cols * style |> myplot
+cols = style(x = [:PetalLength, :PetalWidth], y = [:SepalLength :SepalWidth])
+style = group(marker = (color = dims(1), symbol = dims(2),)) * spec(mode = "markers", type = "scatter")
+data(iris) * cols * style |> myplot
 
-style = primary(marker = (color = :Species,), layout_x = dims(1), layout_y = dims(2)) *
+style = group(marker = (color = :Species,), layout_x = dims(1), layout_y = dims(2)) *
     spec(mode = "markers", type = "scatter")
-table(iris) * cols * style |> myplot
+data(iris) * cols * style |> myplot
 
 dims(1) *
-    data(x = rand(5, 3, 2), y = rand(5, 3)) *
-    primary(marker = (color = dims(2),)) *
+    style(x = rand(5, 3, 2), y = rand(5, 3)) *
+    group(marker = (color = dims(2),)) *
     spec(mode = "markers", type = "scatter") |> myplot
 

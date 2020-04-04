@@ -124,14 +124,14 @@ end
 function apply(f, c::AbstractDict)
     d = OrderedDict{Spec, PairList}()
     for (sp, itr) in c
-        for (primary, data) in itr
-            res = f(positional(data)...; keyword(data)...)
+        for (group, style) in itr
+            res = f(positional(style)...; keyword(style)...)
             res === nothing && continue
             res isa Union{Tuple, NamedTuple, AbstractDict} || (res = (res,))
             res isa Tuple && (res = namedtuple(res...))
             res isa NamedTuple && (res = LittleDict(spec() => res))
             for (key, val) in pairs(res)
-                pushat!(d, merge(sp, key), primary => val)
+                pushat!(d, merge(sp, key), group => val)
             end
         end
     end
@@ -143,7 +143,7 @@ end
 
 Compute a vector of `OrderedDict{NamedTuple, Spec}` to be passed to the
 plotting package. `palette[key]` must return a finite list of options, for
-each `key` used as primary (e.g., `color`, `marker`, `linestyle`).
+each `key` used as group (e.g., `color`, `marker`, `linestyle`).
 """
 function specs(ts::GraphicalOrContextual, palette)
     serieslist = OrderedDict{NamedTuple, Spec}[]
@@ -151,11 +151,11 @@ function specs(ts::GraphicalOrContextual, palette)
         d = OrderedDict{NamedTuple, Spec}()
         l = (layout_x = nothing, layout_y = nothing)
         scales = to_scale(merge(palette, m.kwargs, l))
-        for (primary, data) in itr
-            theme = applytheme(scales, primary)
-            names, data = extract_names(data)
-            sp = merge(m, Spec{Any}(Tuple(positional(data)), (; keyword(data)..., theme...)))
-            d[primary] = merge(sp, Spec{Any}((), (; names=names)))
+        for (group, style) in itr
+            theme = applytheme(scales, group)
+            names, style = extract_names(style)
+            sp = merge(m, Spec{Any}(Tuple(positional(style)), (; keyword(style)..., theme...)))
+            d[group] = merge(sp, Spec{Any}((), (; names=names)))
         end
         push!(serieslist, d)
     end

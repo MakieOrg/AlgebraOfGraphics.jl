@@ -40,7 +40,7 @@ function to_dict(ts::GraphicalOrContextual)
     serieslist = specs(ts, default_palettes)
     Nx, Ny = 1, 1
     for series in serieslist
-        for (primary, trace) in series
+        for (group, trace) in series
             trace = _to_value(trace)
             Nx = max(Nx, get(trace.kwargs, :layout_x, Nx))
             Ny = max(Ny, get(trace.kwargs, :layout_y, Ny))
@@ -50,7 +50,7 @@ function to_dict(ts::GraphicalOrContextual)
     layout = (; grid = (rows = Ny, columns = Nx, pattern = "independent"))
     traces = []
     for series in serieslist
-        for (primary, trace) in series
+        for (group, trace) in series
             trace = _to_value(trace)
             args = trace.args
             attrs = Dict(pairs(trace.kwargs))
@@ -66,7 +66,7 @@ function to_dict(ts::GraphicalOrContextual)
                  )
         end
     end
-    return (data = traces, layout = layout)
+    return (style = traces, layout = layout)
 end
 
 const pre_html = """
@@ -93,13 +93,13 @@ function writeplot(s::GraphicalOrContextual, file::AbstractString)
     ts, l = to_dict(s)
     open(file, "w") do io
         print(io, pre_html)
-        print(io, "var data = ")
+        print(io, "var style = ")
         JSON.print(io, ts)
         println(io, ";")
         print(io, "var layout = ")
         JSON.print(io, l)
         println(io, ";")
-        println(io, "Plotly.newPlot('plotdiv', data, layout);")
+        println(io, "Plotly.newPlot('plotdiv', style, layout);")
         print(io, post_html)
     end
 end
