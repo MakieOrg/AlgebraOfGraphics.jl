@@ -10,11 +10,11 @@ d = style(:SepalLength, :SepalWidth) * group(color = :Species)
 s = spec(Scatter, markersize = 10px) + spec(smooth, linewidth = 3)
 data(iris) * d * s |> draw
 
-data(iris) * d * spec(Wireframe, density) |> draw
+# data(iris) * d * spec(Wireframe, density) |> draw
 
 cols = style([:PetalLength, :PetalWidth], [:SepalLength :SepalWidth])
-style = group(color = dims(1), marker = dims(2))
-data(iris) * cols * style * spec(Scatter) |> draw
+st = group(color = dims(1), marker = dims(2))
+data(iris) * cols * st * spec(Scatter) |> draw
 
 style([rand(100), rand(100)], Ref(rand(100)), color = Ref(rand(100))) * group(marker = 1:2) * spec(Scatter, markersize=10px) |> draw
 
