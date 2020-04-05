@@ -7,6 +7,9 @@ using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict, LittleDict
 using NamedDims: NamedDimsArray, dimnames
 using StructArrays: finduniquesorted, StructArray
+using GeoInterface: AbstractPolygon, AbstractFeatureCollection, coordinates, GeoInterface
+using GeoMakie: toPointVecs
+using AbstractPlotting: Point2f0
 import GLM, Loess
 
 export group, style, data, spec, dims, draw

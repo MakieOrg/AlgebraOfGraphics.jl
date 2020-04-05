@@ -10,6 +10,8 @@ d = style(:SepalLength, :SepalWidth) * group(color = :Species)
 s = spec(Scatter) + spec(smooth, linewidth = 3)
 data(iris) * d * s |> draw
 
+data(iris) * style(:SepalLength, :SepalWidth, color = :PetalLength) * spec(:Scatter) |> draw
+
 # data(iris) * d * spec(Wireframe, density) |> draw
 
 cols = style([:PetalLength, :PetalWidth], [:SepalLength :SepalWidth])
