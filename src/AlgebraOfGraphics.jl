@@ -6,7 +6,9 @@ using DataAPI: refarray, refvalue
 using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict, LittleDict
 using NamedDims: NamedDimsArray, dimnames
-using StructArrays: finduniquesorted, StructArray
+using StructArrays: finduniquesorted, append!!, StructArray
+using GeoInterface: AbstractMultiPolygon, AbstractFeatureCollection, coordinates, GeoInterface
+using AbstractPlotting: Point2f0
 import GLM, Loess
 
 export group, style, data, spec, dims, draw

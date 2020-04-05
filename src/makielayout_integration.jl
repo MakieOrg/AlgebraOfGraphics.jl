@@ -28,11 +28,16 @@ function create_legend(scene, legdict::AbstractDict)
     MakieLayout.LLegend(scene, plts_list, entries_list, names)
 end
 
+function adjust_color(c, alpha)
+    to_value(c) isa Union{Tuple, AbstractArray} ? c : map(tuple, c, alpha)
+end
+
+
 function set_defaults!(attrs::Attributes)
     # manually implement alpha values
     col = get(attrs, :color, Observable(:black))
     alpha = get(attrs, :alpha, Observable(1))
-    attrs[:color] = map(tuple, col, alpha)
+    attrs[:color] = adjust_color(col, alpha)
     get!(attrs, :markersize, Observable(8px))
 end
 

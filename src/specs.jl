@@ -102,7 +102,7 @@ end
 const PairList = Vector{Pair{<:NamedTuple, <:NamedTuple}}
 
 for (f!, f_at!) in [(:push!, :pushat!), (:append!, :appendat!)]
-    @eval function $f_at!(d::AbstractDict{<:Any, T}, key, val) where {T <: AbstractVector}
+    @eval function $f_at!(d::AbstractDict{<:Any, Vector{T}}, key, val) where {T}
         v = get!(d, key, T[])
         $f!(v, val)
     end

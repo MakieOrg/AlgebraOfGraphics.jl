@@ -153,3 +153,23 @@ function merge_group_style(s::ContextualPair{<:DataContext}, (group, style))
     isempty(p′) ? ContextualPair(ctx, p, d′′) : _group(cols, p, d′′, map(pool, p′), ns)
 end
 
+# Geo context
+
+function data(c::AbstractFeatureCollection)
+    cols = OrderedDict{Symbol, AbstractVector}()
+    cols[:geometry] = Vector{Vector{Point2f0}}(undef, 0)
+    for f in c.features
+        geom = GeoInterface.geometry(f)
+        coords = geom isa AbstractMultiPolygon ? coordinates(geom) : [coordinates(geom)]
+        polies = [Point2f0.(first(c)) for c in coords]
+        append!(cols[:geometry], polies)
+        np = length(polies)
+        for (key, val) in pairs(GeoInterface.properties(f))
+            k = Symbol(key)
+            v = get(cols, k, Union{}[])
+            vs = fill(val, np)
+            cols[k] = val isa eltype(v) ? append!(v, vs) : vcat(v, vs)
+        end
+    end
+    return data(cols) * style(:geometry)
+end
