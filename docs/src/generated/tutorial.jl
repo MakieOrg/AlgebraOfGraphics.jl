@@ -100,19 +100,6 @@ AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #
 
 # ![](layout.svg)
 #
-# ## Choropleth maps
-#
-# Choropleth maps can be plotted using the same syntax:
-#
-
-using GeoJSON
-states = download("https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json") 
-states_geo = GeoJSON.read(read(states, String))
-data(states_geo) * style(color = :density) * spec(Poly, colorrange = (0, 1000)) |> draw
-AbstractPlotting.save("choropleth.svg", AbstractPlotting.current_scene()); nothing #hide
-
-# ![](choropleth.svg)
-#
 # ## Non tabular style
 #
 # The framework is not specific to tables, but can be used with anything that the plotting

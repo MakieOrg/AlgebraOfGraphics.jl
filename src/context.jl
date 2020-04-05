@@ -156,14 +156,19 @@ end
 # Geo context
 
 function data(c::AbstractFeatureCollection)
-    features = filter(f -> GeoInterface.geometry(f) isa AbstractPolygon, c.features)
     cols = OrderedDict{Symbol, AbstractVector}()
-    cols[:geometry] = getindex.(toPointVecs.(GeoInterface.geometry.(features)), 1)
-    for f in features
+    cols[:geometry] = Vector{Vector{Point2f0}}(undef, 0)
+    for f in c.features
+        geom = GeoInterface.geometry(f)
+        coords = geom isa AbstractMultiPolygon ? coordinates(geom) : [coordinates(geom)]
+        polies = [Point2f0.(first(c)) for c in coords]
+        append!(cols[:geometry], polies)
+        np = length(polies)
         for (key, val) in pairs(GeoInterface.properties(f))
             k = Symbol(key)
             v = get(cols, k, Union{}[])
-            cols[k] = isa(val, eltype(v)) ? push!(v, val) : vcat(v, [val])
+            vs = fill(val, np)
+            cols[k] = val isa eltype(v) ? append!(v, vs) : vcat(v, vs)
         end
     end
     return data(cols) * style(:geometry)
