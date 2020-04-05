@@ -32,7 +32,6 @@ function adjust_color(c, alpha)
     to_value(c) isa Union{Tuple, AbstractArray} ? c : map(tuple, c, alpha)
 end
 
-
 function set_defaults!(attrs::Attributes)
     # manually implement alpha values
     col = get(attrs, :color, Observable(:black))
