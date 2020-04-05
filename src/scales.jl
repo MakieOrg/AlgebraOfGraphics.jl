@@ -20,9 +20,8 @@ add_value!(s::DiscreteScale, value) = s.values[] = push!(s.values[], value)
 
 function add_value!(s::ContinuousScale, value)
     m, n = s.values[]
-    m = min(m, value)
-    n = max(n, value)
-    s.values[] = (min(m, value), max(n, value))
+    m′, n′ = extrema(value)
+    s.values[] = (min(m, m′), max(n, n′))
 end
 
 function get_attr(d::DiscreteScale, value)
@@ -37,7 +36,7 @@ function get_attr(c::ContinuousScale, value)
         scale === nothing && return value
         min, max = values
         smin, smax = scale
-        smin + value * (smax - smin) / (max - min)
+        @. smin + value * (smax - smin) / (max - min)
     end
 end
 

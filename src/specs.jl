@@ -120,13 +120,15 @@ each `key` used as group (e.g., `color`, `marker`, `linestyle`).
 """
 function specs(ts::GraphicalOrContextual, palette)
     serieslist = OrderedDict{NamedTuple, Spec}[]
-    for (m, itr) in spec_dict(ts)
+    for (m, itr) in pairs(spec_dict(ts))
         d = OrderedDict{NamedTuple, Spec}()
         l = (layout_x = nothing, layout_y = nothing)
         discrete_scales = map(DiscreteScale, merge(palette, m.kwargs, l))
+        continuous_scales = map(ContinuousScale, m.kwargs)
         for (group, style) in itr
             theme = applytheme(discrete_scales, group)
             names, style = extract_names(style)
+            style = applytheme(continuous_scales, style)
             sp = merge(m, Spec{Any}(Tuple(positional(style)), (; keyword(style)..., theme...)))
             d[group] = merge(sp, Spec{Any}((), (; names=names)))
         end
@@ -137,7 +139,7 @@ end
 
 function applytheme(scales, grp::NamedTuple{names}) where names
     res = map(names) do key
-        attr!(scales[key], grp[key])
+        haskey(scales, key) ? attr!(scales[key], grp[key]) : grp[key]
     end
     return NamedTuple{names}(res)
 end
