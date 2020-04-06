@@ -49,7 +49,7 @@ AbstractPlotting.save("scatter.svg", AbstractPlotting.current_scene()); nothing 
 #
 # Now let's simply add `grp` to the pipeline to do the grouping.
 
-data(mpg) * grp * pipeline |> draw
+mpg |> grp * pipeline |> draw
 AbstractPlotting.save("grouped_scatter.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](grouped_scatter.svg)
@@ -58,7 +58,7 @@ AbstractPlotting.save("grouped_scatter.svg", AbstractPlotting.current_scene()); 
 using AlgebraOfGraphics: linear
 lin = spec(linear, linewidth = 3)
 pipenew = cols * (scat + lin)
-data(mpg) * pipenew |> draw
+mpg |> pipenew |> draw
 AbstractPlotting.save("linear.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](linear.svg)

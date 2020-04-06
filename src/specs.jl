@@ -86,6 +86,7 @@ end
 # pipeline
 
 function compute(s::GraphicalOrContextual)
+    s = expand(s)
     named = computenames(s)
     return computescales(named)
 end

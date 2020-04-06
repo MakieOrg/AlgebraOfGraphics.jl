@@ -6,21 +6,21 @@ using AlgebraOfGraphics: linear, smooth
 using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
-d = style(:SepalLength, :SepalWidth) * group(color = :Species)
+d = style(:SepalLength, :SepalWidth, color = :Species)
 s = spec(Scatter) + spec(smooth, linewidth = 3)
-data(iris) * d * s |> draw
+iris |> d * spec(Scatter) |> draw
 
-data(iris) * style(:SepalLength, :SepalWidth, color = :PetalLength) * spec(:Scatter) |> draw
+iris |> style(:SepalLength, :SepalWidth, color = :PetalLength) * spec(:Scatter) |> draw
 
 # data(iris) * d * spec(Wireframe, density) |> draw
 
 cols = style([:PetalLength, :PetalWidth], [:SepalLength :SepalWidth])
-st = group(color = dims(1), marker = dims(2))
-data(iris) * cols * st * spec(Scatter) |> draw
+st = style(color = dims(1), marker = dims(2))
+iris |> cols * st * spec(Scatter, markersize = 10px) |> draw
 
-style([rand(100), rand(100)], Ref(rand(100)), color = Ref(rand(100))) * group(marker = 1:2) * spec(Scatter, markersize=10px) |> draw
+style([rand(100), rand(100)], Ref(rand(100)), color = Ref(rand(100)), marker = dims(1)) * spec(Scatter, markersize=10px) |> draw
 
-style((randn(1000), rand(100))) * group(color = 1:2) * spec(density, linewidth=10) |> draw
+style((randn(1000), rand(100)), color = dims(1)) * spec(density, linewidth=10) |> draw
 
 # TODO fix stacking and choose edges globally
 style((randn(1000), rand(100))) * group(color = 1:2) * spec(histogram(edges = -3:0.1:3)) |> draw
@@ -35,8 +35,5 @@ grp = group(layout_x = dims(1), layout_y = dims(2), color = :Species)
 s = group(marker = :Rare) * spec(Scatter, markersize = 10px) + spec(linear)
 data(iris) * d * grp * s |> draw
 
-dims(1) *
-    style(rand(5, 3, 2), rand(5, 3)) *
-    group(color=dims(2)) *
-    spec(Scatter, markersize = 20px) |> draw
+style(rand(5, 3, 2), rand(5, 3), color = dims(2)) * spec(Scatter, markersize = 20px) |> draw
 
