@@ -37,15 +37,19 @@ function aos(d::NamedTuple{names}) where names
     return v isa NamedTuple ? fill(v) : v
 end
 
-adjust(val, c) = val
-adjust(val::DimsSelector, c) = fill(CartesianIndex((c[i] for i in val.dims)...))
+adjust(val, c, nts) = val
+function adjust(val::DimsSelector, c, nts)
+    is = collect(val.dims)
+    ax, cf = axes(nts)[is], Tuple(c)[is]
+    return LinearIndices(ax)[cf...]
+end
 
 function styles(::DimsSelector{0}, s::Style)
     nts = aos(s.value)
     adjusted = map(CartesianIndices(nts)) do c
         nt = nts[c]
         return map(nt) do val
-            adjust(val, c)
+            adjust(val, c, nts)
         end
     end
     return map(Style, adjusted)
@@ -78,6 +82,8 @@ extract_columns(t, val) = fill(extract_column(t, val))
 
 function styles(ctx::DataContext, s::Style)
     data = ctx.data
+    # TODO: decide whether to group here, maybe just by layout?
+    # maybe default analysis does layout grouping?
     cols = map(val -> extract_columns(ctx.data, val), s.value)
     return styles(Style(dims(), cols))
 end

@@ -74,15 +74,16 @@ end
 
 # pipeline
 
+function mapstyles(f, s::GraphicalOrContextual)
+    d = LayerDict(key => f(styles) for (key, styles) in pairs(layers(s)))
+    Layers(d)
+end
+
 function compute(s::GraphicalOrContextual)
-    acc = LayerDict()
-    for (sp, series) in pairs(layers(s))
-        acc[sp] = Style[]
-        foreach(v -> append!(acc[sp], styles(v)), series)
-    end
+    s = mapstyles(series -> mapfoldl(styles, append!, series, init=Style[]), s)
     # TODO: analysis go here
     # ls = computelayout(s)
-    return computescales(Layers(acc))
+    return computescales(s)
 end
 
 # function computeanalysis(s::GraphicalOrContextual)
@@ -108,7 +109,8 @@ end
 computescales(s::GraphicalOrContextual) = sum(computescales, layers(s))
 function computescales((s, v)::Pair{<:Spec, Vector{Style}})
     scales[] = (; AbstractPlotting.current_default_theme()[:palette]...)
-    discrete_scales = map(DiscreteScale, merge(scales[], s.kwargs))
+    l = (layout_x = nothing, layout_y = nothing)
+    discrete_scales = map(DiscreteScale, merge(scales[], s.kwargs, l))
     v′ = [applytheme(discrete_scales, style) for style in v]
     Layers(LayerDict(s => v′))
 end

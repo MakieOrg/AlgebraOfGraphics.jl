@@ -42,14 +42,14 @@ cols = style(:Displ, :Hwy);
 grp = style(color = :Cyl);
 scat = spec(Scatter)
 pipeline = cols * scat
-mpg |> pipeline |> draw
+data(mpg) * pipeline |> draw
 AbstractPlotting.save("scatter.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](scatter.svg)
 #
 # Now let's simply add `grp` to the pipeline to do the grouping.
 
-mpg |> grp * pipeline |> draw
+data(mpg) * grp * pipeline |> draw
 AbstractPlotting.save("grouped_scatter.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](grouped_scatter.svg)
@@ -58,7 +58,7 @@ AbstractPlotting.save("grouped_scatter.svg", AbstractPlotting.current_scene()); 
 using AlgebraOfGraphics: linear
 lin = spec(linear, linewidth = 3)
 pipenew = cols * (scat + lin)
-mpg |> pipenew |> draw
+data(mpg) * pipenew |> draw
 AbstractPlotting.save("linear.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](linear.svg)

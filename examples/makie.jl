@@ -11,13 +11,13 @@ d = style(:SepalLength, :SepalWidth, color = :Species)
 s = spec(Scatter) + spec(smooth, linewidth = 3)
 data(iris) * d * spec(Scatter) |> draw
 
-iris |> style(:SepalLength, :SepalWidth, color = :PetalLength) * spec(:Scatter) |> draw
+data(iris) * style(:SepalLength, :SepalWidth, color = :PetalLength) * spec(:Scatter) |> draw
 
 # data(iris) * d * spec(Wireframe, density) |> draw
 
 cols = style([:PetalLength, :PetalWidth], [:SepalLength :SepalWidth])
 st = style(color = dims(1), marker = dims(2))
-iris |> cols * st * spec(Scatter, markersize = 10px) |> draw
+data(iris) * cols * st * spec(Scatter, markersize = 10px) |> draw
 
 style([rand(100), rand(100)], Ref(rand(100)), color = Ref(rand(100)), marker = dims(1)) * spec(Scatter, markersize=10px) |> draw
 
@@ -32,7 +32,7 @@ using RDatasets: dataset
 iris = dataset("datasets", "iris")
 iris.Rare = rand(Bool, 150)
 d = style([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
-grp = style(marker = dims(1), color = dims(2))
+grp = style(layout_x = dims(1), layout_y = dims(2), color = :Rare)
 s = spec(Scatter, markersize = 10px) #+ spec(linear)
 data(iris) * d * grp * s |> draw
 
