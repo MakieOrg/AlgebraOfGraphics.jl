@@ -7,8 +7,8 @@ using MakieLayout: LAxis,
                    hideydecorations!,
                    MakieLayout
 
-function set_names!(ax, trace)
-    for (nm, prop) in zip(positional(trace.kwargs.names), (:xlabel, :ylabel, :zlabel))
+function set_names!(ax, names)
+    for (nm, prop) in zip(positional(names), (:xlabel, :ylabel, :zlabel))
         s = string(nm)
         if !isempty(s)
             getproperty(ax, prop)[] = s
@@ -63,17 +63,17 @@ function layoutplot!(scene, layout, ts::GraphicalOrContextual)
     legdict = Dict{Symbol, Any}()
     for (sp, series) in serieslist
         for style in series
+            names, style = extract_names(style)
             trace = merge(sp, Spec(style))
             P = plottype(trace)
             P isa Symbol && (P = getproperty(AbstractPlotting, P))
             args = trace.args
             attrs = Attributes(trace.kwargs)
             set_defaults!(attrs)
-            pop!(attrs, :names)
             x_pos = pop!(attrs, :layout_x, 1) |> to_value
             y_pos = pop!(attrs, :layout_y, 1) |> to_value
             current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
-            set_names!(axs[y_pos, x_pos], trace)
+            set_names!(axs[y_pos, x_pos], names)
             # for (key, val) in pairs(group)
             #     key in (:layout_x, :layout_y) && continue
             #     legsubdict = get!(legdict, key, OrderedDict{Any, AbstractPlot}())

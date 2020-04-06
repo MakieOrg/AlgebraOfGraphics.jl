@@ -87,18 +87,8 @@ end
 
 function compute(s::GraphicalOrContextual)
     s = expand(s)
-    named = computenames(s)
-    return computescales(named)
-end
-
-computenames(s::GraphicalOrContextual) = sum(computenames, layers(s))
-function computenames((sp, styles)::Pair{<:Spec, Vector{Style}})
-    acc = Layers(LayerDict())
-    for st in styles
-        names, values = extract_names(st.nt)
-        acc += merge(sp, spec(names = names)) * Style(values)
-    end
-    return acc
+    # TODO: analysis go here
+    scaled = computescales(s)
 end
 
 # function computeanalysis(s::GraphicalOrContextual)

@@ -15,21 +15,42 @@ end
 extract_column(t, c::Union{Tuple, NamedTuple}) = map(x -> extract_column(t, x), c)
 extract_column(t, c::Style) = Style(extract_column(t, c.nt))
 extract_column(t, v::AbstractArray) = v
+extract_column(t, v::Ref) = fill(v[], length(extract_column(t, 1)))
 
-adjust(v, c) = v
-adjust(x::NamedTuple, c) = map(v -> adjust(v, c), x)
-adjust(v::DimsSelector, c) = c[v.dims...]
+clamp(x, l) = l == 1 ? clamp(x) : x
+clamp(x::AbstractRange) = Base.OneTo(1)
+clamp(x::Integer) = 1
 
-function aos(d::NamedTuple{names}) where names
-    v = broadcast((args...) -> NamedTuple{names}(args), d...)
-    return v isa NamedTuple ? [v] : v
+extract(v::NamedTuple, I) = map(t -> extract(t, I), v)
+function extract(v, I)
+    if isempty(axes(v))
+        val = v[]
+        val isa DimsSelector || return val
+        if any(i -> !isa(i, Integer), I)
+            fi = map(first, I)
+            fill(Tuple(fi[d] for d in val.dims), filter(i -> isa(i, AbstractRange), I)...)
+        else
+            # TODO: use something that has isless
+            Ref(Tuple(I[d] for d in val.dims))
+        end
+    else
+        itr = (clamp(I[i], length(ax)) for (i, ax) in enumerate(axes(v)))
+        v[itr...]
+    end
 end
 
 function expand(s::Style)
     any(t -> isa(t, DimsSelector), s.nt) || return [s]
-    v = aos(s.nt)
-    styles = [Style(adjust(v[c], c)) for c in CartesianIndices(v)]
-    return vec(styles)
+    nt = map(Broadcast.broadcastable, s.nt)
+    shape = Broadcast.combine_axes(nt...)
+    seldims = ntuple(length(shape)) do i
+        any(t -> isa(t, DimsSelector) && (i in t.dims), s.nt)
+    end
+    indices = map((a, b) -> ifelse(a, b, (b,)), seldims, shape)
+    nts = map(Iterators.product(indices...)) do I
+        extract(nt, I)
+    end
+    return vec(map(Style, nts))
 end
 
 function expand(g::GraphicalOrContextual)

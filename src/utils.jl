@@ -52,9 +52,13 @@ strip_name(v::NamedDimsArray) = parent(v)
 get_name(v) = Symbol("")
 strip_name(v) = v
 
-function extract_names(d::NamedTuple)
+function extract_names(d::Union{NamedTuple, Tuple})
     ns = map(get_name, d)
     vs = map(strip_name, d)
     return ns, vs
 end
 
+function extract_names(s::Style)
+    ns, vs = extract_names(s.nt)
+    return ns, Style(vs)
+end
