@@ -37,32 +37,36 @@ Analysis(f; kwargs...) = Analysis(f, values(kwargs))
 
 (a::Analysis)(args...; kwargs...) = a.f(args...; merge(a.kwargs, values(kwargs))...)
 
+const LayerDict = OrderedDict{Spec, Vector{Style}}
+
 struct Layers <: AbstractGraphical
-    layers::Vector{Pair{Spec, Style}}
+    layers::LayerDict
 end
 Layers(s::GraphicalOrContextual) = Layers(layers(s))
 
 layers(s::Layers)             = s.layers
 layers(s::Analysis)           = layers(Spec{Any}((s,), NamedTuple()))
-layers(s::Spec)               = Pair{Spec, Style}[s => Style()]
-layers(s::AbstractContextual) = Pair{Spec, Style}[Spec() => Style(s)]
+layers(s::Spec)               = LayerDict(s => [Style()])
+layers(s::AbstractContextual) = LayerDict(Spec() => [Style(s)])
 
 Base.:(==)(s1::Layers, s2::Layers) = layers(s1) == layers(s2)
 
 function Base.:*(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
     l1, l2 = layers(s1), layers(s2)
-    v = Pair{Spec, Style}[]
-    for el1 in l1
-        for el2 in l2
-            push!(v, merge(first(el1), first(el2)) => last(el1) * last(el2))
+    d = LayerDict()
+    for (k1, v1) in pairs(l1)
+        for (k2, v2) in pairs(l2)
+            k = merge(k1, k2)
+            v = Style[merge(a, b) for a in v1 for b in v2]
+            d[k] = append!(get(d, k, Style[]), v)
         end
     end
-    return Layers(v)
+    return Layers(d)
 end
 
 function Base.:+(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
     l1, l2 = layers(s1), layers(s2)
-    return Layers(vcat(l1, l2))
+    return Layers(merge(vcat, l1, l2))
 end
 
 # plotting tools
