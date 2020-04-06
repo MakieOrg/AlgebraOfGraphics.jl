@@ -41,12 +41,12 @@ function set_defaults!(attrs::Attributes)
 end
 
 function layoutplot!(scene, layout, ts::GraphicalOrContextual)
-    palette = (; AbstractPlotting.current_default_theme()[:palette]...)
     facetlayout = layout[1, 1] = GridLayout()
-    serieslist = specs(ts, palette)
+    serieslist = layers(compute(ts))
     Nx, Ny = 1, 1
-    for series in serieslist
-        for (group, trace) in series
+    for (sp, series) in serieslist
+        for style in series
+            trace = merge(sp, Spec(style))
             Nx = max(Nx, to_value(get(trace.kwargs, :layout_x, Nx)))
             Ny = max(Ny, to_value(get(trace.kwargs, :layout_y, Ny)))
         end
@@ -61,8 +61,9 @@ function layoutplot!(scene, layout, ts::GraphicalOrContextual)
     hidexdecorations!.(axs[1:end-1, :])
     hideydecorations!.(axs[:, 2:end])
     legdict = Dict{Symbol, Any}()
-    for series in serieslist
-        for (group, trace) in series
+    for (sp, series) in serieslist
+        for style in series
+            trace = merge(sp, Spec(style))
             P = plottype(trace)
             P isa Symbol && (P = getproperty(AbstractPlotting, P))
             args = trace.args
@@ -73,11 +74,11 @@ function layoutplot!(scene, layout, ts::GraphicalOrContextual)
             y_pos = pop!(attrs, :layout_y, 1) |> to_value
             current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
             set_names!(axs[y_pos, x_pos], trace)
-            for (key, val) in pairs(group)
-                key in (:layout_x, :layout_y) && continue
-                legsubdict = get!(legdict, key, OrderedDict{Any, AbstractPlot}())
-                legentry = get!(legsubdict, val, current)
-            end
+            # for (key, val) in pairs(group)
+            #     key in (:layout_x, :layout_y) && continue
+            #     legsubdict = get!(legdict, key, OrderedDict{Any, AbstractPlot}())
+            #     legentry = get!(legsubdict, val, current)
+            # end
         end
     end
     if !isempty(legdict)

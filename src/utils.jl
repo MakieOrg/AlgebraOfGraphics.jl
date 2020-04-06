@@ -31,12 +31,19 @@ function namedtuple(args::Vararg{Any, N}; kwargs...) where N
     return merge(NamedTuple{syms}(args), values(kwargs))
 end
 
-integerlike(x::Symbol) = tryparse(Int, String(x)) !== nothing
-integerlike(x::Integer) = true
+function remove_intkeys(nt::NamedTuple, t::NTuple{N, Any}) where N
+    Base.structdiff(nt, NamedTuple{ntuple(Symbol, N)}(t))
+end
+remove_intkeys(nt) = remove_intkeys(nt, Tuple(nt))
+reorder(nt::NamedTuple) = Tuple(nt[Symbol(i)] for i in keys(keys(nt)))
 
-# TODO: keep order from parsed symbols
-positional(ps) = (val for (key, val) in pairs(ps) if integerlike(key))
-keyword(ps) = (key => val for (key, val) in pairs(ps) if !integerlike(key))
+function split(ps::NamedTuple)
+    nt = remove_intkeys(ps)
+    t = Base.structdiff(ps, nt)
+    return reorder(t), nt
+end
+positional(ps::NamedTuple) = first(split(ps))
+keyword(ps::NamedTuple) = last(split(ps))
 
 # naming utils
 
@@ -64,4 +71,10 @@ get_name(v) = Symbol("")
 strip_name(v) = v
 
 Base.string(n::NamedEntry) = string(n.value)
+
+function extract_names(d::NamedTuple)
+    ns = map(get_name, d)
+    vs = map(strip_name, d)
+    return ns, vs
+end
 

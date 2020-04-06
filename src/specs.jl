@@ -8,6 +8,8 @@ struct Spec{T} <: AbstractGraphical
 end
 Spec() = Spec{Any}((), NamedTuple())
 
+Spec(s::Style) = Spec{Any}(split(s.nt)...)
+
 spec(args...; kwargs...) = Spec{Any}(args, values(kwargs))
 spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}(args, values(kwargs))
 
@@ -69,77 +71,38 @@ function Base.:+(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
     return Layers(merge(vcat, l1, l2))
 end
 
-# plotting tools
+# pipeline
 
-function extract_names(d::NamedTuple)
-    ns = map(get_name, d)
-    vs = map(strip_name, d)
-    return ns, vs
+function compute(s::GraphicalOrContextual)
+    named = computenames(s)
+    return computescales(named)
 end
 
-const PairList = Vector{Pair{<:NamedTuple, <:NamedTuple}}
-
-for (f!, f_at!) in [(:push!, :pushat!), (:append!, :appendat!)]
-    @eval function $f_at!(d::AbstractDict{<:Any, Vector{T}}, key, val) where {T}
-        v = get!(d, key, T[])
-        $f!(v, val)
+computenames(s::GraphicalOrContextual) = sum(computenames, layers(s))
+function computenames((sp, styles)::Pair{<:Spec, Vector{Style}})
+    acc = Layers(LayerDict())
+    for st in styles
+        names, values = extract_names(st.nt)
+        acc += merge(sp, spec(names = names)) * Style(values)
     end
+    return acc
 end
 
-function spec_dict(ts::GraphicalOrContextual)
-    d = OrderedDict{Spec, PairList}()
-    for (sp, ctx) in layers(ts)
-        sp0 = Spec{plottype(sp)}((), sp.kwargs)
-        init = LittleDict(sp0 => pairs(ctx))
-        res = foldl((v, f) -> apply(f, v), sp.args, init=init)
-        for (key, val) in pairs(res)
-            appendat!(d, key, val)
-        end
-    end
-    return d
+# function computeanalysis(s::GraphicalOrContextual)
+#     s′ = Spec{plottype(s)}(Base.tail(s.args), s.kwargs)
+#     compute(first(s.args), v) * compute(s′, v)
+# end
+
+computescales(s::GraphicalOrContextual) = sum(computescales, layers(s))
+function computescales((s, v)::Pair{<:Spec, Vector{Style}})
+    l = (layout_x = nothing, layout_y = nothing)
+    scales[] = (; AbstractPlotting.current_default_theme()[:palette]...)
+    discrete_scales = map(DiscreteScale, merge(scales[], s.kwargs, l))
+    v′ = [applytheme(discrete_scales, style) for style in v]
+    Layers(LayerDict(s => v′))
 end
 
-function apply(f, c::AbstractDict)
-    d = OrderedDict{Spec, PairList}()
-    for (sp, itr) in c
-        for (group, style) in itr
-            res = f(positional(style)...; keyword(style)...)
-            res isa Union{Tuple, NamedTuple, AbstractDict} || (res = (res,))
-            res isa Tuple && (res = namedtuple(res...))
-            res isa NamedTuple && (res = LittleDict(spec() => res))
-            for (key, val) in pairs(res)
-                pushat!(d, merge(sp, key), group => val)
-            end
-        end
-    end
-    return d
-end
-
-"""
-    specs(ts::GraphicalOrContextual, palette)
-
-Compute a vector of `OrderedDict{NamedTuple, Spec}` to be passed to the
-plotting package. `palette[key]` must return a finite list of options, for
-each `key` used as group (e.g., `color`, `marker`, `linestyle`).
-"""
-function specs(ts::GraphicalOrContextual, palette)
-    serieslist = OrderedDict{NamedTuple, Spec}[]
-    for (m, itr) in pairs(spec_dict(ts))
-        d = OrderedDict{NamedTuple, Spec}()
-        l = (layout_x = nothing, layout_y = nothing)
-        discrete_scales = map(DiscreteScale, merge(palette, m.kwargs, l))
-        continuous_scales = map(ContinuousScale, m.kwargs)
-        for (group, style) in itr
-            theme = applytheme(discrete_scales, group)
-            names, style = extract_names(style)
-            style = applytheme(continuous_scales, style)
-            sp = merge(m, Spec{Any}(Tuple(positional(style)), (; keyword(style)..., theme...)))
-            d[group] = merge(sp, Spec{Any}((), (; names=names)))
-        end
-        push!(serieslist, d)
-    end
-    return serieslist
-end
+applytheme(scales, style::Style) = Style(applytheme(scales, style.nt))
 
 function applytheme(scales, grp::NamedTuple{names}) where names
     res = map(names) do key
