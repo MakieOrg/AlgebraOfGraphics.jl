@@ -15,7 +15,7 @@ end
 extract_column(t, c::Union{Tuple, NamedTuple}) = map(x -> extract_column(t, x), c)
 extract_column(t, c::Style) = Style(extract_column(t, c.nt))
 extract_column(t, v::AbstractArray) = v
-extract_column(t, v::Ref) = fill(v[], length(extract_column(t, 1)))
+extract_column(t, v::Array{<:Any, 0}) = fill(v[], length(extract_column(t, 1)))
 
 clamp(x, l) = l == 1 ? clamp(x) : x
 clamp(x::AbstractRange) = Base.OneTo(1)
@@ -26,13 +26,8 @@ function extract(v, I)
     if isempty(axes(v))
         val = v[]
         val isa DimsSelector || return val
-        if any(i -> !isa(i, Integer), I)
-            fi = map(first, I)
-            fill(Tuple(fi[d] for d in val.dims), filter(i -> isa(i, AbstractRange), I)...)
-        else
-            # TODO: use something that has isless
-            Ref(Tuple(I[d] for d in val.dims))
-        end
+        fi = map(first, I)
+        fill(Tuple(fi[d] for d in val.dims))
     else
         itr = (clamp(I[i], length(ax)) for (i, ax) in enumerate(axes(v)))
         v[itr...]

@@ -32,10 +32,11 @@ end
 
 function get_attr(d::DiscreteScale, value)
     map(d.scale, d.values) do scale, values
-        map(value) do v
+        res = map(value) do v
             n = sum(x -> !isless(v, x), values)
             scale === nothing ? n : scale[mod1(n, length(scale))]
         end
+        ndims(res) == 0 ? res[] : res
     end
 end
 

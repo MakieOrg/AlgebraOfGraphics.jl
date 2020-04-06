@@ -88,7 +88,8 @@ end
 function compute(s::GraphicalOrContextual)
     s = expand(s)
     # TODO: analysis go here
-    scaled = computescales(s)
+    ls = computelayout(s)
+    return computescales(ls)
 end
 
 # function computeanalysis(s::GraphicalOrContextual)
@@ -96,11 +97,21 @@ end
 #     compute(first(s.args), v) * compute(s′, v)
 # end
 
+computelayout(s::GraphicalOrContextual) = sum(computelayout, layers(s))
+function computelayout((s, v)::Pair{<:Spec, Vector{Style}})
+    list = map(v) do style
+        layout_x = to_value(get(style.nt, :layout_x, 1))
+        layout_y = to_value(get(style.nt, :layout_x, 1))
+
+        @show typeof(layout_x)
+    end
+    Layers(LayerDict(s => v))
+end
+
 computescales(s::GraphicalOrContextual) = sum(computescales, layers(s))
 function computescales((s, v)::Pair{<:Spec, Vector{Style}})
-    l = (layout_x = nothing, layout_y = nothing)
     scales[] = (; AbstractPlotting.current_default_theme()[:palette]...)
-    discrete_scales = map(DiscreteScale, merge(scales[], s.kwargs, l))
+    discrete_scales = map(DiscreteScale, merge(scales[], s.kwargs))
     v′ = [applytheme(discrete_scales, style) for style in v]
     Layers(LayerDict(s => v′))
 end
