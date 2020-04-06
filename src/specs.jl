@@ -1,15 +1,3 @@
-abstract type AbstractContextual end
-
-struct Style <: AbstractContextual
-    nt::NamedTuple
-end
-Style(s::Style) = s
-Style() = Style(NamedTuple())
-
-style(args...; kwargs...) = Style(namedtuple(args...; kwargs...))
-
-Base.merge(s1::Style, s2::Style) = Style(merge(s1.nt, s2.nt))
-
 abstract type AbstractGraphical end
 
 const GraphicalOrContextual = Union{AbstractGraphical, AbstractContextual}
@@ -20,7 +8,7 @@ struct Spec{T} <: AbstractGraphical
 end
 Spec() = Spec{Any}((), NamedTuple())
 
-Spec(s::Style) = Spec{Any}(split(s.nt)...)
+Spec(s::Style) = Spec{Any}(split(s.value)...)
 
 spec(args...; kwargs...) = Spec{Any}(args, values(kwargs))
 spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}(args, values(kwargs))
@@ -97,16 +85,20 @@ end
 #     compute(first(s.args), v) * compute(s′, v)
 # end
 
-computelayout(s::GraphicalOrContextual) = sum(computelayout, layers(s))
-function computelayout((s, v)::Pair{<:Spec, Vector{Style}})
-    list = map(v) do style
-        layout_x = to_value(get(style.nt, :layout_x, 1))
-        layout_y = to_value(get(style.nt, :layout_x, 1))
-
-        @show typeof(layout_x)
-    end
-    Layers(LayerDict(s => v))
-end
+# computelayout(s::GraphicalOrContextual) = sum(computelayout, layers(s))
+# function computelayout((s, v)::Pair{<:Spec, Vector{Style}})
+#     list = map(v) do style
+#         layout_x = to_value(get(style.value, :layout_x, 1))
+#         layout_y = to_value(get(style.value, :layout_y, 1))
+#         layout = tuple.(layout_x, layout_y)
+#         if layout isa AbstractArray
+#             sa = StructArray(vec(layout))
+#             return finduniquesorted(sa) do (k, idxs)
+#                 map(st.value)
+#         end
+#     end
+#     Layers(LayerDict(s => v))
+# end
 
 computescales(s::GraphicalOrContextual) = sum(computescales, layers(s))
 function computescales((s, v)::Pair{<:Spec, Vector{Style}})
@@ -116,7 +108,7 @@ function computescales((s, v)::Pair{<:Spec, Vector{Style}})
     Layers(LayerDict(s => v′))
 end
 
-applytheme(scales, style::Style) = Style(applytheme(scales, style.nt))
+applytheme(scales, style::Style) = Style(applytheme(scales, style.value))
 
 function applytheme(scales, grp::NamedTuple{names}) where names
     res = map(names) do key
