@@ -45,6 +45,7 @@ struct Layers <: AbstractGraphical
     layers::LayerDict
 end
 Layers(s::GraphicalOrContextual) = Layers(layers(s))
+Layers() = Layers(LayerDict())
 
 layers(s::Layers)             = s.layers
 layers(s::Analysis)           = layers(Spec{Any}((s,), NamedTuple()))
@@ -74,10 +75,14 @@ end
 # pipeline
 
 function compute(s::GraphicalOrContextual)
-    s = expand(s)
+    acc = LayerDict()
+    for (sp, series) in pairs(layers(s))
+        acc[sp] = Style[]
+        foreach(v -> append!(acc[sp], styles(v)), series)
+    end
     # TODO: analysis go here
-    ls = computelayout(s)
-    return computescales(ls)
+    # ls = computelayout(s)
+    return computescales(Layers(acc))
 end
 
 # function computeanalysis(s::GraphicalOrContextual)

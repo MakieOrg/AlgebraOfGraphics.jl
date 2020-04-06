@@ -59,6 +59,6 @@ function extract_names(d::Union{NamedTuple, Tuple})
 end
 
 function extract_names(s::Style)
-    ns, vs = extract_names(s.nt)
-    return ns, Style(vs)
+    ns, vs = extract_names(s.value)
+    return ns, Style(s.context, vs)
 end

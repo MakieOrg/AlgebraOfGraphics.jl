@@ -1,6 +1,7 @@
 using AbstractPlotting, GLMakie
 
 using AlgebraOfGraphics
+using AlgebraOfGraphics: data
 using AlgebraOfGraphics: linear, smooth
 
 using RDatasets: dataset
@@ -8,7 +9,7 @@ using RDatasets: dataset
 iris = dataset("datasets", "iris")
 d = style(:SepalLength, :SepalWidth, color = :Species)
 s = spec(Scatter) + spec(smooth, linewidth = 3)
-iris |> d * spec(Scatter) |> draw
+data(iris) * d * spec(Scatter) |> draw
 
 iris |> style(:SepalLength, :SepalWidth, color = :PetalLength) * spec(:Scatter) |> draw
 

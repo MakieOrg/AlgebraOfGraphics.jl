@@ -13,7 +13,7 @@ Style(s::Style) = s
 style(args...; kwargs...) = Style(namedtuple(args...; kwargs...))
 
 function Base.merge(s1::Style, s2::Style)
-    context = s2.context === nothing ? s2.context : s1.context
+    context = s2.context === nothing ? s1.context : s2.context
     return Style(context, merge(s1.value, s2.value))
 end
 
@@ -37,8 +37,8 @@ function aos(d::NamedTuple{names}) where names
     return v isa NamedTuple ? fill(v) : v
 end
 
-adjust(val, c) = c
-adjust(val::DimsSelector, c) = CartesianIndex((c[i] for i in val.dims)...)
+adjust(val, c) = val
+adjust(val::DimsSelector, c) = fill(CartesianIndex((c[i] for i in val.dims)...))
 
 function styles(::DimsSelector{0}, s::Style)
     nts = aos(s.value)
