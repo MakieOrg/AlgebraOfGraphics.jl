@@ -13,8 +13,8 @@ import GLM, Loess
 
 export style, spec, draw
 
-include("style.jl")
 include("specs.jl")
+include("data.jl")
 include("scales.jl")
 include("utils.jl")
 include("analysis/smooth.jl")

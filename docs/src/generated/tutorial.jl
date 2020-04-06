@@ -39,10 +39,10 @@ using RDatasets: dataset
 using AlgebraOfGraphics, AbstractPlotting, CairoMakie
 mpg = dataset("ggplot2", "mpg");
 cols = style(:Displ, :Hwy);
-grp = group(color = :Cyl);
+grp = style(color = :Cyl);
 scat = spec(Scatter)
 pipeline = cols * scat
-data(mpg) * pipeline |> draw
+mpg |> pipeline |> draw
 AbstractPlotting.save("scatter.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](scatter.svg)
