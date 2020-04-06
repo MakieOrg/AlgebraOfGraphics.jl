@@ -38,20 +38,20 @@ Analysis(f; kwargs...) = Analysis(f, values(kwargs))
 (a::Analysis)(args...; kwargs...) = a.f(args...; merge(a.kwargs, values(kwargs))...)
 
 struct Layers <: AbstractGraphical
-    layers::Vector{Pair{Spec, ContextualMap}}
+    layers::Vector{Pair{Spec, Style}}
 end
 Layers(s::GraphicalOrContextual) = Layers(layers(s))
 
 layers(s::Layers)             = s.layers
 layers(s::Analysis)           = layers(Spec{Any}((s,), NamedTuple()))
-layers(s::Spec)               = Pair{Spec, ContextualMap}[s => ContextualMap()]
-layers(s::AbstractContextual) = Pair{Spec, ContextualMap}[Spec() => ContextualMap(s)]
+layers(s::Spec)               = Pair{Spec, Style}[s => Style()]
+layers(s::AbstractContextual) = Pair{Spec, Style}[Spec() => Style(s)]
 
 Base.:(==)(s1::Layers, s2::Layers) = layers(s1) == layers(s2)
 
 function Base.:*(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
     l1, l2 = layers(s1), layers(s2)
-    v = Pair{Spec, ContextualMap}[]
+    v = Pair{Spec, Style}[]
     for el1 in l1
         for el2 in l2
             push!(v, merge(first(el1), first(el2)) => last(el1) * last(el2))
