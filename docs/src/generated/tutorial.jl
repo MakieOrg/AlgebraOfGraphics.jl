@@ -86,6 +86,16 @@ filtered * cols * grp * (scat + spec(smooth(span = 0.8), linewidth = 3)) |> draw
 AbstractPlotting.save("loess.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](loess.svg)
+#
+# We can also add styling that only makes sense in one spec (e.g. `markersize`) by
+# multiplying them:
+#
+newstyle = style(markersize = :Cyl) * spec(markersize = (0.05, 0.5))
+filtered * style(:Hwy, :Cty) * grp * (scat * newstyle + spec(smooth(span = 0.8), linewidth = 3)) |> draw
+AbstractPlotting.save("loess_markersize.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](loess_markersize.svg)
+#
 # ## Layout
 #
 # Thanks to the MakieLayout package it is possible to create plots where categorical variables

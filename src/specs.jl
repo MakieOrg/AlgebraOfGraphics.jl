@@ -73,32 +73,6 @@ function extract_names(d::NamedTuple)
     return ns, vs
 end
 
-struct Scale
-    scale::Observable
-    values::Observable
-end
-
-to_scale(nt::NamedTuple) = map(to_scale, nt)
-function to_scale(v)
-    Scale(convert(Observable, v), Observable(Any[]))
-end
-to_scale() = to_scale(Observable(nothing))
-
-function getrank(value, values)
-    for (i, v) in enumerate(unique(sort(values)))
-        v == value && return i
-    end
-    return nothing
-end
-
-function attr!(s::Scale, value)
-    value in s.values[] || (s.values[] = push!(s.values[], value))
-    map(s.scale, s.values) do scale, values
-        n = getrank(value, values)
-        scale === nothing ? n : scale[mod1(n, length(scale))]
-    end
-end
-
 const PairList = Vector{Pair{<:NamedTuple, <:NamedTuple}}
 
 for (f!, f_at!) in [(:push!, :pushat!), (:append!, :appendat!)]
@@ -146,13 +120,15 @@ each `key` used as group (e.g., `color`, `marker`, `linestyle`).
 """
 function specs(ts::GraphicalOrContextual, palette)
     serieslist = OrderedDict{NamedTuple, Spec}[]
-    for (m, itr) in spec_dict(ts)
+    for (m, itr) in pairs(spec_dict(ts))
         d = OrderedDict{NamedTuple, Spec}()
         l = (layout_x = nothing, layout_y = nothing)
-        scales = to_scale(merge(palette, m.kwargs, l))
+        discrete_scales = map(DiscreteScale, merge(palette, m.kwargs, l))
+        continuous_scales = map(ContinuousScale, m.kwargs)
         for (group, style) in itr
-            theme = applytheme(scales, group)
+            theme = applytheme(discrete_scales, group)
             names, style = extract_names(style)
+            style = applytheme(continuous_scales, style)
             sp = merge(m, Spec{Any}(Tuple(positional(style)), (; keyword(style)..., theme...)))
             d[group] = merge(sp, Spec{Any}((), (; names=names)))
         end
@@ -161,10 +137,9 @@ function specs(ts::GraphicalOrContextual, palette)
     return serieslist
 end
 
-applytheme(scale, val) = attr!(scale, val)
 function applytheme(scales, grp::NamedTuple{names}) where names
     res = map(names) do key
-        applytheme(scales[key], grp[key])
+        haskey(scales, key) ? attr!(scales[key], grp[key]) : grp[key]
     end
     return NamedTuple{names}(res)
 end

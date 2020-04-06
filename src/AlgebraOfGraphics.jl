@@ -15,6 +15,7 @@ export group, style, data, spec, dims, draw
 
 include("context.jl")
 include("specs.jl")
+include("scales.jl")
 include("utils.jl")
 include("analysis/smooth.jl")
 include("makielayout_integration.jl")
