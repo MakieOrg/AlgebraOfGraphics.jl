@@ -11,7 +11,7 @@ using GeoInterface: AbstractMultiPolygon, AbstractFeatureCollection, coordinates
 using AbstractPlotting: Point2f0
 import GLM, Loess
 
-export style, spec, dims, draw
+export style, spec, data, dims, draw
 
 include("context.jl")
 include("specs.jl")

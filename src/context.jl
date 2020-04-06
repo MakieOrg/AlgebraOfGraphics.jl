@@ -72,8 +72,8 @@ function extract_column(t, col::Union{Symbol, Int})
     colname = col isa Symbol ? col : columnnames(t)[col]
     return NamedDimsArray{(colname,)}(getcolumn(t, col))
 end
-extract_columns(t, val::DimsSelector) = t
-extract_columns(t, val::Union{Tuple, AbstractArray}) = map(t -> extract_column(data, t), val)
+extract_columns(t, val::DimsSelector) = val
+extract_columns(t, val::Union{Tuple, AbstractArray}) = map(v -> extract_column(t, v), val)
 extract_columns(t, val) = fill(extract_column(t, val))
 
 function styles(ctx::DataContext, s::Style)

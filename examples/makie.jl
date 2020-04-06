@@ -32,9 +32,9 @@ using RDatasets: dataset
 iris = dataset("datasets", "iris")
 iris.Rare = rand(Bool, 150)
 d = style([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
-grp = style(layout_x = dims(1), color = dims(2))
+grp = style(marker = dims(1), color = dims(2))
 s = spec(Scatter, markersize = 10px) #+ spec(linear)
-iris |> d * grp * s |> draw;
+data(iris) * d * grp * s |> draw
 
-style(rand(5, 3, 2), rand(5, 3), color = dims(2), marker = dims(3)) * spec(Scatter, markersize = 20px) |> AlgebraOfGraphics.draw
+dims(1) * style(rand(5, 3, 2), rand(5, 3), color = dims(2), marker = dims(3)) * spec(Scatter, markersize = 20px) |> AlgebraOfGraphics.draw
 
