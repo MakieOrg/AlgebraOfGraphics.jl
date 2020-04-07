@@ -17,22 +17,13 @@ end
 
 style(args...; kwargs...) = Style(namedtuple(args...; kwargs...))
 
-Base.merge(s1::Style, s2::Style) = merge!!(copy(s1), s2)
-# is only merge enough?
-function merge!!(s1::Style, s2::Style{Nothing})
-    s = copy(s1)
-    ctx = s.context
-    _merge!!(ctx, s, s2)
-end
-
+Base.merge(s1::Style, s2::Style) = _merge(s1.context, s1, s2)
 Base.pairs(s::Style) = _pairs(s.context, s)
-Base.copy(s::Style)  = _copy(s.context, s)
 
 # interface and fallbacks
 
-_merge!!(c, s1::Style, s2::Style) = Style(c, merge(s1.value, s2.value))
+_merge(c, s1::Style, s2::Style) = Style(c, merge(s1.value, s2.value))
 _pairs(c, s::Style) = Pair{NamedTuple, NamedTuple}[NamedTuple() => s.value]
-_copy(c, s::Style) = Style(c, s.value)
 
 ## Dims context
 
@@ -98,11 +89,6 @@ end
 
 data(x) = DataContext(coldict(x))
 
-function _copy(c::DataContext, s::Style)
-    data, pkeys, perm = c.data, c.pkeys, copy(c.perm)
-    return Style(DataContext(data, pkeys, perm), s.value)
-end
-
 iscategorical(v) = !(eltype(v) <: Number)
 function unwrap_categorical(values)
     pc = filter(keys(values)) do key
@@ -113,25 +99,25 @@ function unwrap_categorical(values)
     return (; zip(pc, map(key -> values[key][], pc))...)
 end
 
-function refine_perm!!(perm, pc, n)
+function refine_perm(perm, pc, n)
     if n == length(pc)
         perm
     elseif n == 0
         sortperm(StructArray(pc))
     else
         x, y = pc[n], pc[n+1]
-        refine_perm!(perm, pc, n, x, y, 1, length(x))
+        refine_perm!(copy(perm), pc, n, x, y, 1, length(x))
     end
 end
 
-function _merge!!(c::DataContext, s1::Style, s2::Style)
+function _merge(c::DataContext, s1::Style, s2::Style)
     data, pkeys, perm = c.data, c.pkeys, c.perm
     nt = map(val -> extract_columns(data, val), s2.value)
     newpkeys = unwrap_categorical(nt)
     @assert isempty(intersect(keys(pkeys), keys(newpkeys)))
     allpkeys = merge(pkeys, newpkeys)
     # unwrap from NamedDimsArray to perform the sorting
-    allperm = refine_perm!!(perm, map(parent, allpkeys), length(pkeys))
+    allperm = refine_perm(perm, map(parent, allpkeys), length(pkeys))
     ctx = DataContext(data, allpkeys, allperm)
     return Style(ctx, merge(s1.value, Base.structdiff(nt, newpkeys)))
 end
@@ -143,11 +129,11 @@ function _pairs(c::DataContext, s::Style)
     itr = GroupPerm(StructArray(map(parent, pkeys)), perm)
     sa = StructArray(pkeys)
     nestedpairs = map(itr) do idxs
-        i1 = first(idxs)
+        i1 = perm[first(idxs)]
         # keep value categorical and preserve name by taking a mini slice
         k = map(col -> col[i1:i1], pkeys)
         cols = map(s.value) do val
-            extract_views(val, idxs)
+            extract_views(val, perm[idxs])
         end
         [merge(k, p) => v for (p, v) in pairs(Style(dims(), cols))]
     end
@@ -173,6 +159,8 @@ extract_columns(t, val::Union{Tuple, AbstractArray}) = map(v -> extract_column(t
 extract_columns(t, val) = fill(extract_column(t, val))
 
 # Geo context
+
+using GeoInterface: AbstractMultiPolygon, AbstractFeatureCollection, coordinates, GeoInterface
 
 function data(c::AbstractFeatureCollection)
     cols = OrderedDict{Symbol, AbstractVector}()

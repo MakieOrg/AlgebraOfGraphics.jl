@@ -1,14 +1,13 @@
 abstract type AbstractGraphical end
 
-const GraphicalOrContextual = Union{AbstractGraphical, AbstractContextual}
+const Algebraic = Union{AbstractGraphical, AbstractContextual, AlgebraicDict}
 
 struct Spec{T} <: AbstractGraphical
     args::Tuple
     kwargs::NamedTuple
 end
-Spec() = Spec{Any}((), NamedTuple())
-
-Spec(s::Style) = Spec{Any}(split(s.value)...)
+Spec(t::Tuple=(), nt::NamedTuple=NamedTuple()) = Spec{Any}(t, nt)
+Spec(nt::NamedTuple) = Spec((), nt)
 
 spec(args...; kwargs...) = Spec{Any}(args, values(kwargs))
 spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}(args, values(kwargs))
@@ -39,89 +38,42 @@ Analysis(f; kwargs...) = Analysis(f, values(kwargs))
 
 (a::Analysis)(args...; kwargs...) = a.f(args...; merge(a.kwargs, values(kwargs))...)
 
-const LayerDict = OrderedDict{Spec, Vector{Style}}
-
-struct Layers <: AbstractGraphical
-    layers::LayerDict
-end
-Layers(s::GraphicalOrContextual) = Layers(layers(s))
-Layers() = Layers(LayerDict())
-
-layers(s::Layers)             = s.layers
 layers(s::Analysis)           = layers(Spec{Any}((s,), NamedTuple()))
-layers(s::Spec)               = LayerDict(s => [Style()])
-layers(s::AbstractContextual) = LayerDict(Spec() => [Style(s)])
+layers(s::Spec)               = AlgebraicDict(s => Style())
+layers(s::AbstractContextual) = AlgebraicDict(Spec() => Style(s))
 
-Base.:(==)(s1::Layers, s2::Layers) = layers(s1) == layers(s2)
+AlgebraicDict(s::Union{AbstractGraphical, AbstractContextual}) = AlgebraicDict(layers(s))
 
-function Base.:*(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
-    l1, l2 = layers(s1), layers(s2)
-    d = LayerDict()
-    for (k1, v1) in pairs(l1)
-        for (k2, v2) in pairs(l2)
-            k = merge(k1, k2)
-            v = Style[merge(a, b) for a in v1 for b in v2]
-            d[k] = append!(get(d, k, Style[]), v)
-        end
-    end
-    return Layers(d)
-end
-
-function Base.:+(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
-    l1, l2 = layers(s1), layers(s2)
-    return Layers(merge(vcat, l1, l2))
-end
+Base.:*(s1::Algebraic, s2::Algebraic) = AlgebraicDict(s1) * AlgebraicDict(s2)
+Base.:+(s1::Algebraic, s2::Algebraic) = AlgebraicDict(s1) + AlgebraicDict(s2)
 
 # pipeline
 
-function mapstyles(f, s::GraphicalOrContextual)
-    d = LayerDict(key => f(styles) for (key, styles) in pairs(layers(s)))
-    Layers(d)
-end
-
-function compute(s::GraphicalOrContextual)
-    s = mapstyles(series -> mapfoldl(styles, append!, series, init=Style[]), s)
+function compute(s::Algebraic)
+    l = AlgebraicDict(s)
+    d = AlgebraicDict(k => LittleDict(pairs(v)) for (k, v) in pairs(l))
     # TODO: analysis go here
     # ls = computelayout(s)
-    return computescales(s)
+    return computescales(d)
 end
-
-# function group(s::AbstractVector{<:Style})
-#     acc = Style[]
-#     for style in s
-#         nt = style.value
-#         for (k, idxs) in finduniquesorted(
 
 # function computeanalysis(s::GraphicalOrContextual)
 #     s′ = Spec{plottype(s)}(Base.tail(s.args), s.kwargs)
 #     compute(first(s.args), v) * compute(s′, v)
 # end
 
-# computelayout(s::GraphicalOrContextual) = sum(computelayout, layers(s))
-# function computelayout((s, v)::Pair{<:Spec, Vector{Style}})
-#     list = map(v) do style
-#         layout_x = to_value(get(style.value, :layout_x, 1))
-#         layout_y = to_value(get(style.value, :layout_y, 1))
-#         layout = tuple.(layout_x, layout_y)
-#         if layout isa AbstractArray
-#             sa = StructArray(vec(layout))
-#             return finduniquesorted(sa) do (k, idxs)
-#                 map(st.value)
-#         end
-#     end
-#     Layers(LayerDict(s => v))
-# end
-
-computescales(s::GraphicalOrContextual) = sum(computescales, layers(s))
-function computescales((s, v)::Pair{<:Spec, Vector{Style}})
+function computescales(s::AlgebraicDict)
+    AlgebraicDict(key => computescales(key, val) for (key, val) in pairs(s))
+end
+function computescales(s::Spec, dict::AbstractDict)
     scales[] = (; AbstractPlotting.current_default_theme()[:palette]...)
     l = (layout_x = nothing, layout_y = nothing)
     discrete_scales = map(DiscreteScale, merge(scales[], s.kwargs, l))
-    v′ = [applytheme(discrete_scales, style) for style in v]
-    Layers(LayerDict(s => v′))
+    continuous_scales = map(ContinuousScale, s.kwargs)
+    ks = [applytheme(discrete_scales, ds) for ds in keys(dict)]
+    vs = [applytheme(continuous_scales, cs) for cs in values(dict)]
+    return LittleDict(ks, vs)
 end
-
-applytheme(scales, style::Style) = Style(applytheme(scales, style.value))
 
 function applytheme(scales, grp::NamedTuple{names}) where names
     res = map(names) do key

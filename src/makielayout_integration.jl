@@ -40,13 +40,13 @@ function set_defaults!(attrs::Attributes)
     get!(attrs, :markersize, Observable(8px))
 end
 
-function layoutplot!(scene, layout, ts::GraphicalOrContextual)
+function layoutplot!(scene, layout, ts::Algebraic)
     facetlayout = layout[1, 1] = GridLayout()
-    serieslist = layers(compute(ts))
+    serieslist = compute(ts)
     Nx, Ny = 1, 1
     for (sp, series) in serieslist
-        for style in series
-            trace = merge(sp, Spec(style))
+        for (key, val) in series
+            trace = foldl(merge, (sp, Spec(key), Spec(val)))
             Nx = max(Nx, to_value(get(trace.kwargs, :layout_x, Nx)))
             Ny = max(Ny, to_value(get(trace.kwargs, :layout_y, Ny)))
         end
