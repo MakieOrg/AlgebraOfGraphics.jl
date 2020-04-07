@@ -41,11 +41,10 @@ function aos(d::NamedTuple{names}) where names
     return v isa NamedTuple ? fill(v) : v
 end
 
-adjust(val, c, nts) = val
 function adjust(val::DimsSelector, c, nts)
     is = collect(val.dims)
     ax, cf = axes(nts)[is], Tuple(c)[is]
-    return LinearIndices(ax)[cf...]
+    return NamedDimsArray{(Symbol(""),)}([LinearIndices(ax)[cf...]])
 end
 
 # make it a pair list

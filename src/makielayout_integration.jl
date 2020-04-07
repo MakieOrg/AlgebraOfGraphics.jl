@@ -8,7 +8,7 @@ using MakieLayout: LAxis,
                    MakieLayout
 
 function set_names!(ax, names)
-    for (nm, prop) in zip(positional(names), (:xlabel, :ylabel, :zlabel))
+    for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
         s = string(nm)
         if !isempty(s)
             getproperty(ax, prop)[] = s
@@ -46,7 +46,7 @@ function layoutplot!(scene, layout, ts::Algebraic)
     Nx, Ny = 1, 1
     for (sp, series) in serieslist
         for (key, val) in series
-            trace = foldl(merge, (sp, Spec(key), Spec(val)))
+            trace = foldl(merge, (sp, Spec(key), Spec(split(val)...)))
             Nx = max(Nx, to_value(get(trace.kwargs, :layout_x, Nx)))
             Ny = max(Ny, to_value(get(trace.kwargs, :layout_y, Ny)))
         end
@@ -62,12 +62,15 @@ function layoutplot!(scene, layout, ts::Algebraic)
     hideydecorations!.(axs[:, 2:end])
     legdict = Dict{Symbol, Any}()
     for (sp, series) in serieslist
-        for style in series
-            names, style = extract_names(style)
-            trace = merge(sp, Spec(style))
+        for (key, val) in series
+            # TODO: also get names here
+            key = map(key) do kw
+                map(v -> v[1], kw)
+            end
+            trace = foldl(merge, (sp, Spec(key), Spec(split(val)...)))
             P = plottype(trace)
             P isa Symbol && (P = getproperty(AbstractPlotting, P))
-            args = trace.args
+            names, args = extract_names(trace.args)
             attrs = Attributes(trace.kwargs)
             set_defaults!(attrs)
             x_pos = pop!(attrs, :layout_x, 1) |> to_value

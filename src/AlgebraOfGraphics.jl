@@ -2,7 +2,7 @@ module AlgebraOfGraphics
 
 using Tables: columns, getcolumn, columnnames
 using PooledArrays: PooledArray, PooledVector, RefArray
-import DataAPI
+import DataAPI, CategoricalArrays
 using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict, LittleDict
 using NamedDims: NamedDimsArray, dimnames
