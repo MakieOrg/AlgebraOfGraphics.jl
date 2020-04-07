@@ -109,6 +109,9 @@ function refine_perm(perm, pc, n)
     end
 end
 
+optimize_cols(v::NamedDimsArray) = refs(parent(v))
+optimize_cols(v::Union{Tuple, NamedTuple}) = map(optimize_cols, v)
+
 function _merge(c::DataContext, s1::Style, s2::Style)
     data, pkeys, perm = c.data, c.pkeys, c.perm
     nt = map(val -> extract_columns(data, val), s2.value)
@@ -116,7 +119,7 @@ function _merge(c::DataContext, s1::Style, s2::Style)
     @assert isempty(intersect(keys(pkeys), keys(newpkeys)))
     allpkeys = merge(pkeys, newpkeys)
     # unwrap from NamedDimsArray to perform the sorting
-    allperm = refine_perm(perm, map(parent, allpkeys), length(pkeys))
+    allperm = refine_perm(perm, optimize_cols(allpkeys), length(pkeys))
     ctx = DataContext(data, allpkeys, allperm)
     return Style(ctx, merge(s1.value, Base.structdiff(nt, newpkeys)))
 end
@@ -125,7 +128,7 @@ function _pairs(c::DataContext, s::Style)
     data, pkeys, perm = c.data, c.pkeys, c.perm
     isempty(pkeys) && return pairs(Style(dims(), s.value))
     # uwrap for sorting computations
-    itr = GroupPerm(StructArray(map(parent, pkeys)), perm)
+    itr = GroupPerm(StructArray(optimize_cols(pkeys)), perm)
     sa = StructArray(pkeys)
     nestedpairs = map(itr) do idxs
         i1 = perm[first(idxs)]
