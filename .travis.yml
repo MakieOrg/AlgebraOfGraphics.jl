@@ -17,6 +17,8 @@ after_success:
     fi
 
 jobs:
+  allow_failures:
+    - nightly
   include:
     - stage: "Documentation"
       julia: 1.4
