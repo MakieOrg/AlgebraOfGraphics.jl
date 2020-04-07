@@ -23,8 +23,8 @@ using AbstractPlotting: default_palettes
     @test length(v) == 1
     st = first(v)
     ps = pairs(st)
-    @test ps[1] == Pair((color = 1,), (var"1" = 1, var"2" = "a"))
-    @test ps[2] == Pair((color = 2,), (var"1" = 2, var"2" = "b"))
+    @test ps[1] == Pair((color = [1],), (var"1" = 1, var"2" = "a"))
+    @test ps[2] == Pair((color = [2],), (var"1" = 2, var"2" = "b"))
 end
 
 @testset "lazy spec" begin
@@ -65,7 +65,7 @@ end
     res = pairs(s)
     for (i, r) in enumerate(pairs(s[spec()]))
         group, style = r
-        @test group == (; color = mod1(i, 3))
+        @test group == (; color = [mod1(i, 3)])
         xsl = x[:, mod1(i, 3), (i > 3) + 1]
         ysl = y[:, mod1(i, 3)]
         @test style == (; Symbol(1) => xsl, Symbol(2) => ysl)
