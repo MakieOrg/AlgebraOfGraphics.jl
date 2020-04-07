@@ -86,6 +86,12 @@ function compute(s::GraphicalOrContextual)
     return computescales(s)
 end
 
+# function group(s::AbstractVector{<:Style})
+#     acc = Style[]
+#     for style in s
+#         nt = style.value
+#         for (k, idxs) in finduniquesorted(
+
 # function computeanalysis(s::GraphicalOrContextual)
 #     s′ = Spec{plottype(s)}(Base.tail(s.args), s.kwargs)
 #     compute(first(s.args), v) * compute(s′, v)

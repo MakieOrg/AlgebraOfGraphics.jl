@@ -3,37 +3,35 @@ using AlgebraOfGraphics: data,
                          style,
                          Spec,
                          spec,
-                         specs,
                          layers,
-                         group,
                          positional,
                          keyword,
-                         dims,
-                         NamedEntry,
-                         ContextualPair,
-                         ContextualMap
+                         dims
 
 using OrderedCollections: OrderedDict
+using CategoricalArrays: categorical
 using NamedDims
 using RDatasets: dataset
 using Observables: to_value
 
 @testset "product" begin
-    s = style(1:2, ["a", "b"]) * group(color = dims(1))
-    exp = ContextualPair(
-                         nothing,
-                         (; color = dims(1)),
-                         (; Symbol(1) => 1:2, Symbol(2) => ["a", "b"])
-                        )
-    @test s == exp
+    s = dims() * style(1:2, ["a", "b"], color = dims(1))
+    v = values(s.layers)
+    @test length(v) == 1
+    st = first(v)
+    @test length(st) == 1
+    ps = pairs(only(st))
+    @test ps[1] == Pair((color = 1,), (var"1" = 1, var"2" = "a"))
+    @test ps[2] == Pair((color = 2,), (var"1" = 2, var"2" = "b"))
 end
 
 @testset "lazy spec" begin
     mpg = dataset("ggplot2", "mpg")
-    d = style(:Cyl, :Hwy) * group(color = :Year)
+    d = style(:Cyl, :Hwy, color = :Year => categorical)
     s = spec(color = :red, font = 10) + style(markersize = :Year)
     sl = data(mpg) * d * s
     res = layers(sl)
+    st = res[spec(color = :red, font = 10)]
     @test first(res[1]) == Spec{Any}((), (color = :red, font = 10))
 
     idx1 = mpg.Year .== 1999
