@@ -47,8 +47,8 @@ function layoutplot!(scene, layout, ts::Algebraic)
     for (sp, series) in serieslist
         for (key, val) in series
             trace = foldl(merge, (sp, Spec(key), Spec(split(val)...)))
-            Nx = max(Nx, to_value(get(trace.kwargs, :layout_x, Nx)))
-            Ny = max(Ny, to_value(get(trace.kwargs, :layout_y, Ny)))
+            Nx = max(Nx, rank(to_value(get(trace.kwargs, :layout_x, Nx))))
+            Ny = max(Ny, rank(to_value(get(trace.kwargs, :layout_y, Ny))))
         end
     end
     axs = facetlayout[1:Ny, 1:Nx] = [LAxis(scene) for i in 1:Ny, j in 1:Nx]
@@ -73,8 +73,8 @@ function layoutplot!(scene, layout, ts::Algebraic)
             names, args = extract_names(trace.args)
             attrs = Attributes(trace.kwargs)
             set_defaults!(attrs)
-            x_pos = pop!(attrs, :layout_x, 1) |> to_value
-            y_pos = pop!(attrs, :layout_y, 1) |> to_value
+            x_pos = pop!(attrs, :layout_x, 1) |> to_value |> rank
+            y_pos = pop!(attrs, :layout_y, 1) |> to_value |> rank
             current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
             set_names!(axs[y_pos, x_pos], names)
             # for (key, val) in pairs(group)

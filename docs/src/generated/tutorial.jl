@@ -39,7 +39,7 @@ using RDatasets: dataset
 using AlgebraOfGraphics, AbstractPlotting, CairoMakie
 mpg = dataset("ggplot2", "mpg");
 cols = style(:Displ, :Hwy);
-grp = style(color = :Cyl);
+grp = style(color = :Cyl => categorical);
 scat = spec(Scatter)
 pipeline = cols * scat
 data(mpg) * pipeline |> draw

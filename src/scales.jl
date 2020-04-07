@@ -30,10 +30,14 @@ function add_value!(s::ContinuousScale, value)
     s.values[] = (min(m, m′), max(n, n′))
 end
 
+rank(n::Integer) = n
+rank(n) = levelcode(n)
+rank(n::NamedDimsArray) = rank(n[1])
+
 function get_attr(d::DiscreteScale, value)
     map(d.scale, d.values) do scale, values
         res = map(value) do v
-            n = sum(x -> !isless(v, x), values)
+            n = rank(value[1])
             scale === nothing ? n : scale[mod1(n, length(scale))]
         end
         ndims(res) == 0 ? res[] : res

@@ -1,24 +1,3 @@
-# PooledArrays utils
-
-refarray(v) = DataAPI.refarray(v)
-refvalue(v, el) = DataAPI.refvalue(v, el)
-
-function refarray(v::NamedDimsArray{names}) where names
-    NamedDimsArray{names}(refarray(parent(v)))
-end
-
-refvalue(v::NamedDimsArray, el) = refvalue(parent(v), el)
-
-pool(v::PooledVector) = v
-
-function pool(v::AbstractVector)
-    s = refarray(v)
-    pv = PooledArray(s)
-    map(pv) do el
-        refvalue(v, el)
-    end
-end
-
 # tabular utils
 
 function mapcols(f, t)

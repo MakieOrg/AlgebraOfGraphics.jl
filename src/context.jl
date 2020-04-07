@@ -143,16 +143,13 @@ extract_views(cols, idxs) = map(t -> view(t, idxs), cols)
 extract_views(cols::DimsSelector, idxs) = cols
 
 function extract_column(t, (nm, f)::Pair)
-    v = extract_column(t, nm)
-    return NamedDimsArray{dimnames(v)}(f(v))
-end
-
-function extract_column(t, col::Union{Symbol, Int})
-    colname = col isa Symbol ? col : columnnames(t)[col]
-    vals = getcolumn(t, col)
-    p = iscategorical(vals) ? pool(vals) : vals
+    colname = nm isa Symbol ? nm : columnnames(t)[nm]
+    vals = f(getcolumn(t, nm))
+    p = iscategorical(vals) ? categorical(vals) : vals
     return NamedDimsArray{(colname,)}(p)
 end
+extract_column(t, nm::Union{Symbol, Int}) = extract_column(t, nm => identity)
+
 extract_columns(t, val::DimsSelector) = val
 extract_columns(t, val::Union{Tuple, AbstractArray}) = map(v -> extract_column(t, v), val)
 extract_columns(t, val) = fill(extract_column(t, val))

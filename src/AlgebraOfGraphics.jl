@@ -1,8 +1,7 @@
 module AlgebraOfGraphics
 
 using Tables: columns, getcolumn, columnnames
-using PooledArrays: PooledArray, PooledVector, RefArray
-import DataAPI, CategoricalArrays
+using CategoricalArrays: categorical, levelcode
 using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict, LittleDict
 using NamedDims: NamedDimsArray, dimnames
@@ -10,7 +9,7 @@ using StructArrays: GroupPerm, refine_perm!, StructArray
 using AbstractPlotting: Point2f0
 import GLM, Loess
 
-export style, spec, data, dims, draw
+export style, spec, data, dims, draw, categorical
 
 include("algebraic_dict.jl")
 include("context.jl")
