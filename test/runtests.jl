@@ -21,10 +21,10 @@ using AbstractPlotting: default_palettes
     s = dims() * style(1:2, ["a", "b"], color = dims(1))
     v = values(s)
     @test length(v) == 1
-    st = first(v)
+    st = first(v)[NamedTuple()]
     ps = pairs(st)
-    @test ps[1] == Pair((color = [1],), (var"1" = 1, var"2" = "a"))
-    @test ps[2] == Pair((color = [2],), (var"1" = 2, var"2" = "b"))
+    @test ps[1] == Pair((color = [1],), style(1, "a"))
+    @test ps[2] == Pair((color = [2],), style(2, "b"))
 end
 
 @testset "lazy spec" begin
@@ -32,22 +32,17 @@ end
     d = style(:Cyl, :Hwy, color = :Year => categorical)
     s = spec(color = :red, font = 10) + style(markersize = :Year)
     res = data(mpg) * d * s
-    st = res[spec(color = :red, font = 10)]
+    st = res[spec(color = :red, font = 10)][NamedTuple()]
     @test first(keys(res)) == Spec{Any}((), (color = :red, font = 10))
 
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
 
-    styles = map(pairs, values(res))
-    @test Tuple(last(styles[1][1])) == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test Tuple(last(styles[1][2])) == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
-    @test Tuple(last(styles[2][1]))[1:2] == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test Tuple(last(styles[2][2]))[1:2] == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
-
-    @test keyword(last(styles[1][1])) == NamedTuple()
-    @test keyword(last(styles[1][2])) == NamedTuple()
-    @test keyword(last(styles[2][1])) == (; markersize = mpg[idx1, :Year])
-    @test keyword(last(styles[2][2])) == (; markersize = mpg[idx2, :Year])
+    styles = map(t -> pairs(t[NamedTuple()]), values(res))
+    @test last(styles[1][1]).value == style(mpg[idx1, :Cyl], mpg[idx1, :Hwy]).value
+    @test last(styles[1][2]).value == style(mpg[idx2, :Cyl], mpg[idx2, :Hwy]).value
+    @test last(styles[2][1]).value == style(mpg[idx1, :Cyl], mpg[idx1, :Hwy], markersize = mpg[idx1, :Year]).value
+    @test last(styles[2][2]).value == style(mpg[idx2, :Cyl], mpg[idx2, :Hwy], markersize = mpg[idx2, :Year]).value
 
     @test extract_names(first(styles[1][1])) ==
         ((color = :Year,), (color = categorical([1999]),))
@@ -63,12 +58,12 @@ end
     s = dims(1) * style(x, y, color = dims(2)) 
 
     res = pairs(s)
-    for (i, r) in enumerate(pairs(s[spec()]))
-        group, style = r
+    for (i, r) in enumerate(pairs(s[spec()][NamedTuple()]))
+        group, st = r
         @test group == (; color = [mod1(i, 3)])
         xsl = x[:, mod1(i, 3), (i > 3) + 1]
         ysl = y[:, mod1(i, 3)]
-        @test style == (; Symbol(1) => xsl, Symbol(2) => ysl)
+        @test st.value == style(xsl, ysl).value
     end
 end
 
@@ -85,16 +80,17 @@ end
     r = res[Spec{:log}((), (font = 10,))]
     (k1, v1), (k2, v2) = r
 
-    @test map(getindex, k1) == (color = NamedDimsArray{(:c,)}([wong[1]]),)
-    @test map(getindex, k2) == (color = NamedDimsArray{(:c,)}([wong[2]]),)
-    @test v1 == (var"1" = [1], var"2" = [10])
-    @test v2 == (var"1" = [2], var"2" = [20])
+    # TODO: fix when reworking legend entry structure and scales
+    @test map(getindex∘last, k1) == (color = NamedDimsArray{(:c,)}([wong[1]]),)
+    @test map(getindex∘last, k2) == (color = NamedDimsArray{(:c,)}([wong[2]]),)
+    @test v1.value == style([1], [10]).value
+    @test v2.value == style([2], [20]).value
 
     r = res[spec()]
     (k1, v1), (k2, v2) = r
 
-    @test map(getindex, k1) == (color = NamedDimsArray{(:c,)}([wong[1]]),)
-    @test map(getindex, k2) == (color = NamedDimsArray{(:c,)}([wong[2]]),)
-    @test v1 == (var"1" = [1], var"2" = [10], size = [3])
-    @test v2 == (var"1" = [2], var"2" = [20], size = [4])
+    @test map(getindex∘last, k1) == (color = NamedDimsArray{(:c,)}([wong[1]]),)
+    @test map(getindex∘last, k2) == (color = NamedDimsArray{(:c,)}([wong[2]]),)
+    @test v1.value == style([1], [10], size = [3]).value
+    @test v2.value == style([2], [20], size = [4]).value
 end
