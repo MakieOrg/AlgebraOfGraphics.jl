@@ -39,9 +39,9 @@ Base.empty(dd::AlgebraicDict{K,V}) where {K,V} = AlgebraicDict{K,V}()
 
 # Algebraic operations
 
-Base.:+(s1::AlgebraicDict, s2::AlgebraicDict) = merge(merge, s1, s2)
+Base.:+(s1::AlgebraicDict, s2::AlgebraicDict) = merge(+, s1, s2)
 function Base.:*(s1::AlgebraicDict, s2::AlgebraicDict)
     k = [merge(k1, k2) for k1 in keys(s1) for k2 in keys(s2)]
-    v = [merge(v1, v2) for v1 in values(s1) for v2 in values(s2)]
+    v = [v1 * v2 for v1 in values(s1) for v2 in values(s2)]
     return AlgebraicDict(k, v)
 end

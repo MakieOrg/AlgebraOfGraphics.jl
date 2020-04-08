@@ -8,7 +8,7 @@ using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
 d = style(:SepalLength, :SepalWidth, color = :Species)
-s = spec(Scatter) + spec(smooth, linewidth = 3)
+s = spec(Scatter) + spec(linear, linewidth = 3)
 data(iris) * d * spec(Scatter) |> draw
 
 data(iris) * style(:SepalLength, :SepalWidth, color = :PetalLength) * spec(:Scatter) |> draw

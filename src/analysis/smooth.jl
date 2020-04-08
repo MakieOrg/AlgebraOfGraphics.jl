@@ -12,14 +12,28 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
                                           interval=interval)
         # the GLM predictions always return matrices
         x, y, l, u = x_new, vec(y_new), vec(lower), vec(upper)
-        return LittleDict(
-                          spec(:Lines) => namedtuple(x, y),
-                          spec(:Band, alpha = 0.2) => namedtuple(x, l, u)
-                         )
+        lines = style(x, y)
+        band = style(x, l, u)
+        return AlgebraicDict(
+                             spec(:Lines) => AlgebraicDict(NamedTuple() => lines),
+                             spec(:Band, alpha = 0.2) => AlgebraicDict(NamedTuple() => band)
+                            )
     catch e
         @warn "Linear fit not possible for the given data"
-        return LittleDict()
+        return spec()
     end
+end
+
+function _linear(d::AlgebraicDict; kws...)
+    acc = AlgebraicDict()
+    for (sp, val) in d
+        for (p, st) in val
+            pre = AlgebraicDict(sp => AlgebraicDict(p => style()))
+            args, kwargs = split(st.value)
+            acc += pre * _linear(args...; kws..., kwargs...)
+        end
+    end
+    return acc
 end
 
 const linear = Analysis(_linear)

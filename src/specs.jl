@@ -8,6 +8,7 @@ struct Spec{T} <: AbstractGraphical
 end
 Spec(t::Tuple=(), nt::NamedTuple=NamedTuple()) = Spec{Any}(t, nt)
 Spec(nt::NamedTuple) = Spec((), nt)
+Spec(t::Style) = Spec(t.value)
 
 spec(args...; kwargs...) = Spec{Any}((), namedtuple(args...; kwargs...))
 spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}((), namedtuple(args...; kwargs...))
@@ -52,15 +53,22 @@ Base.:+(s1::Algebraic, s2::Algebraic) = AlgebraicDict(s1) + AlgebraicDict(s2)
 function compute(s::Algebraic)
     l = AlgebraicDict(s)
     d = AlgebraicDict(k => LittleDict(pairs(v)) for (k, v) in pairs(l))
-    # TODO: analysis go here
-    # ls = computelayout(s)
-    return computescales(d)
+    e = computeanalysis(d)
+    computescales(e)
 end
 
-# function computeanalysis(s::GraphicalOrContextual)
-#     s′ = Spec{plottype(s)}(Base.tail(s.args), s.kwargs)
-#     compute(first(s.args), v) * compute(s′, v)
-# end
+function computeanalysis(ad::AlgebraicDict, i=1)
+    acc = AlgebraicDict()
+    for (key, val) in ad
+        p = AlgebraicDict(key => val)
+        if length(key.analysis) < i
+            acc += p
+        else
+            acc += computeanalysis(key.analysis[i](p), i + 1)
+        end
+    end
+    return acc
+end
 
 function computescales(s::AlgebraicDict)
     AlgebraicDict(key => computescales(key, val) for (key, val) in pairs(s))
@@ -71,7 +79,7 @@ function computescales(s::Spec, dict::AbstractDict)
     discrete_scales = map(DiscreteScale, merge(scales[], s.value, l))
     continuous_scales = map(ContinuousScale, s.value)
     ks = [applytheme(discrete_scales, ds) for ds in keys(dict)]
-    vs = [applytheme(continuous_scales, cs) for cs in values(dict)]
+    vs = [Style(applytheme(continuous_scales, cs.value)) for cs in values(dict)]
     return LittleDict(ks, vs)
 end
 

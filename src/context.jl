@@ -17,13 +17,15 @@ end
 
 style(args...; kwargs...) = Style(namedtuple(args...; kwargs...))
 
+Base.:*(s1::Style, s2::Style) = merge(s1, s2)
+
 Base.merge(s1::Style, s2::Style) = _merge(s1.context, s1, s2)
 Base.pairs(s::Style) = _pairs(s.context, s)
 
 # interface and fallbacks
 
 _merge(c, s1::Style, s2::Style) = Style(c, merge(s1.value, s2.value))
-_pairs(c, s::Style) = Pair{NamedTuple, NamedTuple}[NamedTuple() => s.value]
+_pairs(c, s::Style) = [NamedTuple() => s]
 
 ## Dims context
 
@@ -61,7 +63,7 @@ function _pairs(::DimsSelector{0}, s::Style)
         end
         ds = (; zip(dskeys, dsvalues)...)
         nds = Base.structdiff(nt, ds)
-        return ds => nds
+        return ds => Style(nds)
     end
     return vec(ps)
 end
