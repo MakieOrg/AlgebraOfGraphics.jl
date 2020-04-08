@@ -17,13 +17,13 @@ function set_names!(ax, names)
 end
 
 function create_name(k, v)
-    n = string(get_name(first(keys(v))))
+    n = string(only(dimnames(last(first(keys(v))))))
     isempty(n) ? string(k) : n
 end
 
 function create_legend(scene, legdict::AbstractDict)
     plts_list = [collect(values(v)) for v in values(legdict)]
-    entries_list = [string.(keys(v)) for v in values(legdict)]
+    entries_list = [string.(first.(first.(keys(v)))) for v in values(legdict)]
     names = [create_name(k, v) for (k, v) in pairs(legdict)]
     MakieLayout.LLegend(scene, plts_list, entries_list, names)
 end
@@ -63,6 +63,8 @@ function layoutplot!(scene, layout, ts::Algebraic)
     legdict = Dict{Symbol, Any}()
     for (sp, series) in serieslist
         for (key, val) in series
+            leg = key
+            key = map(last, key)
             # TODO: also get names here
             key = map(key) do kw
                 map(v -> v[1], kw)
@@ -78,11 +80,12 @@ function layoutplot!(scene, layout, ts::Algebraic)
             y_pos = pop!(attrs, :layout_y, 1) |> to_value |> rank
             current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
             set_names!(axs[y_pos, x_pos], names)
-            # for (key, val) in pairs(group)
-            #     key in (:layout_x, :layout_y) && continue
-            #     legsubdict = get!(legdict, key, OrderedDict{Any, AbstractPlot}())
-            #     legentry = get!(legsubdict, val, current)
-            # end
+            for (key, val) in pairs(leg)
+                nm, val = val
+                key in (:layout_x, :layout_y) && continue
+                legsubdict = get!(legdict, key, OrderedDict{Any, AbstractPlot}())
+                legentry = get!(legsubdict, nm => to_value(val), current)
+            end
         end
     end
     if !isempty(legdict)

@@ -92,13 +92,15 @@ function computescales(s::AlgebraicDict)
     AlgebraicDict(key => computescales(key, val) for (key, val) in pairs(s))
 end
 function computescales(s::Spec, dict::AbstractDict)
+    # temporary! Should have a sensible default scales set, both
+    # discrete and continuous
     scales[] = (; AbstractPlotting.current_default_theme()[:palette]...)
     l = (layout_x = nothing, layout_y = nothing)
     discrete_scales = map(DiscreteScale, merge(scales[], s.value, l))
     continuous_scales = map(ContinuousScale, s.value)
-    ks = [applytheme(discrete_scales, ds) for ds in keys(dict)]
+    ks = [map(Pair, ds, applytheme(discrete_scales, ds)) for ds in keys(dict)]
     vs = [Style(applytheme(continuous_scales, cs.value)) for cs in values(dict)]
-    return LittleDict(ks, vs)
+    return AlgebraicDict(ks, vs)
 end
 
 function applytheme(scales, grp::NamedTuple{names}) where names
