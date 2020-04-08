@@ -24,18 +24,18 @@ using AbstractPlotting: default_palettes
     @test ps[2] == Pair((color = [2],), style(2, "b"))
 end
 
-@testset "lazy spec" begin
+@testset "contexts" begin
     mpg = dataset("ggplot2", "mpg")
     d = style(:Cyl, :Hwy, color = :Year => categorical)
     s = spec(color = :red, font = 10) + style(markersize = :Year)
     res = data(mpg) * d * s
-    st = res[spec(color = :red, font = 10)][NamedTuple()]
+    st = res[spec(color = :red, font = 10)]
     @test first(keys(res)) == Spec{Any}((), (color = :red, font = 10))
 
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
 
-    styles = map(t -> pairs(t[NamedTuple()]), values(res))
+    styles = map(pairs, values(res))
     @test last(styles[1][1]).value == style(mpg[idx1, :Cyl], mpg[idx1, :Hwy]).value
     @test last(styles[1][2]).value == style(mpg[idx2, :Cyl], mpg[idx2, :Hwy]).value
     @test last(styles[2][1]).value == style(mpg[idx1, :Cyl], mpg[idx1, :Hwy], markersize = mpg[idx1, :Year]).value
@@ -64,7 +64,7 @@ end
     end
 end
 
-@testset "specs" begin
+@testset "compute specs" begin
     wong = default_palettes[:color][]
     t = (x = [1, 2], y = [10, 20], z = [3, 4], c = ["a", "b"])
     d = style(:x, :y, color = :c)
