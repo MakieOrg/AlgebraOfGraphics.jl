@@ -8,6 +8,7 @@ struct Spec{T} <: AbstractGraphical
 end
 Spec(t::Tuple=(), nt::NamedTuple=NamedTuple()) = Spec{Any}(t, nt)
 Spec(nt::NamedTuple) = Spec((), nt)
+Spec(s::Spec) = s
 Spec(t::Style) = Spec(t.value)
 
 spec(args...; kwargs...) = Spec{Any}((), namedtuple(args...; kwargs...))
@@ -28,12 +29,18 @@ end
 
 Base.hash(a::Spec, h::UInt64) = hash((a.analysis, a.value), hash(typeof(a), h))
 
+Base.:*(a1::AbstractGraphical, a2::AbstractGraphical) = merge(Spec(a1), Spec(a2))
+
+key(; kwargs...) = AlgebraicDict(Spec() => AlgebraicDict(values(kwargs) => Style()))
+
 struct Analysis{F} <: AbstractGraphical
     f::F
     kwargs::NamedTuple
 end
 
 Analysis(f; kwargs...) = Analysis(f, values(kwargs))
+
+Spec(a::Analysis) = Spec((a,))
 
 (a::Analysis)(; kwargs...) = Analysis(a.f, merge(a.kwargs, values(kwargs)))
 
@@ -52,20 +59,30 @@ function (a::Analysis)(d::AlgebraicDict{<:Spec})
     return acc
 end
 
-layers(s::Analysis)                    = layers(Spec{Any}((s,), NamedTuple()))
-layers(s::Spec)                        = AlgebraicDict(s => AlgebraicDict(NamedTuple() => Style()))
-layers(s::AbstractContextual)          = layers(AlgebraicDict(NamedTuple() => Style(s)))
-layers(s::AlgebraicDict{<:NamedTuple}) = AlgebraicDict(Spec() => s)
-layers(s::AlgebraicDict)               = s
+layers(g::AbstractGraphical) = AlgebraicDict(Spec(g) => Style())
+layers(c::AbstractContextual) = AlgebraicDict(Spec() => Style(c))
+layers(c::AlgebraicDict) = isgraphical(c) ? c : AlgebraicDict(Spec() => c)
 
-const null = AlgebraicDict{Spec, AlgebraicDict{NamedTuple, Style}}()
+contexts(s::AbstractContextual) = AlgebraicDict(NamedTuple() => s)
+contexts(s::AlgebraicDict) = s
 
-Base.:*(s1::Algebraic, s2::Algebraic) = layers(s1) * layers(s2)
-Base.:+(s1::Algebraic, s2::Algebraic) = layers(s1) + layers(s2)
+isgraphical(_) = false
+isgraphical(::AbstractGraphical) = true
+isgraphical(::AbstractContextual) = false
+isgraphical(t::AlgebraicDict) = any(isgraphical, keys(t))
+
+function Base.:*(s1::Algebraic, s2::Algebraic)
+    any(isgraphical, (s1, s2)) ? layers(s1) * layers(s2) : contexts(s1) * contexts(s2)
+end
+
+function Base.:+(s1::Algebraic, s2::Algebraic)
+    any(isgraphical, (s1, s2)) ? layers(s1) + layers(s2) : contexts(s1) + contexts(s2)
+end
 
 # pipeline
 
-function expand(d::AlgebraicDict{<:NamedTuple, <:Style})
+function expand(a)
+    d = contexts(a)
     AlgebraicDict(merge(k, f) => l for (k, v) in d for (f, l) in pairs(v))
 end
 function compute(s::Algebraic)
@@ -76,16 +93,11 @@ function compute(s::Algebraic)
 end
 
 function computeanalysis(ad::AlgebraicDict, i=1)
-    acc = AlgebraicDict()
-    for (key, val) in ad
+    mapfoldl(+, pairs(ad), init=AlgebraicDict()) do (key, val)
         p = AlgebraicDict(key => val)
-        if length(key.analysis) < i
-            acc += p
-        else
-            acc += computeanalysis(key.analysis[i](p), i + 1)
-        end
+        ans = key.analysis
+        length(ans) < i ? p : computeanalysis(ans[i](p), i + 1)
     end
-    return acc
 end
 
 function computescales(s::AlgebraicDict)

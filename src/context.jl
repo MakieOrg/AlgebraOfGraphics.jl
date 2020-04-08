@@ -18,8 +18,18 @@ end
 style(args...; kwargs...) = Style(namedtuple(args...; kwargs...))
 
 Base.:*(s1::AbstractContextual, s2::AbstractContextual) = merge(Style(s1), Style(s2))
+function Base.:+(s1::AbstractContextual, s2::AbstractContextual)
+    error("Can not sum two contextuals")
+end
 
-Base.merge(s1::Style, s2::Style) = _merge(s1.context, s1, s2)
+function Base.merge(s1::Style, s2::Style)
+    c1, c2 = s1.context, s2.context
+    c = c2 === nothing ? c1 : c2
+    if c !== c1 && !isempty(s1.value)
+        @warn "Changing context on a non empty style"
+    end
+    return _merge(c, s1, s2)
+end
 Base.pairs(s::Style) = _pairs(s.context, s)
 
 # interface and fallbacks

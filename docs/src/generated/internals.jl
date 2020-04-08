@@ -47,8 +47,8 @@ AbstractPlotting.save("combine.svg", AbstractPlotting.current_scene()); nothing 
 #
 # To implement a new context, one can overload:
 #
-# - `AlgebraOfGraphics.merge_group_style(c::ContextualPair{<:MyContext}, pd)`, to allow applying `group` and `style` to `MyContext`,
+# - `AlgebraOfGraphics._merge(c::MyContext, s1::Style, s2::Style)`, to allow applying `style` to `MyContext`,
 #
-# - `Base.pairs(c::ContextualPair{<:MyContext})`, which must iterates `group::NamedTuple => style::NamedTuple` pairs.
+# - `AlgebraOfGraphics._pairs(c::MyContext, s::Style)`, which must iterates `group::NamedTuple => style::Style` pairs.
 # 
 # See example implementation in the [context file](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/blob/master/src/context.jl).

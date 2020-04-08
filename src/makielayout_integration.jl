@@ -65,7 +65,7 @@ function layoutplot!(scene, layout, ts::Algebraic)
         for (key, val) in series
             leg = key
             key = map(last, key)
-            # TODO: also get names here
+            # TODO: clean up
             key = map(key) do kw
                 map(v -> v[1], kw)
             end
