@@ -8,8 +8,8 @@ using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
 d = style(:SepalLength, :SepalWidth, color = :Species)
-s = spec(Scatter) + spec(linear, linewidth = 3)
-data(iris) * d * spec(Scatter) |> draw
+s = spec(Scatter) + smooth
+data(iris) * d * s |> draw
 
 data(iris) * style(:SepalLength, :SepalWidth, color = :PetalLength) * spec(:Scatter) |> draw
 
@@ -37,5 +37,5 @@ grp = style(layout_x = dims(1), layout_y = dims(2), color = :Rare => categorical
 s = spec(Scatter, markersize = 10px) #+ spec(linear)
 data(iris) * d * grp * s |> draw
 
-dims(1) * style(rand(5, 3, 2), rand(5, 3), color = dims(2), marker = dims(3)) * spec(Scatter, markersize = 20px) |> AlgebraOfGraphics.draw
+dims(1) * style(rand(5, 3, 2), rand(5, 3), color = dims(2), marker = dims(3)) * spec(Scatter, markersize = 20px) |> draw
 

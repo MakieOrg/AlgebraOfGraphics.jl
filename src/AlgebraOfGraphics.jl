@@ -9,7 +9,8 @@ using StructArrays: GroupPerm, refine_perm!, StructArray
 using AbstractPlotting: Point2f0
 import GLM, Loess
 
-export style, spec, data, dims, draw, categorical, cut
+export data, dims, draw, spec, style
+export categorical, cut
 
 include("algebraic_dict.jl")
 include("context.jl")

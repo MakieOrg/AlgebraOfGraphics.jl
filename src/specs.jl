@@ -56,7 +56,9 @@ layers(s::Analysis)                    = layers(Spec{Any}((s,), NamedTuple()))
 layers(s::Spec)                        = AlgebraicDict(s => AlgebraicDict(NamedTuple() => Style()))
 layers(s::AbstractContextual)          = layers(AlgebraicDict(NamedTuple() => Style(s)))
 layers(s::AlgebraicDict{<:NamedTuple}) = AlgebraicDict(Spec() => s)
-layers(s::AlgebraicDict{<:Spec})       = s
+layers(s::AlgebraicDict)               = s
+
+const null = AlgebraicDict{Spec, AlgebraicDict{NamedTuple, Style}}()
 
 Base.:*(s1::Algebraic, s2::Algebraic) = layers(s1) * layers(s2)
 Base.:+(s1::Algebraic, s2::Algebraic) = layers(s1) + layers(s2)
