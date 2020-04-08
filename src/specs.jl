@@ -1,30 +1,32 @@
 abstract type AbstractGraphical end
 
-const GraphicalOrContextual = Union{AbstractGraphical, AbstractContextual}
+const Algebraic = Union{AbstractGraphical, AbstractContextual, AlgebraicDict}
 
 struct Spec{T} <: AbstractGraphical
-    args::Tuple
-    kwargs::NamedTuple
+    analysis::Tuple
+    value::NamedTuple
 end
-Spec() = Spec{Any}((), NamedTuple())
+Spec(t::Tuple=(), nt::NamedTuple=NamedTuple()) = Spec{Any}(t, nt)
+Spec(nt::NamedTuple) = Spec((), nt)
+Spec(t::Style) = Spec(t.value)
 
-spec(args...; kwargs...) = Spec{Any}(args, values(kwargs))
-spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}(args, values(kwargs))
+spec(args...; kwargs...) = Spec{Any}((), namedtuple(args...; kwargs...))
+spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}((), namedtuple(args...; kwargs...))
 
 plottype(::Spec{T}) where {T} = T
 
 function Base.merge(t1::Spec{T1}, t2::Spec{T2}) where {T1, T2}
     T = T2 === Any ? T1 : T2
-    args = (t1.args..., t2.args...)
-    kwargs = merge(t1.kwargs, t2.kwargs)
-    return Spec{T}(args, kwargs)
+    analysis = (t1.analysis..., t2.analysis...)
+    value = merge(t1.value, t2.value)
+    return Spec{T}(analysis, value)
 end
 
 function Base.:(==)(s1::Spec, s2::Spec)
-    return plottype(s1) === plottype(s2) && s1.args == s2.args && s1.kwargs == s2.kwargs
+    return plottype(s1) === plottype(s2) && s1.analysis == s2.analysis && s1.value == s2.value
 end
 
-Base.hash(a::Spec, h::UInt64) = hash((a.args, a.kwargs), hash(typeof(a), h))
+Base.hash(a::Spec, h::UInt64) = hash((a.analysis, a.value), hash(typeof(a), h))
 
 struct Analysis{F} <: AbstractGraphical
     f::F
@@ -37,104 +39,68 @@ Analysis(f; kwargs...) = Analysis(f, values(kwargs))
 
 (a::Analysis)(args...; kwargs...) = a.f(args...; merge(a.kwargs, values(kwargs))...)
 
-struct Layers <: AbstractGraphical
-    layers::Vector{Pair{Spec, ContextualMap}}
-end
-Layers(s::GraphicalOrContextual) = Layers(layers(s))
-
-layers(s::Layers)             = s.layers
-layers(s::Analysis)           = layers(Spec{Any}((s,), NamedTuple()))
-layers(s::Spec)               = Pair{Spec, ContextualMap}[s => ContextualMap()]
-layers(s::AbstractContextual) = Pair{Spec, ContextualMap}[Spec() => ContextualMap(s)]
-
-Base.:(==)(s1::Layers, s2::Layers) = layers(s1) == layers(s2)
-
-function Base.:*(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
-    l1, l2 = layers(s1), layers(s2)
-    v = Pair{Spec, ContextualMap}[]
-    for el1 in l1
-        for el2 in l2
-            push!(v, merge(first(el1), first(el2)) => last(el1) * last(el2))
+# default fallback
+function (a::Analysis)(d::AlgebraicDict{<:Spec})
+    acc = AlgebraicDict()
+    for (sp, val) in d
+        for (p, st) in val
+            pre = AlgebraicDict(sp => AlgebraicDict(p => style()))
+            args, kwargs = split(st.value)
+            acc += pre * a(args...; kwargs...)
         end
     end
-    return Layers(v)
+    return acc
 end
 
-function Base.:+(s1::GraphicalOrContextual, s2::GraphicalOrContextual)
-    l1, l2 = layers(s1), layers(s2)
-    return Layers(vcat(l1, l2))
+layers(s::Analysis)                    = layers(Spec{Any}((s,), NamedTuple()))
+layers(s::Spec)                        = AlgebraicDict(s => AlgebraicDict(NamedTuple() => Style()))
+layers(s::AbstractContextual)          = layers(AlgebraicDict(NamedTuple() => Style(s)))
+layers(s::AlgebraicDict{<:NamedTuple}) = AlgebraicDict(Spec() => s)
+layers(s::AlgebraicDict)               = s
+
+const null = AlgebraicDict{Spec, AlgebraicDict{NamedTuple, Style}}()
+
+Base.:*(s1::Algebraic, s2::Algebraic) = layers(s1) * layers(s2)
+Base.:+(s1::Algebraic, s2::Algebraic) = layers(s1) + layers(s2)
+
+# pipeline
+
+function expand(d::AlgebraicDict{<:NamedTuple, <:Style})
+    AlgebraicDict(merge(k, f) => l for (k, v) in d for (f, l) in pairs(v))
+end
+function compute(s::Algebraic)
+    l = layers(s)
+    d = AlgebraicDict(k => expand(v) for (k, v) in pairs(l))
+    e = computeanalysis(d)
+    computescales(e)
 end
 
-# plotting tools
-
-function extract_names(d::NamedTuple)
-    ns = map(get_name, d)
-    vs = map(strip_name, d)
-    return ns, vs
-end
-
-const PairList = Vector{Pair{<:NamedTuple, <:NamedTuple}}
-
-for (f!, f_at!) in [(:push!, :pushat!), (:append!, :appendat!)]
-    @eval function $f_at!(d::AbstractDict{<:Any, Vector{T}}, key, val) where {T}
-        v = get!(d, key, T[])
-        $f!(v, val)
-    end
-end
-
-function spec_dict(ts::GraphicalOrContextual)
-    d = OrderedDict{Spec, PairList}()
-    for (sp, ctx) in layers(ts)
-        sp0 = Spec{plottype(sp)}((), sp.kwargs)
-        init = LittleDict(sp0 => pairs(ctx))
-        res = foldl((v, f) -> apply(f, v), sp.args, init=init)
-        for (key, val) in pairs(res)
-            appendat!(d, key, val)
+function computeanalysis(ad::AlgebraicDict, i=1)
+    acc = AlgebraicDict()
+    for (key, val) in ad
+        p = AlgebraicDict(key => val)
+        if length(key.analysis) < i
+            acc += p
+        else
+            acc += computeanalysis(key.analysis[i](p), i + 1)
         end
     end
-    return d
+    return acc
 end
 
-function apply(f, c::AbstractDict)
-    d = OrderedDict{Spec, PairList}()
-    for (sp, itr) in c
-        for (group, style) in itr
-            res = f(positional(style)...; keyword(style)...)
-            res isa Union{Tuple, NamedTuple, AbstractDict} || (res = (res,))
-            res isa Tuple && (res = namedtuple(res...))
-            res isa NamedTuple && (res = LittleDict(spec() => res))
-            for (key, val) in pairs(res)
-                pushat!(d, merge(sp, key), group => val)
-            end
-        end
-    end
-    return d
+function computescales(s::AlgebraicDict)
+    AlgebraicDict(key => computescales(key, val) for (key, val) in pairs(s))
 end
-
-"""
-    specs(ts::GraphicalOrContextual, palette)
-
-Compute a vector of `OrderedDict{NamedTuple, Spec}` to be passed to the
-plotting package. `palette[key]` must return a finite list of options, for
-each `key` used as group (e.g., `color`, `marker`, `linestyle`).
-"""
-function specs(ts::GraphicalOrContextual, palette)
-    serieslist = OrderedDict{NamedTuple, Spec}[]
-    for (m, itr) in pairs(spec_dict(ts))
-        d = OrderedDict{NamedTuple, Spec}()
-        l = (layout_x = nothing, layout_y = nothing)
-        discrete_scales = map(DiscreteScale, merge(palette, m.kwargs, l))
-        continuous_scales = map(ContinuousScale, m.kwargs)
-        for (group, style) in itr
-            theme = applytheme(discrete_scales, group)
-            names, style = extract_names(style)
-            style = applytheme(continuous_scales, style)
-            sp = merge(m, Spec{Any}(Tuple(positional(style)), (; keyword(style)..., theme...)))
-            d[group] = merge(sp, Spec{Any}((), (; names=names)))
-        end
-        push!(serieslist, d)
-    end
-    return serieslist
+function computescales(s::Spec, dict::AbstractDict)
+    # temporary! Should have a sensible default scales set, both
+    # discrete and continuous
+    scales[] = (; AbstractPlotting.current_default_theme()[:palette]...)
+    l = (layout_x = nothing, layout_y = nothing)
+    discrete_scales = map(DiscreteScale, merge(scales[], s.value, l))
+    continuous_scales = map(ContinuousScale, s.value)
+    ks = [map(Pair, ds, applytheme(discrete_scales, ds)) for ds in keys(dict)]
+    vs = [Style(applytheme(continuous_scales, cs.value)) for cs in values(dict)]
+    return AlgebraicDict(ks, vs)
 end
 
 function applytheme(scales, grp::NamedTuple{names}) where names

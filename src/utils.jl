@@ -1,19 +1,3 @@
-# PooledArrays utils
-
-pool(v::AbstractVector) = pool(v, eltype(v))
-pool(v::PooledVector) = v
-
-function pool(v::AbstractVector, ::Type)
-    s = refarray(v)
-    pv = PooledArray(s)
-    map(pv) do el
-        refvalue(v, el)
-    end
-end
-
-pool(v::Vector, ::Type{<:Integer}) = v
-pool(v::AbstractVector, ::Type{<:Integer}) = collect(v)
-
 # tabular utils
 
 function mapcols(f, t)
@@ -31,37 +15,34 @@ function namedtuple(args::Vararg{Any, N}; kwargs...) where N
     return merge(NamedTuple{syms}(args), values(kwargs))
 end
 
-integerlike(x::Symbol) = tryparse(Int, String(x)) !== nothing
-integerlike(x::Integer) = true
+function remove_intkeys(nt::NamedTuple, t::NTuple{N, Any}) where N
+    Base.structdiff(nt, NamedTuple{ntuple(Symbol, N)}(t))
+end
+remove_intkeys(nt) = remove_intkeys(nt, Tuple(nt))
+reorder(nt::NamedTuple) = Tuple(nt[Symbol(i)] for i in keys(keys(nt)))
 
-# TODO: keep order from parsed symbols
-positional(ps) = (val for (key, val) in pairs(ps) if integerlike(key))
-keyword(ps) = (key => val for (key, val) in pairs(ps) if !integerlike(key))
+function split(ps::NamedTuple)
+    nt = remove_intkeys(ps)
+    t = Base.structdiff(ps, nt)
+    return reorder(t), nt
+end
+positional(ps::NamedTuple) = first(split(ps))
+keyword(ps::NamedTuple) = last(split(ps))
 
 # naming utils
 
-struct NamedEntry{T}
-    name::Symbol
-    value::T
-end
-NamedEntry(name, value) = NamedEntry(Symbol(name), value)
-
-function Base.isless(n1::NamedEntry, n2::NamedEntry)
-    if n1.name != n2.name
-        error("Cannot sort named entries with different names")
-    end
-    isless(n1.value, n2.value)
-end
-
-Base.:(==)(n1::NamedEntry, n2::NamedEntry) = n1.name == n2.name && n1.value == n2.value
-Base.hash(n::NamedEntry, h::UInt64) = hash((n.name, n.value), hash(NamedEntry, h))
-
 get_name(v::NamedDimsArray) = dimnames(v)[1]
 strip_name(v::NamedDimsArray) = parent(v)
-get_name(v::NamedEntry) = v.name
-strip_name(v::NamedEntry) = v.value
 get_name(v) = Symbol("")
 strip_name(v) = v
 
-Base.string(n::NamedEntry) = string(n.value)
+function extract_names(d::Union{NamedTuple, Tuple})
+    ns = map(get_name, d)
+    vs = map(strip_name, d)
+    return ns, vs
+end
 
+function extract_names(s::Style)
+    ns, vs = extract_names(s.value)
+    return ns, Style(s.context, vs)
+end

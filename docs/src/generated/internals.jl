@@ -1,57 +1,47 @@
 # # Internals
 #
-# AlgebraOfGraphics is based on *contexts*, which can be extended. Each context is then
-# associated to a named tuple `style` (used for `x`, `y` axes or attributes in the plot)
-# and a named tuple `group` used for grouping, forming a `ContextualPair`. A list of
-# contextual pairs is called a contextual map.
+# AlgebraOfGraphics is based on *contexts*, which can be extended. A context, together with
+# a named tuple (used for `x`, `y` axes or attributes in the plot) forms a `Style`.
+# Each `Style` can actually encode many traces, encoded as a list of `NamedTuple => Style`
+# pairs, accessible using `Base.pairs`.
 #
 # ## Contexts
 #
-# In the default context, all variables in `style` are broadcasted to a common shape, and
-# each entry corresponds to a separate trace. The syntax `dims` exists to allow setting 
-# `group` variables that only vary with one of the dimensions.
-# The `group => style` pairs corresponding to each group can be accessed with `Base.pairs`:
+# The `DataContext` is invoked with `data(df)`, where `df` respects the Tables.jl interface.
 
 using RDatasets: dataset
 using AlgebraOfGraphics
-d = style(:Cyl, :Hwy) * group(color = :Year)
-pairs(d)
-
-# The `DataContext` is invoked with `data(df)`, where `df` respects the Tables.jl interface.
-# `DefaultContext`s can be merged onto a `DataContext` (column names are replaced by the
-# corresponding arrays).
-
 mpg = dataset("ggplot2", "mpg")
 t = data(mpg)
-pairs(t * d)
+st = style(:Cyl, color = :Year => categorical)
 
-# The slicing context is another example. It is invoked with `dims(I::Int...)`, and signals
-# along which dimension on the style to dims to extract series.
+pairs(t * st)
 
-using AlgebraOfGraphics: dims
-ctx = dims(1)
-x = rand(5, 3, 2)
-y = rand(5, 3)
-pairs(dims(1) * style(x, y) * group(color=dims(2), marker=dims(3)))
+# In the `dims(i)` context, all variables in `style` are sliced along the `i`-th dimension.
+# The resulting arrays of arrays broadcasted to a common shape, and
+# each "inner array" corresponds to a separate trace. The syntax `dims` exists to allow setting 
+# discrete attributes variables that only vary with one of the dimensions.
 
-# ## Combining operations using trees
+d = dims(1) * style(rand(5, 3, 2), rand(5, 3), color = dims(2))
+pairs(d)
+
+# ## Combining styles and contexts together
 #
-# All outputs of `group`, `style`, `data`, and `dims` inherit can be combined using `+`
+# All outputs of `style`, `data`, and `dims` inherit can be combined using `+`
 # (adding a new layer), or `*` (merge information in existing layer).
 
 using AbstractPlotting, CairoMakie
-using AlgebraOfGraphics: spec
 mpg1 = copy(mpg)
 mpg1.Displ = mpg.Displ .* 0.1
-ts = (data(mpg) * spec(markersize = 5px) + data(mpg1) * spec(markersize=10px))
-sl = ts * style(:Hwy, :Displ) * group(color=:Cyl)
+ts = data(mpg) * spec(markersize = 5px) + data(mpg1) * spec(markersize=10px)
+sl = ts * style(:Hwy, :Displ, color = :Cyl => categorical)
 
 # The result can then be plotted using the `draw` function:
 
 sl * spec(Scatter) |> draw
-AbstractPlotting.save("tree.svg", AbstractPlotting.current_scene()); nothing #hide
+AbstractPlotting.save("combine.svg", AbstractPlotting.current_scene()); nothing #hide
 
-# ![](tree.svg)
+# ![](combine.svg)
 #
 # ## Implementing a new context
 #

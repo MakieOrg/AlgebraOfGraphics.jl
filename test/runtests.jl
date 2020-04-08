@@ -3,100 +3,91 @@ using AlgebraOfGraphics: data,
                          style,
                          Spec,
                          spec,
-                         specs,
                          layers,
-                         group,
                          positional,
                          keyword,
                          dims,
-                         NamedEntry,
-                         ContextualPair,
-                         ContextualMap
+                         extract_names,
+                         compute
 
 using OrderedCollections: OrderedDict
+using CategoricalArrays: categorical
 using NamedDims
 using RDatasets: dataset
 using Observables: to_value
+using AbstractPlotting: default_palettes
 
 @testset "product" begin
-    s = style(1:2, ["a", "b"]) * group(color = dims(1))
-    exp = ContextualPair(
-                         nothing,
-                         (; color = dims(1)),
-                         (; Symbol(1) => 1:2, Symbol(2) => ["a", "b"])
-                        )
-    @test s == exp
+    s = dims() * style(1:2, ["a", "b"], color = dims(1))
+    ps = pairs(s)
+    @test ps[1] == Pair((color = [1],), style(1, "a"))
+    @test ps[2] == Pair((color = [2],), style(2, "b"))
 end
 
 @testset "lazy spec" begin
     mpg = dataset("ggplot2", "mpg")
-    d = style(:Cyl, :Hwy) * group(color = :Year)
+    d = style(:Cyl, :Hwy, color = :Year => categorical)
     s = spec(color = :red, font = 10) + style(markersize = :Year)
-    sl = data(mpg) * d * s
-    res = layers(sl)
-    @test first(res[1]) == Spec{Any}((), (color = :red, font = 10))
+    res = data(mpg) * d * s
+    st = res[spec(color = :red, font = 10)][NamedTuple()]
+    @test first(keys(res)) == Spec{Any}((), (color = :red, font = 10))
 
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
 
-    styles = [map(last, pairs(last(res[i]))) for i in 1:2]
-    @test Tuple(positional(styles[1][1])) == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test Tuple(positional(styles[1][2])) == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
-    @test Tuple(positional(styles[2][1])) == tuple(mpg[idx1, :Cyl], mpg[idx1, :Hwy])
-    @test Tuple(positional(styles[2][2])) == tuple(mpg[idx2, :Cyl], mpg[idx2, :Hwy])
+    styles = map(t -> pairs(t[NamedTuple()]), values(res))
+    @test last(styles[1][1]).value == style(mpg[idx1, :Cyl], mpg[idx1, :Hwy]).value
+    @test last(styles[1][2]).value == style(mpg[idx2, :Cyl], mpg[idx2, :Hwy]).value
+    @test last(styles[2][1]).value == style(mpg[idx1, :Cyl], mpg[idx1, :Hwy], markersize = mpg[idx1, :Year]).value
+    @test last(styles[2][2]).value == style(mpg[idx2, :Cyl], mpg[idx2, :Hwy], markersize = mpg[idx2, :Year]).value
 
-    @test (; keyword(styles[1][1])...) == NamedTuple()
-    @test (; keyword(styles[1][2])...) == NamedTuple()
-    @test (; keyword(styles[2][1])...) == (; markersize = mpg[idx1, :Year])
-    @test (; keyword(styles[2][2])...) == (; markersize = mpg[idx2, :Year])
-
-    primaries = [map(first, pairs(last(res[i]))) for i in 1:2]
-    @test primaries[1][1] == (; color = NamedEntry(:Year, 1999))
-    @test primaries[1][2] == (; color = NamedEntry(:Year, 2008))
-    @test primaries[2][1] == (; color = NamedEntry(:Year, 1999))
-    @test primaries[2][2] == (; color = NamedEntry(:Year, 2008))
-
-    @test length(collect(pairs(last(res[1])))) == 2
-    @test length(collect(pairs(last(res[2])))) == 2
+    @test extract_names(first(styles[1][1])) ==
+        ((color = :Year,), (color = categorical([1999]),))
+    @test extract_names(first(styles[1][2])) ==
+        ((color = :Year,), (color = categorical([2008]),))
+    @test extract_names(first(styles[2][1])) ==
+        ((color = :Year,), (color = categorical([1999]),))
+    @test extract_names(first(styles[2][2])) ==
+        ((color = :Year,), (color = categorical([2008]),))
 
     x = rand(5, 3, 2)
     y = rand(5, 3)
-    s = dims(1) * style(x, y) * group(color = dims(2)) 
+    s = dims(1) * style(x, y, color = dims(2)) 
 
     res = pairs(s)
     for (i, r) in enumerate(res)
-        group, style = r
-        @test group == (; color = mod1(i, 3))
+        group, st = r
+        @test group == (; color = [mod1(i, 3)])
         xsl = x[:, mod1(i, 3), (i > 3) + 1]
         ysl = y[:, mod1(i, 3)]
-        @test style == (; Symbol(1) => xsl, Symbol(2) => ysl)
+        @test st.value == style(xsl, ysl).value
     end
 end
 
-_to_value(s::Spec{T}) where {T} = Spec{T}(_to_value(s.args), _to_value(s.kwargs))
-_to_value(s::Union{Tuple, NamedTuple}) = map(_to_value, s)
-_to_value(s) = to_value(s)
-
 @testset "specs" begin
-    palette = (color = ["red", "blue"],)
+    wong = default_palettes[:color][]
     t = (x = [1, 2], y = [10, 20], z = [3, 4], c = ["a", "b"])
-    d = style(:x, :y) * group(color = :c)
+    d = style(:x, :y, color = :c)
     s = spec(:log) * spec(font = 10) + style(size = :z)
     ds = data(t) * d
     sl = ds * s
-    res = specs(sl, palette)
+    res = compute(sl)
     @test length(res) == 2
 
-    ns = (; Symbol(1) => :x, Symbol(2) => :y)
-    ns_attr = (; Symbol(1) => :x, Symbol(2) => :y, :size => :z)
-    @test _to_value(res[1][(color = NamedEntry(:c, "a"),)]) ==
-        Spec{:log}(([1], [10]), (font = 10, color = "red", names = ns))
-    @test _to_value(res[1][(color = NamedEntry(:c, "b"),)]) ==
-        Spec{:log}(([2], [20]), (font = 10, color = "blue", names = ns))
-    @test _to_value(res[2][(color = NamedEntry(:c, "a"),)]) ==
-        Spec{Any}(([1], [10]), (size = [3], color = "red", names = ns_attr))
-    @test _to_value(res[2][(color = NamedEntry(:c, "b"),)]) ==
-        Spec{Any}(([2], [20]), (size = [4], color = "blue", names = ns_attr))
+    r = res[Spec{:log}((), (font = 10,))]
+    (k1, v1), (k2, v2) = r
 
-    @test layers(sl)[1] == (Spec{:log}((), (; font = 10)) => ds)
+    # TODO: fix when reworking legend entry structure and scales
+    @test map(getindex∘last, k1) == (color = NamedDimsArray{(:c,)}([wong[1]]),)
+    @test map(getindex∘last, k2) == (color = NamedDimsArray{(:c,)}([wong[2]]),)
+    @test v1.value == style([1], [10]).value
+    @test v2.value == style([2], [20]).value
+
+    r = res[spec()]
+    (k1, v1), (k2, v2) = r
+
+    @test map(getindex∘last, k1) == (color = NamedDimsArray{(:c,)}([wong[1]]),)
+    @test map(getindex∘last, k2) == (color = NamedDimsArray{(:c,)}([wong[2]]),)
+    @test v1.value == style([1], [10], size = [3]).value
+    @test v2.value == style([2], [20], size = [4]).value
 end

@@ -1,159 +1,167 @@
-# abstract type architecture
-
 abstract type AbstractContextual end
 
 abstract type AbstractContext <: AbstractContextual end
 
-# contextual pair and map
-
-struct ContextualPair{C, P<:NamedTuple, D<:NamedTuple} <: AbstractContextual
+struct Style{C} <: AbstractContextual
     context::C
-    group::P
-    style::D
+    value::NamedTuple
 end
-ContextualPair(context) = ContextualPair(context, NamedTuple(), NamedTuple())
+Style(s::NamedTuple=NamedTuple()) = Style(nothing, s)
+Style(c::AbstractContext) = Style(c, NamedTuple())
+Style(s::Style) = s
 
-function Base.:(==)(s1::ContextualPair, s2::ContextualPair)
-    s1.context == s2.context && s1.group == s2.group && s1.style == s2.style
-end
-
-function Base.show(io::IO, c::ContextualPair{C}) where {C}
-    Base.print(io, "ContextualPair of context type $C")
+function Base.show(io::IO, s::Style)
+    print(io, "Style with entries ")
+    show(io, keys(s.value))
 end
 
-struct ContextualMap{L<:ContextualPair} <: AbstractContextual
-    entries::Vector{L}
-end
-ContextualMap() = ContextualMap(ContextualPair(nothing))
-ContextualMap(c::AbstractContextual) = ContextualMap(entries(c))
+style(args...; kwargs...) = Style(namedtuple(args...; kwargs...))
 
-entries(c::ContextualMap)   = c.entries
-entries(c::ContextualPair)  = [c]
-entries(c::AbstractContext) = entries(ContextualPair(c))
+Base.:*(s1::AbstractContextual, s2::AbstractContextual) = merge(Style(s1), Style(s2))
 
-function Base.show(io::IO, c::ContextualMap)
-    Base.print(io, "ContextualMap of length $(length(entries(c)))")
-end
+Base.merge(s1::Style, s2::Style) = _merge(s1.context, s1, s2)
+Base.pairs(s::Style) = _pairs(s.context, s)
 
-Base.:(==)(s1::ContextualMap, s2::ContextualMap) = entries(s1) == entries(s2)
+# interface and fallbacks
 
-Base.pairs(c::ContextualMap) = collect(Iterators.flatten(pairs(cp) for cp in entries(c)))
+_merge(c, s1::Style, s2::Style) = Style(c, merge(s1.value, s2.value))
+_pairs(c, s::Style) = [NamedTuple() => s]
 
-# Algebra and constructors
-
-function Base.:+(c1::AbstractContextual, c2::AbstractContextual)
-    return ContextualMap(vcat(map(entries, (c1, c2))...))
-end
-
-function Base.:*(c1::AbstractContextual, c2::AbstractContextual)
-    l = [entries(cp1 * cp2) for cp1 in entries(c1) for cp2 in entries(c2)]
-    return ContextualMap(reduce(vcat, l))
-end
-
-# TODO: deal with context more carefully here?
-function Base.:*(c1::ContextualPair, c2::ContextualPair)
-    return merge_group_style(c1, c2.group => c2.style)
-end
-
-group(; kwargs...) = ContextualPair(nothing, values(kwargs), NamedTuple())
-style(t...; nt...) = ContextualPair(nothing, NamedTuple(), namedtuple(t...; nt...))
-
-# Default: broadcast context
-
-adjust(x, d) = x
-adjust(x::NamedTuple, d) = map(v -> adjust(v, d), x)
-
-function aos(d::NamedTuple{names}) where names
-    v = broadcast((args...) -> NamedTuple{names}(args), d...)
-    return v isa NamedTuple ? [v] : v
-end
-
-function Base.pairs(s::ContextualPair)
-    d = aos(s.style)
-    p = aos(adjust(s.group, d))
-    return p .=> d
-end
-
-function merge_group_style(c::ContextualPair, (p, d))
-    return ContextualPair(c.context, merge(c.group, p), merge(c.style, d))
-end
-
-# slicing context
+## Dims context
 
 struct DimsSelector{N} <: AbstractContext
     dims::NTuple{N, Int}
 end
 dims(args...) = DimsSelector(args)
 
-Base.:(==)(s1::DimsSelector, s2::DimsSelector) = s1.dims == s2.dims
+Broadcast.broadcastable(d::DimsSelector) = fill(d)
+
 Base.isless(s1::DimsSelector, s2::DimsSelector) = isless(s1.dims, s2.dims)
 
-adjust(ds::DimsSelector, d) = [c[ds.dims...] for c in CartesianIndices(d)]
-
-function Base.pairs(c::ContextualPair{<:DimsSelector})
-    d = map(c.style) do col
-        mapslices(v -> [v], col; dims=c.context.dims)
-    end
-    return pairs(ContextualPair(nothing, c.group, d))
+function aos(d::NamedTuple{names}) where names
+    v = broadcast((args...) -> NamedTuple{names}(args), d...)
+    return v isa NamedTuple ? fill(v) : v
 end
 
-# style context: integers and symbols are columns
+function adjust(val::DimsSelector, c, nts)
+    is = collect(val.dims)
+    ax, cf = axes(nts)[is], Tuple(c)[is]
+    return NamedDimsArray{(Symbol(""),)}([LinearIndices(ax)[cf...]])
+end
 
-struct DataContext{T} <: AbstractContext
+# make it a pair list
+function _pairs(::DimsSelector{0}, s::Style)
+    nts = aos(s.value)
+    ps = map(CartesianIndices(nts)) do c
+        nt = nts[c]
+        dskeys = filter(keys(nt)) do key
+            nt[key] isa DimsSelector
+        end
+        dsvalues = map(dskeys) do key
+            val = nt[key]
+            return adjust(val, c, nts)
+        end
+        ds = (; zip(dskeys, dsvalues)...)
+        nds = Base.structdiff(nt, ds)
+        return ds => Style(nds)
+    end
+    return vec(ps)
+end
+
+function _pairs(d::DimsSelector, s::Style)
+    value = map(s.value) do v
+        v isa AbstractArray ? mapslices(x -> [x], v; dims=d.dims) : v
+    end
+    return pairs(Style(dims(), value))
+end
+
+# data context: integers and symbols are columns
+
+struct DataContext{T, NT, I<:AbstractVector{Int}} <: AbstractContext
     data::T
+    pkeys::NT
+    perm::I
+end
+
+function DataContext(data)
+    col = getcolumn(data, 1)
+    DataContext(data, NamedTuple(), axes(col, 1))
 end
 
 data(x) = DataContext(coldict(x))
 
-Base.:(==)(s1::DataContext, s2::DataContext) = s1.data == s2.data
-
-Base.pairs(t::ContextualPair{<:DataContext}) = pairs(ContextualPair(nothing, t.group, t.style))
-
-function extract_column(t, col::Union{Symbol, Int}, wrap=false)
-    colname = col isa Symbol ? col : columnnames(t)[col]
-    v = NamedDimsArray{(colname,)}(getcolumn(t, col))
-    return wrap ? fill(v) : v
-end
-function extract_column(t, c::DimsSelector, wrap=false)
-    ra = RefArray(fill(UInt8(1), length(getcolumn(t, 1))))
-    return PooledArray(ra, Dict(c => UInt8(1)))
-end
-extract_column(t, c::NamedTuple, wrap=false) = map(x -> extract_column(t, x, wrap), c)
-extract_column(t, c::AbstractArray, wrap=false) = map(x -> extract_column(t, x, false), c)
-
-extract_view(t, idxs) = view(t, idxs)
-extract_view(t::AbstractArray, idxs) = map(v -> view(v, idxs), t)
-function extract_view(t::Union{NamedTuple, Tuple}, idxs)
-    map(v -> extract_view(v, idxs), t)
-end
-
-addname(name, el) = fill(NamedEntry(name, el))
-addname(_, el::DimsSelector) = el
-addname(names::NamedTuple, els::NamedTuple) = map(addname, names, els)
-
-# TODO consider further optimizations with refine_perm!
-function _group(cols, p, d, pcols, names)
-    sa = StructArray(pcols)
-    list = map(finduniquesorted(sa)) do (k, idxs)
-        v = extract_view(d, idxs)
-        subdata = coldict(cols, idxs)
-        newkey = merge(p, addname(names, k))
-        ContextualPair(DataContext(subdata), newkey, v)
+iscategorical(v) = !(eltype(v) <: Number)
+function unwrap_categorical(values)
+    pc = filter(keys(values)) do key
+        t = values[key]
+        iskw = tryparse(Int, String(key)) === nothing
+        iskw && ndims(t) == 0 && iscategorical(t[])
     end
-    return ContextualMap(list)
+    return (; zip(pc, map(key -> values[key][], pc))...)
 end
 
-function merge_group_style(s::ContextualPair{<:DataContext}, (group, style))
-    ctx, p, d = s.context, s.group, s.style
-    cols = ctx.data
-    d′ = extract_column(cols, style, true)
-    d′′ = merge(d, d′)
-    p′ = extract_column(cols, group)
-    ns = map(get_name, p′)
-    isempty(p′) ? ContextualPair(ctx, p, d′′) : _group(cols, p, d′′, map(pool, p′), ns)
+function refine_perm(perm, pc, n)
+    if n == length(pc)
+        perm
+    elseif n == 0
+        sortperm(StructArray(pc))
+    else
+        x, y = pc[n], pc[n+1]
+        refine_perm!(copy(perm), pc, n, x, y, 1, length(x))
+    end
 end
+
+optimize_cols(v::NamedDimsArray) = refs(parent(v))
+optimize_cols(v::Union{Tuple, NamedTuple}) = map(optimize_cols, v)
+
+function _merge(c::DataContext, s1::Style, s2::Style)
+    data, pkeys, perm = c.data, c.pkeys, c.perm
+    nt = map(val -> extract_columns(data, val), s2.value)
+    newpkeys = unwrap_categorical(nt)
+    @assert isempty(intersect(keys(pkeys), keys(newpkeys)))
+    allpkeys = merge(pkeys, newpkeys)
+    # unwrap from NamedDimsArray to perform the sorting
+    allperm = refine_perm(perm, optimize_cols(allpkeys), length(pkeys))
+    ctx = DataContext(data, allpkeys, allperm)
+    return Style(ctx, merge(s1.value, Base.structdiff(nt, newpkeys)))
+end
+
+function _pairs(c::DataContext, s::Style)
+    data, pkeys, perm = c.data, c.pkeys, c.perm
+    isempty(pkeys) && return pairs(Style(dims(), s.value))
+    # uwrap for sorting computations
+    itr = GroupPerm(StructArray(optimize_cols(pkeys)), perm)
+    sa = StructArray(pkeys)
+    nestedpairs = map(itr) do idxs
+        i1 = perm[first(idxs)]
+        # keep value categorical and preserve name by taking a mini slice
+        k = map(col -> col[i1:i1], pkeys)
+        cols = map(s.value) do val
+            extract_views(val, perm[idxs])
+        end
+        [merge(k, p) => v for (p, v) in pairs(Style(dims(), cols))]
+    end
+    return reduce(vcat, nestedpairs)
+end
+
+extract_views(cols, idxs) = map(t -> view(t, idxs), cols)
+extract_views(cols::DimsSelector, idxs) = cols
+
+function extract_column(t, (nm, f)::Pair)
+    colname = nm isa Symbol ? nm : columnnames(t)[nm]
+    vals = f(getcolumn(t, nm))
+    p = iscategorical(vals) ? categorical(vals) : vals
+    return NamedDimsArray{(colname,)}(p)
+end
+extract_column(t, nm::Union{Symbol, Int}) = extract_column(t, nm => identity)
+
+extract_columns(t, val::DimsSelector) = val
+extract_columns(t, val::Union{Tuple, AbstractArray}) = map(v -> extract_column(t, v), val)
+extract_columns(t, val) = fill(extract_column(t, val))
 
 # Geo context
+
+using GeoInterface: AbstractMultiPolygon, AbstractFeatureCollection, coordinates, GeoInterface
 
 function data(c::AbstractFeatureCollection)
     cols = OrderedDict{Symbol, AbstractVector}()

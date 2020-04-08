@@ -1,3 +1,5 @@
+const scales = Observable{Any}(Dict())
+
 abstract type AbstractScale end
 
 struct DiscreteScale <: AbstractScale
@@ -16,7 +18,11 @@ end
 ContinuousScale(v) = ContinuousScale(convert(Observable, v), Observable((Inf, -Inf)))
 ContinuousScale() = ContinuousScale(nothing)
 
-add_value!(s::DiscreteScale, value) = s.values[] = push!(s.values[], value)
+function add_value!(s::DiscreteScale, value)
+    v = s.values[]
+    foreach(t -> push!(v, t), value)
+    s.values[] = v
+end
 
 function add_value!(s::ContinuousScale, value)
     m, n = s.values[]
@@ -24,10 +30,18 @@ function add_value!(s::ContinuousScale, value)
     s.values[] = (min(m, m′), max(n, n′))
 end
 
+rank(n::Integer) = n
+rank(n) = levelcode(n)
+rank(p::Pair) = rank(first(p))
+rank(n::NamedDimsArray) = rank(n[1])
+
 function get_attr(d::DiscreteScale, value)
     map(d.scale, d.values) do scale, values
-        n = sum(≤(value), values)
-        scale === nothing ? n : scale[mod1(n, length(scale))]
+        res = map(value) do v
+            n = rank(value[1])
+            scale === nothing ? n : scale[mod1(n, length(scale))]
+        end
+        ndims(res) == 0 ? res[] : res
     end
 end
 

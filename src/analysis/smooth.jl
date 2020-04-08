@@ -12,23 +12,24 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
                                           interval=interval)
         # the GLM predictions always return matrices
         x, y, l, u = x_new, vec(y_new), vec(lower), vec(upper)
-        return LittleDict(
-                          spec(:Lines) => namedtuple(x, y),
-                          spec(:Band, alpha = 0.2) => namedtuple(x, l, u)
-                         )
+        lines = style(x, y)
+        band = style(x, l, u)
+        return spec(:Lines) * lines + spec(:Band, alpha = 0.2) * band
     catch e
-        error("Linear fit not possible for the given data")
+        @warn "Linear fit not possible for the given data"
+        return null
     end
 end
 
 const linear = Analysis(_linear)
 
 function _smooth(x, y; length = 100, kwargs...)
-    model = Loess.loess(x, y; kwargs...)
     min, max = extrema(x)
+    min < max || return null
+    model = Loess.loess(x, y; kwargs...)
     us = collect(range(min, stop = max, length = length))
     vs = Loess.predict(model, us)
-    return LittleDict(spec(:Lines) => namedtuple(us, vs))
+    return spec(:Lines) * style(us, vs)
 end
 
 const smooth = Analysis(_smooth)
