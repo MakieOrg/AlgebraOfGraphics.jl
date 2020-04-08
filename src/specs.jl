@@ -39,20 +39,36 @@ Analysis(f; kwargs...) = Analysis(f, values(kwargs))
 
 (a::Analysis)(args...; kwargs...) = a.f(args...; merge(a.kwargs, values(kwargs))...)
 
-layers(s::Analysis)           = layers(Spec{Any}((s,), NamedTuple()))
-layers(s::Spec)               = AlgebraicDict(s => Style())
-layers(s::AbstractContextual) = AlgebraicDict(Spec() => Style(s))
+# default fallback
+function (a::Analysis)(d::AlgebraicDict{<:Spec})
+    acc = AlgebraicDict()
+    for (sp, val) in d
+        for (p, st) in val
+            pre = AlgebraicDict(sp => AlgebraicDict(p => style()))
+            args, kwargs = split(st.value)
+            acc += pre * a(args...; kwargs...)
+        end
+    end
+    return acc
+end
 
-AlgebraicDict(s::Union{AbstractGraphical, AbstractContextual}) = AlgebraicDict(layers(s))
+layers(s::Analysis)                    = layers(Spec{Any}((s,), NamedTuple()))
+layers(s::Spec)                        = AlgebraicDict(s => AlgebraicDict(NamedTuple() => Style()))
+layers(s::AbstractContextual)          = layers(AlgebraicDict(NamedTuple() => Style(s)))
+layers(s::AlgebraicDict{<:NamedTuple}) = AlgebraicDict(Spec() => s)
+layers(s::AlgebraicDict{<:Spec})       = s
 
-Base.:*(s1::Algebraic, s2::Algebraic) = AlgebraicDict(s1) * AlgebraicDict(s2)
-Base.:+(s1::Algebraic, s2::Algebraic) = AlgebraicDict(s1) + AlgebraicDict(s2)
+Base.:*(s1::Algebraic, s2::Algebraic) = layers(s1) * layers(s2)
+Base.:+(s1::Algebraic, s2::Algebraic) = layers(s1) + layers(s2)
 
 # pipeline
 
+function expand(d::AlgebraicDict{<:NamedTuple, <:Style})
+    AlgebraicDict(merge(k, f) => l for (k, v) in d for (f, l) in pairs(v))
+end
 function compute(s::Algebraic)
-    l = AlgebraicDict(s)
-    d = AlgebraicDict(k => LittleDict(pairs(v)) for (k, v) in pairs(l))
+    l = layers(s)
+    d = AlgebraicDict(k => expand(v) for (k, v) in pairs(l))
     e = computeanalysis(d)
     computescales(e)
 end
