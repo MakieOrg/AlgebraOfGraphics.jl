@@ -3,29 +3,29 @@ abstract type AbstractGraphical end
 const Algebraic = Union{AbstractGraphical, AbstractContextual, AlgebraicDict}
 
 struct Spec{T} <: AbstractGraphical
-    args::Tuple
-    kwargs::NamedTuple
+    analysis::Tuple
+    value::NamedTuple
 end
 Spec(t::Tuple=(), nt::NamedTuple=NamedTuple()) = Spec{Any}(t, nt)
 Spec(nt::NamedTuple) = Spec((), nt)
 
-spec(args...; kwargs...) = Spec{Any}(args, values(kwargs))
-spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}(args, values(kwargs))
+spec(args...; kwargs...) = Spec{Any}((), namedtuple(args...; kwargs...))
+spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}((), namedtuple(args...; kwargs...))
 
 plottype(::Spec{T}) where {T} = T
 
 function Base.merge(t1::Spec{T1}, t2::Spec{T2}) where {T1, T2}
     T = T2 === Any ? T1 : T2
-    args = (t1.args..., t2.args...)
-    kwargs = merge(t1.kwargs, t2.kwargs)
-    return Spec{T}(args, kwargs)
+    analysis = (t1.analysis..., t2.analysis...)
+    value = merge(t1.value, t2.value)
+    return Spec{T}(analysis, value)
 end
 
 function Base.:(==)(s1::Spec, s2::Spec)
-    return plottype(s1) === plottype(s2) && s1.args == s2.args && s1.kwargs == s2.kwargs
+    return plottype(s1) === plottype(s2) && s1.analysis == s2.analysis && s1.value == s2.value
 end
 
-Base.hash(a::Spec, h::UInt64) = hash((a.args, a.kwargs), hash(typeof(a), h))
+Base.hash(a::Spec, h::UInt64) = hash((a.analysis, a.value), hash(typeof(a), h))
 
 struct Analysis{F} <: AbstractGraphical
     f::F
@@ -68,8 +68,8 @@ end
 function computescales(s::Spec, dict::AbstractDict)
     scales[] = (; AbstractPlotting.current_default_theme()[:palette]...)
     l = (layout_x = nothing, layout_y = nothing)
-    discrete_scales = map(DiscreteScale, merge(scales[], s.kwargs, l))
-    continuous_scales = map(ContinuousScale, s.kwargs)
+    discrete_scales = map(DiscreteScale, merge(scales[], s.value, l))
+    continuous_scales = map(ContinuousScale, s.value)
     ks = [applytheme(discrete_scales, ds) for ds in keys(dict)]
     vs = [applytheme(continuous_scales, cs) for cs in values(dict)]
     return LittleDict(ks, vs)
