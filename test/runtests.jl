@@ -19,10 +19,7 @@ using AbstractPlotting: default_palettes
 
 @testset "product" begin
     s = dims() * style(1:2, ["a", "b"], color = dims(1))
-    v = values(s)
-    @test length(v) == 1
-    st = first(v)[NamedTuple()]
-    ps = pairs(st)
+    ps = pairs(s)
     @test ps[1] == Pair((color = [1],), style(1, "a"))
     @test ps[2] == Pair((color = [2],), style(2, "b"))
 end
@@ -58,7 +55,7 @@ end
     s = dims(1) * style(x, y, color = dims(2)) 
 
     res = pairs(s)
-    for (i, r) in enumerate(pairs(s[spec()][NamedTuple()]))
+    for (i, r) in enumerate(res)
         group, st = r
         @test group == (; color = [mod1(i, 3)])
         xsl = x[:, mod1(i, 3), (i > 3) + 1]
