@@ -29,6 +29,8 @@ end
 
 Base.hash(a::Spec, h::UInt64) = hash((a.analysis, a.value), hash(typeof(a), h))
 
+Base.:*(a1::AbstractGraphical, a2::AbstractGraphical) = merge(Spec(a1), Spec(a2))
+
 struct Analysis{F} <: AbstractGraphical
     f::F
     kwargs::NamedTuple
