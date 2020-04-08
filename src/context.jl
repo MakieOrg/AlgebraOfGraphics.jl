@@ -17,7 +17,7 @@ end
 
 style(args...; kwargs...) = Style(namedtuple(args...; kwargs...))
 
-Base.:*(s1::Style, s2::Style) = merge(s1, s2)
+Base.:*(s1::AbstractContextual, s2::AbstractContextual) = merge(Style(s1), Style(s2))
 
 Base.merge(s1::Style, s2::Style) = _merge(s1.context, s1, s2)
 Base.pairs(s::Style) = _pairs(s.context, s)

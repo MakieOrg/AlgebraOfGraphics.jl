@@ -32,6 +32,7 @@ end
 
 rank(n::Integer) = n
 rank(n) = levelcode(n)
+rank(p::Pair) = rank(first(p))
 rank(n::NamedDimsArray) = rank(n[1])
 
 function get_attr(d::DiscreteScale, value)
