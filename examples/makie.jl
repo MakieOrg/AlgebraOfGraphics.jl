@@ -1,15 +1,25 @@
 using AbstractPlotting, GLMakie
 
 using AlgebraOfGraphics
-using AlgebraOfGraphics: data
+using AlgebraOfGraphics: key
 using AlgebraOfGraphics: linear, smooth
 
 using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
-d = style(:SepalLength, :SepalWidth, color = :Species)
-s = spec(Scatter) + smooth
+d = style(:SepalLength, :SepalWidth)
+s = spec(Scatter) * style(marker = :Species) + smooth
 data(iris) * d * s |> draw
+
+iris2 = copy(iris)
+iris2.SepalLength = iris.SepalLength .+ 0.05
+
+using NamedDims, CategoricalArrays
+# TODO report bug on `getindex(::NamedDimsArray)`
+# TODO clean up this wrapping
+v = NamedDimsArray{(:test,)}([1, 2])
+datas = key(color = v[1:1]) * data(iris) + key(color = v[2:2]) * data(iris2)
+datas * d * s |> draw
 
 data(iris) * style(:SepalLength, :SepalWidth, color = :PetalLength) * spec(:Scatter) |> draw
 

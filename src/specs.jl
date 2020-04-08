@@ -31,6 +31,8 @@ Base.hash(a::Spec, h::UInt64) = hash((a.analysis, a.value), hash(typeof(a), h))
 
 Base.:*(a1::AbstractGraphical, a2::AbstractGraphical) = merge(Spec(a1), Spec(a2))
 
+key(; kwargs...) = AlgebraicDict(Spec() => AlgebraicDict(values(kwargs) => Style()))
+
 struct Analysis{F} <: AbstractGraphical
     f::F
     kwargs::NamedTuple
@@ -79,8 +81,8 @@ end
 
 # pipeline
 
-expand(s::Style) = expand(AlgebraicDict(NamedTuple() => s))
-function expand(d::AlgebraicDict{<:NamedTuple, <:Style})
+function expand(a)
+    d = contexts(a)
     AlgebraicDict(merge(k, f) => l for (k, v) in d for (f, l) in pairs(v))
 end
 function compute(s::Algebraic)
