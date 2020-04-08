@@ -67,8 +67,6 @@ isgraphical(::AbstractGraphical) = true
 isgraphical(::AbstractContextual) = false
 isgraphical(t::AlgebraicDict) = any(isgraphical, keys(t))
 
-const null = AlgebraicDict()
-
 function Base.:*(s1::Algebraic, s2::Algebraic)
     any(isgraphical, (s1, s2)) ? layers(s1) * layers(s2) : contexts(s1) * contexts(s2)
 end
@@ -91,16 +89,11 @@ function compute(s::Algebraic)
 end
 
 function computeanalysis(ad::AlgebraicDict, i=1)
-    acc = AlgebraicDict()
-    for (key, val) in ad
+    mapfoldl(+, pairs(ad), init=AlgebraicDict()) do (key, val)
         p = AlgebraicDict(key => val)
-        if length(key.analysis) < i
-            acc += p
-        else
-            acc += computeanalysis(key.analysis[i](p), i + 1)
-        end
+        ans = key.analysis
+        length(ans) < i ? p : computeanalysis(ans[i](p), i + 1)
     end
-    return acc
 end
 
 function computescales(s::AlgebraicDict)

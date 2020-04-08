@@ -17,7 +17,7 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
         return spec(:Lines) * lines + spec(:Band, alpha = 0.2) * band
     catch e
         @warn "Linear fit not possible for the given data"
-        return null
+        return AlgebraicDict()
     end
 end
 
@@ -25,7 +25,7 @@ const linear = Analysis(_linear)
 
 function _smooth(x, y; length = 100, kwargs...)
     min, max = extrema(x)
-    min < max || return null
+    min < max || return AlgebraicDict()
     model = Loess.loess(x, y; kwargs...)
     us = collect(range(min, stop = max, length = length))
     vs = Loess.predict(model, us)
