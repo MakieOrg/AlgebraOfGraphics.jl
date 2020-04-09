@@ -76,8 +76,7 @@ AbstractPlotting.save("semi_grouped.svg", AbstractPlotting.current_scene()); not
 
 # ![](semi_grouped.svg)
 #
-# Different analyses are also possible, always with the same syntax (again we filter
-# out the degenerate group):
+# Different analyses are also possible, always with the same syntax:
 
 using AlgebraOfGraphics: smooth
 data(mpg) * cols * grp * (scat + smooth(span = 0.8)) |> draw

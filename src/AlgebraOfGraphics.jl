@@ -16,8 +16,9 @@ include("algebraic_dict.jl")
 include("context.jl")
 include("specs.jl")
 include("scales.jl")
-include("utils.jl")
+include("analysis/analysis.jl")
 include("analysis/smooth.jl")
 include("makielayout_integration.jl")
+include("utils.jl")
 
 end # module
