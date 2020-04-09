@@ -4,9 +4,12 @@ abstract type AbstractScale end
 
 struct DiscreteScale
     options::Union{AbstractVector, Nothing}
+    function DiscreteScale(x)
+        options = x isa AbstractVector ? x : nothing
+        return new(options)
+    end
 end
 DiscreteScale(v::AbstractObservable) = DiscreteScale(v[])
-DiscreteScale(x) = DiscreteScale(nothing)
 
 rank(c) = levelcode(c)
 rank(n::Integer) = n
@@ -17,13 +20,16 @@ function get_attr(d::DiscreteScale, value, unique)
     n = sum(t -> !isless(rank(v), rank(t)), unique)
     scale = d.options
     val = scale === nothing ? n : scale[mod1(n, length(scale))]
-    LegendEntry(v, Observable(val), name=get_name(v))
+    LegendEntry(v, Observable(val), name=get_name(value))
 end
 
 struct ContinuousScale
-    extrema::Union{NTuple{2, Number}, Nothing}
+    extrema::Union{NTuple{2, Float64}, Nothing}
+    function ContinuousScale(x)
+        extrema = x isa NTuple{2, Number} ? map(Float64, x) : nothing
+        return new(extrema)
+    end
 end
-ContinuousScale(x) = ContinuousScale(nothing)
 
 function get_attr(c::ContinuousScale, value, extrema)
     scale = c.extrema

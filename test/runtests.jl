@@ -8,7 +8,8 @@ using AlgebraOfGraphics: data,
                          keyword,
                          dims,
                          extract_names,
-                         compute
+                         compute,
+                         LegendEntry
 
 using OrderedCollections: OrderedDict
 using CategoricalArrays: categorical
@@ -20,8 +21,8 @@ using AbstractPlotting: default_palettes
 @testset "product" begin
     s = dims() * style(1:2, ["a", "b"], color = dims(1))
     ps = pairs(s)
-    @test ps[1] == Pair((color = [1],), style(1, "a"))
-    @test ps[2] == Pair((color = [2],), style(2, "b"))
+    @test ps[1] == Pair((color = 1,), style(1, "a"))
+    @test ps[2] == Pair((color = 2,), style(2, "b"))
 end
 
 @testset "contexts" begin
@@ -41,14 +42,21 @@ end
     @test last(styles[2][1]).value == style(mpg[idx1, :Cyl], mpg[idx1, :Hwy], markersize = mpg[idx1, :Year]).value
     @test last(styles[2][2]).value == style(mpg[idx2, :Cyl], mpg[idx2, :Hwy], markersize = mpg[idx2, :Year]).value
 
-    @test extract_names(first(styles[1][1])) ==
-        ((color = :Year,), (color = categorical([1999]),))
-    @test extract_names(first(styles[1][2])) ==
-        ((color = :Year,), (color = categorical([2008]),))
-    @test extract_names(first(styles[2][1])) ==
-        ((color = :Year,), (color = categorical([1999]),))
-    @test extract_names(first(styles[2][2])) ==
-        ((color = :Year,), (color = categorical([2008]),))
+    @test first(styles[1][1]).color isa LegendEntry
+    @test first(styles[1][1]).color.key == 1999
+    @test first(styles[1][1]).color.name == :Year
+
+    @test first(styles[1][2]).color isa LegendEntry
+    @test first(styles[1][2]).color.key == 2008
+    @test first(styles[1][2]).color.name == :Year
+
+    @test first(styles[2][1]).color isa LegendEntry
+    @test first(styles[2][1]).color.key == 1999
+    @test first(styles[2][1]).color.name == :Year
+
+    @test first(styles[2][2]).color isa LegendEntry
+    @test first(styles[2][2]).color.key == 2008
+    @test first(styles[2][2]).color.name == :Year
 
     x = rand(5, 3, 2)
     y = rand(5, 3)
@@ -57,7 +65,7 @@ end
     res = pairs(s)
     for (i, r) in enumerate(res)
         group, st = r
-        @test group == (; color = [mod1(i, 3)])
+        @test group == (; color = mod1(i, 3))
         xsl = x[:, mod1(i, 3), (i > 3) + 1]
         ysl = y[:, mod1(i, 3)]
         @test st.value == style(xsl, ysl).value
@@ -77,17 +85,20 @@ end
     r = res[Spec{:log}((), (font = 10,))]
     (k1, v1), (k2, v2) = r
 
-    # TODO: fix when reworking legend entry structure and scales
-    @test map(getindex∘last, k1) == (color = NamedDimsArray{(:c,)}([wong[1]]),)
-    @test map(getindex∘last, k2) == (color = NamedDimsArray{(:c,)}([wong[2]]),)
+    @test k1.color.value[] == wong[1]
+    @test k2.color.value[] == wong[2]
+    @test k1.color.name == :c
+    @test k2.color.name == :c
     @test v1.value == style([1], [10]).value
     @test v2.value == style([2], [20]).value
 
     r = res[spec()]
     (k1, v1), (k2, v2) = r
 
-    @test map(getindex∘last, k1) == (color = NamedDimsArray{(:c,)}([wong[1]]),)
-    @test map(getindex∘last, k2) == (color = NamedDimsArray{(:c,)}([wong[2]]),)
+    @test k1.color.value[] == wong[1]
+    @test k2.color.value[] == wong[2]
+    @test k1.color.name == :c
+    @test k2.color.name == :c
     @test v1.value == style([1], [10], size = [3]).value
     @test v2.value == style([2], [20], size = [4]).value
 end
