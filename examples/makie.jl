@@ -14,10 +14,7 @@ data(iris) * d * s |> draw
 iris2 = copy(iris)
 iris2.SepalLength = iris.SepalLength .+ 0.05
 
-# TODO report bug on `getindex(::NamedDimsArray)`
-
 using AlgebraOfGraphics: LegendEntry
-# TODO clean up this wrapping
 v = [LegendEntry(i, name = :test) for i in 1:2]
 datas = key(color = v[1]) * data(iris) + key(color = v[2]) * data(iris2)
 datas * d * s |> draw
