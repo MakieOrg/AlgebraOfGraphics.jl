@@ -16,15 +16,15 @@ function set_names!(ax, names)
     end
 end
 
-function create_name(k, v)
-    n = string(only(dimnames(last(first(keys(v))))))
-    isempty(n) ? string(k) : n
+function somestring(s, t)
+    s = string(s)
+    isempty(s) ? string(t) : s
 end
 
 function create_legend(scene, legdict::AbstractDict)
-    plts_list = [collect(values(v)) for v in values(legdict)]
-    entries_list = [string.(first.(first.(keys(v)))) for v in values(legdict)]
-    names = [create_name(k, v) for (k, v) in pairs(legdict)]
+    plts_list = [collect(values(sublegdict)) for sublegdict in values(legdict)]
+    entries_list = [collect(keys(sublegdict)) for sublegdict in values(legdict)]
+    names = last.(keys(legdict))
     MakieLayout.LLegend(scene, plts_list, entries_list, names)
 end
 
@@ -60,16 +60,11 @@ function layoutplot!(scene, layout, ts::Algebraic)
     end
     hidexdecorations!.(axs[1:end-1, :])
     hideydecorations!.(axs[:, 2:end])
-    legdict = Dict{Symbol, Any}()
+    legdict = Dict{Pair, Any}()
     for (sp, series) in serieslist
         for (key, val) in series
-            leg = key
-            key = map(last, key)
-            # TODO: clean up
-            key = map(key) do kw
-                map(v -> v[1], kw)
-            end
-            trace = foldl(merge, (sp, Spec(key), Spec(val)))
+            discrete_attrs = map(t -> t.value, key)
+            trace = foldl(merge, (sp, Spec(discrete_attrs), Spec(val)))
             P = plottype(trace)
             P isa Symbol && (P = getproperty(AbstractPlotting, P))
             args, kwargs = split(trace.value)
@@ -80,11 +75,13 @@ function layoutplot!(scene, layout, ts::Algebraic)
             y_pos = pop!(attrs, :layout_y, 1) |> to_value |> rank
             current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
             set_names!(axs[y_pos, x_pos], names)
-            for (key, val) in pairs(leg)
-                nm, val = val
-                key in (:layout_x, :layout_y) && continue
-                legsubdict = get!(legdict, key, OrderedDict{Any, AbstractPlot}())
-                legentry = get!(legsubdict, nm => to_value(val), current)
+            for (k, v) in pairs(key)
+                k in (:layout_x, :layout_y) && continue
+                @assert v isa LegendEntry
+                name = somestring(v.name, k)
+                sublegdict = get!(legdict, k => name, OrderedDict{String, Vector{AbstractPlot}}())
+                legtraces = get!(sublegdict, string(v.key), AbstractPlot[])
+                push!(legtraces, current)
             end
         end
     end

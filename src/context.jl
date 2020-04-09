@@ -56,7 +56,7 @@ end
 function adjust(val::DimsSelector, c, nts)
     is = collect(val.dims)
     ax, cf = axes(nts)[is], Tuple(c)[is]
-    return NamedDimsArray{(Symbol(""),)}([LinearIndices(ax)[cf...]])
+    return LinearIndices(ax)[cf...]
 end
 
 # make it a pair list
@@ -145,7 +145,7 @@ function _pairs(c::DataContext, s::Style)
     nestedpairs = map(itr) do idxs
         i1 = perm[first(idxs)]
         # keep value categorical and preserve name by taking a mini slice
-        k = map(col -> col[i1:i1], pkeys)
+        k = map(col -> LegendEntry(col[i1], name=only(dimnames(col))), pkeys)
         cols = map(s.value) do val
             extract_views(val, perm[idxs])
         end

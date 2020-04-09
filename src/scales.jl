@@ -2,60 +2,105 @@ const scales = Observable{Any}(Dict())
 
 abstract type AbstractScale end
 
-struct DiscreteScale <: AbstractScale
-    scale::Observable
-    values::Observable
+struct DiscreteScale
+    options::Union{AbstractVector, Nothing}
+    function DiscreteScale(x)
+        options = x isa AbstractVector ? x : nothing
+        return new(options)
+    end
 end
+DiscreteScale(v::AbstractObservable) = DiscreteScale(v[])
 
-DiscreteScale(v) = DiscreteScale(convert(Observable, v), Observable(Set()))
-DiscreteScale() = DiscreteScale(nothing)
-
-struct ContinuousScale <: AbstractScale
-    scale::Observable
-    values::Observable
-end
-
-ContinuousScale(v) = ContinuousScale(convert(Observable, v), Observable((Inf, -Inf)))
-ContinuousScale() = ContinuousScale(nothing)
-
-function add_value!(s::DiscreteScale, value)
-    v = s.values[]
-    foreach(t -> push!(v, t), value)
-    s.values[] = v
-end
-
-function add_value!(s::ContinuousScale, value)
-    m, n = s.values[]
-    m′, n′ = extrema(value)
-    s.values[] = (min(m, m′), max(n, n′))
-end
-
+rank(c) = levelcode(c)
 rank(n::Integer) = n
-rank(n) = levelcode(n)
-rank(p::Pair) = rank(first(p))
-rank(n::NamedDimsArray) = rank(n[1])
 
-function get_attr(d::DiscreteScale, value)
-    map(d.scale, d.values) do scale, values
-        res = map(value) do v
-            n = rank(value[1])
-            scale === nothing ? n : scale[mod1(n, length(scale))]
+function get_attr(d::DiscreteScale, value, unique)
+    v = strip_name(value)
+    # Could be tricky in case of many datasets
+    n = sum(t -> !isless(rank(v), rank(t)), unique)
+    scale = d.options
+    val = scale === nothing ? n : scale[mod1(n, length(scale))]
+    LegendEntry(v, Observable(val), name=get_name(value))
+end
+
+struct ContinuousScale
+    extrema::Union{NTuple{2, Float64}, Nothing}
+    function ContinuousScale(x)
+        extrema = x isa NTuple{2, Number} ? map(Float64, x) : nothing
+        return new(extrema)
+    end
+end
+
+function get_attr(c::ContinuousScale, value, extrema)
+    scale = c.extrema
+    scale === nothing && return value
+    min, max = extrema
+    smin, smax = scale
+    @. smin + value * (smax - smin) / (max - min)
+end
+
+struct LegendEntry{T}
+    name::Symbol
+    key::T
+    value::Observable
+end
+get_name(l::LegendEntry) = l.name
+strip_name(l::LegendEntry) = l.key
+
+rank(n::LegendEntry) = rank(strip_name(n))
+
+function LegendEntry(key, value=Observable{Any}(nothing); name=Symbol(""))
+    return LegendEntry(name, key, value)
+end
+
+function get_extrema(layers::AlgebraicDict)
+    d = Dict{Symbol, NTuple{2, Float64}}()
+    for value in values(layers)
+        for stl in values(value)
+            for (k, val) in pairs(stl.value)
+                a, b = get(d, k, (Inf, - Inf))
+                a′, b′ = val isa AbstractVector ? extrema(val) : (Inf, -Inf)
+                d[k] = (min(a, a′), max(b, b′))
+            end
         end
-        ndims(res) == 0 ? res[] : res
     end
+    return d
 end
 
-function get_attr(c::ContinuousScale, value)
-    map(c.scale, c.values) do scale, values
-        scale === nothing && return value
-        min, max = values
-        smin, smax = scale
-        @. smin + value * (smax - smin) / (max - min)
+function get_unique(layers::AlgebraicDict)
+    d = Dict{Symbol, Set{Any}}()
+    for value in values(layers)
+        for pkey in keys(value)
+            for (k, val) in pairs(pkey)
+                grp = strip_name(val)
+                v = get!(d, k, Set())
+                push!(v, grp)
+            end
+        end
     end
+    return d
 end
 
-function attr!(s::AbstractScale, value)
-    add_value!(s, value)
-    return get_attr(s, value)
+function computescales(s::AlgebraicDict)
+    unique = get_unique(s)
+    extrema = get_extrema(s)
+    AlgebraicDict(key => computescales(key, val, unique, extrema) for (key, val) in s)
+end
+function computescales(s::Spec, dict::AbstractDict, unique, extrema)
+    # temporary! Should have a sensible default scales set, both
+    # discrete and continuous
+    scales[] = (; AbstractPlotting.current_default_theme()[:palette]...)
+    l = (layout_x = nothing, layout_y = nothing)
+    discrete_scales = map(DiscreteScale, merge(scales[], s.value, l))
+    continuous_scales = map(ContinuousScale, s.value)
+    ks = [applytheme(discrete_scales, ds, unique) for ds in keys(dict)]
+    vs = [Style(applytheme(continuous_scales, cs.value, extrema)) for cs in values(dict)]
+    return AlgebraicDict(ks, vs)
 end
 
+function applytheme(scales, grp::NamedTuple{names}, metadata) where names
+    res = map(names) do key
+        haskey(scales, key) ? get_attr(scales[key], grp[key], metadata[key]) : grp[key]
+    end
+    return NamedTuple{names}(res)
+end

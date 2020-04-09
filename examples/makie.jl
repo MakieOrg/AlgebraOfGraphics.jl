@@ -8,20 +8,19 @@ using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
 d = style(:SepalLength, :SepalWidth)
-s = spec(Scatter) * style(marker = :Species) + smooth
+s = spec(Scatter, markersize = 20px) * style(marker = :Species) + smooth
 data(iris) * d * s |> draw
 
 iris2 = copy(iris)
 iris2.SepalLength = iris.SepalLength .+ 0.05
 
-using NamedDims, CategoricalArrays
-# TODO report bug on `getindex(::NamedDimsArray)`
-# TODO clean up this wrapping
-v = NamedDimsArray{(:test,)}([1, 2])
-datas = key(color = v[1:1]) * data(iris) + key(color = v[2:2]) * data(iris2)
+using AlgebraOfGraphics: LegendEntry
+v = [LegendEntry(i, name = :test) for i in 1:2]
+datas = key(color = v[1]) * data(iris) + key(color = v[2]) * data(iris2)
 datas * d * s |> draw
 
-data(iris) * style(:SepalLength, :SepalWidth, color = :PetalLength) * spec(:Scatter) |> draw
+data(iris) * style(:SepalLength, :SepalWidth, markersize = :PetalLength) *
+    spec(:Scatter, markersize=(6, 10)) |> draw
 
 # data(iris) * d * spec(Wireframe, density) |> draw
 
