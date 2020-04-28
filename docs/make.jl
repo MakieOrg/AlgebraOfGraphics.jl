@@ -1,5 +1,3 @@
-import Pkg
-Pkg.pkg"add CairoMakie#jk/scatter-glyphs"
 using Documenter, AlgebraOfGraphics, Literate, Glob
 # avoid font caching warning in docs
 using AbstractPlotting, CairoMakie, MakieLayout
