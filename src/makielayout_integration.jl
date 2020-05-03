@@ -58,8 +58,8 @@ function layoutplot!(scene, layout, ts::Algebraic)
     for i in 1:Ny
         linkyaxes!(axs[i, :]...)
     end
-    hidexdecorations!.(axs[1:end-1, :])
-    hideydecorations!.(axs[:, 2:end])
+    hidexdecorations!.(axs[1:end-1, :], grid = false)
+    hideydecorations!.(axs[:, 2:end], grid = false)
     legdict = Dict{Pair, Any}()
     for (sp, series) in serieslist
         for (key, val) in series
