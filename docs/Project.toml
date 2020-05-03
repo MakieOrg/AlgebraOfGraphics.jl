@@ -10,4 +10,5 @@ RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 StatsMakie = "65254759-4cff-5aa5-8326-61ce017a8c70"
 
 [compat]
+CairoMakie = "0.2.6"
 Documenter = "0.24"
