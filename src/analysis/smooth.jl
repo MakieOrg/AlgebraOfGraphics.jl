@@ -7,14 +7,23 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
         lin_model = GLM.lm([ones(T, length(x)) x], y)
         x_min, x_max = extrema(x)
         x_new = range(x_min, x_max, length = n_points)
-        y_new, lower, upper = GLM.predict(lin_model,
+        pred = GLM.predict(lin_model,
                                           [ones(T, n_points) x_new],
                                           interval=interval)
+        if !isnothing(interval)
+          y_new, lower, upper = pred
+        else
+          y_new = pred
+        end
         # the GLM predictions always return matrices
-        x, y, l, u = x_new, vec(y_new), vec(lower), vec(upper)
+        x, y = x_new, vec(y_new)
         lines = style(x, y)
-        band = style(x, l, u)
-        return spec(:Lines) * lines + spec(:Band, alpha = 0.2) * band
+        if !isnothing(interval)
+            band = style(x, vec(lower), vec(upper))
+            return spec(:Lines) * lines + spec(:Band, alpha = 0.2) * band
+        else 
+            return spec(:Lines) * lines
+        end
     catch e
         @warn "Linear fit not possible for the given data"
         return AlgebraicDict()
