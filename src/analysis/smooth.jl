@@ -1,8 +1,8 @@
 # From StatsMakie
 function _linear(x::AbstractVector{T}, y::AbstractVector;
-                 n_points = 100, wts=T[],
+                 n_points = 100, wts = similar(x, 0),
                  interval = length(wts) > 0 ? nothing : :confidence) where T
-    # Note: confidence interval are currently not supported for WLS in GLM.jl
+    # Note: confidence intervals are currently not supported for WLS in GLM.jl
     try
         y = collect(y)
         x = collect(x)
@@ -11,12 +11,12 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
         x_min, x_max = extrema(x)
         x_new = range(x_min, x_max, length = n_points)
         pred = GLM.predict(lin_model,
-                                          [ones(T, n_points) x_new],
-                                          interval=interval)
+                           [ones(T, n_points) x_new],
+                           interval=interval)
         if !isnothing(interval)
-          y_new, lower, upper = pred
+            y_new, lower, upper = pred
         else
-          y_new = pred
+            y_new = pred
         end
         # the GLM predictions always return matrices
         x, y = x_new, vec(y_new)
