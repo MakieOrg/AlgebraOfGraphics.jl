@@ -68,7 +68,7 @@ AbstractPlotting.save("grouped_linear.svg", AbstractPlotting.current_scene()); n
 
 # ![](grouped_linear.svg)
 # This is a more complex example, where we split the scatter plot,
-# but do the linear regression with all the style. Instead we pass weights to `linear`
+# but do the linear regression with all the style. Moreover, we pass weights to `linear`
 # to compute the regression line with weighted least squares.
 
 different_grouping = grp * scat + linear * style(wts=:Hwy)
