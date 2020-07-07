@@ -95,7 +95,7 @@ function layoutplot!(scene, layout, ts::Algebraic)
         xlabel_facet = LText(scene, string(layout_x_name(ts)))
         xlabel_facet.tellheight = true
         xlabel_facet.tellwidth = false
-        facetlayout[end+1,:] = xlabel_facet
+        facetlayout[end,:,MakieLayout.Bottom()] = xlabel_facet
     end
     
     if has_layout_y(ts)
@@ -113,7 +113,7 @@ function layoutplot!(scene, layout, ts::Algebraic)
         ylabel_facet = LText(scene, string(layout_y_name(ts)), rotation=π/2)
         ylabel_facet.tellheight = false
         ylabel_facet.tellwidth = true
-        facetlayout[1:end-1,0] = ylabel_facet
+        facetlayout[:,1,MakieLayout.Left()] = ylabel_facet
     end    
       
     legdict = Dict{Pair, Any}()
