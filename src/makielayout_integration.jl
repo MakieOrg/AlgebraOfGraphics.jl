@@ -1,11 +1,11 @@
 using AbstractPlotting: px, Attributes, AbstractPlot, AbstractPlotting
-using MakieLayout: LAxis,
+using MakieLayout: LAxis, LText, LRect,
                    GridLayout,
-                   linkxaxes!,
-                   linkyaxes!,
-                   hidexdecorations!,
-                   hideydecorations!,
-                   MakieLayout
+                   linkxaxes!, linkyaxes!,
+                   hidexdecorations!, hideydecorations!,
+                   MakieLayout,
+                   Top, Right,
+                   RGBAf0
 
 function set_names!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
@@ -40,6 +40,16 @@ function set_defaults!(attrs::Attributes)
     get!(attrs, :markersize, Observable(8px))
 end
 
+pkeys(aog) = aog.dict.vals[1].context.pkeys
+has_layout_x(aog) = hasproperty(pkeys(aog), :layout_x)
+has_layout_y(aog) = hasproperty(pkeys(aog), :layout_y)
+
+layout_x_levels(aog) = levels(pkeys(aog).layout_x)
+layout_y_levels(aog) = levels(pkeys(aog).layout_y)
+
+layout_x_name(aog) = only(dimnames(pkeys(aog).layout_x))
+layout_y_name(aog) = only(dimnames(pkeys(aog).layout_y))
+
 function layoutplot!(scene, layout, ts::Algebraic)
     facetlayout = layout[1, 1] = GridLayout()
     serieslist = compute(ts)
@@ -60,6 +70,52 @@ function layoutplot!(scene, layout, ts::Algebraic)
     end
     hidexdecorations!.(axs[1:end-1, :], grid = false)
     hideydecorations!.(axs[:, 2:end], grid = false)
+
+    # faceting: hide x and y labels
+    for i in 1:length(facetlayout.content)
+        ax = facetlayout.content[i].content
+        ax.xlabelvisible[] = ax.xlabelvisible[] && !has_layout_x(ts)
+        ax.ylabelvisible[] = ax.ylabelvisible[] && !has_layout_y(ts)
+    end
+ 
+
+    if has_layout_x(ts)
+        # Facet labels
+        lxl = string.(layout_x_levels(ts))
+        @assert length(lxl) == Nx
+        for i in 1:Nx
+            text = MakieLayout.LText(scene, lxl[i])
+            text.tellheight = true
+            text.tellwidth = false
+            facetlayout[1,i,Top()] = LRect(scene, color = RGBAf0(0,0,0,0.2), strokevisible=false) 
+            facetlayout[1,i,Top()] = text
+        end
+        
+        # Shared xlabel
+        xlabel_facet = LText(scene, string(layout_x_name(ts)))
+        xlabel_facet.tellheight = true
+        xlabel_facet.tellwidth = false
+        facetlayout[end+1,:] = xlabel_facet
+    end
+    
+    if has_layout_y(ts)
+        lyl = string.(layout_y_levels(ts))
+        @assert length(lyl) == Ny
+        for i in 1:Ny
+            text = LText(scene, lyl[i], rotation = -π/2)
+            text.tellheight = false
+            text.tellwidth = true
+            facetlayout[i,end,Right()] = LRect(scene, color = RGBAf0(0,0,0,0.2), strokevisible=false) 
+            facetlayout[i,end,Right()] = text
+        end
+        
+        # Shared ylabel
+        ylabel_facet = LText(scene, string(layout_y_name(ts)), rotation=π/2)
+        ylabel_facet.tellheight = false
+        ylabel_facet.tellwidth = true
+        facetlayout[1:end-1,0] = ylabel_facet
+    end    
+      
     legdict = Dict{Pair, Any}()
     for (sp, series) in serieslist
         for (key, val) in series
@@ -102,3 +158,4 @@ end
 layoutplot(; kwargs...) = t -> layoutplot(t; kwargs...)
 
 draw(args...; kwargs...) = layoutplot(args...; kwargs...)
+
