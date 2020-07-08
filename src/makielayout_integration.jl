@@ -84,11 +84,11 @@ function layoutplot!(scene, layout, ts::Algebraic)
         lxl = string.(layout_x_levels(ts))
         @assert length(lxl) == Nx
         for i in 1:Nx
-            text = MakieLayout.LText(scene, lxl[i])
-            text.tellheight = true
-            text.tellwidth = false
-            facetlayout[1,i,Top()] = LRect(scene, color = RGBAf0(0,0,0,0.2), strokevisible=false) 
-            facetlayout[1,i,Top()] = text
+            text = LText(scene, lxl[i])
+            facetlayout[1, i, Top()] = LRect(
+                scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
+            ) 
+            facetlayout[1, i, Top()] = text
         end
         
         # Shared xlabel
@@ -103,18 +103,19 @@ function layoutplot!(scene, layout, ts::Algebraic)
         xlabel = LText(scene,
                        string(layout_x_name(ts)),
                        padding = @lift((0, 0, 0, $toppad)))
-        facetlayout[end,:,Bottom()] = xlabel
+        facetlayout[end, :, Bottom()] = xlabel
     end
     
     if has_layout_y(ts)
+        # Facet labels
         lyl = string.(layout_y_levels(ts))
         @assert length(lyl) == Ny
         for i in 1:Ny
             text = LText(scene, lyl[i], rotation = -π/2)
-            text.tellheight = false
-            text.tellwidth = true
-            facetlayout[i,end,Right()] = LRect(scene, color = RGBAf0(0,0,0,0.2), strokevisible=false) 
-            facetlayout[i,end,Right()] = text
+            facetlayout[i, end, Right()] = LRect(
+                scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
+            ) 
+            facetlayout[i, end, Right()] = text
         end
         
         # Shared ylabel
@@ -130,7 +131,7 @@ function layoutplot!(scene, layout, ts::Algebraic)
                        string(layout_y_name(ts)),
                        padding = @lift((0, $rightpad, 0, 0)),
                        rotation = π/2) 
-        facetlayout[:,1,Left()] = ylabel
+        facetlayout[:, 1, Left()] = ylabel
     end    
       
     legdict = Dict{Pair, Any}()
