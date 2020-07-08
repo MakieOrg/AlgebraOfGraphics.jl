@@ -4,8 +4,8 @@ using MakieLayout: LAxis, LText, LRect,
                    linkxaxes!, linkyaxes!,
                    hidexdecorations!, hideydecorations!,
                    MakieLayout,
-                   Top, Right,
-                   RGBAf0
+                   Top, Bottom, Left, Right,
+                   RGBAf0, lift, @lift, Node
 
 function set_names!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
@@ -92,10 +92,18 @@ function layoutplot!(scene, layout, ts::Algebraic)
         end
         
         # Shared xlabel
-        xlabel_facet = LText(scene, string(layout_x_name(ts)))
-        xlabel_facet.tellheight = true
-        xlabel_facet.tellwidth = false
-        facetlayout[end,:,MakieLayout.Bottom()] = xlabel_facet
+        group_bottom_protrusion = lift(
+            (xs...) -> maximum(y -> y.bottom, xs),
+            (MakieLayout.protrusionsobservable(ax) for ax in axs[end, :])...
+        )
+
+        padx = Node(10.0)
+        toppad = @lift($group_bottom_protrusion + $padx)
+
+        xlabel = LText(scene,
+                       string(layout_x_name(ts)),
+                       padding = @lift((0, 0, 0, $toppad)))
+        facetlayout[end,:,Bottom()] = xlabel
     end
     
     if has_layout_y(ts)
@@ -110,10 +118,19 @@ function layoutplot!(scene, layout, ts::Algebraic)
         end
         
         # Shared ylabel
-        ylabel_facet = LText(scene, string(layout_y_name(ts)), rotation=π/2)
-        ylabel_facet.tellheight = false
-        ylabel_facet.tellwidth = true
-        facetlayout[:,1,MakieLayout.Left()] = ylabel_facet
+        group_left_protrusion = lift(
+            (xs...) -> maximum(y -> y.left, xs),
+            (MakieLayout.protrusionsobservable(ax) for ax in axs[:, 1])...
+        )
+        
+        pady = Node(10.0)
+        rightpad = @lift($group_left_protrusion + $pady)
+
+        ylabel = LText(scene,
+                       string(layout_y_name(ts)),
+                       padding = @lift((0, $rightpad, 0, 0)),
+                       rotation = π/2) 
+        facetlayout[:,1,Left()] = ylabel
     end    
       
     legdict = Dict{Pair, Any}()
