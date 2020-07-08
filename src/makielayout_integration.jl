@@ -1,11 +1,16 @@
-using AbstractPlotting: px, Attributes, AbstractPlot, AbstractPlotting
-using MakieLayout: LAxis, LText, LRect,
-                   GridLayout,
-                   linkxaxes!, linkyaxes!,
-                   hidexdecorations!, hideydecorations!,
-                   MakieLayout,
-                   Top, Bottom, Left, Right,
-                   RGBAf0, lift, @lift, Node
+using AbstractPlotting:
+    AbstractPlotting,
+    px, Attributes, AbstractPlot,
+    Node, lift, @lift,
+    RGBAf0
+
+using MakieLayout:
+    MakieLayout,
+    LAxis, LText, LRect,
+    GridLayout,
+    linkxaxes!, linkyaxes!,
+    hidexdecorations!, hideydecorations!,
+    Top, Bottom, Left, Right
 
 function set_names!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
