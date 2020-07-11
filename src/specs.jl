@@ -1,15 +1,16 @@
 abstract type AbstractGraphical end
 
-const Algebraic = Union{AbstractGraphical, AbstractContextual, AlgebraicDict}
+const Algebraic = Union{AbstractGraphical, AbstractContextual, AlgebraicList}
 
 struct Spec{T} <: AbstractGraphical
     analysis::Tuple
-    value::NamedTuple
+    style::Style
+    options::NamedTuple
 end
-Spec(t::Tuple=(), nt::NamedTuple=NamedTuple()) = Spec{Any}(t, nt)
-Spec(nt::NamedTuple) = Spec((), nt)
+
+Spec{T}(t::Tuple=(), nt::NamedTuple=NamedTuple()) where {T} = Spec{T}(t, Style(), nt)
+Spec(t::AbstractContextual) = Spec{Any}((), Style(t), NamedTuple())
 Spec(s::Spec) = s
-Spec(t::Style) = Spec(t.value)
 
 spec(args...; kwargs...) = Spec{Any}((), namedtuple(args...; kwargs...))
 spec(T::Union{Type, Symbol}, args...; kwargs...) = Spec{T}((), namedtuple(args...; kwargs...))
@@ -19,8 +20,9 @@ plottype(::Spec{T}) where {T} = T
 function Base.merge(t1::Spec{T1}, t2::Spec{T2}) where {T1, T2}
     T = T2 === Any ? T1 : T2
     analysis = (t1.analysis..., t2.analysis...)
-    value = merge(t1.value, t2.value)
-    return Spec{T}(analysis, value)
+    style = merge(t1.style, t2.style)
+    options = merge(t1.options, t2.options)
+    return Spec{T}(analysis, style, options)
 end
 
 function Base.:(==)(s1::Spec, s2::Spec)

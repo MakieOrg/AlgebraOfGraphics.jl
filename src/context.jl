@@ -1,9 +1,7 @@
-abstract type AbstractContextual end
+abstract type AbstractContext end
 
-abstract type AbstractContext <: AbstractContextual end
-
-struct Style{C} <: AbstractContextual
-    context::C
+struct Style
+    context::Union{AbstractContext, Nothing}
     value::NamedTuple
 end
 Style(s::NamedTuple=NamedTuple()) = Style(nothing, s)
@@ -17,9 +15,8 @@ end
 
 style(args...; kwargs...) = Style(namedtuple(args...; kwargs...))
 
-Base.:*(s1::AbstractContextual, s2::AbstractContextual) = merge(Style(s1), Style(s2))
-function Base.:+(s1::AbstractContextual, s2::AbstractContextual)
-    error("Can not sum two contextuals")
+function Base.:*(s1::Union{Style, AbstractContext}, s2::Union{Style, AbstractContext})
+    merge(Style(s1), Style(s2))
 end
 
 function Base.merge(s1::Style, s2::Style)
