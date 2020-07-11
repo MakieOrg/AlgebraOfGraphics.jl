@@ -1,7 +1,5 @@
 using Documenter, AlgebraOfGraphics, Literate, Glob
 # avoid font caching warning in docs
-import Pkg
-Pkg.pkg"add https://github.com/JuliaPlots/CairoMakie.jl#pv/update"
 using AbstractPlotting, CairoMakie, MakieLayout
 CairoMakie.activate!()
 scatter(rand(10), rand(10))
