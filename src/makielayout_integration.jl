@@ -1,11 +1,11 @@
-using AbstractPlotting: px, Attributes, AbstractPlot, AbstractPlotting
-using MakieLayout: LAxis,
-                   GridLayout,
-                   linkxaxes!,
-                   linkyaxes!,
-                   hidexdecorations!,
-                   hideydecorations!,
-                   MakieLayout
+using AbstractPlotting: Attributes, AbstractPlot, AbstractPlotting
+using AbstractPlotting.MakieLayout: LAxis,
+                                    GridLayout,
+                                    linkxaxes!,
+                                    linkyaxes!,
+                                    hidexdecorations!,
+                                    hideydecorations!,
+                                    MakieLayout
 
 function set_names!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
@@ -37,7 +37,6 @@ function set_defaults!(attrs::Attributes)
     col = get(attrs, :color, Observable(:black))
     alpha = get(attrs, :alpha, Observable(1))
     attrs[:color] = adjust_color(col, alpha)
-    get!(attrs, :markersize, Observable(8px))
 end
 
 function layoutplot!(scene, layout, ts::Algebraic)
