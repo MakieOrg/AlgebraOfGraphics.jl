@@ -20,7 +20,7 @@ include("scales.jl")
 include("analysis/analysis.jl")
 include("analysis/smooth.jl")
 include("analysis/density.jl")
-# include("makielayout_integration.jl")
+include("makielayout_integration.jl")
 include("utils.jl")
 
 end # module

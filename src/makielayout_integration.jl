@@ -52,16 +52,13 @@ has_layout_y(aog) = hasproperty(pkeys(aog), :layout_y)
 layout_x_levels(aog) = levels(pkeys(aog).layout_x)
 layout_y_levels(aog) = levels(pkeys(aog).layout_y)
 
-function layoutplot!(scene, layout, ts::Algebraic)
+function layoutplot!(scene, layout, ts::ElementOrList)
     facetlayout = layout[1, 1] = GridLayout()
-    serieslist = compute(ts)
+    speclist = run_pipeline(ts)
     Nx, Ny = 1, 1
-    for (sp, series) in serieslist
-        for (key, val) in series
-            trace = foldl(merge, (sp, Spec(key), Spec(val)))
-            Nx = max(Nx, rank(to_value(get(trace.value, :layout_x, Nx))))
-            Ny = max(Ny, rank(to_value(get(trace.value, :layout_y, Ny))))
-        end
+    for spec in speclist
+        Nx = max(Nx, rank(to_value(get(spec.options, :layout_x, Nx))))
+        Ny = max(Ny, rank(to_value(get(spec.options, :layout_y, Ny))))
     end
     axs = facetlayout[1:Ny, 1:Nx] = [LAxis(scene) for i in 1:Ny, j in 1:Nx]
     for i in 1:Nx
@@ -74,7 +71,7 @@ function layoutplot!(scene, layout, ts::Algebraic)
     hideydecorations!.(axs[:, 2:end], grid = false)
 
     legdict = Dict{Pair, Any}()
-    for (sp, series) in serieslist
+    for spec in speclist
         for (key, val) in series
             discrete_attrs = map(t -> t.value, key)
             trace = foldl(merge, (sp, Spec(discrete_attrs), Spec(val)))
