@@ -1,4 +1,4 @@
-struct Analysis{F} <: AbstractGraphical
+struct Analysis{F} <: AbstractElement
     f::F
     kwargs::NamedTuple
 end

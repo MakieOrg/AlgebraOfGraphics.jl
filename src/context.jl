@@ -1,6 +1,7 @@
-abstract type AbstractContext end
+abstract type AbstractElement end
+abstract type AbstractContext <: AbstractElement end
 
-struct Style
+struct Style <: AbstractElement
     context::Union{AbstractContext, Nothing}
     value::NamedTuple
 end
