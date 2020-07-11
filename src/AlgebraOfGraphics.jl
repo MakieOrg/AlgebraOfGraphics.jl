@@ -13,7 +13,7 @@ import GLM, Loess
 export data, dims, draw, spec, style
 export categorical, cut
 
-include("algebraic_dict.jl")
+include("algebraic_list.jl")
 include("context.jl")
 include("specs.jl")
 include("scales.jl")
