@@ -1,4 +1,3 @@
-abstract type AbstractElement end
 abstract type AbstractContext <: AbstractElement end
 
 struct Style <: AbstractElement

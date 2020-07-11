@@ -1,15 +1,20 @@
+abstract type AbstractElement end
+
 # immutable list object that supports algebraic operations
 
-struct AlgebraicList{T}
+struct AlgebraicList{T<:AbstractElement}
     parent::Vector{T}
 end
-AlgebraicList(v) = AlgebraicList(collect(v)::Vector)
+function AlgebraicList(l)
+    v::Vector{<:AbstractElement} = collect(l)
+    return AlgebraicList(v)
+end
+AlgebraicList() = AlgebraicList(Union{}[])
 
 Base.parent(v::AlgebraicList) = v.parent
 
 Base.getindex(v::AlgebraicList, i::Int) = parent(v)[i]
 Base.length(v::AlgebraicList) = length(parent(v))
-Base.size(v::AlgebraicList) = size(parent(v))
 Base.eltype(::Type{AlgebraicList{T}}) where {T} = T
 Base.iterate(v::AlgebraicList, args...) = iterate(parent(v), args...)
 
