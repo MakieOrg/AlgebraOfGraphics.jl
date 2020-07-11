@@ -31,7 +31,10 @@ Base.pairs(s::Style) = _pairs(s.context, s)
 
 # interface and fallbacks
 
+# Must return a Style
 _merge(c, s1::Style, s2::Style) = Style(c, merge(s1.value, s2.value))
+
+# Must return a vector of NamedTuple => Style pairs
 _pairs(c, s::Style) = [NamedTuple() => s]
 
 ## Dims context

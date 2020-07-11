@@ -5,7 +5,7 @@ end
 
 Analysis(f; kwargs...) = Analysis(f, values(kwargs))
 
-Spec(a::Analysis) = Spec((a,))
+Spec(a::Analysis) = Spec{Any}(analyses=(a,))
 
 (a::Analysis)(; kwargs...) = Analysis(a.f, merge(a.kwargs, values(kwargs)))
 

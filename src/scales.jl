@@ -53,49 +53,49 @@ function LegendEntry(key, value=Observable{Any}(nothing); name=Symbol(""))
     return LegendEntry(name, key, value)
 end
 
-function get_extrema(layers::AlgebraicDict)
+function get_extrema(specs::AbstractVector{<:AbstractElement})
     d = Dict{Symbol, NTuple{2, Float64}}()
-    for value in values(layers)
-        for stl in values(value)
-            for (k, val) in pairs(stl.value)
-                a, b = get(d, k, (Inf, - Inf))
-                a′, b′ = val isa AbstractVector ? extrema(val) : (Inf, -Inf)
-                d[k] = (min(a, a′), max(b, b′))
-            end
+    for spec in specs
+        style = spec.style
+        for (k, val) in pairs(style.value) # 
+            a, b = get(d, k, (Inf, - Inf))
+            a′, b′ = val isa AbstractVector ? extrema(val) : (Inf, -Inf)
+            d[k] = (min(a, a′), max(b, b′))
         end
     end
     return d
 end
 
-function get_unique(layers::AlgebraicDict)
+function get_unique(specs::AbstractVector{<:AbstractElement})
     d = Dict{Symbol, Set{Any}}()
-    for value in values(layers)
-        for pkey in keys(value)
-            for (k, val) in pairs(pkey)
-                grp = strip_name(val)
-                v = get!(d, k, Set())
-                push!(v, grp)
-            end
+    for spec in specs
+        pkeys = spec.pkeys
+        for (k, val) in pairs(pkeys)
+            grp = strip_name(val)
+            v = get!(d, k, Set())
+            push!(v, grp)
         end
     end
     return d
 end
 
-function computescales(s::AlgebraicDict)
-    unique = get_unique(s)
-    extrema = get_extrema(s)
-    AlgebraicDict(key => computescales(key, val, unique, extrema) for (key, val) in s)
+function computescales(specs)
+    unique_dict = get_unique(specs)
+    extrema_dict = get_extrema(specs)
+    [computescales(spec, unique_dict, extrema_dict) for spec in specs]
 end
-function computescales(s::Spec, dict::AbstractDict, unique, extrema)
-    # temporary! Should have a sensible default scales set, both
-    # discrete and continuous
+
+function computescales(spec::Spec{T}, unique_dict, extrema_dict) where {T}
+    # temporary! Should have a sensible default scales set,
+    # both discrete and continuous
     scales[] = (; AbstractPlotting.current_default_theme()[:palette]...)
     l = (layout_x = nothing, layout_y = nothing)
-    discrete_scales = map(DiscreteScale, merge(scales[], s.value, l))
-    continuous_scales = map(ContinuousScale, s.value)
-    ks = [applytheme(discrete_scales, ds, unique) for ds in keys(dict)]
-    vs = [Style(applytheme(continuous_scales, cs.value, extrema)) for cs in values(dict)]
-    return AlgebraicDict(ks, vs)
+    discrete_scales = map(DiscreteScale, merge(scales[], spec.options, l))
+    continuous_scales = map(ContinuousScale, spec.options)
+    disc_options = applytheme(discrete_scales, spec.pkeys, unique_dict)
+    cont_options = applytheme(continuous_scales, spec.style.value, extrema_dict)
+    options = foldl(merge, (spec.options, disc_options, cont_options))
+    return Spec{T}(pkeys=spec.pkeys, style=spec.style, options=options)
 end
 
 function applytheme(scales, grp::NamedTuple{names}, metadata) where names
