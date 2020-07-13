@@ -1,16 +1,17 @@
-using AbstractPlotting:
-    AbstractPlotting,
-    px, Attributes, AbstractPlot,
-    Node, lift, @lift,
-    RGBAf0
-
-using MakieLayout:
-    MakieLayout,
-    LAxis, LText, LRect,
-    GridLayout,
-    linkxaxes!, linkyaxes!,
-    hidexdecorations!, hideydecorations!,
-    Top, Bottom, Left, Right
+using AbstractPlotting: Attributes, AbstractPlot, Node, lift, @lift, RGBAf0, AbstractPlotting
+using AbstractPlotting.MakieLayout: LAxis,
+                                    LText,
+                                    LRect,
+                                    GridLayout,
+                                    linkxaxes!,
+                                    linkyaxes!,
+                                    hidexdecorations!,
+                                    hideydecorations!,
+                                    Top,
+                                    Bottom,
+                                    Left,
+                                    Right,
+                                    MakieLayout
 
 function set_names!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
@@ -42,7 +43,6 @@ function set_defaults!(attrs::Attributes)
     col = get(attrs, :color, Observable(:black))
     alpha = get(attrs, :alpha, Observable(1))
     attrs[:color] = adjust_color(col, alpha)
-    get!(attrs, :markersize, Observable(8px))
 end
 
 pkeys(aog) = aog.dict.vals[1].context.pkeys

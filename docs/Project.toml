@@ -5,10 +5,8 @@ Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Glob = "c27321d9-0574-5035-807b-f59d2c89b15c"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
-MakieLayout = "5a521ce4-ebb9-4793-b5b7-b334dfe8393c"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 StatsMakie = "65254759-4cff-5aa5-8326-61ce017a8c70"
 
 [compat]
-CairoMakie = "0.2.6"
 Documenter = "0.24"

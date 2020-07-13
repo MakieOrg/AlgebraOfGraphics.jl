@@ -33,7 +33,7 @@ pairs(d)
 using AbstractPlotting, CairoMakie
 mpg1 = copy(mpg)
 mpg1.Displ = mpg.Displ .* 0.1
-ts = data(mpg) * spec(markersize = 5px) + data(mpg1) * spec(markersize=10px)
+ts = data(mpg) * spec(markersize = 5) + data(mpg1) * spec(markersize=10)
 sl = ts * style(:Hwy, :Displ, color = :Cyl => categorical)
 
 # The result can then be plotted using the `draw` function:

@@ -7,6 +7,7 @@ using OrderedCollections: OrderedDict, LittleDict
 using NamedDims: NamedDimsArray, dimnames
 using StructArrays: GroupPerm, refine_perm!, StructArray
 using AbstractPlotting: Point2f0
+using KernelDensity: kde
 import GLM, Loess
 
 export data, dims, draw, spec, style
@@ -18,6 +19,7 @@ include("specs.jl")
 include("scales.jl")
 include("analysis/analysis.jl")
 include("analysis/smooth.jl")
+include("analysis/density.jl")
 include("makielayout_integration.jl")
 include("utils.jl")
 
