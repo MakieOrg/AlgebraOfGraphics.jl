@@ -1,10 +1,16 @@
-using AbstractPlotting: Attributes, AbstractPlot, AbstractPlotting
+using AbstractPlotting: Attributes, AbstractPlot, Node, lift, @lift, RGBAf0, AbstractPlotting
 using AbstractPlotting.MakieLayout: LAxis,
+                                    LText,
+                                    LRect,
                                     GridLayout,
                                     linkxaxes!,
                                     linkyaxes!,
                                     hidexdecorations!,
                                     hideydecorations!,
+                                    Top,
+                                    Bottom,
+                                    Left,
+                                    Right,
                                     MakieLayout
 
 function set_names!(ax, names)
@@ -39,6 +45,13 @@ function set_defaults!(attrs::Attributes)
     attrs[:color] = adjust_color(col, alpha)
 end
 
+pkeys(aog) = aog.dict.vals[1].context.pkeys
+has_layout_x(aog) = hasproperty(pkeys(aog), :layout_x)
+has_layout_y(aog) = hasproperty(pkeys(aog), :layout_y)
+
+layout_x_levels(aog) = levels(pkeys(aog).layout_x)
+layout_y_levels(aog) = levels(pkeys(aog).layout_y)
+
 function layoutplot!(scene, layout, ts::Algebraic)
     facetlayout = layout[1, 1] = GridLayout()
     serieslist = compute(ts)
@@ -59,6 +72,7 @@ function layoutplot!(scene, layout, ts::Algebraic)
     end
     hidexdecorations!.(axs[1:end-1, :], grid = false)
     hideydecorations!.(axs[:, 2:end], grid = false)
+
     legdict = Dict{Pair, Any}()
     for (sp, series) in serieslist
         for (key, val) in series
@@ -91,6 +105,72 @@ function layoutplot!(scene, layout, ts::Algebraic)
             @warn "Automated legend was not possible due to $e"
         end
     end
+    
+    ax1 = axs[end,1]
+    
+    # faceting: hide x and y labels
+    for i in 1:length(facetlayout.content)
+        ax = facetlayout.content[i].content
+        ax.xlabelvisible[] = ax.xlabelvisible[] && !has_layout_x(ts)
+        ax.ylabelvisible[] = ax.ylabelvisible[] && !has_layout_y(ts)
+    end
+        
+
+    if has_layout_x(ts)
+        # Facet labels
+        lxl = string.(layout_x_levels(ts))
+        @assert length(lxl) == Nx
+        for i in 1:Nx
+            text = LText(scene, lxl[i])
+            facetlayout[1, i, Top()] = LRect(
+                scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
+            ) 
+            facetlayout[1, i, Top()] = text
+        end
+    
+        # Shared xlabel
+        group_bottom_protrusion = lift(
+            (xs...) -> maximum(y -> y.bottom, xs),
+            (MakieLayout.protrusionsobservable(ax) for ax in axs[end, :])...
+        )
+    
+        padx = Node(10.0)
+        toppad = @lift($group_bottom_protrusion + $padx)
+    
+        xlabel = LText(scene,
+                       ax1.xlabel[],
+                       padding = @lift((0, 0, 0, $toppad)))
+        facetlayout[end, :, Bottom()] = xlabel
+    end
+    
+    if has_layout_y(ts)
+        # Facet labels
+        lyl = string.(layout_y_levels(ts))
+        @assert length(lyl) == Ny
+        for i in 1:Ny
+            text = LText(scene, lyl[i], rotation = -π/2)
+            facetlayout[i, end, Right()] = LRect(
+                scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
+            ) 
+            facetlayout[i, end, Right()] = text
+        end
+    
+        # Shared ylabel
+        group_left_protrusion = lift(
+            (xs...) -> maximum(y -> y.left, xs),
+            (MakieLayout.protrusionsobservable(ax) for ax in axs[:, 1])...
+        )
+    
+        pady = Node(10.0)
+        rightpad = @lift($group_left_protrusion + $pady)
+    
+        ylabel = LText(scene,
+                       ax1.ylabel[],
+                       padding = @lift((0, $rightpad, 0, 0)),
+                       rotation = π/2) 
+        facetlayout[:, 1, Left()] = ylabel
+    end    
+
     return scene
 end
 
@@ -101,3 +181,4 @@ end
 layoutplot(; kwargs...) = t -> layoutplot(t; kwargs...)
 
 draw(args...; kwargs...) = layoutplot(args...; kwargs...)
+
