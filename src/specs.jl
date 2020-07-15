@@ -43,7 +43,7 @@ function expand(sp::Spec{T}) where {T}
     @assert isempty(pkeys)
     v = [Spec{T}(style=val, pkeys=key, options=options) for (key, val) in pairs(style)]
     list = AlgebraicList(v)
-    return foldl(apply, analyses, init=list)
+    return foldl((ls, an) -> apply(an, ls), analyses, init=list)
 end
 
 # default fallback to apply a callable to a vector of key => value pairs
