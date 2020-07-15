@@ -88,7 +88,7 @@ AbstractPlotting.save("loess.svg", AbstractPlotting.current_scene()); nothing #h
 # We can also add styling that only makes sense in one spec (e.g. `markersize`) by
 # multiplying them:
 #
-newstyle = style(markersize = :Cyl) * spec(markersize = (0.05, 0.5))
+newstyle = style(markersize = :Cyl) * spec(markersize = (0.1, 5))
 data(mpg) * style(:Hwy, :Cty) * grp * (scat * newstyle + smooth(span = 0.8)) |> draw
 AbstractPlotting.save("loess_markersize.svg", AbstractPlotting.current_scene()); nothing #hide
 

@@ -1,9 +1,7 @@
-abstract type AbstractContextual end
+abstract type AbstractContext <: AbstractElement end
 
-abstract type AbstractContext <: AbstractContextual end
-
-struct Style{C} <: AbstractContextual
-    context::C
+struct Style <: AbstractElement
+    context::Union{AbstractContext, Nothing}
     value::NamedTuple
 end
 Style(s::NamedTuple=NamedTuple()) = Style(nothing, s)
@@ -17,9 +15,8 @@ end
 
 style(args...; kwargs...) = Style(namedtuple(args...; kwargs...))
 
-Base.:*(s1::AbstractContextual, s2::AbstractContextual) = merge(Style(s1), Style(s2))
-function Base.:+(s1::AbstractContextual, s2::AbstractContextual)
-    error("Can not sum two contextuals")
+function Base.:*(s1::Union{Style, AbstractContext}, s2::Union{Style, AbstractContext})
+    merge(Style(s1), Style(s2))
 end
 
 function Base.merge(s1::Style, s2::Style)
@@ -34,7 +31,10 @@ Base.pairs(s::Style) = _pairs(s.context, s)
 
 # interface and fallbacks
 
+# Must return a Style
 _merge(c, s1::Style, s2::Style) = Style(c, merge(s1.value, s2.value))
+
+# Must return a vector of NamedTuple => Style pairs
 _pairs(c, s::Style) = [NamedTuple() => s]
 
 ## Dims context
@@ -139,13 +139,14 @@ end
 function _pairs(c::DataContext, s::Style)
     data, pkeys, perm = c.data, c.pkeys, c.perm
     isempty(pkeys) && return pairs(Style(dims(), s.value))
-    # uwrap for sorting computations
+    # unwrap for sorting computations
     itr = GroupPerm(StructArray(optimize_cols(pkeys)), perm)
     sa = StructArray(pkeys)
     nestedpairs = map(itr) do idxs
         i1 = perm[first(idxs)]
-        # keep value categorical and preserve name by taking a mini slice
-        k = map(col -> LegendEntry(col[i1], name=only(dimnames(col))), pkeys)
+        # keep value categorical and preserve name by taking a mini slice (document this!)
+        # consider using these levels directly in discrete scales
+        k = map(col -> col[i1:i1], pkeys)
         cols = map(s.value) do val
             extract_views(val, perm[idxs])
         end

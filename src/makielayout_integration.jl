@@ -45,23 +45,24 @@ function set_defaults!(attrs::Attributes)
     attrs[:color] = adjust_color(col, alpha)
 end
 
-pkeys(aog) = aog.dict.vals[1].context.pkeys
-has_layout_x(aog) = hasproperty(pkeys(aog), :layout_x)
-has_layout_y(aog) = hasproperty(pkeys(aog), :layout_y)
+# function pkeys(aog)
+#     ctx = first(aog).style.context
+#     ctx isa DataContext ? ctx.pkeys : ()
+# end
 
-layout_x_levels(aog) = levels(pkeys(aog).layout_x)
-layout_y_levels(aog) = levels(pkeys(aog).layout_y)
+# has_layout_x(aog) = hasproperty(pkeys(aog), :layout_x)
+# has_layout_y(aog) = hasproperty(pkeys(aog), :layout_y)
 
-function layoutplot!(scene, layout, ts::Algebraic)
+# layout_x_levels(aog) = levels(pkeys(aog).layout_x)
+# layout_y_levels(aog) = levels(pkeys(aog).layout_y)
+
+function layoutplot!(scene, layout, ts::ElementOrList)
     facetlayout = layout[1, 1] = GridLayout()
-    serieslist = compute(ts)
+    speclist = run_pipeline(ts)
     Nx, Ny = 1, 1
-    for (sp, series) in serieslist
-        for (key, val) in series
-            trace = foldl(merge, (sp, Spec(key), Spec(val)))
-            Nx = max(Nx, rank(to_value(get(trace.value, :layout_x, Nx))))
-            Ny = max(Ny, rank(to_value(get(trace.value, :layout_y, Ny))))
-        end
+    for spec in speclist
+        Nx = max(Nx, rank(to_value(get(spec.options, :layout_x, Nx))))
+        Ny = max(Ny, rank(to_value(get(spec.options, :layout_y, Ny))))
     end
     axs = facetlayout[1:Ny, 1:Nx] = [LAxis(scene) for i in 1:Ny, j in 1:Nx]
     for i in 1:Nx
@@ -74,26 +75,27 @@ function layoutplot!(scene, layout, ts::Algebraic)
     hideydecorations!.(axs[:, 2:end], grid = false)
 
     legdict = Dict{Pair, Any}()
-    for (sp, series) in serieslist
-        for (key, val) in series
-            discrete_attrs = map(t -> t.value, key)
-            trace = foldl(merge, (sp, Spec(discrete_attrs), Spec(val)))
-            P = plottype(trace)
-            P isa Symbol && (P = getproperty(AbstractPlotting, P))
-            args, kwargs = split(trace.value)
-            names, args = extract_names(args)
-            attrs = Attributes(kwargs)
-            set_defaults!(attrs)
-            x_pos = pop!(attrs, :layout_x, 1) |> to_value |> rank
-            y_pos = pop!(attrs, :layout_y, 1) |> to_value |> rank
-            current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
-            set_names!(axs[y_pos, x_pos], names)
-            for (k, v) in pairs(key)
-                k in (:layout_x, :layout_y) && continue
-                @assert v isa LegendEntry
-                name = somestring(v.name, k)
+    level_dict = Dict{Symbol, Any}()
+    for trace in speclist
+        pkeys, style, options = trace.pkeys, trace.style, trace.options
+        P = plottype(trace)
+        P isa Symbol && (P = getproperty(AbstractPlotting, P))
+        args, kwargs = split(options)
+        names, args = extract_names(args)
+        attrs = Attributes(kwargs)
+        set_defaults!(attrs)
+        x_pos = pop!(attrs, :layout_x, 1) |> to_value |> rank
+        y_pos = pop!(attrs, :layout_y, 1) |> to_value |> rank
+        current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
+        set_names!(axs[y_pos, x_pos], names)
+        for (k, v) in pairs(pkeys)
+            name = somestring(get_name(v), k)
+            val = strip_name(v)
+            # here v will often be a NamedDimsArray, so we call `only` below
+            val isa CategoricalArray && get!(level_dict, k, levels(val))
+            if k ∉ (:layout_x, :layout_y)
                 sublegdict = get!(legdict, k => name, OrderedDict{String, Vector{AbstractPlot}}())
-                legtraces = get!(sublegdict, string(v.key), AbstractPlot[])
+                legtraces = get!(sublegdict, string(only(val)), AbstractPlot[])
                 push!(legtraces, current)
             end
         end
@@ -108,17 +110,19 @@ function layoutplot!(scene, layout, ts::Algebraic)
     
     ax1 = axs[end,1]
     
+    layout_x_levels = get(level_dict, :layout_x, nothing)
+    layout_y_levels = get(level_dict, :layout_y, nothing)
+
     # faceting: hide x and y labels
     for i in 1:length(facetlayout.content)
         ax = facetlayout.content[i].content
-        ax.xlabelvisible[] = ax.xlabelvisible[] && !has_layout_x(ts)
-        ax.ylabelvisible[] = ax.ylabelvisible[] && !has_layout_y(ts)
+        ax.xlabelvisible[] &= isnothing(layout_x_levels)
+        ax.ylabelvisible[] &= isnothing(layout_y_levels)
     end
-        
 
-    if has_layout_x(ts)
+    if !isnothing(layout_x_levels)
         # Facet labels
-        lxl = string.(layout_x_levels(ts))
+        lxl = string.(layout_x_levels)
         @assert length(lxl) == Nx
         for i in 1:Nx
             text = LText(scene, lxl[i])
@@ -143,9 +147,9 @@ function layoutplot!(scene, layout, ts::Algebraic)
         facetlayout[end, :, Bottom()] = xlabel
     end
     
-    if has_layout_y(ts)
+    if !isnothing(layout_y_levels)
         # Facet labels
-        lyl = string.(layout_y_levels(ts))
+        lyl = string.(layout_y_levels)
         @assert length(lyl) == Ny
         for i in 1:Ny
             text = LText(scene, lyl[i], rotation = -π/2)
