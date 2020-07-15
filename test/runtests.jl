@@ -8,8 +8,7 @@ using AlgebraOfGraphics: data,
                          keyword,
                          dims,
                          extract_names,
-                         compute,
-                         LegendEntry
+                         run_pipeline
 
 using OrderedCollections: OrderedDict
 using CategoricalArrays: categorical
@@ -30,33 +29,32 @@ end
     d = style(:Cyl, :Hwy, color = :Year => categorical)
     s = spec(color = :red, font = 10) + style(markersize = :Year)
     res = data(mpg) * d * s
-    st = res[spec(color = :red, font = 10)]
-    @test first(keys(res)) == Spec{Any}((), (color = :red, font = 10))
+    @test res[1].options == (color = :red, font = 10)
 
     idx1 = mpg.Year .== 1999
     idx2 = mpg.Year .== 2008
 
-    styles = map(pairs, values(res))
+    styles = pairs.(getproperty.(res, :style))
     @test last(styles[1][1]).value == style(mpg[idx1, :Cyl], mpg[idx1, :Hwy]).value
     @test last(styles[1][2]).value == style(mpg[idx2, :Cyl], mpg[idx2, :Hwy]).value
     @test last(styles[2][1]).value == style(mpg[idx1, :Cyl], mpg[idx1, :Hwy], markersize = mpg[idx1, :Year]).value
     @test last(styles[2][2]).value == style(mpg[idx2, :Cyl], mpg[idx2, :Hwy], markersize = mpg[idx2, :Year]).value
 
-    @test first(styles[1][1]).color isa LegendEntry
-    @test first(styles[1][1]).color.key == 1999
-    @test first(styles[1][1]).color.name == :Year
+    @test first(styles[1][1]).color isa NamedDimsArray
+    @test only(first(styles[1][1]).color) == 1999
+    @test dimnames(first(styles[1][1]).color) == (:Year,)
 
-    @test first(styles[1][2]).color isa LegendEntry
-    @test first(styles[1][2]).color.key == 2008
-    @test first(styles[1][2]).color.name == :Year
+    @test first(styles[1][2]).color isa NamedDimsArray
+    @test only(first(styles[1][2]).color) == 2008
+    @test dimnames(first(styles[1][2]).color) == (:Year,)
 
-    @test first(styles[2][1]).color isa LegendEntry
-    @test first(styles[2][1]).color.key == 1999
-    @test first(styles[2][1]).color.name == :Year
+    @test first(styles[2][1]).color isa NamedDimsArray
+    @test only(first(styles[2][1]).color) == 1999
+    @test dimnames(first(styles[2][1]).color) == (:Year,)
 
-    @test first(styles[2][2]).color isa LegendEntry
-    @test first(styles[2][2]).color.key == 2008
-    @test first(styles[2][2]).color.name == :Year
+    @test first(styles[2][2]).color isa NamedDimsArray
+    @test only(first(styles[2][2]).color) == 2008
+    @test dimnames(first(styles[2][2]).color) == (:Year,)
 
     x = rand(5, 3, 2)
     y = rand(5, 3)
@@ -79,26 +77,21 @@ end
     s = spec(:log) * spec(font = 10) + style(size = :z)
     ds = data(t) * d
     sl = ds * s
-    res = compute(sl)
-    @test length(res) == 2
+    @test length(sl) == 2
 
-    r = res[Spec{:log}((), (font = 10,))]
-    (k1, v1), (k2, v2) = r
+    res = run_pipeline(sl)
 
-    @test k1.color.value[] == wong[1]
-    @test k2.color.value[] == wong[2]
-    @test k1.color.name == :c
-    @test k2.color.name == :c
-    @test v1.value == style([1], [10]).value
-    @test v2.value == style([2], [20]).value
+    @test res[1].options.color == wong[1]
+    @test res[2].options.color == wong[2]
+    @test dimnames(res[1].pkeys.color) == (:c,)
+    @test dimnames(res[2].pkeys.color) == (:c,)
+    @test res[1].style.value == style([1], [10]).value
+    @test res[2].style.value == style([2], [20]).value
 
-    r = res[spec()]
-    (k1, v1), (k2, v2) = r
-
-    @test k1.color.value[] == wong[1]
-    @test k2.color.value[] == wong[2]
-    @test k1.color.name == :c
-    @test k2.color.name == :c
-    @test v1.value == style([1], [10], size = [3]).value
-    @test v2.value == style([2], [20], size = [4]).value
+    @test res[3].options.color == wong[1]
+    @test res[4].options.color == wong[2]
+    @test dimnames(res[3].pkeys.color) == (:c,)
+    @test dimnames(res[4].pkeys.color) == (:c,)
+    @test res[3].style.value == style([1], [10], size = [3]).value
+    @test res[4].style.value == style([2], [20], size = [4]).value
 end
