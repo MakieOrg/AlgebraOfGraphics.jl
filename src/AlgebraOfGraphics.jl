@@ -1,7 +1,7 @@
 module AlgebraOfGraphics
 
 using Tables: columns, getcolumn, columnnames
-using CategoricalArrays: categorical, cut, levelcode, refs, levels
+using CategoricalArrays: categorical, cut, levelcode, refs, levels, CategoricalArray
 using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict
 using NamedDims: NamedDimsArray, dimnames

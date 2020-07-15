@@ -45,12 +45,16 @@ function set_defaults!(attrs::Attributes)
     attrs[:color] = adjust_color(col, alpha)
 end
 
-# pkeys(aog) = aog.dict.vals[1].context.pkeys
-has_layout_x(aog) = hasproperty(pkeys(aog), :layout_x)
-has_layout_y(aog) = hasproperty(pkeys(aog), :layout_y)
+# function pkeys(aog)
+#     ctx = first(aog).style.context
+#     ctx isa DataContext ? ctx.pkeys : ()
+# end
 
-layout_x_levels(aog) = levels(pkeys(aog).layout_x)
-layout_y_levels(aog) = levels(pkeys(aog).layout_y)
+# has_layout_x(aog) = hasproperty(pkeys(aog), :layout_x)
+# has_layout_y(aog) = hasproperty(pkeys(aog), :layout_y)
+
+# layout_x_levels(aog) = levels(pkeys(aog).layout_x)
+# layout_y_levels(aog) = levels(pkeys(aog).layout_y)
 
 function layoutplot!(scene, layout, ts::ElementOrList)
     facetlayout = layout[1, 1] = GridLayout()
@@ -71,9 +75,9 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     hideydecorations!.(axs[:, 2:end], grid = false)
 
     legdict = Dict{Pair, Any}()
+    level_dict = Dict{Symbol, Any}()
     for trace in speclist
         pkeys, style, options = trace.pkeys, trace.style, trace.options
-        @show dimnames(pkeys.color)
         P = plottype(trace)
         P isa Symbol && (P = getproperty(AbstractPlotting, P))
         args, kwargs = split(options)
@@ -85,11 +89,15 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
         set_names!(axs[y_pos, x_pos], names)
         for (k, v) in pairs(pkeys)
-            k in (:layout_x, :layout_y) && continue
             name = somestring(get_name(v), k)
-            sublegdict = get!(legdict, k => name, OrderedDict{String, Vector{AbstractPlot}}())
-            legtraces = get!(sublegdict, string(only(v)), AbstractPlot[])
-            push!(legtraces, current)
+            val = strip_name(v)
+            # here v will often be a NamedDimsArray, so we call `only` below
+            val isa CategoricalArray && get!(level_dict, k, levels(val))
+            if k ∉ (:layout_x, :layout_y)
+                sublegdict = get!(legdict, k => name, OrderedDict{String, Vector{AbstractPlot}}())
+                legtraces = get!(sublegdict, string(only(val)), AbstractPlot[])
+                push!(legtraces, current)
+            end
         end
     end
     if !isempty(legdict)
@@ -102,68 +110,70 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     
     ax1 = axs[end,1]
     
-    # # faceting: hide x and y labels
-    # for i in 1:length(facetlayout.content)
-    #     ax = facetlayout.content[i].content
-    #     ax.xlabelvisible[] = ax.xlabelvisible[] && !has_layout_x(ts)
-    #     ax.ylabelvisible[] = ax.ylabelvisible[] && !has_layout_y(ts)
-    # end
-        
+    layout_x_levels = get(level_dict, :layout_x, nothing)
+    layout_y_levels = get(level_dict, :layout_y, nothing)
 
-    # if has_layout_x(ts)
-    #     # Facet labels
-    #     lxl = string.(layout_x_levels(ts))
-    #     @assert length(lxl) == Nx
-    #     for i in 1:Nx
-    #         text = LText(scene, lxl[i])
-    #         facetlayout[1, i, Top()] = LRect(
-    #             scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
-    #         ) 
-    #         facetlayout[1, i, Top()] = text
-    #     end
+    # faceting: hide x and y labels
+    for i in 1:length(facetlayout.content)
+        ax = facetlayout.content[i].content
+        ax.xlabelvisible[] &= isnothing(layout_x_levels)
+        ax.ylabelvisible[] &= isnothing(layout_y_levels)
+    end
+
+    if !isnothing(layout_x_levels)
+        # Facet labels
+        lxl = string.(layout_x_levels)
+        @assert length(lxl) == Nx
+        for i in 1:Nx
+            text = LText(scene, lxl[i])
+            facetlayout[1, i, Top()] = LRect(
+                scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
+            ) 
+            facetlayout[1, i, Top()] = text
+        end
     
-    #     # Shared xlabel
-    #     group_bottom_protrusion = lift(
-    #         (xs...) -> maximum(y -> y.bottom, xs),
-    #         (MakieLayout.protrusionsobservable(ax) for ax in axs[end, :])...
-    #     )
+        # Shared xlabel
+        group_bottom_protrusion = lift(
+            (xs...) -> maximum(y -> y.bottom, xs),
+            (MakieLayout.protrusionsobservable(ax) for ax in axs[end, :])...
+        )
     
-    #     padx = Node(10.0)
-    #     toppad = @lift($group_bottom_protrusion + $padx)
+        padx = Node(10.0)
+        toppad = @lift($group_bottom_protrusion + $padx)
     
-    #     xlabel = LText(scene,
-    #                    ax1.xlabel[],
-    #                    padding = @lift((0, 0, 0, $toppad)))
-    #     facetlayout[end, :, Bottom()] = xlabel
-    # end
+        xlabel = LText(scene,
+                       ax1.xlabel[],
+                       padding = @lift((0, 0, 0, $toppad)))
+        facetlayout[end, :, Bottom()] = xlabel
+    end
     
-    # if has_layout_y(ts)
-    #     # Facet labels
-    #     lyl = string.(layout_y_levels(ts))
-    #     @assert length(lyl) == Ny
-    #     for i in 1:Ny
-    #         text = LText(scene, lyl[i], rotation = -π/2)
-    #         facetlayout[i, end, Right()] = LRect(
-    #             scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
-    #         ) 
-    #         facetlayout[i, end, Right()] = text
-    #     end
+    if !isnothing(layout_y_levels)
+        # Facet labels
+        lyl = string.(layout_y_levels)
+        @assert length(lyl) == Ny
+        for i in 1:Ny
+            text = LText(scene, lyl[i], rotation = -π/2)
+            facetlayout[i, end, Right()] = LRect(
+                scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
+            ) 
+            facetlayout[i, end, Right()] = text
+        end
     
-    #     # Shared ylabel
-    #     group_left_protrusion = lift(
-    #         (xs...) -> maximum(y -> y.left, xs),
-    #         (MakieLayout.protrusionsobservable(ax) for ax in axs[:, 1])...
-    #     )
+        # Shared ylabel
+        group_left_protrusion = lift(
+            (xs...) -> maximum(y -> y.left, xs),
+            (MakieLayout.protrusionsobservable(ax) for ax in axs[:, 1])...
+        )
     
-    #     pady = Node(10.0)
-    #     rightpad = @lift($group_left_protrusion + $pady)
+        pady = Node(10.0)
+        rightpad = @lift($group_left_protrusion + $pady)
     
-    #     ylabel = LText(scene,
-    #                    ax1.ylabel[],
-    #                    padding = @lift((0, $rightpad, 0, 0)),
-    #                    rotation = π/2) 
-    #     facetlayout[:, 1, Left()] = ylabel
-    # end    
+        ylabel = LText(scene,
+                       ax1.ylabel[],
+                       padding = @lift((0, $rightpad, 0, 0)),
+                       rotation = π/2) 
+        facetlayout[:, 1, Left()] = ylabel
+    end    
 
     return scene
 end
