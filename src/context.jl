@@ -144,7 +144,8 @@ function _pairs(c::DataContext, s::Style)
     sa = StructArray(pkeys)
     nestedpairs = map(itr) do idxs
         i1 = perm[first(idxs)]
-        # keep value categorical and preserve name by taking a mini slice
+        # keep value categorical and preserve name by taking a mini slice (document this!)
+        # Consider using these levels directly in discrete scales
         k = map(col -> col[i1:i1], pkeys)
         cols = map(s.value) do val
             extract_views(val, perm[idxs])

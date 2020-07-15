@@ -79,11 +79,12 @@ function computescales(spec::Spec{T}, unique_dict, extrema_dict) where {T}
     discrete_scales = map(DiscreteScale, merge(scales[], spec.options, l))
     continuous_scales = map(ContinuousScale, spec.options)
     disc_options = applytheme(discrete_scales, spec.pkeys, unique_dict)
-    cont_options = applytheme(continuous_scales, spec.style.value, extrema_dict)
+    cont_options = applytheme(continuous_scales, spec.style, extrema_dict)
     options = foldl(merge, (spec.options, disc_options, cont_options))
     return Spec{T}(pkeys=spec.pkeys, style=spec.style, options=options)
 end
 
+applytheme(scales, style::Style, metadata) = applytheme(scales, style.value, metadata)
 function applytheme(scales, grp::NamedTuple{names}, metadata) where names
     res = map(names) do key
         haskey(scales, key) ? get_attr(scales[key], grp[key], metadata[key]) : grp[key]
