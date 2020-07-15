@@ -1,6 +1,6 @@
 # From StatsMakie
 function _linear(x::AbstractVector{T}, y::AbstractVector;
-                 n_points = 100, wts = similar(x, 0),
+                 npoints = 100, wts = similar(x, 0),
                  interval = length(wts) > 0 ? nothing : :confidence) where T
     # Note: confidence intervals are currently not supported for WLS in GLM.jl
     try
@@ -9,9 +9,9 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
         wts = collect(wts)
         lin_model = GLM.lm([ones(T, length(x)) x], y, wts=wts)
         x_min, x_max = extrema(x)
-        x_new = range(x_min, x_max, length = n_points)
+        x_new = range(x_min, x_max, length = npoints)
         pred = GLM.predict(lin_model,
-                           [ones(T, n_points) x_new],
+                           [ones(T, npoints) x_new],
                            interval=interval)
         if !isnothing(interval)
             y_new, lower, upper = pred
@@ -35,11 +35,11 @@ end
 
 const linear = Analysis(_linear)
 
-function _smooth(x, y; length = 100, kwargs...)
+function _smooth(x, y; npoints = 100, kwargs...)
     min, max = extrema(x)
     min < max || return AlgebraicList()
-    model = Loess.loess(x, y; kwargs...)
-    us = collect(range(min, stop = max, length = length))
+    model = Loess.loess(Float64.(x), Float64.(y); kwargs...)
+    us = collect(range(min, stop = max, length = npoints))
     vs = Loess.predict(model, us)
     return spec(:Lines) * style(us, vs)
 end
