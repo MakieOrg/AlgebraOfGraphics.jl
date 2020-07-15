@@ -13,14 +13,14 @@ DiscreteScale(v::AbstractObservable) = DiscreteScale(v[])
 
 rank(c) = levelcode(c)
 rank(n::Integer) = n
+rank(v::AbstractArray) = rank(only(v))
 
 function get_attr(d::DiscreteScale, value, unique)
     v = strip_name(value)
     # Could be tricky in case of many datasets
     n = sum(t -> !isless(rank(v), rank(t)), unique)
     scale = d.options
-    val = scale === nothing ? n : scale[mod1(n, length(scale))]
-    LegendEntry(v, Observable(val), name=get_name(value))
+    return scale === nothing ? n : scale[mod1(n, length(scale))]
 end
 
 struct ContinuousScale
@@ -37,20 +37,6 @@ function get_attr(c::ContinuousScale, value, extrema)
     min, max = extrema
     smin, smax = scale
     @. smin + value * (smax - smin) / (max - min)
-end
-
-struct LegendEntry{T}
-    name::Symbol
-    key::T
-    value::Observable
-end
-get_name(l::LegendEntry) = l.name
-strip_name(l::LegendEntry) = l.key
-
-rank(n::LegendEntry) = rank(strip_name(n))
-
-function LegendEntry(key, value=Observable{Any}(nothing); name=Symbol(""))
-    return LegendEntry(name, key, value)
 end
 
 function get_extrema(specs::AbstractVector{<:AbstractElement})

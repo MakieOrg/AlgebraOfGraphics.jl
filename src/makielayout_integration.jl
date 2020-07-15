@@ -73,6 +73,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     legdict = Dict{Pair, Any}()
     for trace in speclist
         pkeys, style, options = trace.pkeys, trace.style, trace.options
+        @show dimnames(pkeys.color)
         P = plottype(trace)
         P isa Symbol && (P = getproperty(AbstractPlotting, P))
         args, kwargs = split(options)
@@ -83,14 +84,13 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         y_pos = pop!(attrs, :layout_y, 1) |> to_value |> rank
         current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
         set_names!(axs[y_pos, x_pos], names)
-        # for (k, v) in pairs(pkeys)
-        #     k in (:layout_x, :layout_y) && continue
-        #     @assert v isa LegendEntry
-        #     name = somestring(v.name, k)
-        #     sublegdict = get!(legdict, k => name, OrderedDict{String, Vector{AbstractPlot}}())
-        #     legtraces = get!(sublegdict, string(v.key), AbstractPlot[])
-        #     push!(legtraces, current)
-        # end
+        for (k, v) in pairs(pkeys)
+            k in (:layout_x, :layout_y) && continue
+            name = somestring(get_name(v), k)
+            sublegdict = get!(legdict, k => name, OrderedDict{String, Vector{AbstractPlot}}())
+            legtraces = get!(sublegdict, string(only(v)), AbstractPlot[])
+            push!(legtraces, current)
+        end
     end
     if !isempty(legdict)
         try

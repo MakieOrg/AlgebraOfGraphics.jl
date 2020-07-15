@@ -139,13 +139,13 @@ end
 function _pairs(c::DataContext, s::Style)
     data, pkeys, perm = c.data, c.pkeys, c.perm
     isempty(pkeys) && return pairs(Style(dims(), s.value))
-    # uwrap for sorting computations
+    # unwrap for sorting computations
     itr = GroupPerm(StructArray(optimize_cols(pkeys)), perm)
     sa = StructArray(pkeys)
     nestedpairs = map(itr) do idxs
         i1 = perm[first(idxs)]
         # keep value categorical and preserve name by taking a mini slice
-        k = map(col -> LegendEntry(col[i1], name=only(dimnames(col))), pkeys)
+        k = map(col -> col[i1:i1], pkeys)
         cols = map(s.value) do val
             extract_views(val, perm[idxs])
         end
