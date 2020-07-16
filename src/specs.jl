@@ -53,7 +53,7 @@ function apply(f, d)
         analyses, pkeys, style, options = layer.analyses, layer.pkeys, layer.style, layer.options
         T = plottype(layer)
         args, kwargs = split(style.value)
-        res = Spec{T}(analyses=analyses, options=options, pkeys=pkeys) * f(args...; kwargs...)
+        res = f(args...; kwargs...) * Spec{T}(analyses=analyses, options=options, pkeys=pkeys)
         return parent(layers(res))
     end
     return AlgebraicList(reduce(vcat, v))
