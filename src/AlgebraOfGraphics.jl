@@ -6,9 +6,31 @@ using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict
 using NamedDims: NamedDimsArray, dimnames
 using StructArrays: GroupPerm, refine_perm!, StructArray
-using AbstractPlotting: Point2f0, AbstractPlotting
 using KernelDensity: kde
 import GLM, Loess
+
+using AbstractPlotting: Point2f0,
+                        Attributes,
+                        AbstractPlot,
+                        Node,
+                        lift,
+                        @lift,
+                        RGBAf0,
+                        AbstractPlotting
+
+using AbstractPlotting.MakieLayout: LAxis,
+                                    LText,
+                                    LRect,
+                                    GridLayout,
+                                    linkxaxes!,
+                                    linkyaxes!,
+                                    hidexdecorations!,
+                                    hideydecorations!,
+                                    Top,
+                                    Bottom,
+                                    Left,
+                                    Right,
+                                    MakieLayout
 
 export data, dims, draw, spec, style
 export categorical, cut
@@ -20,7 +42,7 @@ include("scales.jl")
 include("analysis/analysis.jl")
 include("analysis/smooth.jl")
 include("analysis/density.jl")
-include("makielayout_integration.jl")
+include("draw.jl")
 include("utils.jl")
 
 end # module

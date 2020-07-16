@@ -1,18 +1,3 @@
-using AbstractPlotting: Attributes, AbstractPlot, Node, lift, @lift, RGBAf0, AbstractPlotting
-using AbstractPlotting.MakieLayout: LAxis,
-                                    LText,
-                                    LRect,
-                                    GridLayout,
-                                    linkxaxes!,
-                                    linkyaxes!,
-                                    hidexdecorations!,
-                                    hideydecorations!,
-                                    Top,
-                                    Bottom,
-                                    Left,
-                                    Right,
-                                    MakieLayout
-
 function set_names!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
         s = string(nm)
@@ -44,17 +29,6 @@ function set_defaults!(attrs::Attributes)
     alpha = get(attrs, :alpha, Observable(1))
     attrs[:color] = adjust_color(col, alpha)
 end
-
-# function pkeys(aog)
-#     ctx = first(aog).style.context
-#     ctx isa DataContext ? ctx.pkeys : ()
-# end
-
-# has_layout_x(aog) = hasproperty(pkeys(aog), :layout_x)
-# has_layout_y(aog) = hasproperty(pkeys(aog), :layout_y)
-
-# layout_x_levels(aog) = levels(pkeys(aog).layout_x)
-# layout_y_levels(aog) = levels(pkeys(aog).layout_y)
 
 function layoutplot!(scene, layout, ts::ElementOrList)
     facetlayout = layout[1, 1] = GridLayout()
