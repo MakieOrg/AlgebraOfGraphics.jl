@@ -3,7 +3,7 @@
 # AlgebraOfGraphics is based on *contexts*, which can be extended. A context, together with
 # a named tuple (used for `x`, `y` axes or attributes in the plot) forms a `Style`.
 # Each `Style` can actually encode many traces, encoded as a list of `NamedTuple => Style`
-# pairs, accessible using `Base.pairs`.
+# pairs, accessible using `pairs(st::Style)`.
 #
 # ## Contexts
 #
