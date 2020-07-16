@@ -59,11 +59,6 @@ function set_axis_labels!(ax, names)
     end
 end
 
-function somestring(s, t)
-    s = string(s)
-    isempty(s) ? string(t) : s
-end
-
 function layoutplot!(scene, layout, ts::ElementOrList)
     facetlayout = layout[1, 1] = GridLayout()
     speclist = run_pipeline(ts)
@@ -97,12 +92,13 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
         set_axis_labels!(axs[y_pos, x_pos], names)
         for (k, v) in pairs(pkeys)
-            name = somestring(get_name(v), k)
+            name = get_name(v)
+            name == Symbol("") && (name = k) # make sure legend section has non empty title
             val = strip_name(v)
             # here v will often be a NamedDimsArray, so we call `only` below
             val isa CategoricalArray && get!(level_dict, k, levels(val))
             if k ∉ (:layout_x, :layout_y)
-                legendsection = add_entry!(legend, string(k); title=name)
+                legendsection = add_entry!(legend, string(k); title=string(name))
                 entry_traces = add_entry!(legendsection, string(only(val)))
                 push!(entry_traces, current)
             end
