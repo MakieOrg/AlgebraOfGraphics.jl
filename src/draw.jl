@@ -43,18 +43,14 @@ function create_legend(scene, legend::Legend)
     )
 end
 
-function adjust_color(c, alpha)
-    to_value(c) isa Union{Tuple, AbstractArray} ? c : map(tuple, c, alpha)
-end
-
-function set_defaults!(attrs::Attributes)
+function apply_alpha_transparency!(attrs::Attributes)
     # manually implement alpha values
-    col = get(attrs, :color, Observable(:black))
+    c = get(attrs, :color, Observable(:black))
     alpha = get(attrs, :alpha, Observable(1))
-    attrs[:color] = adjust_color(col, alpha)
+    attrs[:color] = c[] isa Union{Tuple, AbstractArray} ? c : lift(tuple, c, alpha)
 end
 
-function set_names!(ax, names)
+function set_axis_labels!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
         s = string(nm)
         if !isempty(s)
@@ -95,11 +91,11 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         args, kwargs = split(options)
         names, args = extract_names(args)
         attrs = Attributes(kwargs)
-        set_defaults!(attrs)
+        apply_alpha_transparency!(attrs)
         x_pos = pop!(attrs, :layout_x, 1) |> to_value |> rank
         y_pos = pop!(attrs, :layout_y, 1) |> to_value |> rank
         current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
-        set_names!(axs[y_pos, x_pos], names)
+        set_axis_labels!(axs[y_pos, x_pos], names)
         for (k, v) in pairs(pkeys)
             name = somestring(get_name(v), k)
             val = strip_name(v)
