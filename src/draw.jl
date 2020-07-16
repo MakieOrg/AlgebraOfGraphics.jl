@@ -1,3 +1,59 @@
+function add_entry!(names, values, entry; default)
+    i = findfirst(==(entry), names)
+    if isnothing(i)
+        push!(names, entry)
+        push!(values, default)
+        i = lastindex(names)
+    end
+    return values[i]
+end
+
+struct LegendSection
+    title::String
+    names::Vector{String}
+    plots::Vector{Vector{AbstractPlot}}
+end
+LegendSection(title::String="") = LegendSection(title, String[], Vector{AbstractPlot}[])
+
+# Add an empty trace list with name `entry` to the legend section
+function add_entry!(legendsection::LegendSection, entry::String)
+    names, plots = legendsection.names, legendsection.plots
+    return add_entry!(names, plots, entry; default=AbstractPlot[])
+end
+
+struct Legend
+    names::Vector{String}
+    sections::Vector{LegendSection}
+end
+Legend() = Legend(String[], LegendSection[])
+
+# Add an empty section with name `entry` and title `title` to the legend
+function add_entry!(legend::Legend, entry::String; title::String="")
+    names, sections = legend.names, legend.sections
+    return add_entry!(names, sections, entry; default=LegendSection(title))
+end
+
+function create_legend(scene, legend::Legend)
+    sections = legend.sections
+    MakieLayout.LLegend(
+        scene,
+        getproperty.(sections, :plots),
+        getproperty.(sections, :names),
+        getproperty.(sections, :title)
+    )
+end
+
+function adjust_color(c, alpha)
+    to_value(c) isa Union{Tuple, AbstractArray} ? c : map(tuple, c, alpha)
+end
+
+function set_defaults!(attrs::Attributes)
+    # manually implement alpha values
+    col = get(attrs, :color, Observable(:black))
+    alpha = get(attrs, :alpha, Observable(1))
+    attrs[:color] = adjust_color(col, alpha)
+end
+
 function set_names!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
         s = string(nm)
@@ -10,41 +66,6 @@ end
 function somestring(s, t)
     s = string(s)
     isempty(s) ? string(t) : s
-end
-
-struct LegendSection
-    names::Vector{String}
-    plots::Vector{Vector{AbstractPlot}}
-end
-LegendSection() = LegendSection(String[], Vector{AbstractPlot}[])
-# Add the trace with name entry to the legend section
-function add_entry!(legendsection::LegendSection, entry::String, plot::AbstractPlot)
-    names, plots = legendsection.names, legendsection.plots
-    i = findfirst(==(entry), names)
-    if isnothing(i)
-        push!(names, entry)
-        push!(plots, [plot])
-    else
-        push!(plots[i], plot)
-    end
-end
-
-function create_legend(scene, legdict::AbstractDict)
-    plts_list = [legendsection.plots for legendsection in values(legdict)]
-    entries_list = [legendsection.names for legendsection in values(legdict)]
-    names = last.(keys(legdict))
-    MakieLayout.LLegend(scene, plts_list, entries_list, names)
-end
-
-function adjust_color(c, alpha)
-    to_value(c) isa Union{Tuple, AbstractArray} ? c : map(tuple, c, alpha)
-end
-
-function set_defaults!(attrs::Attributes)
-    # manually implement alpha values
-    col = get(attrs, :color, Observable(:black))
-    alpha = get(attrs, :alpha, Observable(1))
-    attrs[:color] = adjust_color(col, alpha)
 end
 
 function layoutplot!(scene, layout, ts::ElementOrList)
@@ -65,7 +86,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     hidexdecorations!.(axs[1:end-1, :], grid = false)
     hideydecorations!.(axs[:, 2:end], grid = false)
 
-    legend_dict = Dict{Pair, LegendSection}()
+    legend = Legend()
     level_dict = Dict{Symbol, Any}()
     for trace in speclist
         pkeys, style, options = trace.pkeys, trace.style, trace.options
@@ -85,14 +106,15 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             # here v will often be a NamedDimsArray, so we call `only` below
             val isa CategoricalArray && get!(level_dict, k, levels(val))
             if k ∉ (:layout_x, :layout_y)
-                legendsection = get!(legend_dict, k => name, LegendSection())
-                add_entry!(legendsection, string(only(val)), current)
+                legendsection = add_entry!(legend, string(k); title=name)
+                entry_traces = add_entry!(legendsection, string(only(val)))
+                push!(entry_traces, current)
             end
         end
     end
-    if !isempty(legend_dict)
+    if !isempty(legend.sections)
         try
-            layout[1, 2] = create_legend(scene, legend_dict)
+            layout[1, 2] = create_legend(scene, legend)
         catch e
             @warn "Automated legend was not possible due to $e"
         end
