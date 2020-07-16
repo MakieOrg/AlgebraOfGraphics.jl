@@ -5,18 +5,18 @@ struct ColumnDict <: AbstractColumns
     columns::Vector{AbstractVector}
 end
 
-Tables.getcolumn(c::ColumnDict, i::Int) = c.columns[i]
-Tables.getcolumn(c::ColumnDict, s::Symbol) = c.columns[findfirst(==(s), c.names)]
-Tables.columnnames(c::ColumnDict) = c.columns
+Tables.columnnames(c::ColumnDict) = getfield(c, 1)
+Tables.getcolumn(c::ColumnDict, i::Int) = getfield(c, 2)[i]
+function Tables.getcolumn(c::ColumnDict, s::Symbol)
+    i::Int = findfirst(==(s), columnnames(c))
+    getcolumn(c, i)
+end
 
 function ColumnDict(t)
-    cols = columns(t)
-    names, columns = Symbol[], AbstractVector[]
-    for name in columnnames(cols)
-        push!(names, name)
-        push!(columns, getcolumn(cols, name))
-    end
-    return ColumnDict(names, columns)
+    t_cols = columns(t)
+    names = collect(columnnames(t_cols))
+    cols = map(name -> getcolumn(t_cols, name), names)
+    return ColumnDict(names, cols)
 end
 
 # integer naming utils

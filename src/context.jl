@@ -87,8 +87,8 @@ end
 
 # data context: integers and symbols are columns
 
-struct DataContext{T, NT, I<:AbstractVector{Int}} <: AbstractContext
-    data::T
+struct DataContext{NT, I<:AbstractVector{Int}} <: AbstractContext
+    data::ColumnDict
     pkeys::NT
     perm::I
 end
@@ -98,7 +98,7 @@ function DataContext(data)
     DataContext(data, NamedTuple(), axes(col, 1))
 end
 
-data(x) = DataContext(coldict(x))
+data(x) = DataContext(ColumnDict(x))
 
 iscategorical(v) = !(eltype(v) <: Number)
 function unwrap_categorical(values)
