@@ -80,17 +80,22 @@ AbstractPlotting.save("semi_grouped.svg", AbstractPlotting.current_scene()); not
 #
 # Different analyses are also possible, always with the same syntax:
 
-using AlgebraOfGraphics: smooth
+using AlgebraOfGraphics: smooth, density
 data(mpg) * cols * grp * (scat + smooth(span = 0.8)) |> draw
 AbstractPlotting.save("loess.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](loess.svg)
+
+data(mpg) * cols * density |> draw
+AbstractPlotting.save("density.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](density.svg)
 #
 # We can also add styling that only makes sense in one spec (e.g. `markersize`) by
 # multiplying them:
 #
 newstyle = style(markersize = :Cyl) * spec(markersize = (0.1, 5))
-data(mpg) * style(:Hwy, :Cty) * grp * (scat * newstyle + smooth(span = 0.8)) |> draw
+data(mpg) * cols * (scat * newstyle + smooth(span = 0.8)) |> draw
 AbstractPlotting.save("loess_markersize.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](loess_markersize.svg)
@@ -122,12 +127,10 @@ AbstractPlotting.save("functions.svg", AbstractPlotting.current_scene()); nothin
 
 # ![](functions.svg)
 
-import StatsMakie
 using Distributions
-mus = 1:4
-shapes = [6, 10]
-gs = InverseGaussian.(mus, shapes')
-dims() * style(fill(0..5), gs, color = dims(1), linestyle = dims(2)) |> draw
+IGpdf(μ, λ) = t -> pdf(InverseGaussian(μ, λ), t)
+pdfs = IGpdf.(1:4, [6 10])
+dims() * style(fill(0..5), pdfs, color = dims(1), linestyle = dims(2)) |> draw
 AbstractPlotting.save("distributions.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](distributions.svg)

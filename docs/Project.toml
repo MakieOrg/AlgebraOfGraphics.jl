@@ -6,7 +6,6 @@ Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Glob = "c27321d9-0574-5035-807b-f59d2c89b15c"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
-StatsMakie = "65254759-4cff-5aa5-8326-61ce017a8c70"
 
 [compat]
 Documenter = "0.24"
