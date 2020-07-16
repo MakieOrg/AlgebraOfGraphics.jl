@@ -7,10 +7,8 @@ using AlgebraOfGraphics: data,
                          positional,
                          keyword,
                          dims,
-                         extract_names,
                          run_pipeline
 
-using OrderedCollections: OrderedDict
 using CategoricalArrays: categorical
 using NamedDims
 using RDatasets: dataset

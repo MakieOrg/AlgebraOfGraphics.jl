@@ -1,12 +1,23 @@
 # tabular utils
 
-function mapcols(f, t)
-    cols = columns(t)
-    itr = (name => f(getcolumn(cols, name)) for name in columnnames(cols))
-    return OrderedDict{Symbol, AbstractVector}(itr)
+struct ColumnDict <: AbstractColumns
+    names::Vector{Symbol}
+    columns::Vector{AbstractVector}
 end
-coldict(t) = mapcols(identity, t)
-coldict(t, idxs) = mapcols(v -> view(v, idxs), t)
+
+Tables.columnnames(c::ColumnDict) = getfield(c, 1)
+Tables.getcolumn(c::ColumnDict, i::Int) = getfield(c, 2)[i]
+function Tables.getcolumn(c::ColumnDict, s::Symbol)
+    i::Int = findfirst(==(s), columnnames(c))
+    getcolumn(c, i)
+end
+
+function ColumnDict(t)
+    t_cols = columns(t)
+    names = collect(columnnames(t_cols))
+    cols = map(name -> getcolumn(t_cols, name), names)
+    return ColumnDict(names, cols)
+end
 
 # integer naming utils
 
@@ -40,9 +51,4 @@ function extract_names(d::Union{NamedTuple, Tuple})
     ns = map(get_name, d)
     vs = map(strip_name, d)
     return ns, vs
-end
-
-function extract_names(s::Style)
-    ns, vs = extract_names(s.value)
-    return ns, Style(s.context, vs)
 end

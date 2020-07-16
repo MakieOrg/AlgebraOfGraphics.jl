@@ -87,8 +87,8 @@ end
 
 # data context: integers and symbols are columns
 
-struct DataContext{T, NT, I<:AbstractVector{Int}} <: AbstractContext
-    data::T
+struct DataContext{NT, I<:AbstractVector{Int}} <: AbstractContext
+    data::ColumnDict
     pkeys::NT
     perm::I
 end
@@ -98,16 +98,13 @@ function DataContext(data)
     DataContext(data, NamedTuple(), axes(col, 1))
 end
 
-data(x) = DataContext(coldict(x))
+data(x) = DataContext(ColumnDict(x))
 
 iscategorical(v) = !(eltype(v) <: Number)
+# unwrap categorical vectors from the 0-dim array that contains them
 function unwrap_categorical(values)
-    pc = filter(keys(values)) do key
-        t = values[key]
-        iskw = tryparse(Int, String(key)) === nothing
-        iskw && ndims(t) == 0 && iscategorical(t[])
-    end
-    return (; zip(pc, map(key -> values[key][], pc))...)
+    iter = (k => v[] for (k, v) in pairs(values) if ndims(v) == 0 && iscategorical(v[]))
+    return (; iter...)
 end
 
 function refine_perm(perm, pc, n)
@@ -127,7 +124,7 @@ optimize_cols(v::Union{Tuple, NamedTuple}) = map(optimize_cols, v)
 function _merge(c::DataContext, s1::Style, s2::Style)
     data, pkeys, perm = c.data, c.pkeys, c.perm
     nt = map(val -> extract_columns(data, val), s2.value)
-    newpkeys = unwrap_categorical(nt)
+    newpkeys = unwrap_categorical(keyword(nt))
     @assert isempty(intersect(keys(pkeys), keys(newpkeys)))
     allpkeys = merge(pkeys, newpkeys)
     # unwrap from NamedDimsArray to perform the sorting
@@ -175,7 +172,7 @@ extract_columns(t, val) = fill(extract_column(t, val))
 using GeoInterface: AbstractMultiPolygon, AbstractFeatureCollection, coordinates, GeoInterface
 
 function data(c::AbstractFeatureCollection)
-    cols = OrderedDict{Symbol, AbstractVector}()
+    cols = Dict{Symbol, AbstractVector}()
     cols[:geometry] = Vector{Vector{Point2f0}}(undef, 0)
     for f in c.features
         geom = GeoInterface.geometry(f)
