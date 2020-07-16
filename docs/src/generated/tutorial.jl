@@ -5,24 +5,25 @@
 #
 # ## Basic building blocks
 #
-# The most important functions are `group`, `style`, and `spec`.
+# The most important functions are `style`, and `spec`.
 # `style` determines the mapping from data to plot. Its positional arguments correspond to
 # the `x`, `y` or `z` axes of the plot, whereas the keyword arguments correspond to plot
-# attributes that can vary continuously, such as `color` or `markersize`. `group`
-# determines the grouping of the style. The style is split according to the variables listed
-# in `group`, and then styled using a default palette. Finally `spec` can be used to
-# give style-independent specifications about the plot (plotting function or attributes).
+# attributes that can vary continuously or discretely, such as `color` or `markersize`.
+# The style is split according to the categorical attributes in it, and then styled using
+# a default palette.
+# Finally `spec` can be used to give style-independent specifications about the plot
+# (plotting function or attributes).
 #
-# `style`, `group`, and `spec` work in various context. In the following we will explore
+# `style` and `spec` work in various context. In the following we will explore
 # `DataContext`, which is introduced doing `data(df)` for any tabular style structure `df`.
 # In this context, `style` and `group` accept symbols and integers, which correspond to
 # columns of the data.
 #
 # ## Operations
 #
-# The outputs of `style`, `group`, `spec`, and `data` can be combined with `+` or `*`,
-# to generate a `Layers` object, which can then be plotted with a package that supports it
-# (so far MakieLayout).
+# The outputs of `style`, `spec`, and `data` can be combined with `+` or `*`,
+# to generate an `AlgebraicList` object, which can then be plotted using the
+# function `draw`. The actual drawing is done by AbstractPlotting.
 #
 # The operation `+` is used to create separate layer. `a + b` has as many layers as `la + lb`,
 # where `la` and `lb` are the number of layers in `a` and `b` respectively.
@@ -47,7 +48,7 @@ AbstractPlotting.save("scatter.svg", AbstractPlotting.current_scene()); nothing 
 
 # ![](scatter.svg)
 #
-# Now let's simply add `grp` to the pipeline style the color.
+# Now let's simply add `grp` to the pipeline to style the color.
 
 data(mpg) * grp * pipeline |> draw
 AbstractPlotting.save("grouped_scatter.svg", AbstractPlotting.current_scene()); nothing #hide
