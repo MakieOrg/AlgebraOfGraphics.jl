@@ -7,7 +7,6 @@ using AlgebraOfGraphics: data,
                          positional,
                          keyword,
                          dims,
-                         extract_names,
                          run_pipeline
 
 using CategoricalArrays: categorical

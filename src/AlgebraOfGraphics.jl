@@ -1,6 +1,6 @@
 module AlgebraOfGraphics
 
-using Tables: columns, getcolumn, columnnames
+using Tables: columns, getcolumn, columnnames, AbstractColumns, Tables
 using CategoricalArrays: categorical, cut, levelcode, refs, levels, CategoricalArray
 using Observables: AbstractObservable, Observable, to_value
 using OrderedCollections: OrderedDict
@@ -36,6 +36,7 @@ export data, dims, draw, spec, style
 export categorical, cut
 
 include("algebraic_list.jl")
+include("utils.jl")
 include("context.jl")
 include("specs.jl")
 include("scales.jl")
@@ -43,6 +44,5 @@ include("analysis/analysis.jl")
 include("analysis/smooth.jl")
 include("analysis/density.jl")
 include("draw.jl")
-include("utils.jl")
 
 end # module
