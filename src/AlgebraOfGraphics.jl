@@ -3,7 +3,6 @@ module AlgebraOfGraphics
 using Tables: columns, getcolumn, columnnames, AbstractColumns, Tables
 using CategoricalArrays: categorical, cut, levelcode, refs, levels, CategoricalArray
 using Observables: AbstractObservable, Observable, to_value
-using OrderedCollections: OrderedDict
 using NamedDims: NamedDimsArray, dimnames
 using StructArrays: GroupPerm, refine_perm!, StructArray
 using KernelDensity: kde

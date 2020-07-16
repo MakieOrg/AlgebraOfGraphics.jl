@@ -12,9 +12,26 @@ function somestring(s, t)
     isempty(s) ? string(t) : s
 end
 
+struct LegendSection
+    names::Vector{String}
+    plots::Vector{Vector{AbstractPlot}}
+end
+LegendSection() = LegendSection(String[], Vector{AbstractPlot}[])
+# Add the trace with name entry to the legend section
+function add_entry!(legendsection::LegendSection, entry::String, plot::AbstractPlot)
+    names, plots = legendsection.names, legendsection.plots
+    i = findfirst(==(entry), names)
+    if isnothing(i)
+        push!(names, entry)
+        push!(plots, [plot])
+    else
+        push!(plots[i], plot)
+    end
+end
+
 function create_legend(scene, legdict::AbstractDict)
-    plts_list = [collect(values(sublegdict)) for sublegdict in values(legdict)]
-    entries_list = [collect(keys(sublegdict)) for sublegdict in values(legdict)]
+    plts_list = [legendsection.plots for legendsection in values(legdict)]
+    entries_list = [legendsection.names for legendsection in values(legdict)]
     names = last.(keys(legdict))
     MakieLayout.LLegend(scene, plts_list, entries_list, names)
 end
@@ -48,7 +65,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     hidexdecorations!.(axs[1:end-1, :], grid = false)
     hideydecorations!.(axs[:, 2:end], grid = false)
 
-    legdict = Dict{Pair, Any}()
+    legend_dict = Dict{Pair, LegendSection}()
     level_dict = Dict{Symbol, Any}()
     for trace in speclist
         pkeys, style, options = trace.pkeys, trace.style, trace.options
@@ -68,15 +85,14 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             # here v will often be a NamedDimsArray, so we call `only` below
             val isa CategoricalArray && get!(level_dict, k, levels(val))
             if k ∉ (:layout_x, :layout_y)
-                sublegdict = get!(legdict, k => name, OrderedDict{String, Vector{AbstractPlot}}())
-                legtraces = get!(sublegdict, string(only(val)), AbstractPlot[])
-                push!(legtraces, current)
+                legendsection = get!(legend_dict, k => name, LegendSection())
+                add_entry!(legendsection, string(only(val)), current)
             end
         end
     end
-    if !isempty(legdict)
+    if !isempty(legend_dict)
         try
-            layout[1, 2] = create_legend(scene, legdict)
+            layout[1, 2] = create_legend(scene, legend_dict)
         catch e
             @warn "Automated legend was not possible due to $e"
         end

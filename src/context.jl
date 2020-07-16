@@ -172,7 +172,7 @@ extract_columns(t, val) = fill(extract_column(t, val))
 using GeoInterface: AbstractMultiPolygon, AbstractFeatureCollection, coordinates, GeoInterface
 
 function data(c::AbstractFeatureCollection)
-    cols = OrderedDict{Symbol, AbstractVector}()
+    cols = Dict{Symbol, AbstractVector}()
     cols[:geometry] = Vector{Vector{Point2f0}}(undef, 0)
     for f in c.features
         geom = GeoInterface.geometry(f)
