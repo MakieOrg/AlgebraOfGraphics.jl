@@ -116,12 +116,15 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     
     layout_x_levels = get(level_dict, :layout_x, nothing)
     layout_y_levels = get(level_dict, :layout_y, nothing)
-
+    
+    # Check if axis labels are spannable (i.e. the same across all panels)
+    spanned_xlab, spanned_ylab = spannable_xy_labels(facetlayout)
+    
     # faceting: hide x and y labels
     for i in 1:length(facetlayout.content)
         ax = facetlayout.content[i].content
-        ax.xlabelvisible[] &= isnothing(layout_x_levels)
-        ax.ylabelvisible[] &= isnothing(layout_y_levels)
+        ax.xlabelvisible[] &= isnothing(spanned_xlab)
+        ax.ylabelvisible[] &= isnothing(spanned_ylab)
     end
 
     if !isnothing(layout_x_levels)
@@ -146,7 +149,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         toppad = @lift($group_bottom_protrusion + $padx)
     
         xlabel = LText(scene,
-                       ax1.xlabel[],
+                       spanned_xlab,
                        padding = @lift((0, 0, 0, $toppad)))
         facetlayout[end, :, Bottom()] = xlabel
     end
@@ -173,7 +176,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         rightpad = @lift($group_left_protrusion + $pady)
     
         ylabel = LText(scene,
-                       ax1.ylabel[],
+                       spanned_ylab,
                        padding = @lift((0, $rightpad, 0, 0)),
                        rotation = π/2) 
         facetlayout[:, 1, Left()] = ylabel
@@ -181,6 +184,23 @@ function layoutplot!(scene, layout, ts::ElementOrList)
 
     return scene
 end
+
+function spannable_xy_labels(layout)
+    labs = map(layout.content) do _ax
+        ax = _ax.content
+        (x = ax.xlabel[], y = ax.ylabel[], empty = isemptyax(ax))
+    end |> StructArray
+    
+    unique_x_labs = unique(labs.x[.! labs.empty])
+    unique_y_labs = unique(labs.y[.! labs.empty])
+    
+    xlab = length(unique_x_labs) == 1 ? only(unique_x_labs) : nothing
+    ylab = length(unique_y_labs) == 1 ? only(unique_y_labs) : nothing
+    
+    (x = xlab, y = ylab)
+end
+
+isemptyax(ax) = length(ax.scene.plots) == 0
 
 function layoutplot(s; kwargs...)
     scene, layout = MakieLayout.layoutscene(; kwargs...)
