@@ -106,15 +106,15 @@ AbstractPlotting.save("loess_markersize.svg", AbstractPlotting.current_scene());
 # inform the layout.
 
 iris = dataset("datasets", "iris")
-cols = style([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
-grp = style(layout_x = dims(1), layout_y = dims(2), color = :Species)
+cols = style(:SepalLength, :SepalWidth)
+grp = style(layout_x = :Species)
 geom = spec(Scatter) + linear
 data(iris) * cols * grp * geom |> draw
 AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](layout.svg)
 #
-# ## Non tabular style
+# ## Non tabular style (slicing context)
 #
 # The framework is not specific to tables., but can be used in different contexts.
 # For instance, `dims()` introduces a context where each entry of the array corresponds
@@ -135,8 +135,6 @@ AbstractPlotting.save("distributions.svg", AbstractPlotting.current_scene()); no
 
 # ![](distributions.svg)
 #
-# ## Slicing context
-#
 # More generally, one can pass arguments to `dims` to implement the
 # "slices are series" approach.
 
@@ -146,3 +144,15 @@ s * grp * spec(Scatter) |> draw
 AbstractPlotting.save("arrays.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](arrays.svg)
+
+# This approach can be used in combination with the tabular context to work
+# with "wide" data, where grouping is done by column.
+
+iris = dataset("datasets", "iris")
+cols = style([:SepalLength, :SepalWidth], [:PetalLength :PetalWidth])
+grp = style(layout_x = dims(1), layout_y = dims(2), color = :Species)
+geom = spec(Scatter) + linear
+data(iris) * cols * grp * geom |> draw
+AbstractPlotting.save("layout_wide.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](layout_wide.svg)
