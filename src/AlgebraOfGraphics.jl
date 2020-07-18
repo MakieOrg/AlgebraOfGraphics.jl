@@ -42,6 +42,7 @@ include("scales.jl")
 include("analysis/analysis.jl")
 include("analysis/smooth.jl")
 include("analysis/density.jl")
+include("legend.jl")
 include("draw.jl")
 
 end # module
