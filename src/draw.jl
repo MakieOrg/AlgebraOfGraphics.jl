@@ -79,13 +79,13 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     layout_y_levels = get(level_dict, :layout_y, nothing)
     
     # Check if axis labels are spannable (i.e. the same across all panels)
-    spanned_xlab, spanned_ylab = spannable_xy_labels(facetlayout)
+    spanned = spannable_xy_labels(facetlayout)
     
     # faceting: hide x and y labels
     for i in 1:length(facetlayout.content)
         ax = facetlayout.content[i].content
-        ax.xlabelvisible[] &= isnothing(spanned_xlab)
-        ax.ylabelvisible[] &= isnothing(spanned_ylab)
+        ax.xlabelvisible[] &= isnothing(spanned.x.lab)
+        ax.ylabelvisible[] &= isnothing(spanned.y.lab)
     end
 
     if !isnothing(layout_x_levels)
@@ -106,11 +106,11 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             (MakieLayout.protrusionsobservable(ax) for ax in axs[end, :])...
         )
     
-        padx = Node(10.0)
+        padx = Node(spanned.x.pad)
         toppad = @lift($group_bottom_protrusion + $padx)
     
         xlabel = LText(scene,
-                       spanned_xlab,
+                       spanned.x.lab,
                        padding = @lift((0, 0, 0, $toppad)))
         facetlayout[end, :, Bottom()] = xlabel
     end
@@ -133,11 +133,11 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             (MakieLayout.protrusionsobservable(ax) for ax in axs[:, 1])...
         )
     
-        pady = Node(10.0)
+        pady = Node(spanned.y.pad)
         rightpad = @lift($group_left_protrusion + $pady)
     
         ylabel = LText(scene,
-                       spanned_ylab,
+                       spanned.y.lab,
                        padding = @lift((0, $rightpad, 0, 0)),
                        rotation = π/2) 
         facetlayout[:, 1, Left()] = ylabel
@@ -149,26 +149,41 @@ end
 function spannable_xy_labels(layout)
     labs = map(layout.content) do _ax
         ax = _ax.content
-        (x = ax.xlabel[], y = ax.ylabel[], empty = isemptyax(ax))
+        (x = ax.xlabel[], y = ax.ylabel[], 
+         xpad = ax.xlabelpadding[], ypad = ax.ylabelpadding[], empty = isemptyax(ax))
     end |> StructArray
     
     # if layout has multiple columns, check if xlabel is spannable
     if size(layout)[2] > 1
         unique_x_labs = unique(labs.x[.! labs.empty])
         xlab = length(unique_x_labs) == 1 ? only(unique_x_labs) : nothing
+        if !isnothing(xlab)
+            unique_x_pads = unique(labs.xpad[.! labs.empty])
+            xpad = only(unique_x_pads)
+        else
+            xpad = nothing
+        end  
     else
         xlab = nothing
+        xpad = nothing
     end
     
     # if layout has multiple rows, check if xlabel is spannable
     if size(layout)[1] > 1
         unique_y_labs = unique(labs.y[.! labs.empty])
         ylab = length(unique_y_labs) == 1 ? only(unique_y_labs) : nothing
+        if !isnothing(ylab)
+            unique_y_pads = unique(labs.ypad[.! labs.empty])
+            ypad = only(unique_y_pads)
+        else
+            ypad = nothing
+        end  
     else
         ylab = nothing
+        ypad = nothing
     end
         
-    (x = xlab, y = ylab)
+    (x = (lab=xlab, pad=xpad), y = (lab=ylab, pad=ypad))
 end
 
 isemptyax(ax) = length(ax.scene.plots) == 0
