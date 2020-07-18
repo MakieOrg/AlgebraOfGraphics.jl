@@ -79,6 +79,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
 
     legend = Legend()
     level_dict = Dict{Symbol, Any}()
+    encountered = Set()
     for trace in speclist
         pkeys, style, options = trace.pkeys, trace.style, trace.options
         P = plottype(trace)
@@ -95,12 +96,17 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             name = get_name(v)
             name == Symbol("") && (name = k) # make sure legend section has non empty title
             val = strip_name(v)
-            # here v will often be a NamedDimsArray, so we call `only` below
             val isa CategoricalArray && get!(level_dict, k, levels(val))
             if k ∉ (:layout_x, :layout_y)
                 legendsection = add_entry!(legend, string(k); title=string(name))
-                entry_traces = add_entry!(legendsection, string(only(val)))
-                push!(entry_traces, current)
+                # here `val` will often be a NamedDimsArray, so we call `only` below
+                entry = string(only(val))
+                entry_traces = add_entry!(legendsection, entry)
+                # make sure to write at most once on a legend entry per plot type
+                if (P, k, entry) ∉ encountered
+                    push!(entry_traces, current)
+                    push!(encountered, (P, k, entry))
+                end
             end
         end
     end
