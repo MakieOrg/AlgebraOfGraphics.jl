@@ -160,7 +160,7 @@ function spannable_xy_labels(layout)
         xlab = nothing
     end
     
-    # if layout has multiple row, check if xlabel is spannable
+    # if layout has multiple rows, check if xlabel is spannable
     if size(layout)[1] > 1
         unique_y_labs = unique(labs.y[.! labs.empty])
         ylab = length(unique_y_labs) == 1 ? only(unique_y_labs) : nothing
@@ -180,4 +180,3 @@ end
 layoutplot(; kwargs...) = t -> layoutplot(t; kwargs...)
 
 draw(args...; kwargs...) = layoutplot(args...; kwargs...)
-
