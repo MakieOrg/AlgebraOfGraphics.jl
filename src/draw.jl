@@ -152,12 +152,22 @@ function spannable_xy_labels(layout)
         (x = ax.xlabel[], y = ax.ylabel[], empty = isemptyax(ax))
     end |> StructArray
     
-    unique_x_labs = unique(labs.x[.! labs.empty])
-    unique_y_labs = unique(labs.y[.! labs.empty])
+    # if layout has multiple columns, check if xlabel is spannable
+    if size(layout)[2] > 1
+        unique_x_labs = unique(labs.x[.! labs.empty])
+        xlab = length(unique_x_labs) == 1 ? only(unique_x_labs) : nothing
+    else
+        xlab = nothing
+    end
     
-    xlab = length(unique_x_labs) == 1 ? only(unique_x_labs) : nothing
-    ylab = length(unique_y_labs) == 1 ? only(unique_y_labs) : nothing
-    
+    # if layout has multiple rows, check if xlabel is spannable
+    if size(layout)[1] > 1
+        unique_y_labs = unique(labs.y[.! labs.empty])
+        ylab = length(unique_y_labs) == 1 ? only(unique_y_labs) : nothing
+    else
+        ylab = nothing
+    end
+        
     (x = xlab, y = ylab)
 end
 
@@ -170,4 +180,3 @@ end
 layoutplot(; kwargs...) = t -> layoutplot(t; kwargs...)
 
 draw(args...; kwargs...) = layoutplot(args...; kwargs...)
-
