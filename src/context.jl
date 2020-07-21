@@ -101,9 +101,13 @@ end
 data(x) = DataContext(ColumnDict(x))
 
 iscategorical(v) = !(eltype(v) <: Number)
+
+iswrappedcategorical(::Any) = false
+iswrappedcategorical(v::AbstractArray{<:Any, 0}) = iscategorical(v[])
+
 # unwrap categorical vectors from the 0-dim array that contains them
 function unwrap_categorical(values)
-    iter = (k => v[] for (k, v) in pairs(values) if ndims(v) == 0 && iscategorical(v[]))
+    iter = (k => v[] for (k, v) in pairs(values) if iswrappedcategorical(v))
     return (; iter...)
 end
 
@@ -166,26 +170,3 @@ extract_column(t, nm::Union{Symbol, Int}) = extract_column(t, nm => identity)
 extract_columns(t, val::DimsSelector) = val
 extract_columns(t, val::Union{Tuple, AbstractArray}) = map(v -> extract_column(t, v), val)
 extract_columns(t, val) = fill(extract_column(t, val))
-
-# Geo context
-
-using GeoInterface: AbstractMultiPolygon, AbstractFeatureCollection, coordinates, GeoInterface
-
-function data(c::AbstractFeatureCollection)
-    cols = Dict{Symbol, AbstractVector}()
-    cols[:geometry] = Vector{Vector{Point2f0}}(undef, 0)
-    for f in c.features
-        geom = GeoInterface.geometry(f)
-        coords = geom isa AbstractMultiPolygon ? coordinates(geom) : [coordinates(geom)]
-        polies = [Point2f0.(first(c)) for c in coords]
-        append!(cols[:geometry], polies)
-        np = length(polies)
-        for (key, val) in pairs(GeoInterface.properties(f))
-            k = Symbol(key)
-            v = get(cols, k, Union{}[])
-            vs = fill(val, np)
-            cols[k] = val isa eltype(v) ? append!(v, vs) : vcat(v, vs)
-        end
-    end
-    return data(cols) * style(:geometry)
-end
