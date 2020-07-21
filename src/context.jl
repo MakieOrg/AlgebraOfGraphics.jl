@@ -101,9 +101,13 @@ end
 data(x) = DataContext(ColumnDict(x))
 
 iscategorical(v) = !(eltype(v) <: Number)
+
+iswrappedcategorical(::Any) = false
+iswrappedcategorical(v::AbstractArray{<:Any, 0}) = iscategorical(v[])
+
 # unwrap categorical vectors from the 0-dim array that contains them
 function unwrap_categorical(values)
-    iter = (k => v[] for (k, v) in pairs(values) if ndims(v) == 0 && iscategorical(v[]))
+    iter = (k => v[] for (k, v) in pairs(values) if iswrappedcategorical(v))
     return (; iter...)
 end
 
