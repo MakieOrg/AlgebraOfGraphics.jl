@@ -51,14 +51,14 @@ function add_facet_labels!(scene, axs, layout_levels;
     facetlayout[pos...] = label
 end
 
-# Return the unique value of the collection if it exists, `nothing` otherwise.
+# Return the only unique value of the collection if it exists, `nothing` otherwise.
 function unique_value(labels)
     l = first(labels)
     return all(==(l), labels) ? l : nothing
 end
 
 function spannable_xy_labels(axs)
-    nonempty_axs = filter(ax -> length(ax.scene.plots) > 0, axs)
+    nonempty_axs = filter(ax -> !isempty(ax.scene.plots), axs)
     xlabels = [ax.xlabel[] for ax in nonempty_axs]
     ylabels = [ax.ylabel[] for ax in nonempty_axs]
     
@@ -132,7 +132,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     layout_x_levels = get(level_dict, :layout_x, nothing)
     layout_y_levels = get(level_dict, :layout_y, nothing)
     
-    # Check if axis labels are spannable (i.e. the same across all panels)
+    # Check if axis labels are spannable (i.e., the same across all panels)
     spanned_xlab, spanned_ylab = spannable_xy_labels(axs)
     
     # faceting: hide x and y labels
