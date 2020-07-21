@@ -8,7 +8,7 @@ end
 function set_axis_labels!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
         s = string(nm)
-        if !isempty(s) && hasproperty(ax, prop) && getproperty(ax, prop)[] == " "
+        if hasproperty(ax, prop) && getproperty(ax, prop)[] == " "
             getproperty(ax, prop)[] = s
         end
     end
@@ -49,7 +49,6 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         set_axis_labels!(axs[y_pos, x_pos], names)
         for (k, v) in pairs(pkeys)
             name = get_name(v)
-            name == Symbol("") && (name = k) # make sure legend section has non empty title
             val = strip_name(v)
             val isa CategoricalArray && get!(level_dict, k, levels(val))
             if k ∉ (:layout_x, :layout_y)
@@ -73,13 +72,11 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         end
     end
     
-    ax1 = axs[end,1]
-    
     layout_x_levels = get(level_dict, :layout_x, nothing)
     layout_y_levels = get(level_dict, :layout_y, nothing)
     
     # Check if axis labels are spannable (i.e. the same across all panels)
-    spanned_xlab, spanned_ylab = spannable_xy_labels(facetlayout)
+    spanned_xlab, spanned_ylab = spannable_xy_labels(axs)
     
     # faceting: hide x and y labels
     for i in 1:length(facetlayout.content)
@@ -146,32 +143,25 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     return scene
 end
 
-function spannable_xy_labels(layout)
-    labs = map(layout.content) do _ax
-        ax = _ax.content
-        (x = ax.xlabel[], y = ax.ylabel[], empty = isemptyax(ax))
-    end |> StructArray
-    
-    # if layout has multiple columns, check if xlabel is spannable
-    if size(layout)[2] > 1
-        unique_x_labs = unique(labs.x[.! labs.empty])
-        xlab = length(unique_x_labs) == 1 ? only(unique_x_labs) : nothing
-    else
-        xlab = nothing
-    end
-    
-    # if layout has multiple rows, check if xlabel is spannable
-    if size(layout)[1] > 1
-        unique_y_labs = unique(labs.y[.! labs.empty])
-        ylab = length(unique_y_labs) == 1 ? only(unique_y_labs) : nothing
-    else
-        ylab = nothing
-    end
-        
-    (x = xlab, y = ylab)
+# Return the unique value of the collection if it exists, `nothing` otherwise.
+function unique_value(labels)
+    l = first(labels)
+    return all(==(l), labels) ? l : nothing
 end
 
-isemptyax(ax) = length(ax.scene.plots) == 0
+function spannable_xy_labels(axs)
+    nonempty_axs = filter(ax -> length(ax.scene.plots) > 0, axs)
+    xlabels = [ax.xlabel[] for ax in nonempty_axs]
+    ylabels = [ax.ylabel[] for ax in nonempty_axs]
+    
+    # if layout has multiple columns, check if `xlabel` is spannable
+    xlabel = size(axs, 2) > 1 ? unique_value(xlabels) : nothing
+
+    # if layout has multiple rows, check if `ylabel` is spannable
+    ylabel = size(axs, 1) > 1 ? unique_value(ylabels) : nothing
+
+    return xlabel, ylabel
+end
 
 function layoutplot(s; kwargs...)
     scene, layout = MakieLayout.layoutscene(; kwargs...)
