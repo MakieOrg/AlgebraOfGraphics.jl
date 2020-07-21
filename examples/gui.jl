@@ -1,4 +1,4 @@
-# Example UI to look at a dataset
+# Example GUI to look at a dataset
 
 using AbstractPlotting
 using AbstractPlotting.MakieLayout
@@ -14,7 +14,7 @@ function clean!(g::GridLayout)
     foreach(GridLayoutBase.remove_from_gridlayout!, g.content)
 end
 
-function ui!(scene, layout, df)
+function gui!(scene, layout, df)
     table = data(df)
 
     plot_options = [("none", nothing), ("scatter", Scatter), ("lines", Lines), ("barplot", BarPlot)]
@@ -78,9 +78,9 @@ function ui!(scene, layout, df)
     return scene
 end
 
-function ui(df; kwargs...)
+function gui(df; kwargs...)
     scene, layout = MakieLayout.layoutscene(; kwargs...)
-    return ui!(scene, layout, df)
+    return gui!(scene, layout, df)
 end
 
 # Try it on iris dataset
@@ -89,4 +89,4 @@ using RDatasets: dataset
 
 iris = dataset("datasets", "iris")
 
-display(ui(iris))
+display(gui(iris))
