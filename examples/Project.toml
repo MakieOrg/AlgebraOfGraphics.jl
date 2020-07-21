@@ -1,0 +1,4 @@
+[deps]
+AbstractPlotting = "537997a7-5e4e-5d89-9595-2241ea00577e"
+GridLayoutBase = "3955a311-db13-416c-9275-1d80ed98e5e9"
+Observables = "510215fc-4207-5dde-b226-833fc4488ee2"

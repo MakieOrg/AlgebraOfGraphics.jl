@@ -1,15 +1,22 @@
-# Default UI to look at a dataset
+# Example UI to look at a dataset
 
-using AbstractPlotting: Scatter, Lines, BarPlot
+using AbstractPlotting
+using AbstractPlotting.MakieLayout
+using GLMakie
+using GridLayoutBase
+using Observables
 
-function clean!(axs::GridLayout)
+using AlgebraOfGraphics
+using AlgebraOfGraphics: linear, smooth, density, AlgebraicList, layoutplot!
+
+function clean!(g::GridLayout)
     foreach(delete!, Any, g)
-    foreach(remove_from_gridlayout!, g.content)
-    while ncols(axs) > 1
-        deletecol!(axs, ncols(axs))
+    foreach(GridLayoutBase.remove_from_gridlayout!, g.content)
+    while ncols(g) > 1
+        deletecol!(g, ncols(g))
     end
-    while nrows(axs) > 1
-        deletecol!(axs, ncols(axs))
+    while nrows(g) > 1
+        deletecol!(g, ncols(g))
     end
 end
 
@@ -30,7 +37,7 @@ function ui!(scene, layout, df)
     layout[2, 1] = LText(scene, "analysis", textsize=30)
     layout[2, 2] = analysis_menu
 
-    axis_options = vcat([("None", nothing)], [(s, Symbol(s)) for s in columnnames(table)])
+    axis_options = vcat([("None", nothing)], [(s, Symbol(s)) for s in propertynames(table.data)])
 
     styles = ["x", "y", "color", "marker", "markersize", "linestyle", "layout_x", "layout_y"]
     style_menus = [LMenu(scene, options=axis_options, textsize=30, width=500) for style in styles]
@@ -80,3 +87,11 @@ function ui(df; kwargs...)
     scene, layout = MakieLayout.layoutscene(; kwargs...)
     return ui!(scene, layout, df)
 end
+
+# Try it on iris dataset
+
+using RDatasets: dataset
+
+iris = dataset("datasets", "iris")
+
+display(ui(iris))
