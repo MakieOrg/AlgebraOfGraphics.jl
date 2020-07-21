@@ -14,6 +14,63 @@ function set_axis_labels!(ax, names)
     end
 end
 
+function add_facet_labels!(scene, axs, layout_levels;
+    facetlayout, axis, spanned_label)
+
+    isnothing(layout_levels) && return
+
+    @assert size(axs) == size(facetlayout)
+
+    Ny, Nx = size(axs)
+
+    positive_rotation = axis == :x ? 0.0 : π/2
+    # Facet labels
+    lxl = string.(layout_levels)
+    for i in eachindex(lxl)
+        pos = axis == :x ? (1, i, Top()) : (i, Nx, Right())
+        facetlayout[pos...] = LRect(
+            scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
+        ) 
+        facetlayout[pos...] = LText(scene, lxl[i], rotation = -positive_rotation)
+    end
+
+    # Shared xlabel
+    itr = axis == :x ? axs[end, :] : axs[:, 1]
+    group_protrusion = lift(
+        (xs...) -> maximum(x -> axis == :x ? x.bottom : x.left, xs),
+        (MakieLayout.protrusionsobservable(ax) for ax in itr)...
+    )
+
+    single_padding = @lift($group_protrusion + 10)
+    padding = lift(single_padding) do val
+        axis == :x ? (0, 0, 0, val) : (0, val, 0, 0)
+    end
+
+    label = LText(scene, spanned_label, padding = padding, rotation = positive_rotation)
+    pos = axis == :x ? (Ny, :, Bottom()) : (:, 1, Left())
+    facetlayout[pos...] = label
+end
+
+# Return the unique value of the collection if it exists, `nothing` otherwise.
+function unique_value(labels)
+    l = first(labels)
+    return all(==(l), labels) ? l : nothing
+end
+
+function spannable_xy_labels(axs)
+    nonempty_axs = filter(ax -> length(ax.scene.plots) > 0, axs)
+    xlabels = [ax.xlabel[] for ax in nonempty_axs]
+    ylabels = [ax.ylabel[] for ax in nonempty_axs]
+    
+    # if layout has multiple columns, check if `xlabel` is spannable
+    xlabel = size(axs, 2) > 1 ? unique_value(xlabels) : nothing
+
+    # if layout has multiple rows, check if `ylabel` is spannable
+    ylabel = size(axs, 1) > 1 ? unique_value(ylabels) : nothing
+
+    return xlabel, ylabel
+end
+
 function layoutplot!(scene, layout, ts::ElementOrList)
     facetlayout = layout[1, 1] = GridLayout()
     speclist = run_pipeline(ts)
@@ -84,80 +141,13 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         ax.ylabelvisible[] &= isnothing(spanned_ylab)
     end
 
-    if !isnothing(layout_x_levels)
-        # Facet labels
-        lxl = string.(layout_x_levels)
-        @assert length(lxl) == Nx
-        for i in 1:Nx
-            facetlayout[1, i, Top()] = LRect(
-                scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
-            ) 
-            facetlayout[1, i, Top()] = LText(scene, lxl[i])
-        end
-    
-        # Shared xlabel
-        group_bottom_protrusion = lift(
-            (xs...) -> maximum(y -> y.bottom, xs),
-            (MakieLayout.protrusionsobservable(ax) for ax in axs[end, :])...
-        )
-    
-        padx = Node(10.0)
-        toppad = @lift($group_bottom_protrusion + $padx)
-    
-        xlabel = LText(scene,
-                       spanned_xlab,
-                       padding = @lift((0, 0, 0, $toppad)))
-        facetlayout[end, :, Bottom()] = xlabel
-    end
-    
-    if !isnothing(layout_y_levels)
-        # Facet labels
-        lyl = string.(layout_y_levels)
-        @assert length(lyl) == Ny
-        for i in 1:Ny
-            facetlayout[i, end, Right()] = LRect(
-                scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
-            ) 
-            facetlayout[i, end, Right()] = LText(scene, lyl[i], rotation = -π/2)
-        end
-    
-        # Shared ylabel
-        group_left_protrusion = lift(
-            (xs...) -> maximum(y -> y.left, xs),
-            (MakieLayout.protrusionsobservable(ax) for ax in axs[:, 1])...
-        )
-    
-        pady = Node(10.0)
-        rightpad = @lift($group_left_protrusion + $pady)
-    
-        ylabel = LText(scene,
-                       spanned_ylab,
-                       padding = @lift((0, $rightpad, 0, 0)),
-                       rotation = π/2) 
-        facetlayout[:, 1, Left()] = ylabel
-    end    
+    add_facet_labels!(scene, axs, layout_x_levels;
+        facetlayout = facetlayout, axis = :x, spanned_label = spanned_xlab)
+
+    add_facet_labels!(scene, axs, layout_y_levels;
+        facetlayout = facetlayout, axis = :y, spanned_label = spanned_ylab)
 
     return scene
-end
-
-# Return the unique value of the collection if it exists, `nothing` otherwise.
-function unique_value(labels)
-    l = first(labels)
-    return all(==(l), labels) ? l : nothing
-end
-
-function spannable_xy_labels(axs)
-    nonempty_axs = filter(ax -> length(ax.scene.plots) > 0, axs)
-    xlabels = [ax.xlabel[] for ax in nonempty_axs]
-    ylabels = [ax.ylabel[] for ax in nonempty_axs]
-    
-    # if layout has multiple columns, check if `xlabel` is spannable
-    xlabel = size(axs, 2) > 1 ? unique_value(xlabels) : nothing
-
-    # if layout has multiple rows, check if `ylabel` is spannable
-    ylabel = size(axs, 1) > 1 ? unique_value(ylabels) : nothing
-
-    return xlabel, ylabel
 end
 
 function layoutplot(s; kwargs...)
