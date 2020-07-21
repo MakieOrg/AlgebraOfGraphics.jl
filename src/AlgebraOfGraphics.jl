@@ -20,6 +20,7 @@ using AbstractPlotting: Point2f0,
 using AbstractPlotting.MakieLayout: LAxis,
                                     LText,
                                     LRect,
+                                    GridLayout,
                                     linkxaxes!,
                                     linkyaxes!,
                                     hidexdecorations!,
@@ -29,13 +30,6 @@ using AbstractPlotting.MakieLayout: LAxis,
                                     Left,
                                     Right,
                                     MakieLayout
-
-using GridLayoutBase: remove_from_gridlayout!,
-                      GridLayout,
-                      ncols,
-                      nrows,
-                      deletecol!,
-                      deleterow!
 
 export data, dims, draw, spec, style
 export categorical, cut
@@ -50,6 +44,5 @@ include("analysis/smooth.jl")
 include("analysis/density.jl")
 include("legend.jl")
 include("draw.jl")
-include("ui.jl")
 
 end # module

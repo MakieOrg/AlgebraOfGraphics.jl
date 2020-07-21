@@ -1,5 +1,7 @@
 # Default UI to look at a dataset
 
+using AbstractPlotting: Scatter, Lines, BarPlot
+
 function clean!(axs::GridLayout)
     foreach(delete!, Any, g)
     foreach(remove_from_gridlayout!, g.content)
@@ -28,7 +30,7 @@ function ui!(scene, layout, df)
     layout[2, 1] = LText(scene, "analysis", textsize=30)
     layout[2, 2] = analysis_menu
 
-    axis_options = vcat([("None", nothing)], [(s, Symbol(s)) for s in names(iris)])
+    axis_options = vcat([("None", nothing)], [(s, Symbol(s)) for s in columnnames(table)])
 
     styles = ["x", "y", "color", "marker", "markersize", "linestyle", "layout_x", "layout_y"]
     style_menus = [LMenu(scene, options=axis_options, textsize=30, width=500) for style in styles]
