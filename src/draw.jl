@@ -79,8 +79,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     spanned_xlab, spanned_ylab = spannable_xy_labels(axs)
     
     # faceting: hide x and y labels
-    for i in 1:length(facetlayout.content)
-        ax = facetlayout.content[i].content
+    for ax in axs
         ax.xlabelvisible[] &= isnothing(spanned_xlab)
         ax.ylabelvisible[] &= isnothing(spanned_ylab)
     end
@@ -90,11 +89,10 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         lxl = string.(layout_x_levels)
         @assert length(lxl) == Nx
         for i in 1:Nx
-            text = LText(scene, lxl[i])
             facetlayout[1, i, Top()] = LRect(
                 scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
             ) 
-            facetlayout[1, i, Top()] = text
+            facetlayout[1, i, Top()] = LText(scene, lxl[i])
         end
     
         # Shared xlabel
@@ -117,11 +115,10 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         lyl = string.(layout_y_levels)
         @assert length(lyl) == Ny
         for i in 1:Ny
-            text = LText(scene, lyl[i], rotation = -π/2)
             facetlayout[i, end, Right()] = LRect(
                 scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
             ) 
-            facetlayout[i, end, Right()] = text
+            facetlayout[i, end, Right()] = LText(scene, lyl[i], rotation = -π/2)
         end
     
         # Shared ylabel
