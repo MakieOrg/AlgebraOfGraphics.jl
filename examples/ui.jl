@@ -12,12 +12,6 @@ using AlgebraOfGraphics: linear, smooth, density, AlgebraicList, layoutplot!
 function clean!(g::GridLayout)
     foreach(delete!, Any, g)
     foreach(GridLayoutBase.remove_from_gridlayout!, g.content)
-    while ncols(g) > 1
-        deletecol!(g, ncols(g))
-    end
-    while nrows(g) > 1
-        deletecol!(g, ncols(g))
-    end
 end
 
 function ui!(scene, layout, df)
@@ -54,7 +48,8 @@ function ui!(scene, layout, df)
     layout[1, 3] = plot_button
     layout[1, 4] = add_and_plot_button
 
-    axs = layout[1:2+N, 5] = GridLayout()
+    axs = layout[1:2+N, 5] = GridLayout(1, 2) # for plot and legend
+    colsize!(axs, 2, Relative(1/5)) # make legend a fourth of the plot's width
 
     state = AlgebraicList()
 
