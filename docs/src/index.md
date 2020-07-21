@@ -8,4 +8,7 @@ This package is not yet released, but can be installed typing
 ```
 in the Pkg REPL.
 
-See [Tutorial](@ref) for examples on how to use it. Devdocs are coming up next.
+See [Tutorial](@ref) for examples on how to use it.
+[Internals](@ref) gives more details about the internal workings of AlgebraOfGraphics.
+
+If you prefer a more visual, interactive workflow, an example GUI is available in the [examples](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/tree/master/examples) folder.
