@@ -43,9 +43,9 @@ function get_extrema(specs::AbstractVector{<:AbstractElement})
     d = Dict{Symbol, NTuple{2, Float64}}()
     for spec in specs
         style = spec.style
-        for (k, val) in pairs(style.value) # 
+        for (k, val) in pairs(style.value)
             a, b = get(d, k, (Inf, - Inf))
-            a′, b′ = val isa AbstractVector ? extrema(val) : (Inf, -Inf)
+            a′, b′ = val isa AbstractVector{<:Number} ? extrema(val) : (Inf, -Inf)
             d[k] = (min(a, a′), max(b, b′))
         end
     end
