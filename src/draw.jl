@@ -14,6 +14,14 @@ function set_axis_labels!(ax, names)
     end
 end
 
+function set_axis_ticks!(ax, ticks)
+    for (tick, prop) in zip(ticks, (:xticks, :yticks, :zticks))
+        if hasproperty(ax, prop) && getproperty(ax, prop)[] == automatic
+            getproperty(ax, prop)[] = tick
+        end
+    end
+end
+
 function add_facet_labels!(scene, axs, layout_levels;
     facetlayout, axis, spanned_label)
 
@@ -71,6 +79,14 @@ function spannable_xy_labels(axs)
     return xlabel, ylabel
 end
 
+function replace_categorical(v)
+    labels = string.(levels(v))
+    rg = axes(labels, 1)
+    return levelcode.(v), (rg, labels)
+end
+
+replace_categorical(v::AbstractArray{<:Number}) = (v, automatic)
+
 function layoutplot!(scene, layout, ts::ElementOrList)
     facetlayout = layout[1, 1] = GridLayout()
     speclist = run_pipeline(ts)
@@ -102,8 +118,12 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         apply_alpha_transparency!(attrs)
         x_pos = pop!(attrs, :layout_x, 1) |> to_value |> rank
         y_pos = pop!(attrs, :layout_y, 1) |> to_value |> rank
-        current = AbstractPlotting.plot!(axs[y_pos, x_pos], P, attrs, args...)
-        set_axis_labels!(axs[y_pos, x_pos], names)
+        ax = axs[y_pos, x_pos]
+        args_and_ticks = map(replace_categorical, args)
+        args, ticks = map(first, args_and_ticks), map(last, args_and_ticks)
+        current = AbstractPlotting.plot!(ax, P, attrs, args...)
+        set_axis_labels!(ax, names)
+        set_axis_ticks!(ax, ticks)
         for (k, v) in pairs(pkeys)
             name = get_name(v)
             val = strip_name(v)
