@@ -128,7 +128,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             name = get_name(v)
             val = strip_name(v)
             val isa CategoricalArray && get!(level_dict, k, levels(val))
-            if k ∉ (:layout_x, :layout_y)
+            if k ∉ (:layout_x, :layout_y, :side) # position modifiers do not take part in the legend
                 legendsection = add_entry!(legend, string(k); title=string(name))
                 # here `val` will often be a NamedDimsArray, so we call `only` below
                 entry = string(only(val))
