@@ -90,10 +90,12 @@ replace_categorical(v::AbstractArray{<:Number}) = (v, automatic)
 function layoutplot!(scene, layout, ts::ElementOrList)
     facetlayout = layout[1, 1] = GridLayout()
     speclist = run_pipeline(ts)
-    Nx, Ny = 1, 1
+    Nx, Ny, Ndodge = 1, 1, 1
     for spec in speclist
         Nx = max(Nx, rank(to_value(get(spec.options, :layout_x, Nx))))
         Ny = max(Ny, rank(to_value(get(spec.options, :layout_y, Ny))))
+        # dodge may need to be done separately per each subplot
+        Ndodge = max(Ndodge, rank(to_value(get(spec.options, :dodge, Ndodge))))
     end
     axs = facetlayout[1:Ny, 1:Nx] = [LAxis(scene) for i in 1:Ny, j in 1:Nx]
     for i in 1:Nx
@@ -121,6 +123,13 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         ax = axs[y_pos, x_pos]
         args_and_ticks = map(replace_categorical, args)
         args, ticks = map(first, args_and_ticks), map(last, args_and_ticks)
+        dodge = pop!(attrs, :dodge, nothing) |> to_value
+        if !isnothing(dodge)
+            width = pop!(attrs, :width, automatic) |> to_value
+            arg, w = compute_dodge(first(args), rank(dodge), Ndodge, width=width)
+            args = (arg, Base.tail(args)...)
+            attrs.width = w
+        end
         current = AbstractPlotting.plot!(ax, P, attrs, args...)
         set_axis_labels!(ax, names)
         set_axis_ticks!(ax, ticks)
@@ -128,7 +137,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             name = get_name(v)
             val = strip_name(v)
             val isa CategoricalArray && get!(level_dict, k, levels(val))
-            if k ∉ (:layout_x, :layout_y, :side) # position modifiers do not take part in the legend
+            if k ∉ (:layout_x, :layout_y, :side, :dodge) # position modifiers do not take part in the legend
                 legendsection = add_entry!(legend, string(k); title=string(name))
                 # here `val` will often be a NamedDimsArray, so we call `only` below
                 entry = string(only(val))
