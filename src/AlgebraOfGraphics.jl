@@ -4,7 +4,7 @@ using Tables: columns, getcolumn, columnnames, AbstractColumns, Tables
 using CategoricalArrays: categorical, cut, levelcode, refs, levels, CategoricalArray
 using Observables: AbstractObservable, Observable, to_value
 using NamedDims: NamedDimsArray, dimnames
-using StructArrays: GroupPerm, refine_perm!, StructArray
+using StructArrays: GroupPerm, refine_perm!, uniquesorted, fieldarrays, StructArray
 using KernelDensity: kde
 import GLM, Loess
 
@@ -43,6 +43,7 @@ include("scales.jl")
 include("analysis/analysis.jl")
 include("analysis/smooth.jl")
 include("analysis/density.jl")
+include("analysis/frequency.jl")
 include("legend.jl")
 include("dodge.jl")
 include("draw.jl")
