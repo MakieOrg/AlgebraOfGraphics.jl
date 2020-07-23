@@ -8,7 +8,7 @@ struct NamedSparseArray{S<:Tuple, V<:AbstractVector}
     end
 end
 
-# this logic may be moved to AbstractPlotting
+# Turn named sparse array into a dense one, while remembering the labels.
 function dense(kv::NamedSparseArray)
     keys, values = kv.keys, kv.values
     labels = map(collect∘uniquesorted, keys)
