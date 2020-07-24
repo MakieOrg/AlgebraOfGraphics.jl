@@ -6,6 +6,7 @@ using Observables: AbstractObservable, Observable, to_value
 using NamedDims: NamedDimsArray, dimnames
 using StructArrays: GroupPerm, refine_perm!, uniquesorted, fieldarrays, StructArray
 using KernelDensity: kde
+using StatsBase: fit, Histogram, weights, AbstractWeights, normalize, sturges, histrange
 import GLM, Loess
 
 using AbstractPlotting: Point2f0,
@@ -13,6 +14,7 @@ using AbstractPlotting: Point2f0,
                         AbstractPlot,
                         Node,
                         automatic,
+                        Automatic,
                         lift,
                         @lift,
                         RGBAf0,
@@ -44,6 +46,7 @@ include("analysis/analysis.jl")
 include("analysis/smooth.jl")
 include("analysis/density.jl")
 include("analysis/frequency.jl")
+include("analysis/histogram.jl")
 include("legend.jl")
 include("dodge.jl")
 include("draw.jl")

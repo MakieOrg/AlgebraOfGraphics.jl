@@ -46,14 +46,17 @@ function expand(sp::Spec{T}) where {T}
     return foldl((ls, an) -> apply(an, ls), analyses, init=list)
 end
 
+global_options(f, d::AlgebraicList) = NamedTuple()
+
 # default fallback to apply a callable to a vector of key => value pairs
 # if customized, it must return a vector of key => value pairs
-function apply(f, d)
+function apply(f, d::AlgebraicList)
+    global_kwargs = global_options(f, d)
     v = map(parent(d)) do layer
         analyses, pkeys, style, options = layer.analyses, layer.pkeys, layer.style, layer.options
         T = plottype(layer)
         args, kwargs = split(style.value)
-        res = f(args...; kwargs...) * Spec{T}(analyses=analyses, options=options, pkeys=pkeys)
+        res = f(args...; global_kwargs..., kwargs...) * Spec{T}(analyses=analyses, options=options, pkeys=pkeys)
         return parent(layers(res))
     end
     return AlgebraicList(reduce(vcat, v))

@@ -113,6 +113,15 @@ data(iris) * cols * grp * geom |> draw
 AbstractPlotting.save("layout.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](layout.svg)
+
+iris = dataset("datasets", "iris")
+cols = style(:SepalLength)
+grp = style(layout_x = :Species)
+geom = AlgebraOfGraphics.histogram
+data(iris) * cols * grp * geom |> draw
+AbstractPlotting.save("hist.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](hist.svg)
 #
 # ## Non tabular style (slicing context)
 #
