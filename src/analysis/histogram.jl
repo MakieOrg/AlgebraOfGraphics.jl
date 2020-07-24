@@ -8,18 +8,33 @@ end
 to_weights(v) = weights(v)
 to_weights(v::AbstractWeights) = v
 
-function compute_edges(extrema, bins::Tuple{Vararg{Integer}}, closed)
-    map(extrema, bins) do (min, max), n
+function trim(range, min, max, closed)
+    if closed == :left
+        i1 = searchsortedlast(range, min)
+        i2 = searchsortedfirst(range, nextfloat(max))
+    else
+        i1 = searchsortedlast(range, prevfloat(min))
+        i2 = searchsortedfirst(range, max)
+    end
+    return range[i1:i2]
+end
+
+function compute_edges(data, extrema, bins::Tuple{Vararg{Integer}}, closed)
+    ranges = map(extrema, bins) do (min, max), n
         histrange(min, max, n, closed)
     end
+    # trim axis
+    map(ranges, data) do range, d
+        trim(range, Base.extrema(d)..., closed)
+    end
 end
-compute_edges(extrema, bins::Tuple{Vararg{AbstractArray}}, closed) = bins
+compute_edges(data, extrema, bins::Tuple{Vararg{AbstractArray}}, closed) = bins
 
 function _histogram(data...; bins = sturges(length(data[1])), wts = automatic,
     normalization = :none, extrema = map(extrema, data), closed = :left)
 
     bins_tuple = bins isa Tuple ? bins : map(_ -> bins, data)
-    edges = compute_edges(extrema, bins_tuple, closed)
+    edges = compute_edges(data, extrema, bins_tuple, closed)
     weights = wts === automatic ? () : (to_weights(wts),)
     h = fit(Histogram, data, weights..., edges)
     hn = normalize(h, mode = normalization)
