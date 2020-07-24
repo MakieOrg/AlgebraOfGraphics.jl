@@ -48,7 +48,7 @@ function remove_duplicates(legend)
     sections = legend.sections
     titles = getproperty.(sections, :title)
     # check if there are duplicate titles
-    unique_inds = unique_indices(titles)
+    unique_inds = unique_indices(titles; keep = " ")
     has_duplicates = length(unique_inds) < length(titles)
     # if so: remove duplicates, generate new names
     if has_duplicates
@@ -68,3 +68,10 @@ function remove_duplicates(legend)
 end
 
 unique_indices(x) = findfirst.(isequal.(unique(x)), [x])
+
+function unique_indices(x; keep)
+    unique_inds = unique_indices(x)
+    inds_keep = findall(==(keep), x)
+    sort!(unique!([unique_inds; inds_keep]))
+end
+
