@@ -35,4 +35,9 @@ function _frequency(args...)
     return style(labels..., values) * spec(plottypes[length(labels)])
 end
 
+"""
+    frequency(data...)
+
+Compute a frequency table of the arguments.
+"""
 const frequency = Analysis(_frequency)

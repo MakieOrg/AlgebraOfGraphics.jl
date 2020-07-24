@@ -14,6 +14,7 @@ makedocs(
          pages = Any[
                      "index.md",
                      "generated/tutorial.md",
+                     "analyses.md",
                      "generated/internals.md",
                     ]
         )

@@ -6,3 +6,5 @@
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaPlots.github.io/AlgebraOfGraphics.jl/dev)
 
 Define an algebra of graphics based on a few simple building blocks that can be combined using `+` and `*`. Still somewhat experimental, may break often.
+
+Analyses rely on [StatsBase.jl](https://github.com/JuliaStats/StatsBase.jl), [Loess.jl](https://github.com/JuliaStats/Loess.jl), [KernelDensity.jl](https://github.com/JuliaStats/KernelDensity.jl), and [GLM.jl](https://github.com/JuliaStats/GLM.jl). Some of their documentation is copied here.
