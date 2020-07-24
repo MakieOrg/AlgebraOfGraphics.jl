@@ -33,8 +33,17 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
     end
 end
 
+"""
+    linear(x, y; wts = similar(x, 0), interval = length(wts) > 0 ? nothing : :confidence)
+
+Compute a linear fit of `y ~ 1 + x`. Weighted data is supported via the keyword `wts`.
+Use `interval` to specify what type of interval the shaded band should represent.
+Valid values of interval are `:confidence` delimiting the uncertainty of the predicted
+relationship, and `:prediction` delimiting estimated bounds for new data points.
+"""
 const linear = Analysis(_linear)
 
+# TODO: multidimensional case as a heatmap or surface plot
 function _smooth(x, y; npoints = 100, kwargs...)
     min, max = extrema(x)
     min < max || return AlgebraicList()
@@ -44,5 +53,11 @@ function _smooth(x, y; npoints = 100, kwargs...)
     return spec(:Lines) * style(us, vs)
 end
 
-const smooth = Analysis(_smooth)
+"""
+    smooth(x, y, span=0.75, degreee=2)
 
+Fit a loess model. `span` is the degree of smoothing, typically in `[0,1]`.
+Smaller values result in smaller local context in fitting. `degree` is the polynomial
+degree used in the loess model.
+"""
+const smooth = Analysis(_smooth)

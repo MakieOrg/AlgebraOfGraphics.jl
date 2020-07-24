@@ -29,4 +29,21 @@ function _density(datax, datay; xlims = (-Inf, Inf), ylims = (-Inf, Inf), trim =
     return spec(:Heatmap) * style(x, y, z)
 end
 
+"""
+    density(data...; trim = false, boundary, npoints, kernel, bandwidth)
+
+Fit a kernel density estimation of `data`. Only 1D and 2D are supported so far.
+The optional keyword arguments are
+* `boundary`: the lower and upper limits of the kde as a tuple. Due to the
+  fourier transforms used internally, there should be sufficient spacing to
+  prevent wrap-around at the boundaries.
+* `npoints`: the number of interpolation points to use. The function uses
+  fast Fourier transforms (FFTs) internally, so for optimal efficiency this
+  should be a power of 2 (default = 2048).
+* `kernel`: the distributional family from
+  [Distributions.jl](https://github.com/JuliaStats/Distributions.jl) to use as
+  the kernel (default = `Normal`). To add your own kernel, extend the internal
+  `kernel_dist` function.
+* `bandwidth`: the bandwidth of the kernel. Default is to use Silverman's rule.
+"""
 const density = Analysis(_density)
