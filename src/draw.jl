@@ -79,13 +79,14 @@ function spannable_xy_labels(axs)
     return xlabel, ylabel
 end
 
-function replace_categorical(v)
+function replace_categorical(v::AbstractArray)
     labels = string.(levels(v))
     rg = axes(labels, 1)
     return levelcode.(v), (rg, labels)
 end
 
 replace_categorical(v::AbstractArray{<:Number}) = (v, automatic)
+replace_categorical(v::Any) = (v, automatic)
 
 function layoutplot!(scene, layout, ts::ElementOrList)
     facetlayout = layout[1, 1] = GridLayout()
