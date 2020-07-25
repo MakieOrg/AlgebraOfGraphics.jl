@@ -70,8 +70,7 @@ end
 unique_indices(x) = findfirst.(isequal.(unique(x)), [x])
 
 function unique_indices(x; keep)
-    unique_inds = unique_indices(x)
+    first_inds = indexin(x, x)
     inds_keep = findall(==(keep), x)
     sort!(unique!([unique_inds; inds_keep]))
 end
-
