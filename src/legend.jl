@@ -70,5 +70,5 @@ end
 function unique_indices(x; keep)
     first_inds = indexin(x, x)
     inds_keep = findall(==(keep), x)
-    sort!(unique!([unique_inds; inds_keep]))
+    sort!(union!(inds_keep, first_inds))
 end
