@@ -67,8 +67,6 @@ function remove_duplicates(legend)
     end
 end
 
-unique_indices(x) = findfirst.(isequal.(unique(x)), [x])
-
 function unique_indices(x; keep)
     first_inds = indexin(x, x)
     inds_keep = findall(==(keep), x)
