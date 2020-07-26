@@ -34,6 +34,7 @@ function add_entry!(legend::Legend, entry::String; title::String="")
 end
 
 function create_legend(scene, legend::Legend)
+    legend = remove_duplicates(legend)
     sections = legend.sections
     MakieLayout.LLegend(
         scene,
@@ -41,4 +42,26 @@ function create_legend(scene, legend::Legend)
         getproperty.(sections, :names),
         getproperty.(sections, :title)
     )
+end
+
+function remove_duplicates(legend)
+    sections = legend.sections
+    titles = getproperty.(sections, :title)
+    # check if there are duplicate titles
+    unique_inds = unique_indices(titles; keep = " ")
+    has_duplicates = length(unique_inds) < length(titles)
+    # if so: remove duplicates, generate new names
+    if has_duplicates
+        sections_new = sections[unique_inds]
+        names_new = legend.names[unique_inds]
+        return Legend(names_new, sections_new)
+    else
+        return legend
+    end
+end
+
+function unique_indices(x; keep)
+    first_inds = indexin(x, x)
+    inds_keep = findall(==(keep), x)
+    sort!(union!(inds_keep, first_inds))
 end
