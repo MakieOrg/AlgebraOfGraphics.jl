@@ -54,7 +54,6 @@ function remove_duplicates(legend)
     if has_duplicates
         sections_new = sections[unique_inds]
         names_new = legend.names[unique_inds]
-            
         return Legend(names_new, sections_new)
     else
         return legend
