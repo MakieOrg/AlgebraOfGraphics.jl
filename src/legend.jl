@@ -53,14 +53,8 @@ function remove_duplicates(legend)
     # if so: remove duplicates, generate new names
     if has_duplicates
         sections_new = sections[unique_inds]
-    
-        names_new = map(unique_inds) do i
-            title = titles[i]
-            duplicate_inds = titles .== title
-            # ["var1", "var2"] becomes ["var1_var2"]
-            name = reduce((s,t) -> s * "_" * t, legend.names[duplicate_inds])
-        end
-        
+        names_new = legend.names[unique_inds]
+            
         return Legend(names_new, sections_new)
     else
         return legend
