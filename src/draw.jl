@@ -37,9 +37,11 @@ function add_facet_labels!(scene, axs, layout_levels;
     for i in eachindex(lxl)
         pos = axis == :x ? (1, i, Top()) : (i, Nx, Right())
         facetlayout[pos...] = LRect(
-            scene, color = RGBAf0(0, 0, 0, 0.2), strokevisible=false
+            scene, color = :gray85, strokevisible = true
         ) 
-        facetlayout[pos...] = LText(scene, lxl[i], rotation = -positive_rotation)
+        facetlayout[pos...] = LText(scene, lxl[i],
+            rotation = -positive_rotation, padding = (3, 3, 3, 3)
+        )
     end
 
     # Shared xlabel
