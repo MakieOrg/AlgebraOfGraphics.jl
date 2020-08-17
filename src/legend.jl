@@ -40,7 +40,8 @@ function create_legend(scene, legend::Legend)
         scene,
         getproperty.(sections, :plots),
         getproperty.(sections, :names),
-        getproperty.(sections, :title)
+        # LLegend needs `nothing` to remove the space for a missing title
+        [t == " " ? nothing : t for t in getproperty.(sections, :title)]
     )
 end
 
