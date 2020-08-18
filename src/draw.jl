@@ -109,6 +109,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     hideydecorations!.(axs[:, 2:end], grid = false)
     
     for_colormap = []
+    colorname = nothing
     
     legend = Legend()
     level_dict = Dict{Symbol, Any}()
@@ -119,6 +120,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         P isa Symbol && (P = getproperty(AbstractPlotting, P))
         args, kwargs = split(options)
         names, args = extract_names(args)
+        kwnames, _ = extract_names(kwargs)
         attrs = Attributes(kwargs)
         apply_alpha_transparency!(attrs)
         x_pos = pop!(attrs, :layout_x, 1) |> to_value |> rank
@@ -136,6 +138,11 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         current = AbstractPlotting.plot!(ax, P, attrs, args...)
         if hasproperty(style.value, :color)
             push!(for_colormap, current)
+            if isnothing(colorname)
+                colorname = kwnames.color
+            else
+                @assert colorname == kwnames.color
+            end
         end
         set_axis_labels!(ax, names)
         set_axis_ticks!(ax, ticks)
@@ -165,7 +172,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     end
     if length(for_colormap) > 0
         T = typeof(for_colormap[1])
-        layout[1,end+1] = MakieLayout.LColorbar(scene, T[for_colormap...], width=30)
+        layout[1,end+1] = MakieLayout.LColorbar(scene, T[for_colormap...], width=30, label = string(colorname))
     end
     
     layout_x_levels = get(level_dict, :layout_x, nothing)
