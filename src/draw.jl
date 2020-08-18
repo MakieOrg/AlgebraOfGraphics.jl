@@ -107,7 +107,9 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     end
     hidexdecorations!.(axs[1:end-1, :], grid = false)
     hideydecorations!.(axs[:, 2:end], grid = false)
-
+    
+    for_colormap = []
+    
     legend = Legend()
     level_dict = Dict{Symbol, Any}()
     encountered = Set()
@@ -132,6 +134,9 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             attrs.width = w
         end
         current = AbstractPlotting.plot!(ax, P, attrs, args...)
+        if hasproperty(style.value, :color)
+            push!(for_colormap, current)
+        end
         set_axis_labels!(ax, names)
         set_axis_ticks!(ax, ticks)
         for (k, v) in pairs(pkeys)
@@ -153,10 +158,14 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     end
     if !isempty(legend.sections)
         try
-            layout[1, 2] = create_legend(scene, legend)
+            layout[1, end+1] = create_legend(scene, legend)
         catch e
             @warn "Automated legend was not possible due to $e"
         end
+    end
+    if length(for_colormap) > 0
+        T = typeof(for_colormap[1])
+        layout[1,end+1] = MakieLayout.LColorbar(scene, T[for_colormap...], width=30)
     end
     
     layout_x_levels = get(level_dict, :layout_x, nothing)
