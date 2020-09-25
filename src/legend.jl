@@ -33,11 +33,10 @@ function add_entry!(legend::Legend, entry::String; title::String="")
     return add_entry!(names, sections, entry; default=LegendSection(title))
 end
 
-function create_legend(scene, legend::Legend)
+function create_entrygroups(legend::Legend)
     legend = remove_duplicates(legend)
     sections = legend.sections
-    MakieLayout.LLegend(
-        scene,
+    create_entrygroups(
         getproperty.(sections, :plots),
         getproperty.(sections, :names),
         # LLegend needs `nothing` to remove the space for a missing title
@@ -66,3 +65,31 @@ function unique_indices(x; keep)
     inds_keep = findall(==(keep), x)
     sort!(union!(inds_keep, first_inds))
 end
+
+using AbstractPlotting.MakieLayout: Optional, LegendEntry, EntryGroup
+function create_entrygroups(contents::AbstractArray,
+    labels::AbstractArray{String},
+    title::Optional{String} = nothing)
+    
+    if length(contents) != length(labels)
+        error("Number of elements not equal: $(length(contents)) content elements and $(length(labels)) labels.")
+    end
+
+    entries = [LegendEntry(label, content) for (content, label) in zip(contents, labels)]
+    entrygroups = Vector{EntryGroup}([(title, entries)])
+end
+
+function create_entrygroups(contentgroups::AbstractArray{<:AbstractArray},
+    labelgroups::AbstractArray{<:AbstractArray},
+    titles::AbstractArray{<:Optional{String}})
+
+    if !(length(titles) == length(contentgroups) == length(labelgroups))
+    error("Number of elements not equal: $(length(titles)) titles,     $(length(contentgroups)) content groups and $(length(labelgroups)) label     groups.")
+    end
+
+    entries = [[LegendEntry(l, pg) for (l, pg) in zip(labelgroup, contentgroup)]
+        for (labelgroup, contentgroup) in zip(labelgroups, contentgroups)]
+
+    entrygroups = Vector{EntryGroup}([(t, en) for (t, en) in zip(titles, entries)])
+end
+
