@@ -1,4 +1,6 @@
-function AbstractPlotting.MakieLayout.LColorbar(parent::Scene, plots::Vector{<: AbstractPlot}; kwargs...)
+import AbstractPlotting.MakieLayout.LColorbar
+
+function AbstractPlotting.MakieLayout.LColorbar(parent, plots::Vector{<: AbstractPlot}; kwargs...)
     colormap = plots[1].colormap
     # compute colorrange
     min = minimum(p.colorrange[][1] for p in plots)

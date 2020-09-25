@@ -49,6 +49,7 @@ include("analysis/frequency.jl")
 include("analysis/histogram.jl")
 include("legend.jl")
 include("dodge.jl")
+include("colorbar.jl")
 include("draw.jl")
 
 end # module
