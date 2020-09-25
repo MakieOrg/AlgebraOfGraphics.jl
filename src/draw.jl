@@ -165,17 +165,24 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             end
         end
     end
+    
+    legend_layout = layout[1, end+1] = GridLayout(tellheight = false)
+    
     if !isempty(legend.sections)
         try
-            layout[1, end+1] = create_legend(scene, legend)
+            leg = legend_layout[end+1, 1] = create_legend(scene, legend)
+            leg.framevisible[] = false
         catch e
             @warn "Automated legend was not possible due to $e"
         end
     end
     if length(for_colormap) > 0
         T = typeof(for_colormap[1])
-        layout[1,end+1] = MakieLayout.LColorbar(scene, T[for_colormap...], width=30, label = string(colorname))
+        cbar = legend_layout[end+1, 1] = MakieLayout.LColorbar(scene, T[for_colormap...], width=30, height=120)
+        legend_layout[end, 1, Top()] = LText(scene, string(colorname), padding = (10,10,10,10))
     end
+    
+    trim!(legend_layout)
     
     layout_x_levels = get(level_dict, :layout_x, nothing)
     layout_y_levels = get(level_dict, :layout_y, nothing)
