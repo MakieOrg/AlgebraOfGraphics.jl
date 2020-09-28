@@ -100,7 +100,7 @@ end
 
 data(x) = DataContext(ColumnDict(x))
 
-iscategorical(v) = !(eltype(v) <: Number)
+iscategorical(v) = !(eltype(v) <: Union{Number,Geometry})
 
 iswrappedcategorical(::Any) = false
 iswrappedcategorical(v::AbstractArray{<:Any, 0}) = iscategorical(v[])

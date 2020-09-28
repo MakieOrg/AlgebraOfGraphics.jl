@@ -89,13 +89,8 @@ end
 
 import GeometryBasics 
 const Geometry = Union{GeometryBasics.AbstractGeometry, GeometryBasics.MultiPolygon}
-using CategoricalArrays: CategoricalValue
 
-function replace_categorical(v::AbstractArray{<: CategoricalValue{<: Geometry}})
-    return get.(v), automatic
-end
-
-replace_categorical(v::AbstractArray{<:Number}) = (v, automatic)
+replace_categorical(v::AbstractArray{<:Union{Number, Geometry}}) = (v, automatic)
 replace_categorical(v::Any) = (v, automatic)
 
 function layoutplot!(scene, layout, ts::ElementOrList)
