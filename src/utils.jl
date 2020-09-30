@@ -43,7 +43,7 @@ keyword(ps::NamedTuple) = last(split(ps))
 # naming utils
 
 get_name(v::NamedDimsArray) = dimnames(v)[1]
-strip_name(v::NamedDimsArray) = parent(v)
+strip_name(v::NamedDimsArray) = unname(v)
 get_name(v) = Symbol(" ")
 strip_name(v) = v
 
