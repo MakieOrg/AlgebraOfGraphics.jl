@@ -33,13 +33,13 @@ function gui!(scene, layout, df)
 
     axis_options = vcat([("None", nothing)], [(s, Symbol(s)) for s in propertynames(table.data)])
 
-    binds = ["x", "y", "color", "marker", "markersize", "linebind", "layout_x", "layout_y"]
-    bind_menus = [LMenu(scene, options=axis_options, textsize=30, width=500) for bind in binds]
-    N = length(binds)
+    mappings = ["x", "y", "color", "marker", "markersize", "linemapping", "layout_x", "layout_y"]
+    mapping_menus = [LMenu(scene, options=axis_options, textsize=30, width=500) for mapping in mappings]
+    N = length(mappings)
 
     for i in 1:N
-        layout[2+i, 1] = LText(scene, binds[i], textsize=30)
-        layout[2+i, 2] = bind_menus[i]
+        layout[2+i, 1] = LText(scene, mappings[i], textsize=30)
+        layout[2+i, 2] = mapping_menus[i]
     end
 
     plot_button = LButton(scene, label="Plot", textsize=30)
@@ -59,10 +59,10 @@ function gui!(scene, layout, df)
         isnothing(T) || (acc *= visual(T))
         an = analysis_menu.selection[]
         isnothing(an) || (acc *= an)
-        for (st, st_menu) in zip(binds, bind_menus)
+        for (st, st_menu) in zip(mappings, mapping_menus)
             sym = st === "x" ? Symbol("1") : st === "y" ? Symbol("2") : Symbol(st)
             val = st_menu.selection[]
-            isnothing(val) || (acc *= bind(; sym => val))
+            isnothing(val) || (acc *= mapping(; sym => val))
         end
         clean!(axs)
         state += acc
