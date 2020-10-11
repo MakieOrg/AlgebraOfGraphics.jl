@@ -1,4 +1,4 @@
-function hist2visual(h::Histogram{<:Any, N}) where N
+function hist2spec(h::Histogram{<:Any, N}) where N
     ptype = [:BarPlot, :Heatmap, :Volume][N]
     f(edges) = edges[1:end-1] .+ diff(edges)./2
     kwargs = N == 1 ? (; width = step(h.edges[1])) : NamedTuple()
@@ -38,7 +38,7 @@ function _histogram(data...; bins = sturges(length(data[1])), wts = automatic,
     weights = wts === automatic ? () : (to_weights(wts),)
     h = fit(Histogram, data, weights..., edges)
     hn = normalize(h, mode = normalization)
-    return hist2visual(hn)
+    return hist2spec(hn)
 end
 
 """

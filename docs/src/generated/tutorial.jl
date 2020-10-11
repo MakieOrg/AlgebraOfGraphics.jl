@@ -1,27 +1,27 @@
 # # Tutorial
 #
 # Here we will see what are the basic building blocks of AlgebraOfGraphics, and how to
-# combine them to create complex plots based on tables or other bind formats.
+# combine them to create complex plots based on tables or other formats.
 #
 # ## Basic building blocks
 #
-# The most important functions are `bind`, and `spec`.
+# The most important functions are `bind`, and `visual`.
 # `bind` determines the mapping from data to plot. Its positional arguments correspond to
 # the `x`, `y` or `z` axes of the plot, whereas the keyword arguments correspond to plot
 # attributes that can vary continuously or discretely, such as `color` or `markersize`.
-# The bind is split according to the categorical attributes in it, and then bindd using
-# a default palette.
-# Finally `spec` can be used to give bind-independent specifications about the plot
+# Variables in `bind`  are split according to the categorical attributes in it, and then converted
+# to plot attributes using a default palette.
+# Finally `visual` can be used to give data-independent visual information about the plot
 # (plotting function or attributes).
 #
-# `bind` and `spec` work in various context. In the following we will explore
+# `bind` and `visual` work in various context. In the following we will explore
 # `DataContext`, which is introduced doing `data(df)` for any tabular bind structure `df`.
-# In this context, `bind` and `group` accept symbols and integers, which correspond to
+# In this context, `bind` accepts symbols and integers, which correspond to
 # columns of the data.
 #
 # ## Operations
 #
-# The outputs of `bind`, `spec`, and `data` can be combined with `+` or `*`,
+# The outputs of `bind`, `visual`, and `data` can be combined with `+` or `*`,
 # to generate an `AlgebraicList` object, which can then be plotted using the
 # function `draw`. The actual drawing is done by AbstractPlotting.
 #
@@ -69,7 +69,7 @@ AbstractPlotting.save("grouped_linear.svg", AbstractPlotting.current_scene()); n
 
 # ![](grouped_linear.svg)
 # This is a more complex example, where we split the scatter plot,
-# but do the linear regression with all the bind. Moreover, we pass weights to `linear`
+# but do the linear regression with all the data. Moreover, we pass weights to `linear`
 # to compute the regression line with weighted least squares.
 
 different_grouping = grp * scat + linear * bind(wts=:Hwy)
@@ -91,7 +91,7 @@ AbstractPlotting.save("density.svg", AbstractPlotting.current_scene()); nothing 
 
 # ![](density.svg)
 #
-# We can also add styling that only makes sense in one spec (e.g. `markersize`) by
+# We can also add visual information that only makes sense in one recipe (e.g. `markersize`) by
 # multiplying them:
 #
 newbind = bind(markersize = :Cyl) * visual(markersize = (0.1, 5))
@@ -125,7 +125,7 @@ AbstractPlotting.save("hist.svg", AbstractPlotting.current_scene()); nothing #hi
 #
 # ## Non tabular bind (slicing context)
 #
-# The framework is not specific to tables., but can be used in different contexts.
+# The framework is not specific to tables, but can be used in different contexts.
 # For instance, `dims()` introduces a context where each entry of the array corresponds
 # to a trace.
 
