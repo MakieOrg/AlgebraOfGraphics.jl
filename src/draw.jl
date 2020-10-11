@@ -87,7 +87,10 @@ function replace_categorical(v::AbstractArray)
     return levelcode.(v), (rg, labels)
 end
 
-replace_categorical(v::AbstractArray{<:Number}) = (v, automatic)
+import GeometryBasics 
+const Geometry = Union{GeometryBasics.AbstractGeometry, GeometryBasics.MultiPolygon}
+
+replace_categorical(v::AbstractArray{<:Union{Number, Geometry}}) = (v, automatic)
 replace_categorical(v::Any) = (v, automatic)
 
 function layoutplot!(scene, layout, ts::ElementOrList)
@@ -189,3 +192,4 @@ end
 layoutplot(; kwargs...) = t -> layoutplot(t; kwargs...)
 
 draw(args...; kwargs...) = layoutplot(args...; kwargs...)
+
