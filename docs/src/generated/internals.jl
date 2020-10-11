@@ -25,7 +25,7 @@ pairs(t * st)
 d = dims(1) * mapping(rand(5, 3, 2), rand(5, 3), color = dims(2))
 pairs(d)
 
-# ## Combining mappings and contexts together
+# ## Combining mappings and contexts
 #
 # All outputs of `mapping`, `data`, and `dims` inherit can be combined using `+`
 # (adding a new layer), or `*` (merge information in existing layer).
