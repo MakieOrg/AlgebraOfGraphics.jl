@@ -9,7 +9,7 @@ function _density(data; xlims = (-Inf, Inf), trim = false, kwargs...)
             xmin ≤ x[i] ≤ xmax || (y[i] = NaN)
         end
     end
-    return spec(:Lines) * style(x, y)
+    return visual(:Lines) * bind(x, y)
 end
 
 function _density(datax, datay; xlims = (-Inf, Inf), ylims = (-Inf, Inf), trim = false, kwargs...)
@@ -26,7 +26,7 @@ function _density(datax, datay; xlims = (-Inf, Inf), ylims = (-Inf, Inf), trim =
             xmin ≤ x[i] ≤ xmax && ymin ≤ y[i] ≤ ymax || (z[i] = NaN)
         end
     end
-    return spec(:Heatmap) * style(x, y, z)
+    return visual(:Heatmap) * bind(x, y, z)
 end
 
 """

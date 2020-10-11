@@ -32,7 +32,7 @@ function _frequency(args...)
     namedarray =  NamedSparseArray(fieldarrays(keys)..., values)
     labels, values = dense(namedarray)
     plottypes = [:BarPlot, :Heatmap, :Volume]
-    return style(labels..., values) * spec(plottypes[length(labels)])
+    return bind(labels..., values) * visual(plottypes[length(labels)])
 end
 
 """

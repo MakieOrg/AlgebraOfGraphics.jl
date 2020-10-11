@@ -42,8 +42,8 @@ end
 function get_extrema(specs::AbstractVector{<:AbstractElement})
     d = Dict{Symbol, NTuple{2, Float64}}()
     for spec in specs
-        style = spec.style
-        for (k, val) in pairs(style.value)
+        bind = spec.bind
+        for (k, val) in pairs(bind.value)
             a, b = get(d, k, (Inf, - Inf))
             a′, b′ = val isa AbstractVector{<:Number} ? extrema(val) : (Inf, -Inf)
             d[k] = (min(a, a′), max(b, b′))
@@ -79,12 +79,12 @@ function computescales(spec::Spec{T}, unique_dict, extrema_dict) where {T}
     discrete_scales = map(DiscreteScale, merge(scales[], spec.options, l))
     continuous_scales = map(ContinuousScale, spec.options)
     disc_options = applytheme(discrete_scales, spec.pkeys, unique_dict)
-    cont_options = applytheme(continuous_scales, spec.style, extrema_dict)
+    cont_options = applytheme(continuous_scales, spec.bind, extrema_dict)
     options = foldl(merge, (spec.options, disc_options, cont_options))
-    return Spec{T}(pkeys=spec.pkeys, style=spec.style, options=options)
+    return Spec{T}(pkeys=spec.pkeys, bind=spec.bind, options=options)
 end
 
-applytheme(scales, style::Style, metadata) = applytheme(scales, style.value, metadata)
+applytheme(scales, bind::Bind, metadata) = applytheme(scales, bind.value, metadata)
 function applytheme(scales, grp::NamedTuple{names}, metadata) where names
     res = map(names) do key
         haskey(scales, key) ? get_attr(scales[key], grp[key], metadata[key]) : grp[key]

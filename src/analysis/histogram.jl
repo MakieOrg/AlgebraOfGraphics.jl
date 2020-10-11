@@ -1,8 +1,8 @@
-function hist2spec(h::Histogram{<:Any, N}) where N
+function hist2visual(h::Histogram{<:Any, N}) where N
     ptype = [:BarPlot, :Heatmap, :Volume][N]
     f(edges) = edges[1:end-1] .+ diff(edges)./2
     kwargs = N == 1 ? (; width = step(h.edges[1])) : NamedTuple()
-    return style(map(f, h.edges)..., Float64.(h.weights)) * spec(ptype; kwargs...)
+    return bind(map(f, h.edges)..., Float64.(h.weights)) * visual(ptype; kwargs...)
 end
 
 to_weights(v) = weights(v)
@@ -38,7 +38,7 @@ function _histogram(data...; bins = sturges(length(data[1])), wts = automatic,
     weights = wts === automatic ? () : (to_weights(wts),)
     h = fit(Histogram, data, weights..., edges)
     hn = normalize(h, mode = normalization)
-    return hist2spec(hn)
+    return hist2visual(hn)
 end
 
 """
@@ -65,7 +65,7 @@ function global_options(::typeof(histogram), d::AlgebraicList)
         min(min1, min2), max(max1, max2)
     end
     extr = mapfoldl(combine, d) do spec
-        map(extrema, positional(spec.style.value))
+        map(extrema, positional(spec.bind.value))
     end
     return (extrema = extr,)
 end

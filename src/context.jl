@@ -1,41 +1,43 @@
 abstract type AbstractContext <: AbstractElement end
 
-struct Style <: AbstractElement
+struct Bind <: AbstractElement
     context::Union{AbstractContext, Nothing}
     value::NamedTuple
 end
-Style(s::NamedTuple=NamedTuple()) = Style(nothing, s)
-Style(c::AbstractContext) = Style(c, NamedTuple())
-Style(s::Style) = s
+Bind(s::NamedTuple=NamedTuple()) = Bind(nothing, s)
+Bind(c::AbstractContext) = Bind(c, NamedTuple())
+Bind(s::Bind) = s
 
-function Base.show(io::IO, s::Style)
-    print(io, "Style with entries ")
+function Base.show(io::IO, s::Bind)
+    print(io, "Bind with entries ")
     show(io, keys(s.value))
 end
 
-style(args...; kwargs...) = Style(namedtuple(args...; kwargs...))
+bind(args...; kwargs...) = Bind(namedtuple(args...; kwargs...))
 
-function Base.:*(s1::Union{Style, AbstractContext}, s2::Union{Style, AbstractContext})
-    merge(Style(s1), Style(s2))
+@deprecate style(args...; kwargs...) visual(args...; kwargs...)
+
+function Base.:*(s1::Union{Bind, AbstractContext}, s2::Union{Bind, AbstractContext})
+    merge(Bind(s1), Bind(s2))
 end
 
-function Base.merge(s1::Style, s2::Style)
+function Base.merge(s1::Bind, s2::Bind)
     c1, c2 = s1.context, s2.context
     c = c2 === nothing ? c1 : c2
     if c !== c1 && !isempty(s1.value)
-        @warn "Changing context on a non empty style"
+        @warn "Changing context on a non empty bind"
     end
     return _merge(c, s1, s2)
 end
-Base.pairs(s::Style) = _pairs(s.context, s)
+Base.pairs(s::Bind) = _pairs(s.context, s)
 
 # interface and fallbacks
 
-# Must return a Style
-_merge(c, s1::Style, s2::Style) = Style(c, merge(s1.value, s2.value))
+# Must return a Bind
+_merge(c, s1::Bind, s2::Bind) = Bind(c, merge(s1.value, s2.value))
 
-# Must return a vector of NamedTuple => Style pairs
-_pairs(c, s::Style) = [NamedTuple() => s]
+# Must return a vector of NamedTuple => Bind pairs
+_pairs(c, s::Bind) = [NamedTuple() => s]
 
 ## Dims context
 
@@ -60,7 +62,7 @@ function adjust(val::DimsSelector, c, nts)
 end
 
 # make it a pair list
-function _pairs(::DimsSelector{0}, s::Style)
+function _pairs(::DimsSelector{0}, s::Bind)
     nts = aos(s.value)
     ps = map(CartesianIndices(nts)) do c
         nt = nts[c]
@@ -73,16 +75,16 @@ function _pairs(::DimsSelector{0}, s::Style)
         end
         ds = (; zip(dskeys, dsvalues)...)
         nds = Base.structdiff(nt, ds)
-        return ds => Style(nds)
+        return ds => Bind(nds)
     end
     return vec(ps)
 end
 
-function _pairs(d::DimsSelector, s::Style)
+function _pairs(d::DimsSelector, s::Bind)
     value = map(s.value) do v
         v isa AbstractArray ? mapslices(x -> [x], v; dims=d.dims) : v
     end
-    return pairs(Style(dims(), value))
+    return pairs(Bind(dims(), value))
 end
 
 # data context: integers and symbols are columns
@@ -125,7 +127,7 @@ end
 optimize_cols(v::NamedDimsArray) = refs(parent(v))
 optimize_cols(v::Union{Tuple, NamedTuple}) = map(optimize_cols, v)
 
-function _merge(c::DataContext, s1::Style, s2::Style)
+function _merge(c::DataContext, s1::Bind, s2::Bind)
     data, pkeys, perm = c.data, c.pkeys, c.perm
     nt = map(val -> extract_columns(data, val), s2.value)
     newpkeys = unwrap_categorical(keyword(nt))
@@ -134,12 +136,12 @@ function _merge(c::DataContext, s1::Style, s2::Style)
     # unwrap from NamedDimsArray to perform the sorting
     allperm = refine_perm(perm, optimize_cols(allpkeys), length(pkeys))
     ctx = DataContext(data, allpkeys, allperm)
-    return Style(ctx, merge(s1.value, Base.structdiff(nt, newpkeys)))
+    return Bind(ctx, merge(s1.value, Base.structdiff(nt, newpkeys)))
 end
 
-function _pairs(c::DataContext, s::Style)
+function _pairs(c::DataContext, s::Bind)
     data, pkeys, perm = c.data, c.pkeys, c.perm
-    isempty(pkeys) && return pairs(Style(dims(), s.value))
+    isempty(pkeys) && return pairs(Bind(dims(), s.value))
     # unwrap for sorting computations
     itr = GroupPerm(StructArray(optimize_cols(pkeys)), perm)
     sa = StructArray(pkeys)
@@ -151,7 +153,7 @@ function _pairs(c::DataContext, s::Style)
         cols = map(s.value) do val
             extract_views(val, perm[idxs])
         end
-        [merge(k, p) => v for (p, v) in pairs(Style(dims(), cols))]
+        [merge(k, p) => v for (p, v) in pairs(Bind(dims(), cols))]
     end
     return reduce(vcat, nestedpairs)
 end

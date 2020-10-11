@@ -114,7 +114,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
     level_dict = Dict{Symbol, Any}()
     encountered = Set()
     for trace in speclist
-        pkeys, style, options = trace.pkeys, trace.style, trace.options
+        pkeys, bind, options = trace.pkeys, trace.bind, trace.options
         P = plottype(trace)
         P isa Symbol && (P = getproperty(AbstractPlotting, P))
         args, kwargs = split(options)

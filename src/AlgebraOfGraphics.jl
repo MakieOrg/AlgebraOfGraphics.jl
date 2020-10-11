@@ -36,7 +36,7 @@ using AbstractPlotting.MakieLayout: LAxis,
                                     Right,
                                     MakieLayout
 
-export data, dims, draw, spec, style
+export data, dims, draw, spec, bind
 export categorical, cut
 
 include("algebraic_list.jl")
