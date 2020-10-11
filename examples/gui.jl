@@ -33,7 +33,7 @@ function gui!(scene, layout, df)
 
     axis_options = vcat([("None", nothing)], [(s, Symbol(s)) for s in propertynames(table.data)])
 
-    mappings = ["x", "y", "color", "marker", "markersize", "linemapping", "layout_x", "layout_y"]
+    mappings = ["x", "y", "color", "marker", "markersize", "linestyle", "layout_x", "layout_y"]
     mapping_menus = [LMenu(scene, options=axis_options, textsize=30, width=500) for mapping in mappings]
     N = length(mappings)
 

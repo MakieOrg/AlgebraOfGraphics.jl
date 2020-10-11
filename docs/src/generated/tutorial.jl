@@ -6,7 +6,7 @@
 # ## Basic building blocks
 #
 # The most important functions are `mapping`, and `visual`.
-# `mapping` determines the mapping from data to plot. Its positional arguments correspond to
+# `mapping` determines the mappings from data to plot. Its positional arguments correspond to
 # the `x`, `y` or `z` axes of the plot, whereas the keyword arguments correspond to plot
 # attributes that can vary continuously or discretely, such as `color` or `markersize`.
 # Variables in `mapping`  are split according to the categorical attributes in it, and then converted
@@ -48,7 +48,7 @@ AbstractPlotting.save("scatter.svg", AbstractPlotting.current_scene()); nothing 
 
 # ![](scatter.svg)
 #
-# Now let's simply add `grp` to the pipeline to mapping the color.
+# Now let's simply add `grp` to the pipeline to color according to `:Cyl`.
 
 data(mpg) * grp * pipeline |> draw
 AbstractPlotting.save("grouped_scatter.svg", AbstractPlotting.current_scene()); nothing #hide
@@ -131,7 +131,7 @@ AbstractPlotting.save("hist.svg", AbstractPlotting.current_scene()); nothing #hi
 
 x = [-pi..0, 0..pi]
 y = [sin cos] # We use broadcasting semantics on `tuple.(x, y)`.
-dims() * mapping(x, y, color = dims(1), linemapping = dims(2)) |> draw
+dims() * mapping(x, y, color = dims(1), linestyle = dims(2)) |> draw
 AbstractPlotting.save("functions.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](functions.svg)
@@ -139,7 +139,7 @@ AbstractPlotting.save("functions.svg", AbstractPlotting.current_scene()); nothin
 using Distributions
 IGpdf(μ, λ) = t -> pdf(InverseGaussian(μ, λ), t)
 pdfs = IGpdf.(1:4, [6 10])
-dims() * mapping(fill(0..5), pdfs, color = dims(1), linemapping = dims(2)) |> draw
+dims() * mapping(fill(0..5), pdfs, color = dims(1), linestyle = dims(2)) |> draw
 AbstractPlotting.save("distributions.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](distributions.svg)
