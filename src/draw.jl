@@ -87,9 +87,6 @@ function replace_categorical(v::AbstractArray)
     return levelcode.(v), (rg, labels)
 end
 
-import GeometryBasics 
-const Geometry = Union{GeometryBasics.AbstractGeometry, GeometryBasics.MultiPolygon}
-
 replace_categorical(v::AbstractArray{<:Union{Number, Geometry}}) = (v, automatic)
 replace_categorical(v::Any) = (v, automatic)
 

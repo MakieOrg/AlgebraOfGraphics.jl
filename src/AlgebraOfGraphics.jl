@@ -8,6 +8,8 @@ using StructArrays: GroupPerm, refine_perm!, uniquesorted, fieldarrays, StructAr
 using KernelDensity: kde
 using StatsBase: fit, Histogram, weights, AbstractWeights, normalize, sturges, histrange
 import GLM, Loess
+import GeometryBasics 
+const Geometry = Union{GeometryBasics.AbstractGeometry, GeometryBasics.MultiPolygon}
 
 using AbstractPlotting: Point2f0,
                         Attributes,
