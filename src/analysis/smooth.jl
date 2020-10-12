@@ -20,12 +20,12 @@ function _linear(x::AbstractVector{T}, y::AbstractVector;
         end
         # the GLM predictions always return matrices
         x, y = x_new, vec(y_new)
-        lines = style(x, y)
+        lines = mapping(x, y)
         if !isnothing(interval)
-            band = style(x, vec(lower), vec(upper))
-            return spec(:Lines) * lines + spec(:Band, alpha = 0.2) * band
+            band = mapping(x, vec(lower), vec(upper))
+            return visual(:Lines) * lines + visual(:Band, alpha = 0.2) * band
         else 
-            return spec(:Lines) * lines
+            return visual(:Lines) * lines
         end
     catch e
         @warn "Linear fit not possible for the given data"
@@ -50,7 +50,7 @@ function _smooth(x, y; npoints = 100, kwargs...)
     model = Loess.loess(Float64.(x), Float64.(y); kwargs...)
     us = collect(range(min, stop = max, length = npoints))
     vs = Loess.predict(model, us)
-    return spec(:Lines) * style(us, vs)
+    return visual(:Lines) * mapping(us, vs)
 end
 
 """
