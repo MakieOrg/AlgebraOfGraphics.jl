@@ -2,7 +2,7 @@ module AlgebraOfGraphics
 
 using Tables: columns, getcolumn, columnnames, AbstractColumns, Tables
 using CategoricalArrays: categorical, cut, levelcode, refs, levels, CategoricalArray
-using OnlineStatsBase: value, Mean
+using OnlineStatsBase: value, Mean, OnlineStat
 using Observables: AbstractObservable, Observable, to_value
 using NamedDims: NamedDimsArray, dimnames, unname
 using StructArrays: GroupPerm, refine_perm!, uniquesorted, fieldarrays, StructArray

@@ -23,8 +23,10 @@ function dense(kv::NamedSparseArray)
 end
 
 function _frequency(args...)
-    gp = GroupPerm(fast_sortable(args))
-    itr = (s[sp[first(range)]] => length(range) for range in gp)
+    s = StructArray(args)
+    gp = GroupPerm(fast_sortable(s))
+    perm = sortperm(gp)
+    itr = (s[perm[first(range)]] => length(range) for range in gp)
     keys, values = fieldarrays(StructArray(itr, unwrap = t -> t <: Tuple))
     namedarray =  NamedSparseArray(fieldarrays(keys)..., values)
     labels, values = dense(namedarray)
