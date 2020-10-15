@@ -2,11 +2,12 @@ module AlgebraOfGraphics
 
 using Tables: columns, getcolumn, columnnames, AbstractColumns, Tables
 using CategoricalArrays: categorical, cut, levelcode, refs, levels, CategoricalArray
+using OnlineStatsBase: value, Mean, OnlineStat
 using Observables: AbstractObservable, Observable, to_value
 using NamedDims: NamedDimsArray, dimnames, unname
 using StructArrays: GroupPerm, refine_perm!, uniquesorted, fieldarrays, StructArray
 using KernelDensity: kde
-using StatsBase: fit, Histogram, weights, AbstractWeights, normalize, sturges, histrange
+using StatsBase: fit, fit!, Histogram, weights, AbstractWeights, normalize, sturges, histrange
 import GLM, Loess
 import GeometryBasics 
 const Geometry = Union{GeometryBasics.AbstractGeometry, GeometryBasics.MultiPolygon}
@@ -49,6 +50,7 @@ include("analysis/smooth.jl")
 include("analysis/density.jl")
 include("analysis/frequency.jl")
 include("analysis/histogram.jl")
+include("analysis/reducer.jl")
 include("legend.jl")
 include("dodge.jl")
 include("draw.jl")

@@ -6,6 +6,7 @@ AlgebraOfGraphics.smooth
 AlgebraOfGraphics.density
 AlgebraOfGraphics.histogram
 AlgebraOfGraphics.frequency
+AlgebraOfGraphics.reducer
 ```
 
 !!! note

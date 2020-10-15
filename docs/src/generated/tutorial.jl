@@ -80,7 +80,7 @@ AbstractPlotting.save("semi_grouped.svg", AbstractPlotting.current_scene()); not
 #
 # Different analyses are also possible, always with the same syntax:
 
-using AlgebraOfGraphics: smooth, density
+using AlgebraOfGraphics: smooth, density, frequency, reducer
 data(mpg) * cols * grp * (scat + smooth(span = 0.8)) |> draw
 AbstractPlotting.save("loess.svg", AbstractPlotting.current_scene()); nothing #hide
 
@@ -90,6 +90,16 @@ data(mpg) * cols * density |> draw
 AbstractPlotting.save("density.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](density.svg)
+
+data(mpg) * mapping(:Cyl => categorical) * frequency |> draw
+AbstractPlotting.save("frequency.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](frequency.svg)
+
+data(mpg) * mapping(:Cty, :Hwy) * reducer(agg = +) |> draw
+AbstractPlotting.save("reducer.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](reducer.svg)
 #
 # We can also add visual information that only makes sense in one recipe (e.g. `markersize`) by
 # multiplying them:

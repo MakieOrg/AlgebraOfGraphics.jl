@@ -52,3 +52,10 @@ function extract_names(d::Union{NamedTuple, Tuple})
     vs = map(strip_name, d)
     return ns, vs
 end
+
+function fast_sortable(v)
+    v1 = strip_name(v)
+    return iscategorical(v1) ? refs(categorical(v1)) : v1
+end
+
+fast_sortable(v::StructArray) = StructArray(map(fast_sortable, fieldarrays(v)))
