@@ -147,9 +147,8 @@ AbstractPlotting.save("functions.svg", AbstractPlotting.current_scene()); nothin
 # ![](functions.svg)
 
 using Distributions
-IGpdf(μ, λ) = t -> pdf(InverseGaussian(μ, λ), t)
-pdfs = IGpdf.(1:4, [6 10])
-dims() * mapping(fill(0..5), pdfs, color = dims(1), linestyle = dims(2)) |> draw
+distributions = InverseGaussian.(1:4, [6 10])
+dims() * mapping(fill(0..5), distributions, color = dims(1), linestyle = dims(2)) |> draw
 AbstractPlotting.save("distributions.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](distributions.svg)
