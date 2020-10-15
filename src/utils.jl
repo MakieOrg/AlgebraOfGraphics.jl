@@ -8,7 +8,8 @@ end
 Tables.columnnames(c::ColumnDict) = getfield(c, 1)
 Tables.getcolumn(c::ColumnDict, i::Int) = getfield(c, 2)[i]
 function Tables.getcolumn(c::ColumnDict, s::Symbol)
-    i::Int = findfirst(==(s), columnnames(c))
+    i = findfirst(==(s), columnnames(c))
+    (i === nothing) && throw(ArgumentError("column name :$s not found in the data"))
     getcolumn(c, i)
 end
 
