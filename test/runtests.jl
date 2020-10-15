@@ -54,6 +54,8 @@ end
     @test only(first(mappings[2][2]).color) == 2008
     @test dimnames(first(mappings[2][2]).color) == (:Year,)
 
+    @test_throws ArgumentError data(mpg) * mapping(:Cyll)
+
     x = rand(5, 3, 2)
     y = rand(5, 3)
     s = dims(1) * mapping(x, y, color = dims(2)) 
