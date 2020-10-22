@@ -3,5 +3,6 @@
 test/coverage/Manifest.toml
 /dev/
 examples/backup.jl
+docs/Manifest.toml
 docs/build
 docs/src/generated/*.md
