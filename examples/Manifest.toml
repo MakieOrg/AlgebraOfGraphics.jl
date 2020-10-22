@@ -89,9 +89,9 @@ version = "0.11.2"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "f76e41cf110de7176a657c72409e722cfc86fbb6"
+git-tree-sha1 = "48608f94f3e1a755f65e7ef34684675bb3653030"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "3.20.0"
+version = "3.21.0"
 
 [[Contour]]
 deps = ["StaticArrays"]
@@ -106,9 +106,9 @@ version = "1.3.0"
 
 [[DataFrames]]
 deps = ["CategoricalArrays", "Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "Missings", "PooledArrays", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "a7c1c9a6e47a92321bbc9d500dab9b04cc4a6a39"
+git-tree-sha1 = "ecd850f3d2b815431104252575e7307256121548"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "0.21.7"
+version = "0.21.8"
 
 [[DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -151,9 +151,9 @@ uuid = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
 version = "0.4.0"
 
 [[ExprTools]]
-git-tree-sha1 = "7fce513fcda766962ff67c5596cb16c463dfd371"
+git-tree-sha1 = "10407a39b87f29d47ebaca8edbc75d7c302ff93e"
 uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
-version = "0.1.2"
+version = "0.1.3"
 
 [[EzXML]]
 deps = ["BinaryProvider", "Libdl", "Printf"]
@@ -226,9 +226,9 @@ version = "1.0.2"
 
 [[GridLayoutBase]]
 deps = ["GeometryBasics", "InteractiveUtils", "Match", "Observables"]
-git-tree-sha1 = "2dca3536c1cd743b0bcb3ea062897b4139c71aa6"
+git-tree-sha1 = "0702ac06d05e653996a37fea1d631bc7e74512ee"
 uuid = "3955a311-db13-416c-9275-1d80ed98e5e9"
-version = "0.4.0"
+version = "0.4.1"
 
 [[Grisu]]
 git-tree-sha1 = "03d381f65183cb2d0af8b3425fde97263ce9a995"
@@ -237,9 +237,9 @@ version = "1.0.0"
 
 [[ImageCore]]
 deps = ["Colors", "FixedPointNumbers", "Graphics", "MappedArrays", "MosaicViews", "OffsetArrays", "PaddedViews", "Reexport", "Requires"]
-git-tree-sha1 = "fcfe116faa7b4507bf408e39ba455a2ca2859a83"
+git-tree-sha1 = "b6d3bc61ad9509332317c280b4b271f7d3a3b5ae"
 uuid = "a09fc81d-aa75-5fe9-8630-4744c3626534"
-version = "0.8.17"
+version = "0.8.18"
 
 [[ImageMagick]]
 deps = ["BinaryProvider", "FileIO", "ImageCore", "InteractiveUtils", "Libdl", "Pkg", "Random"]
