@@ -15,7 +15,7 @@ end
 
 mapping(args...; kwargs...) = Mapping(namedtuple(args...; kwargs...))
 
-@deprecate style(args...; kwargs...) visual(args...; kwargs...)
+@deprecate style(args...; kwargs...) mapping(args...; kwargs...)
 
 function Base.:*(s1::Union{Mapping, AbstractContext}, s2::Union{Mapping, AbstractContext})
     merge(Mapping(s1), Mapping(s2))
