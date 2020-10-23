@@ -1,7 +1,7 @@
 name = "AlgebraOfGraphics"
 uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
-authors = ["Pietro Vertechi <pietro.vertechi@neuro.fchampalimaud.org>"]
-version = "0.1.2"
+authors = ["Pietro Vertechi <pietro.vertechi@veos.digital>"]
+version = "0.2.0"
 
 [deps]
 AbstractPlotting = "537997a7-5e4e-5d89-9595-2241ea00577e"
