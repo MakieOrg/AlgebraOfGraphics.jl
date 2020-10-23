@@ -8,7 +8,7 @@ end
 function set_axis_labels!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
         s = string(nm)
-        if hasproperty(ax, prop) && getproperty(ax, prop)[] == " "
+        if hasproperty(ax, prop) && isempty(getproperty(ax, prop)[])
             getproperty(ax, prop)[] = s
         end
     end
@@ -31,7 +31,7 @@ function add_facet_labels!(scene, axs, layout_levels;
 
     Ny, Nx = size(axs)
 
-    positive_rotation = axis == :x ? 0.0 : π/2
+    positive_rotation = axis == :x ? 0f0 : π/2f0
     # Facet labels
     lxl = string.(layout_levels)
     for i in eachindex(lxl)
@@ -40,7 +40,7 @@ function add_facet_labels!(scene, axs, layout_levels;
             scene, color = :gray85, strokevisible = true
         ) 
         facetlayout[pos...] = LText(scene, lxl[i],
-            rotation = -positive_rotation, padding = (3, 3, 3, 3)
+            rotation = -positive_rotation, padding = (3f0, 3f0, 3f0, 3f0)
         )
     end
 
@@ -51,20 +51,23 @@ function add_facet_labels!(scene, axs, layout_levels;
         (MakieLayout.protrusionsobservable(ax) for ax in itr)...
     )
 
-    single_padding = @lift($group_protrusion + 10)
-    padding = lift(single_padding) do val
-        axis == :x ? (0, 0, 0, val) : (0, val, 0, 0)
+    padding = lift(group_protrusion) do val
+        val += 10f0
+        axis == :x ? (0f0, 0f0, 0f0, val) : (0f0, val, 0f0, 0f0)
     end
 
-    label = LText(scene, spanned_label, padding = padding, rotation = positive_rotation)
-    pos = axis == :x ? (Ny, :, Bottom()) : (:, 1, Left())
-    facetlayout[pos...] = label
+    if !isnothing(spanned_label)
+        label = LText(scene, spanned_label, padding = padding, rotation = positive_rotation)
+        pos = axis == :x ? (Ny, :, Bottom()) : (:, 1, Left())
+        facetlayout[pos...] = label
+    end
 end
 
-# Return the only unique value of the collection if it exists, `nothing` otherwise.
+# Return the only unique value of the collection if it exists and is nonempty,
+# `nothing` otherwise.
 function unique_value(labels)
     l = first(labels)
-    return all(==(l), labels) ? l : nothing
+    return all(==(l), labels) && !isempty(l) ? l : nothing
 end
 
 function spannable_xy_labels(axs)
