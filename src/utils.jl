@@ -45,7 +45,7 @@ keyword(ps::NamedTuple) = last(split(ps))
 
 get_name(v::NamedDimsArray) = dimnames(v)[1]
 strip_name(v::NamedDimsArray) = unname(v)
-get_name(v) = Symbol(" ")
+get_name(v) = Symbol("")
 strip_name(v) = v
 
 function extract_names(d::Union{NamedTuple, Tuple})

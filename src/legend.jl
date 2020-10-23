@@ -41,7 +41,7 @@ function create_legend(scene, legend::Legend)
         getproperty.(sections, :plots),
         getproperty.(sections, :names),
         # LLegend needs `nothing` to remove the space for a missing title
-        [t == " " ? nothing : t for t in getproperty.(sections, :title)]
+        [isempty(t) ? nothing : t for t in getproperty.(sections, :title)]
     )
 end
 
@@ -49,7 +49,7 @@ function remove_duplicates(legend)
     sections = legend.sections
     titles = getproperty.(sections, :title)
     # check if there are duplicate titles
-    unique_inds = unique_indices(titles; keep = " ")
+    unique_inds = unique_indices(titles; keep = "")
     has_duplicates = length(unique_inds) < length(titles)
     # if so: remove duplicates, generate new names
     if has_duplicates
