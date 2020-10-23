@@ -31,7 +31,7 @@ function add_facet_labels!(scene, axs, layout_levels;
 
     Ny, Nx = size(axs)
 
-    positive_rotation = axis == :x ? 0.0 : π/2
+    positive_rotation = axis == :x ? 0f0 : π/2f0
     # Facet labels
     lxl = string.(layout_levels)
     for i in eachindex(lxl)
@@ -40,7 +40,7 @@ function add_facet_labels!(scene, axs, layout_levels;
             scene, color = :gray85, strokevisible = true
         ) 
         facetlayout[pos...] = LText(scene, lxl[i],
-            rotation = -positive_rotation, padding = (3, 3, 3, 3)
+            rotation = -positive_rotation, padding = (3f0, 3f0, 3f0, 3f0)
         )
     end
 
@@ -51,9 +51,9 @@ function add_facet_labels!(scene, axs, layout_levels;
         (MakieLayout.protrusionsobservable(ax) for ax in itr)...
     )
 
-    single_padding = @lift($group_protrusion + 10)
-    padding = lift(single_padding) do val
-        axis == :x ? (0, 0, 0, val) : (0, val, 0, 0)
+    padding = lift(group_protrusion) do val
+        val += 10f0
+        axis == :x ? (0f0, 0f0, 0f0, val) : (0f0, val, 0f0, 0f0)
     end
 
     label = LText(scene, spanned_label, padding = padding, rotation = positive_rotation)
