@@ -7,14 +7,13 @@
 #
 # ## Examples
 
-#src using RDatasets: dataset
-#src using AlgebraOfGraphics, CairoMakie
-#src mpg = dataset("ggplot2", "mpg");
-#src data(mpg) * mapping(:Displ, :Hwy, layout_x = ) * visual(QQPlot) |> draw
-#src AbstractPlotting.save("qqplot.svg", AbstractPlotting.current_scene()); nothing #hide
+using RDatasets: dataset
+using AlgebraOfGraphics, CairoMakie
+mpg = dataset("ggplot2", "mpg");
+data(mpg) * mapping(:Displ, :Hwy, layout_x = :Cyl => categorical) * visual(QQPlot) |> draw
+AbstractPlotting.save("qqplot.svg", AbstractPlotting.current_scene()); nothing #hide
 
-#src # ![](qqplot.svg)
-#src Needs https://github.com/JuliaStats/Distributions.jl/issues/1196 to work.
+# ![](qqplot.svg)
 
 using RDatasets: dataset
 using AlgebraOfGraphics, CairoMakie
