@@ -8,7 +8,7 @@ end
 function set_axis_labels!(ax, names)
     for (nm, prop) in zip(names, (:xlabel, :ylabel, :zlabel))
         s = string(nm)
-        if hasproperty(ax, prop) && getproperty(ax, prop)[] == " "
+        if hasproperty(ax, prop) && isempty(getproperty(ax, prop)[])
             getproperty(ax, prop)[] = s
         end
     end
