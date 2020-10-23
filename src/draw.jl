@@ -56,15 +56,18 @@ function add_facet_labels!(scene, axs, layout_levels;
         axis == :x ? (0f0, 0f0, 0f0, val) : (0f0, val, 0f0, 0f0)
     end
 
-    label = LText(scene, spanned_label, padding = padding, rotation = positive_rotation)
-    pos = axis == :x ? (Ny, :, Bottom()) : (:, 1, Left())
-    facetlayout[pos...] = label
+    if !isnothing(spanned_label)
+        label = LText(scene, spanned_label, padding = padding, rotation = positive_rotation)
+        pos = axis == :x ? (Ny, :, Bottom()) : (:, 1, Left())
+        facetlayout[pos...] = label
+    end
 end
 
-# Return the only unique value of the collection if it exists, `nothing` otherwise.
+# Return the only unique value of the collection if it exists and is nonempty,
+# `nothing` otherwise.
 function unique_value(labels)
     l = first(labels)
-    return all(==(l), labels) ? l : nothing
+    return all(==(l), labels) && !isempty(l) ? l : nothing
 end
 
 function spannable_xy_labels(axs)
