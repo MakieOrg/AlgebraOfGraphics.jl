@@ -60,7 +60,7 @@ end
 function apply(f, d::AlgebraicList)
     precomputed_attributes = global_options(f, d)
     v = map(parent(d)) do layer
-        analyses, pkeys, mapping, options = layer.analyses, layer.pkeys, layer.mapping, layer.options
+        analyses, pkeys, options = layer.analyses, layer.pkeys, layer.options
         T = plottype(layer)
         res = compute(f, precomputed_attributes, layer) * Spec{T}(analyses=analyses, options=options, pkeys=pkeys)
         return parent(layers(res))
