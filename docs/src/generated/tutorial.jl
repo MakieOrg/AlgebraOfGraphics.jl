@@ -37,7 +37,7 @@
 # ## Working with tables
 
 using RDatasets: dataset
-using AlgebraOfGraphics, AbstractPlotting, CairoMakie
+using AlgebraOfGraphics, CairoMakie
 mpg = dataset("ggplot2", "mpg");
 cols = mapping(:Displ, :Hwy);
 grp = mapping(color = :Cyl => categorical);
