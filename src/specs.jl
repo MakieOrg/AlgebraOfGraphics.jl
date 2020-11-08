@@ -50,15 +50,19 @@ end
 
 global_options(f, d::AlgebraicList) = NamedTuple()
 
+function compute(f, layer, precomputed_attributes)
+    args, kwargs = split(layer.mapping.value)
+    return f(args...; precomputed_attributes..., kwargs...)
+end
+
 # default fallback to apply a callable to a vector of key => value pairs
 # if customized, it must return a vector of key => value pairs
 function apply(f, d::AlgebraicList)
-    global_kwargs = global_options(f, d)
+    precomputed_attributes = global_options(f, d)
     v = map(parent(d)) do layer
-        analyses, pkeys, mapping, options = layer.analyses, layer.pkeys, layer.mapping, layer.options
+        analyses, pkeys, options = layer.analyses, layer.pkeys, layer.options
         T = plottype(layer)
-        args, kwargs = split(mapping.value)
-        res = f(args...; global_kwargs..., kwargs...) * Spec{T}(analyses=analyses, options=options, pkeys=pkeys)
+        res = compute(f, layer, precomputed_attributes) * Spec{T}(analyses=analyses, options=options, pkeys=pkeys)
         return parent(layers(res))
     end
     return AlgebraicList(reduce(vcat, v))

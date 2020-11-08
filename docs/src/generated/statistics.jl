@@ -8,7 +8,7 @@
 # ## Examples
 
 #src using RDatasets: dataset
-#src using AlgebraOfGraphics, AbstractPlotting, CairoMakie
+#src using AlgebraOfGraphics, CairoMakie
 #src mpg = dataset("ggplot2", "mpg");
 #src data(mpg) * mapping(:Displ, :Hwy, layout_x = ) * visual(QQPlot) |> draw
 #src AbstractPlotting.save("qqplot.svg", AbstractPlotting.current_scene()); nothing #hide
@@ -17,7 +17,7 @@
 #src Needs https://github.com/JuliaStats/Distributions.jl/issues/1196 to work.
 
 using RDatasets: dataset
-using AlgebraOfGraphics, AbstractPlotting, CairoMakie
+using AlgebraOfGraphics, CairoMakie
 mpg = dataset("ggplot2", "mpg");
 mpg.IsAudi = mpg.Manufacturer .== "audi"
 geom = visual(BoxPlot, layout_x = 1) + visual(Violin, layout_x = 2)

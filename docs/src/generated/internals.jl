@@ -30,7 +30,7 @@ pairs(d)
 # All outputs of `mapping`, `data`, and `dims` inherit can be combined using `+`
 # (adding a new layer), or `*` (merge information in existing layer).
 
-using AbstractPlotting, CairoMakie
+using CairoMakie
 mpg1 = copy(mpg)
 mpg1.Displ = mpg.Displ .* 0.1
 ts = data(mpg) * visual(markersize = 5) + data(mpg1) * visual(markersize=10)
