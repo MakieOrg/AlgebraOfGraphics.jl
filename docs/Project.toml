@@ -7,6 +7,7 @@ Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 
 [compat]
+CairoMakie = "0.3.6"
 Documenter = "0.25"
 Glob = "1"
 Literate = "2"
