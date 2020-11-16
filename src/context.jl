@@ -115,12 +115,14 @@ end
 
 function refine_perm(perm, pc, n)
     if n == length(pc)
-        perm
+        return perm
     elseif n == 0
-        sortperm(StructArray(pc))
+        return sortperm(StructArray(pc))
     else
         x, y = pc[n], pc[n+1]
-        refine_perm!(copy(perm), pc, n, x, y, 1, length(x))
+        perm_copy = copy(perm)
+        refine_perm!(perm_copy, pc, n, x, y, 1, length(x))
+        return perm_copy
     end
 end
 
