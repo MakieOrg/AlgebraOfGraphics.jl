@@ -115,15 +115,15 @@ end
 
 function refine_perm(perm, pc, n)
     if n == length(pc)
-        refined = perm
+        return perm
     elseif n == 0
-        refined = sortperm(StructArray(pc))
+        return sortperm(StructArray(pc))
     else
         x, y = pc[n], pc[n+1]
-        refined = copy(perm)
-        refine_perm!(refined, pc, n, x, y, 1, length(x))
+        perm_copy = copy(perm)
+        refine_perm!(perm_copy, pc, n, x, y, 1, length(x))
+        return perm_copy
     end
-    return refined
 end
 
 optimize_cols(v::NamedDimsArray) = refs(parent(v))
