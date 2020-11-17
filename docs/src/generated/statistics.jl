@@ -10,14 +10,6 @@
 using RDatasets: dataset
 using AlgebraOfGraphics, CairoMakie
 mpg = dataset("ggplot2", "mpg");
-data(mpg) * mapping(:Displ, :Hwy, layout_x = :Cyl => categorical) * visual(QQPlot) |> draw
-AbstractPlotting.save("qqplot.svg", AbstractPlotting.current_scene()); nothing #hide
-
-# ![](qqplot.svg)
-
-using RDatasets: dataset
-using AlgebraOfGraphics, CairoMakie
-mpg = dataset("ggplot2", "mpg");
 mpg.IsAudi = mpg.Manufacturer .== "audi"
 geom = visual(BoxPlot, layout_x = 1) + visual(Violin, layout_x = 2)
 data(mpg) *
@@ -35,3 +27,10 @@ data(mpg) *
 AbstractPlotting.save("violin.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](violin.svg)
+
+data(mpg) *
+    mapping(:Displ, :Hwy, layout_x = :IsAudi => categorical) *
+    visual(QQPlot, qqline = :fit) |> draw
+AbstractPlotting.save("qqplot.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](qqplot.svg)
