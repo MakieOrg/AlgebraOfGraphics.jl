@@ -1,6 +1,6 @@
 # AlgebraOfGraphics
 
-![CI](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/workflows/CI/badge.svg)
+[![CI](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/workflows/CI/badge.svg?branch=master)](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/actions?query=workflow%3ACI+branch%3Amaster)
 [![codecov.io](http://codecov.io/github/JuliaPlots/AlgebraOfGraphics.jl/coverage.svg?branch=master)](http://codecov.io/github/JuliaPlots/AlgebraOfGraphics.jl?branch=master)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaPlots.github.io/AlgebraOfGraphics.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaPlots.github.io/AlgebraOfGraphics.jl/dev)
