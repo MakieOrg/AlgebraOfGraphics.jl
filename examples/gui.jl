@@ -20,7 +20,7 @@ function gui!(scene, layout, df)
     plot_options = [("none", nothing), ("scatter", Scatter), ("lines", Lines), ("barplot", BarPlot)]
     plot_menu = LMenu(scene, options = plot_options, textsize=30, width=500)
 
-    layout[1, 1] = LText(scene, "plot type", textsize=30)
+    layout[1, 1] = Label(scene, "plot type", textsize=30)
     layout[1, 2] = plot_menu
 
     analysis_options = [("none", nothing), ("linear", linear), ("smooth", smooth),
@@ -28,7 +28,7 @@ function gui!(scene, layout, df)
 
     analysis_menu = LMenu(scene, options = analysis_options, textsize=30, width=500)
 
-    layout[2, 1] = LText(scene, "analysis", textsize=30)
+    layout[2, 1] = Label(scene, "analysis", textsize=30)
     layout[2, 2] = analysis_menu
 
     axis_options = vcat([("None", nothing)], [(s, Symbol(s)) for s in propertynames(table.data)])
@@ -38,12 +38,12 @@ function gui!(scene, layout, df)
     N = length(mappings)
 
     for i in 1:N
-        layout[2+i, 1] = LText(scene, mappings[i], textsize=30)
+        layout[2+i, 1] = Label(scene, mappings[i], textsize=30)
         layout[2+i, 2] = mapping_menus[i]
     end
 
-    plot_button = LButton(scene, label="Plot", textsize=30)
-    add_and_plot_button = LButton(scene, label="Add and Plot", buttoncolor="powderblue", textsize=30)
+    plot_button = Button(scene, label="Plot", textsize=30)
+    add_and_plot_button = Button(scene, label="Add and Plot", buttoncolor="powderblue", textsize=30)
 
     layout[1, 3] = plot_button
     layout[1, 4] = add_and_plot_button

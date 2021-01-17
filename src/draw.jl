@@ -36,10 +36,10 @@ function add_facet_labels!(scene, axs, layout_levels;
     lxl = string.(layout_levels)
     for i in eachindex(lxl)
         pos = axis == :x ? (1, i, Top()) : (i, Nx, Right())
-        facetlayout[pos...] = LRect(
+        facetlayout[pos...] = Box(
             scene, color = :gray85, strokevisible = true
         ) 
-        facetlayout[pos...] = LText(scene, lxl[i],
+        facetlayout[pos...] = Label(scene, lxl[i],
             rotation = -positive_rotation, padding = (3f0, 3f0, 3f0, 3f0)
         )
     end
@@ -57,7 +57,7 @@ function add_facet_labels!(scene, axs, layout_levels;
     end
 
     if !isnothing(spanned_label)
-        label = LText(scene, spanned_label, padding = padding, rotation = positive_rotation)
+        label = Label(scene, spanned_label, padding = padding, rotation = positive_rotation)
         pos = axis == :x ? (Ny, :, Bottom()) : (:, 1, Left())
         facetlayout[pos...] = label
     end
@@ -103,7 +103,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         # dodge may need to be done separately per each subplot
         Ndodge = max(Ndodge, rank(to_value(get(spec.options, :dodge, Ndodge))))
     end
-    axs = facetlayout[1:Ny, 1:Nx] = [LAxis(scene) for i in 1:Ny, j in 1:Nx]
+    axs = facetlayout[1:Ny, 1:Nx] = [Axis(scene) for i in 1:Ny, j in 1:Nx]
     for i in 1:Nx
         linkxaxes!(axs[:, i]...)
     end

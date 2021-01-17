@@ -36,11 +36,11 @@ end
 function create_legend(scene, legend::Legend)
     legend = remove_duplicates(legend)
     sections = legend.sections
-    MakieLayout.LLegend(
+    MakieLayout.Legend(
         scene,
         getproperty.(sections, :plots),
         getproperty.(sections, :names),
-        # LLegend needs `nothing` to remove the space for a missing title
+        # Legend needs `nothing` to remove the space for a missing title
         [isempty(t) ? nothing : t for t in getproperty.(sections, :title)]
     )
 end
