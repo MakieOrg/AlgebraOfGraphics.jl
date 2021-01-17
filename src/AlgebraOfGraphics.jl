@@ -23,9 +23,9 @@ using AbstractPlotting: Point2f0,
                         RGBAf0,
                         AbstractPlotting
 
-using AbstractPlotting.MakieLayout: LAxis,
-                                    LText,
-                                    LRect,
+using AbstractPlotting.MakieLayout: Axis,
+                                    Label,
+                                    Box,
                                     GridLayout,
                                     linkxaxes!,
                                     linkyaxes!,
