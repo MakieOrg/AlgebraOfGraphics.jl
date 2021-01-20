@@ -33,11 +33,11 @@ function add_entry!(legend::Legend, entry::String; title::String="")
     return add_entry!(names, sections, entry; default=LegendSection(title))
 end
 
-function create_legend(scene, legend::Legend)
+function create_legend(figure, legend::Legend)
     legend = remove_duplicates(legend)
     sections = legend.sections
     MakieLayout.Legend(
-        scene,
+        figure,
         getproperty.(sections, :plots),
         getproperty.(sections, :names),
         # Legend needs `nothing` to remove the space for a missing title
