@@ -23,15 +23,12 @@ function set_axis_ticks!(ax, ticks)
 end
 
 function add_facet_labels!(scene, axs, layout_levels;
-    facetlayout, axis, spanned_label)
+    facetlayout, axis, spanned_label, Nx, Ny)
 
     isnothing(layout_levels) && return
 
-    @assert size(axs) == size(facetlayout)
-
-    Ny, Nx = size(axs)
-
     positive_rotation = axis == :x ? 0f0 : π/2f0
+
     # Facet labels
     lxl = string.(layout_levels)
     for i in eachindex(lxl)
@@ -173,23 +170,25 @@ function draw!(figure, ts::ElementOrList)
         end
     end
     
-    # layout_x_levels = get(level_dict, :layout_x, nothing)
-    # layout_y_levels = get(level_dict, :layout_y, nothing)
+    layout_x_levels = get(level_dict, :layout_x, nothing)
+    layout_y_levels = get(level_dict, :layout_y, nothing)
     
-    # # Check if axis labels are spannable (i.e., the same across all panels)
-    # spanned_xlab, spanned_ylab = spannable_xy_labels(axs)
+    # Check if axis labels are spannable (i.e., the same across all panels)
+    spanned_xlab, spanned_ylab = spannable_xy_labels(axs)
     
-    # # faceting: hide x and y labels
-    # for ax in axs
-    #     ax.xlabelvisible[] &= isnothing(spanned_xlab)
-    #     ax.ylabelvisible[] &= isnothing(spanned_ylab)
-    # end
+    # faceting: hide x and y labels
+    for ax in axs
+        ax.xlabelvisible[] &= isnothing(spanned_xlab)
+        ax.ylabelvisible[] &= isnothing(spanned_ylab)
+    end
 
-    # add_facet_labels!(scene, axs, layout_x_levels;
-    #     facetlayout = facetlayout, axis = :x, spanned_label = spanned_xlab)
+    add_facet_labels!(figure, axs, layout_x_levels;
+        facetlayout = figure[1, 1], axis = :x, spanned_label = spanned_xlab,
+        Nx = Nx, Ny = Ny)
 
-    # add_facet_labels!(scene, axs, layout_y_levels;
-    #     facetlayout = facetlayout, axis = :y, spanned_label = spanned_ylab)
+    add_facet_labels!(figure, axs, layout_y_levels;
+        facetlayout = figure[1, 1], axis = :y, spanned_label = spanned_ylab,
+        Nx = Nx, Ny = Ny)
 
     return figure
 end
