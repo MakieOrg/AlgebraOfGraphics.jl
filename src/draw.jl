@@ -93,8 +93,7 @@ end
 replace_categorical(v::AbstractArray{<:Union{Number, Geometry}}) = (v, automatic)
 replace_categorical(v::Any) = (v, automatic)
 
-function layoutplot!(scene, layout, ts::ElementOrList)
-    facetlayout = layout[1, 1] = GridLayout()
+function draw!(figure, ts::ElementOrList)
     speclist = run_pipeline(ts)
     Nx, Ny, Ndodge = 1, 1, 1
     for spec in speclist
@@ -103,16 +102,8 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         # dodge may need to be done separately per each subplot
         Ndodge = max(Ndodge, rank(to_value(get(spec.options, :dodge, Ndodge))))
     end
-    axs = facetlayout[1:Ny, 1:Nx] = [Axis(scene) for i in 1:Ny, j in 1:Nx]
-    for i in 1:Nx
-        linkxaxes!(axs[:, i]...)
-    end
-    for i in 1:Ny
-        linkyaxes!(axs[i, :]...)
-    end
-    hidexdecorations!.(axs[1:end-1, :], grid = false)
-    hideydecorations!.(axs[:, 2:end], grid = false)
-
+    # What is a better placeholder here, in case some plots are missing?
+    axs = Union{Axis, Nothing}[nothing for i in 1:Ny, j in 1:Nx]
     legend = Legend()
     level_dict = Dict{Symbol, Any}()
     encountered = Set()
@@ -126,7 +117,7 @@ function layoutplot!(scene, layout, ts::ElementOrList)
         apply_alpha_transparency!(attrs)
         x_pos = pop!(attrs, :layout_x, 1) |> to_value |> rank
         y_pos = pop!(attrs, :layout_y, 1) |> to_value |> rank
-        ax = axs[y_pos, x_pos]
+        subfig = figure[1, 1][y_pos, x_pos]
         args_and_ticks = map(replace_categorical, args)
         args, ticks = map(first, args_and_ticks), map(last, args_and_ticks)
         dodge = pop!(attrs, :dodge, nothing) |> to_value
@@ -136,9 +127,17 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             args = (arg, Base.tail(args)...)
             attrs.width = w
         end
-        current = AbstractPlotting.plot!(ax, P, attrs, args...)
+        if isnothing(axs[y_pos, x_pos])
+            ax, current = AbstractPlotting.plot(P, subfig, args...; attrs...)
+            axs[y_pos, x_pos] = ax
+        else
+            ax = axs[y_pos, x_pos]
+            current = AbstractPlotting.plot!(P, ax, args...; attrs...)
+        end
+
         set_axis_labels!(ax, names)
         set_axis_ticks!(ax, ticks)
+
         for (k, v) in pairs(pkeys)
             name = get_name(v)
             val = strip_name(v)
@@ -156,40 +155,47 @@ function layoutplot!(scene, layout, ts::ElementOrList)
             end
         end
     end
+
+    for i in 1:Nx
+        linkxaxes!(axs[:, i]...)
+    end
+    for i in 1:Ny
+        linkyaxes!(axs[i, :]...)
+    end
+    hidexdecorations!.(axs[1:end-1, :], grid = false)
+    hideydecorations!.(axs[:, 2:end], grid = false)
+
     if !isempty(legend.sections)
         try
-            layout[1, 2] = create_legend(scene, legend)
+            figure[1, 2] = create_legend(figure, legend)
         catch e
             @warn "Automated legend was not possible due to $e"
         end
     end
     
-    layout_x_levels = get(level_dict, :layout_x, nothing)
-    layout_y_levels = get(level_dict, :layout_y, nothing)
+    # layout_x_levels = get(level_dict, :layout_x, nothing)
+    # layout_y_levels = get(level_dict, :layout_y, nothing)
     
-    # Check if axis labels are spannable (i.e., the same across all panels)
-    spanned_xlab, spanned_ylab = spannable_xy_labels(axs)
+    # # Check if axis labels are spannable (i.e., the same across all panels)
+    # spanned_xlab, spanned_ylab = spannable_xy_labels(axs)
     
-    # faceting: hide x and y labels
-    for ax in axs
-        ax.xlabelvisible[] &= isnothing(spanned_xlab)
-        ax.ylabelvisible[] &= isnothing(spanned_ylab)
-    end
+    # # faceting: hide x and y labels
+    # for ax in axs
+    #     ax.xlabelvisible[] &= isnothing(spanned_xlab)
+    #     ax.ylabelvisible[] &= isnothing(spanned_ylab)
+    # end
 
-    add_facet_labels!(scene, axs, layout_x_levels;
-        facetlayout = facetlayout, axis = :x, spanned_label = spanned_xlab)
+    # add_facet_labels!(scene, axs, layout_x_levels;
+    #     facetlayout = facetlayout, axis = :x, spanned_label = spanned_xlab)
 
-    add_facet_labels!(scene, axs, layout_y_levels;
-        facetlayout = facetlayout, axis = :y, spanned_label = spanned_ylab)
+    # add_facet_labels!(scene, axs, layout_y_levels;
+    #     facetlayout = facetlayout, axis = :y, spanned_label = spanned_ylab)
 
-    return scene
+    return figure
 end
 
-function layoutplot(s; kwargs...)
-    scene, layout = MakieLayout.layoutscene(; kwargs...)
-    return layoutplot!(scene, layout, s)
+function draw(s; kwargs...)
+    figure = AbstractPlotting.Figure(; kwargs...)
+    return draw!(figure, s)
 end
-layoutplot(; kwargs...) = t -> layoutplot(t; kwargs...)
-
-draw(args...; kwargs...) = layoutplot(args...; kwargs...)
-
+draw(; kwargs...) = t -> draw(t; kwargs...)
