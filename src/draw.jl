@@ -99,8 +99,7 @@ function draw!(figure, ts::ElementOrList)
         # dodge may need to be done separately per each subplot
         Ndodge = max(Ndodge, rank(to_value(get(spec.options, :dodge, Ndodge))))
     end
-    # What is a better placeholder here, in case some plots are missing?
-    axs = Union{Axis, Nothing}[nothing for i in 1:Ny, j in 1:Nx]
+    axs = [(figure[1, 1][i, j] = Axis(figure)) for i in 1:Ny, j in 1:Nx]
     legend = Legend()
     level_dict = Dict{Symbol, Any}()
     encountered = Set()
@@ -124,13 +123,8 @@ function draw!(figure, ts::ElementOrList)
             args = (arg, Base.tail(args)...)
             attrs.width = w
         end
-        if isnothing(axs[y_pos, x_pos])
-            ax, current = AbstractPlotting.plot(P, subfig, args...; attrs...)
-            axs[y_pos, x_pos] = ax
-        else
-            ax = axs[y_pos, x_pos]
-            current = AbstractPlotting.plot!(P, ax, args...; attrs...)
-        end
+        ax = axs[y_pos, x_pos]
+        current = AbstractPlotting.plot!(P, ax, args...; attrs...)
 
         set_axis_labels!(ax, names)
         set_axis_ticks!(ax, ticks)
