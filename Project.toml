@@ -28,7 +28,7 @@ NamedDims = "0.2"
 Observables = "0.3"
 OnlineStatsBase = "1"
 StatsBase = "0.31, 0.32, 0.33"
-StructArrays = "0.4.3"
+StructArrays = "0.5"
 Tables = "1"
 julia = "1"
 

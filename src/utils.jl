@@ -59,4 +59,4 @@ function fast_sortable(v)
     return iscategorical(v1) ? refs(categorical(v1)) : v1
 end
 
-fast_sortable(v::StructArray) = StructArray(map(fast_sortable, fieldarrays(v)))
+fast_sortable(v::StructArray) = StructArray(map(fast_sortable, components(v)))
