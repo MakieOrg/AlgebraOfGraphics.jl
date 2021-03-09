@@ -5,7 +5,7 @@ using CategoricalArrays: categorical, cut, levelcode, refs, levels, CategoricalA
 using OnlineStatsBase: value, Mean, OnlineStat
 using Observables: AbstractObservable, Observable, to_value
 using NamedDims: NamedDimsArray, dimnames, unname
-using StructArrays: GroupPerm, refine_perm!, uniquesorted, fieldarrays, StructArray
+using StructArrays: GroupPerm, refine_perm!, uniquesorted, components, StructArray
 using KernelDensity: kde
 using StatsBase: fit, fit!, Histogram, weights, AbstractWeights, normalize, sturges, histrange
 import GLM, Loess

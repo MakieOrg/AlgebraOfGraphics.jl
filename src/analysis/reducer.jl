@@ -19,8 +19,8 @@ function _reducer(args...; agg=Mean())
     gp = GroupPerm(fast_sortable(key))
     perm = sortperm(gp)
     itr = (key[perm[first(rg)]] => reduce_permuted(agg, data, perm, rg) for rg in gp)
-    keys, values = fieldarrays(StructArray(itr, unwrap = t -> t <: Tuple))
-    return mapping(fieldarrays(keys)..., values)
+    keys, values = components(StructArray(itr, unwrap = t -> t <: Tuple))
+    return mapping(components(keys)..., values)
 end
 
 """
