@@ -16,7 +16,7 @@ end
 
 function set_axis_ticks!(ax, ticks)
     for (tick, prop) in zip(ticks, (:xticks, :yticks, :zticks))
-        if hasproperty(ax, prop) && getproperty(ax, prop)[] == automatic
+        if hasproperty(ax, prop) && tick != automatic
             getproperty(ax, prop)[] = tick
         end
     end
