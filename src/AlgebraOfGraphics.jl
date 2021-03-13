@@ -1,6 +1,5 @@
 module AlgebraOfGraphics
 
-using Base: tail
 using Tables: columns, getcolumn, columnnames, AbstractColumns, Tables
 using CategoricalArrays: categorical, cut, levelcode, refs, levels, CategoricalArray
 using OnlineStatsBase: value, Mean, Counter, OnlineStat
