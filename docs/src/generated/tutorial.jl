@@ -101,7 +101,7 @@ AbstractPlotting.save("frequency2.svg", AbstractPlotting.current_scene()); nothi
 
 # ![](frequency2.svg)
 #
-data(mpg) * mapping(:Cty, :Hwy) * reducer(agg = +) * visual(Scatter) |> draw
+data(mpg) * mapping(:Cty => categorical, :Hwy) * reducer(agg = +) |> draw
 AbstractPlotting.save("reducer.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](reducer.svg)
