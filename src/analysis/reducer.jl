@@ -24,7 +24,7 @@ function _reducer(args...; agg=Mean(), default=NaN)
     itr = (key[perm[first(rg)]] => reduce_permuted(agg, data, perm, rg) for rg in gp)
     keys, values = components(StructArray(itr, unwrap = t -> t <: Tuple))
     namedarray = NamedSparseArray(components(keys)..., values)
-    labels, values = dense(namedarray; default)
+    labels, values = dense(namedarray; default=default)
     plottype = categoricalplottypes[length(labels)]
     return mapping(labels..., values) * visual(plottype)
 end
