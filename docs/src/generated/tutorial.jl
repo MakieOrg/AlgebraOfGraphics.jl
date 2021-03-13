@@ -96,10 +96,21 @@ AbstractPlotting.save("frequency.svg", AbstractPlotting.current_scene()); nothin
 
 # ![](frequency.svg)
 
-data(mpg) * mapping(:Cty, :Hwy) * reducer(agg = +) |> draw
+data(mpg) * mapping(:Cyl => categorical, :Class) * frequency |> draw
+AbstractPlotting.save("frequency2.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](frequency2.svg)
+#
+data(mpg) * mapping(:Cty => categorical, :Hwy) * reducer(agg = +) |> draw
 AbstractPlotting.save("reducer.svg", AbstractPlotting.current_scene()); nothing #hide
 
 # ![](reducer.svg)
+#
+
+data(mpg) * mapping(:Cty => categorical, :Class, :Displ) * reducer |> draw
+AbstractPlotting.save("reducer2.svg", AbstractPlotting.current_scene()); nothing #hide
+
+# ![](reducer2.svg)
 #
 # We can also add visual information that only makes sense in one recipe (e.g. `markersize`) by
 # multiplying them:

@@ -6,6 +6,9 @@ function reduce_permuted(agg::OnlineStat, data, perm, rg)
     return value(acc)
 end
 
+# Fast path to count elements of a range
+reduce_permuted(::Counter{Any}, data, perm, rg) = length(rg)
+
 function reduce_permuted(agg, data, perm, rg)
     acc = data[perm[first(rg)]]
     for i in rg[2:end]
@@ -14,13 +17,16 @@ function reduce_permuted(agg, data, perm, rg)
     return acc
 end
 
-function _reducer(args...; agg=Mean())
+function _reducer(args...; agg=Mean(), default=NaN)
     key, data = StructArray(Base.front(args)), last(args)
     gp = GroupPerm(fast_sortable(key))
     perm = sortperm(gp)
     itr = (key[perm[first(rg)]] => reduce_permuted(agg, data, perm, rg) for rg in gp)
     keys, values = components(StructArray(itr, unwrap = t -> t <: Tuple))
-    return mapping(components(keys)..., values)
+    namedarray = NamedSparseArray(components(keys)..., values)
+    labels, values = dense(namedarray; default=default)
+    plottype = categoricalplottypes[length(labels)]
+    return mapping(labels..., values) * visual(plottype)
 end
 
 """
