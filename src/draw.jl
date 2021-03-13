@@ -120,7 +120,7 @@ function draw!(figure, ts::ElementOrList)
         if !isnothing(dodge)
             width = pop!(attrs, :width, automatic) |> to_value
             arg, w = compute_dodge(first(args), rank(dodge), Ndodge, width=width)
-            args = (arg, Base.tail(args)...)
+            args = (arg, tail(args)...)
             attrs.width = w
         end
         ax = axs[y_pos, x_pos]
