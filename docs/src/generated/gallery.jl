@@ -15,6 +15,10 @@ draw(xy)
 
 # ### A simple lines plot
 
+x = range(-π, π, length=100)
+y = sin.(x)
+df = (; x, y)
+xy = data(df) * mapping(:x, :y)
 layer = visual(Lines)
 draw(layer * xy)
 
@@ -269,16 +273,16 @@ draw(plt)
 
 # ## Legend merging
 
-N = 20
+N = 40
 
-x = [1:N; 1:N; 1:N; 1:N]
-y = [2 .+ cumsum(randn(N)); -2 .+ cumsum(randn(N)); 2.5 .+ cumsum(randn(N)); cumsum(randn(N))]
-grp = [fill("a", 2N); fill("b", 2N)]
+x = [1:N; 1:N]
+y = [cumsum(randn(N)); cumsum(randn(N))]
+grp = [fill("a", N); fill("b", N)]
 
 df = (; x, y, grp)
-    
+
 layers = visual(Lines, linewidth = 2) + visual(Scatter) * mapping(marker = :grp)
-plt = data(df) * mapping(:x, :y, color = :grp) * layers
+plt = data(df) * layers * mapping(:x, :y, color = :grp)
 
 draw(plt)
 

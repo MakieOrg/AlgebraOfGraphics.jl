@@ -33,8 +33,6 @@ export draw, draw!
 export facet!
 export set_aog_theme!
 
-export legend
-
 include("arguments.jl")
 include("theme.jl")
 include("scales.jl")
@@ -55,7 +53,6 @@ include("transformations/histogram.jl")
 include("transformations/groupreduce.jl")
 include("transformations/frequency.jl")
 include("transformations/expectation.jl")
-
 include("guides/legend.jl")
 
 end
