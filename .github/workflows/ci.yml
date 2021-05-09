@@ -1,12 +1,7 @@
 name: CI
 on:
-  pull_request:
-    branches:
-      - master
-  push:
-    branches:
-      - master
-    tags: '*'
+  - push
+  - pull_request
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
@@ -58,6 +53,12 @@ jobs:
             Pkg.add(url="https://github.com/JuliaDocs/Documenter.jl", rev="master");
             Pkg.add(url="https://github.com/JuliaPlots/AbstractPlotting.jl", rev="master");
             Pkg.instantiate()'
+      - run: |
+          julia --project=docs -e '
+            using Documenter: DocMeta, doctest
+            using AlgebraOfGraphics
+            DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics); recursive=true)
+            doctest(AlgebraOfGraphics)'
       - run: julia --project=docs docs/make.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
