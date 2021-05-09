@@ -10,21 +10,22 @@ using AlgebraOfGraphics, CairoMakie
 set_aog_theme!()
 
 df = (x=rand(100), y=rand(100))
-data(df) * mapping(:x, :y) |> plot
+xy = data(df) * mapping(:x, :y)
+draw(xy)
 
 # ### A simple lines plot
 
-x = range(-π, π, length=100)
-y = sin.(x)
-df = (; x, y)
-data(df) * mapping(:x, :y) * visual(Lines) |> plot
+layer = visual(Lines)
+draw(layer * xy)
 
 # ### Lines and scatter combined plot
 
 x = range(-π, π, length=100)
 y = sin.(x)
 df = (; x, y)
-data(df) * mapping(:x, :y) * (visual(Scatter) + visual(Lines)) |> plot
+xy = data(df) * mapping(:x, :y)
+layers = visual(Scatter) + visual(Lines)
+draw(layers * xy)
 
 #
 
@@ -32,16 +33,15 @@ x = range(-π, π, length=100)
 y = sin.(x)
 df1 = (; x, y)
 df2 = (x=rand(10), y=rand(10))
-m = mapping(:x, :y)
-geoms = data(df1) * visual(Lines) + data(df2) * visual(Scatter)
-plot(m * geoms)
+layers = data(df1) * visual(Lines) + data(df2) * visual(Scatter)
+draw(layers * mapping(:x, :y))
 
 # ### Linear regression on a scatter plot
 
 df = (x=rand(100), y=rand(100), z=rand(100))
-m = data(df) * mapping(:x, :y)
-geoms = linear() + visual(Scatter) * mapping(color=:z)
-plot(m * geoms)
+xy = data(df) * mapping(:x, :y)
+layers = linear() + visual(Scatter) * mapping(color=:z)
+draw(layers * xy)
 
 # ## Faceting
 #
@@ -50,12 +50,14 @@ plot(m * geoms)
 # ### Facet grid
 
 df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
-data(df) * mapping(:x, :y, col=:i, row=:j) |> plot |> facet!
+plt = data(df) * mapping(:x, :y, col=:i, row=:j)
+draw(plt)
 
 # ### Facet wrap
 
 df = (x=rand(100), y=rand(100), l=rand(["a", "b", "c", "d", "e"], 100))
-data(df) * mapping(:x, :y, layout=:l) |> plot |> facet!
+plt = data(df) * mapping(:x, :y, layout=:l)
+draw(plt)
 
 # ### Embedding facets
 #
@@ -63,14 +65,15 @@ data(df) * mapping(:x, :y, layout=:l) |> plot |> facet!
 # of the figure is managed by vanilla Makie.
 # For example
 
-df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
 resolution = (800, 400)
 fig = Figure(; resolution)
 ax = Axis(fig[1, 1], title="Some plot")
-layer = data(df) * mapping(:x, :y, col=:i, row=:j)
+
+df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
+plt = data(df) * mapping(:x, :y, col=:i, row=:j)
+
 subfig = fig[1, 2:3]
-ag = plot!(subfig, layer)
-facet!(subfig, ag)
+ag = draw!(subfig, plt)
 for ae in ag
     Axis(ae).xticklabelrotation[] = π/2
 end
@@ -80,22 +83,22 @@ fig
 
 df1 = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
 df2 = (x=[0, 1], y=[0.5, 0.5], i=fill("a", 2), j=fill("e", 2))
-m = mapping(:x, :y, col=:i, row=:j)
-geoms = data(df1) * visual(Scatter) + data(df2) * visual(Lines)
-m * geoms |> plot |> facet!
+layers = data(df1) * visual(Scatter) + data(df2) * visual(Lines)
+draw(layers * mapping(:x, :y, col=:i, row=:j))
 
 # ## Statistical analyses
 #
 # ### Density plot
 
+using AlgebraOfGraphics: density
 df = (x=randn(1000), c=rand(["a", "b"], 1000))
-data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.density(bandwidth=0.5) |> plot
+plt = data(df) * mapping(:x, color=:c) * density(bandwidth=0.5)
+draw(plt)
 
 #
 
 df = (x=randn(1000), c=rand(["a", "b"], 1000))
-layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.density(bandwidth=0.5) *
-    visual(orientation=:vertical)
+plt = data(df) * mapping(:x, color=:c) * density(bandwidth=0.5) * visual(orientation=:vertical)
 "Not yet supported" # hide
 
 # ## Discrete scales
@@ -105,55 +108,57 @@ layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.density(bandwidth=0
 # overwrite that
 
 df = (x=rand(["a", "b", "c"], 100), y=rand(100))
-data(df) * mapping(:x, :y) * visual(BoxPlot) |> plot
+plt = data(df) * mapping(:x, :y) * visual(BoxPlot)
+draw(plt)
 
 #
 
 df = (x=rand(["a", "b", "c"], 100), y=rand(100))
-layer = data(df) *
+plt = data(df) *
     mapping(
         :x => renamer("a" => "label1", "b" => "label2", "c" => "label3"),
         :y
     ) * visual(BoxPlot)
-plot(layer)
+draw(plt)
 
 # The order can also be changed by tweaking the scale
 
-layer = data(df) *
+plt = data(df) *
     mapping(
         :x => renamer("b" => "label b", "a" => "label a", "c" => "label c"),
         :y
     ) * visual(BoxPlot)
-plot(layer)
+draw(plt)
 
 # ## Continuous scales
 
 x = 1:100
 y = @. sqrt(x) + 20x + 100
 df = (; x, y)
-layer = data(df) *
+plt = data(df) *
     mapping(
         :x,
         :y => log => "√x + 20x + 100 (log scale)",
     ) * visual(Lines)
-plot(layer)
+draw(plt)
 
 #
 
 x = 1:100
 y = @. sqrt(x) + 20x + 100
 df = (; x, y)
-layer = data(df) *
+plt = data(df) *
     mapping(
         :x,
         :y => "√x + 20x + 100",
     ) * visual(Lines)
-plot(layer, axis=(yscale=log,))
+draw(plt, axis=(yscale=log,))
 
 # ## Custom scales
 #
 # Sometimes, there is no default palettes for a specific attribute. In that
-# case, the user can pass their own.
+# case, the user can pass their own. TODO: allow legend to use custom attribute
+# of plot, such as the arrowhead or the arrowcolor and pass correct legend symbol.
 
 using Colors
 x=repeat(1:20, inner=20)
@@ -165,12 +170,12 @@ d=rand(Bool, length(x))
 df = (; x, y, u, v, c, d)
 colors = [colorant"#E24A33", colorant"#348ABD"]
 heads = ['▲', '●']
-layer = data(df) *
+plt = data(df) *
     mapping(:x, :y, :u, :v) *
     mapping(arrowhead=:c => nonnumeric) *
     mapping(arrowcolor=:d => nonnumeric) *
     visual(Arrows, arrowsize=10, lengthscale=0.3)
-plot(layer; palettes=(arrowcolor=colors, arrowhead=heads))
+draw(plt; palettes=(arrowcolor=colors, arrowhead=heads))
 
 # ## Axis and figure keywords
 #
@@ -179,17 +184,17 @@ plot(layer; palettes=(arrowcolor=colors, arrowhead=heads))
 # To tweak one or more axes, simply use the `axis` keyword when plotting. For example
 
 df = (x=rand(100), y=rand(100), z=rand(100))
-m = data(df) * mapping(:x, :y)
-geoms = linear() + mapping(color=:z)
-plot(m * geoms, axis=(aspect=1,))
+layers = linear() + mapping(color=:z)
+plt = data(df) * layers * mapping(:x, :y)
+draw(plt, axis=(aspect=1,))
 
 # ### Figure tweaking
 
 df = (x=rand(100), y=rand(100), z=rand(100), c=rand(["a", "b"], 100))
-m = data(df) * mapping(:x, :y, layout=:c)
-geoms = linear() + mapping(color=:z)
-fg = plot(m * geoms, axis=(aspect=1,), figure=(resolution=(800, 400),))
-facet!(fg)
+xyc = data(df) * mapping(:x, :y, layout=:c)
+layers = linear() + mapping(color=:z)
+plt = xyc * layers
+draw(plt, axis=(aspect=1,), figure=(resolution=(800, 400),))
 
 # ## Multiple selection
 #
@@ -199,29 +204,36 @@ facet!(fg)
 # ### Wide data
 
 df = (a=randn(100), b=randn(100), c=randn(100))
-m = data(df) * mapping((:a, :b, :c) .=> "some label") * mapping(color=dims(1))
-plot(m * AlgebraOfGraphics.density())
+labels = ["Trace 1", "Trace 2", "Trace 3"]
+plt = data(df) *
+    density() *
+    mapping((:a, :b, :c) .=> "some label") *
+    mapping(color=dims(1) => c -> labels[c])
+draw(plt)
 
 #
 
 df = (a=rand(100), b=rand(100), c=rand(100), d=rand(100))
-m = data(df) * mapping(1, 2:4, color=dims(1))
-geoms = linear() + visual(Scatter)
-fg = plot(m * geoms)
+labels = ["Trace 1", "Trace 2", "Trace 3"]
+layers = linear() + visual(Scatter)
+plt = data(df) * layers * mapping(1, 2:4, color=dims(1) => c -> labels[c])
+draw(plt)
 
 # The wide format is combined with broadcast semantics.
 
 df = (sepal_length=rand(100), sepal_width=rand(100), petal_length=rand(100), petal_width=rand(100))
 xvars = ["sepal_length", "sepal_width"]
 yvars = ["petal_length" "petal_width"]
-m = data(df) * mapping(
-    xvars .=> "sepal",
-    yvars .=> "petal",
-    row=dims(1) => c -> split(xvars[c], '_')[2],
-    col=dims(2) => c -> split(yvars[c], '_')[2],
-)
-geoms = linear() + visual(Scatter)
-facet!(plot(m * geoms))
+layers = linear() + visual(Scatter)
+plt = data(df) *
+    layers *
+    mapping(
+        xvars .=> "sepal",
+        yvars .=> "petal",
+        row=dims(1) => c -> split(xvars[c], '_')[2],
+        col=dims(2) => c -> split(yvars[c], '_')[2],
+    )
+draw(plt)
 
 # ### Wide data for time series
 
@@ -232,7 +244,8 @@ y = cumsum(randn(length(x)))
 z = cumsum(randn(length(x)))
 df = (; x, y, z)
 labels = ["series 1", "series 2", "series 3", "series 4", "series 5"]
-plt = data(df) * mapping(:x, [:y, :z], color=dims(1)=>(c -> labels[c])=>"series ") *
+plt = data(df) *
+    mapping(:x, [:y, :z], color=dims(1)=>(c -> labels[c])=>"series ") *
     visual(Lines)
 draw(plt)
 
@@ -242,17 +255,17 @@ x = now() - Hour(6) : Minute(1) : now()
 y = cumsum(randn(length(x)))
 z = cumsum(randn(length(x)))
 df = (; x, y, z)
-plt = data(df) * mapping(:x, [:y, :z], color=dims(1)=>(c -> labels[c])=>"series ") *
+plt = data(df) *
+    mapping(:x, [:y, :z], color=dims(1)=>(c -> labels[c])=>"series ") *
     visual(Lines)
 draw(plt)
 
 # ### New columns on the fly
 
 df = (x=rand(100), y=rand(100), z=rand(100), c=rand(["a", "b"], 100))
-m = data(df) * mapping(:x, (:x, :y, :z) => (+) => "x + y + z", layout=:c)
-geoms = linear() + mapping(color=:z)
-fg = plot(m * geoms)
-facet!(fg)
+layers = linear() + mapping(color=:z)
+plt = data(df) * layers * mapping(:x, (:x, :y, :z) => (+) => "x + y + z", layout=:c)
+draw(plt)
 
 # ## Legend merging
 
@@ -264,10 +277,9 @@ grp = [fill("a", 2N); fill("b", 2N)]
 
 df = (; x, y, grp)
     
-line = visual(Lines, linewidth = 2)
-scat = visual(Scatter) * mapping(marker = :grp)
-specs = data(df) * mapping(:x, :y) * mapping(color = :grp) * (line + scat)
+layers = visual(Lines, linewidth = 2) + visual(Scatter) * mapping(marker = :grp)
+plt = data(df) * mapping(:x, :y, color = :grp) * layers
 
-draw(specs)
+draw(plt)
 
 #
