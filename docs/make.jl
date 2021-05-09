@@ -18,10 +18,9 @@ makedocs(;
     modules=[AlgebraOfGraphics],
     authors="Pietro Vertechi <pietro.vertechi@veos.digital>",
     repo="https://github.com/JuliaPlots/AlgebraOfGraphics.jl/blob/{commit}{path}#{line}",
-    sitename="AlgebraOfGraphics.jl",
+    sitename="Algebra of Graphics",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://JuliaPlots.github.io/AlgebraOfGraphics.jl",
         assets=["assets/favicon.ico"],
     ),
     pages=Any[
