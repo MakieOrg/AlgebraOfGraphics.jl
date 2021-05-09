@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.4' # Replace this with the minimum Julia version that your package supports. E.g. if your package requires Julia 1.5 or higher, change this to '1.5'.
+          - '1.6' # Replace this with the minimum Julia version that your package supports. E.g. if your package requires Julia 1.5 or higher, change this to '1.5'.
           - '1' # Leave this line unchanged. '1' will automatically expand to the latest stable 1.x release of Julia.
           - 'nightly'
         os:
@@ -54,8 +54,9 @@ jobs:
           version: '1'
       - run: |
           julia --project=docs -e '
-            using Pkg
-            Pkg.develop(PackageSpec(path=pwd()))
+            using Pkg; Pkg.develop(PackageSpec(path=pwd()));
+            Pkg.add(url="https://github.com/JuliaDocs/Documenter.jl", rev="master");
+            Pkg.add(url="https://github.com/JuliaPlots/AbstractPlotting.jl", rev="master");
             Pkg.instantiate()'
       - run: julia --project=docs docs/make.jl
         env:

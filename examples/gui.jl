@@ -1,4 +1,4 @@
-# Example GUI to look at a dataset
+# Example GUI to look at a dataset (outdated)
 
 using AbstractPlotting
 using AbstractPlotting.MakieLayout
