@@ -1,93 +1,74 @@
-const scales = Observable{Any}(Dict())
+apply_palette(p::AbstractVector, uv) = [cycle(p, idx) for idx in eachindex(uv)]
+apply_palette(::Automatic, uv) = eachindex(uv)
+apply_palette(p, uv) = map(p, eachindex(uv))
 
-abstract type AbstractScale end
+# TODO: add more customizations?
+struct Wrap end
 
-struct DiscreteScale
-    options::Union{AbstractVector, Nothing}
-    function DiscreteScale(x)
-        options = x isa AbstractVector ? x : nothing
-        return new(options)
+const wrap = Wrap()
+
+function apply_palette(::Wrap, uv)
+    ncols = ceil(Int, sqrt(length(uv)))
+    return [fldmod1(idx, ncols) for idx in eachindex(uv)]
+end
+
+struct ContinuousScale{T, F}
+    f::F
+    extrema::Tuple{T, T}
+end
+
+rescale(values::AbstractArray{<:Number}, c::ContinuousScale) = values # Is this ideal?
+function rescale(values::AbstractArray{<:Union{Date, DateTime}}, c::ContinuousScale)
+    @assert c.f === identity
+    min, max = c.extrema
+    return @. convert(Millisecond, DateTime(values) - DateTime(min)) / Millisecond(1)
+end
+
+struct CategoricalScale{S, T}
+    data::S
+    plot::T
+end
+
+function rescale(values, c::CategoricalScale)
+    idxs = indexin(values, c.data)
+    return c.plot[idxs]
+end
+
+Base.length(c::CategoricalScale) = length(c.data)
+
+function default_scale(summary, palette)
+    iscont = summary isa Tuple
+    return if iscont
+        f = palette isa Function ? palette : identity
+        ContinuousScale(f, summary)
+    else
+        plot = apply_palette(palette, summary)
+        return CategoricalScale(summary, plot)
     end
 end
-DiscreteScale(v::AbstractObservable) = DiscreteScale(v[])
 
-rank(c) = levelcode(c)
-rank(n::Integer) = n
-rank(v::AbstractArray) = rank(only(v))
-
-function get_attr(d::DiscreteScale, value, unique)
-    v = strip_name(value)
-    # Could be tricky in case of many datasets
-    n = sum(t -> !isless(rank(v), rank(t)), unique)
-    scale = d.options
-    return scale === nothing ? n : scale[mod1(n, length(scale))]
+# Logic to infer good scales
+function default_scales(summaries, palettes)
+    palettes = merge!(map(_ -> automatic, summaries), palettes)
+    return map(default_scale, summaries, palettes)
 end
 
-struct ContinuousScale
-    extrema::Union{NTuple{2, Float64}, Nothing}
-    function ContinuousScale(x)
-        extrema = x isa NTuple{2, Number} ? map(Float64, x) : nothing
-        return new(extrema)
-    end
+# Logic to create ticks from a scale
+# Should take current tick to incorporate information
+function ticks(scale::CategoricalScale)
+    u = map(string, scale.data)
+    return (axes(u, 1), u)
 end
 
-function get_attr(c::ContinuousScale, value, extrema)
-    scale = c.extrema
-    scale === nothing && return value
-    min, max = extrema
-    smin, smax = scale
-    @. smin + value * (smax - smin) / (max - min)
+function ticks(scale::ContinuousScale)
+    return continuousticks(scale.extrema...)
 end
 
-function get_extrema(specs::AbstractVector{<:AbstractElement})
-    d = Dict{Symbol, NTuple{2, Float64}}()
-    for spec in specs
-        mapping = spec.mapping
-        for (k, val) in pairs(mapping.value)
-            a, b = get(d, k, (Inf, - Inf))
-            a′, b′ = val isa AbstractVector{<:Number} ? extrema(val) : (Inf, -Inf)
-            d[k] = (min(a, a′), max(b, b′))
-        end
-    end
-    return d
-end
+continuousticks(min, max) = automatic
 
-function get_unique(specs::AbstractVector{<:AbstractElement})
-    d = Dict{Symbol, Set{Any}}()
-    for spec in specs
-        pkeys = spec.pkeys
-        for (k, val) in pairs(pkeys)
-            grp = strip_name(val)
-            v = get!(d, k, Set())
-            push!(v, grp)
-        end
-    end
-    return d
-end
-
-function computescales(specs)
-    unique_dict = get_unique(specs)
-    extrema_dict = get_extrema(specs)
-    [computescales(spec, unique_dict, extrema_dict) for spec in specs]
-end
-
-function computescales(spec::Spec{T}, unique_dict, extrema_dict) where {T}
-    # temporary! Should have a sensible default scales set,
-    # both discrete and continuous
-    scales[] = (; AbstractPlotting.current_default_theme()[:palette]...)
-    l = (layout_x = nothing, layout_y = nothing)
-    discrete_scales = map(DiscreteScale, merge(scales[], spec.options, l))
-    continuous_scales = map(ContinuousScale, spec.options)
-    disc_options = applytheme(discrete_scales, spec.pkeys, unique_dict)
-    cont_options = applytheme(continuous_scales, spec.mapping, extrema_dict)
-    options = foldl(merge, (spec.options, disc_options, cont_options))
-    return Spec{T}(pkeys=spec.pkeys, mapping=spec.mapping, options=options)
-end
-
-applytheme(scales, mapping::Mapping, metadata) = applytheme(scales, mapping.value, metadata)
-function applytheme(scales, grp::NamedTuple{names}, metadata) where names
-    res = map(names) do key
-        haskey(scales, key) ? get_attr(scales[key], grp[key], metadata[key]) : grp[key]
-    end
-    return NamedTuple{names}(res)
+function continuousticks(min::T, max::T) where T<:Union{Date, DateTime}
+    min_ms::Millisecond, max_ms::Millisecond = DateTime(min), DateTime(max)
+    min_pure, max_pure = min_ms/Millisecond(1), max_ms/Millisecond(1)
+    dates, labels = optimize_datetime_ticks(min_pure, max_pure)
+    return (dates .-  min_pure, labels)
 end

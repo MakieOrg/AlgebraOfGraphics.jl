@@ -7,4 +7,10 @@
 
 Define an algebra of graphics based on a few simple building blocks that can be combined using `+` and `*`. Still somewhat experimental, may break often.
 
-Analyses rely on [StatsBase.jl](https://github.com/JuliaStats/StatsBase.jl), [Loess.jl](https://github.com/JuliaStats/Loess.jl), [KernelDensity.jl](https://github.com/JuliaStats/KernelDensity.jl), and [GLM.jl](https://github.com/JuliaStats/GLM.jl). Some of their documentation is copied here.
+## Acknowledgements
+
+Analyses rely on [StatsBase.jl](https://github.com/JuliaStats/StatsBase.jl), [Loess.jl](https://github.com/JuliaStats/Loess.jl), [KernelDensity.jl](https://github.com/JuliaStats/KernelDensity.jl), and [GLM.jl](https://github.com/JuliaStats/GLM.jl). Some of their documentation is transcribed here.
+
+
+
+Logo and favicon made with 🧡 by @dyogurt.

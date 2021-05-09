@@ -1,59 +1,61 @@
 module AlgebraOfGraphics
 
-using Tables: columns, getcolumn, columnnames, AbstractColumns, Tables
-using CategoricalArrays: categorical, cut, levelcode, refs, levels, CategoricalArray
-using OnlineStatsBase: value, Mean, Counter, OnlineStat
-using Observables: AbstractObservable, Observable, to_value
-using NamedDims: NamedDimsArray, dimnames, unname
-using StructArrays: GroupPerm, refine_perm!, uniquesorted, components, StructArray
-using KernelDensity: kde
-using StatsBase: fit, fit!, Histogram, weights, AbstractWeights, normalize, sturges, histrange
+using Base: front, tail
+using Dates
+using Tables: rows, columns, getcolumn, columnnames
+using StructArrays: StructArrays, components, uniquesorted, GroupPerm, StructArray
+using Colors: RGB, RGBA, red, green, blue, Color
+using PlotUtils: optimize_datetime_ticks
+using AbstractPlotting
+using AbstractPlotting: automatic, Automatic, PlotFunc, ATTRIBUTES
+import AbstractPlotting.MakieLayout: hidexdecorations!,
+                                     hideydecorations!,
+                                     hidedecorations!,
+                                     linkaxes!,
+                                     linkxaxes!,
+                                     linkyaxes!
+using GridLayoutBase: determinedirsize, Col, Row
+using PooledArrays: PooledArray
+using KernelDensity: kde, pdf
+using StatsBase: fit, histrange, Histogram, normalize, weights, AbstractWeights, sturges
+using DataAPI: refarray
+using OrderedCollections: LittleDict
+
 import GLM, Loess
-import GeometryBasics 
-const Geometry = Union{GeometryBasics.AbstractGeometry, GeometryBasics.MultiPolygon}
+import FileIO
 
-using AbstractPlotting: Point2f0,
-                        Attributes,
-                        AbstractPlot,
-                        Node,
-                        automatic,
-                        Automatic,
-                        lift,
-                        @lift,
-                        RGBAf0,
-                        AbstractPlotting
+export hideinnerdecorations!, deleteemptyaxes!
+export arguments, Entry, Entries, AxisEntries
+export renamer, nonnumeric
+export density, histogram, linear, smooth, expectation, frequency
+export visual, data, dims, mapping
+export draw, draw!
+export facet!
+export set_aog_theme!
 
-using AbstractPlotting.MakieLayout: Axis,
-                                    Label,
-                                    Box,
-                                    GridLayout,
-                                    linkxaxes!,
-                                    linkyaxes!,
-                                    hidexdecorations!,
-                                    hideydecorations!,
-                                    Top,
-                                    Bottom,
-                                    Left,
-                                    Right,
-                                    MakieLayout
+export legend
 
-export data, dims, draw, visual, mapping
-export categorical, cut
-
-include("algebraic_list.jl")
-include("utils.jl")
-include("context.jl")
-include("specs.jl")
+include("arguments.jl")
+include("theme.jl")
 include("scales.jl")
-include("analysis/analysis.jl")
-include("analysis/smooth.jl")
-include("analysis/density.jl")
-include("analysis/namedsparsearray.jl")
-include("analysis/frequency.jl")
-include("analysis/histogram.jl")
-include("analysis/reducer.jl")
-include("legend.jl")
-include("dodge.jl")
-include("draw.jl")
+include("entries.jl")
+include("utils.jl")
+include("facet.jl")
+include("helpers.jl")
+include("algebra/layer.jl")
+include("algebra/layers.jl")
+include("algebra/processing.jl")
+include("recipes/linesfill.jl")
+include("transformations/splitapply.jl")
+include("transformations/visual.jl")
+include("transformations/linear.jl")
+include("transformations/smooth.jl")
+include("transformations/density.jl")
+include("transformations/histogram.jl")
+include("transformations/groupreduce.jl")
+include("transformations/frequency.jl")
+include("transformations/expectation.jl")
 
-end # module
+include("guides/legend.jl")
+
+end
