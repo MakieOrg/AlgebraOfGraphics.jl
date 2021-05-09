@@ -11,6 +11,8 @@ Define an algebra of graphics based on a few simple building blocks that can be 
 
 Analyses rely on [StatsBase.jl](https://github.com/JuliaStats/StatsBase.jl), [Loess.jl](https://github.com/JuliaStats/Loess.jl), [KernelDensity.jl](https://github.com/JuliaStats/KernelDensity.jl), and [GLM.jl](https://github.com/JuliaStats/GLM.jl). Some of their documentation is transcribed here.
 
+Visualizations are powered by [Makie](https://github.com/JuliaPlots/Makie.jl) and its layouting capabilities.
 
+Automatic legend creation re-implements the machinery in [TabularMakie](https://github.com/greimel/TabularMakie.jl).
 
 Logo and favicon made with 🧡 by @dyogurt.
