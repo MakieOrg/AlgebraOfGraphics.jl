@@ -25,7 +25,7 @@ makedocs(;
         assets=["assets/favicon.ico"],
     ),
     pages=Any[
-        "index.md",
+        "Home" => "index.md",
         "Getting Started" => [
             "generated/penguins.md",
             "generated/gallery.md",
