@@ -154,7 +154,19 @@ df = (; x, y)
 plt = data(df) *
     mapping(
         :x,
-        :y => "√x + 20x + 100",
+        :y => "√x + 20x + 100 (log scale)",
+    ) * visual(Lines)
+draw(plt, axis=(yscale=log,))
+
+#
+
+x = 0:100
+y = @. 0.01 + x/1000
+df = (; x, y)
+plt = data(df) *
+    mapping(
+        :x,
+        :y => "y",
     ) * visual(Lines)
 draw(plt, axis=(yscale=log,))
 
