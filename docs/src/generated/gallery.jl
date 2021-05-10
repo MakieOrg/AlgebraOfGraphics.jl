@@ -293,7 +293,7 @@ grp = [fill("a", N); fill("b", N)]
 
 df = (; x, y, grp)
 
-layers = visual(Lines, linewidth = 2) + visual(Scatter) * mapping(marker = :grp)
+layers = visual(Lines) + visual(Scatter) * mapping(marker = :grp)
 plt = data(df) * layers * mapping(:x, :y, color = :grp)
 
 draw(plt)
