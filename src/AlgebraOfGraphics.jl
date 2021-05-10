@@ -7,7 +7,7 @@ using StructArrays: StructArrays, components, uniquesorted, GroupPerm, StructArr
 using Colors: RGB, RGBA, red, green, blue, Color
 using PlotUtils: optimize_datetime_ticks
 using AbstractPlotting
-using AbstractPlotting: automatic, Automatic, PlotFunc, ATTRIBUTES
+using AbstractPlotting: current_default_theme, to_value, automatic, Automatic, PlotFunc, ATTRIBUTES
 import AbstractPlotting.MakieLayout: hidexdecorations!,
                                      hideydecorations!,
                                      hidedecorations!,
@@ -53,6 +53,7 @@ include("transformations/histogram.jl")
 include("transformations/groupreduce.jl")
 include("transformations/frequency.jl")
 include("transformations/expectation.jl")
+include("guides/legendelements.jl")
 include("guides/legend.jl")
 
 end

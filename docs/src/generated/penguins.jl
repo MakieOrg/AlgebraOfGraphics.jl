@@ -132,7 +132,6 @@ draw(plt; axis)
 # In this case, a `Wireframe` with thin lines looks quite nice. (Note that, for the
 # time being, we must specify explicitly that we require a 3D axis.)
 
-using AlgebraOfGraphics: density
 axis = (type = Axis3, width = 300, height = 300)
 layer = density() * visual(Wireframe, linewidth=0.05)
 plt = penguin_bill * layer * mapping(color = :species)
@@ -140,7 +139,6 @@ draw(plt; axis)
 
 # Of course, a more traditional approach would be to use a `Contour` plot instead:
 
-using AlgebraOfGraphics: density
 axis = (width = 225, height = 225)
 layer = density() * visual(Contour)
 plt = penguin_bill * layer * mapping(color = :species)

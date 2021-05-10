@@ -159,6 +159,7 @@ function AbstractPlotting.plot!(ae::AxisEntries)
 
         # Implement defaults
         for (key, val) in pairs(default_styles())
+            key == :color && has_zcolor(entry) && continue # do not overwrite contour color
             get!(named, key, val)
         end
 
@@ -170,7 +171,7 @@ function AbstractPlotting.plot!(ae::AxisEntries)
         # Implement alpha transparency
         alpha = pop!(named, :alpha, nothing)
         color = get(named, :color, nothing)
-        color isa Color && alpha isa Number && (named[:color] = (color, alpha))
+        !isnothing(color) && alpha isa Number && (named[:color] = (color, alpha))
 
         plot!(plottype, axis, positional...; named...)
     end

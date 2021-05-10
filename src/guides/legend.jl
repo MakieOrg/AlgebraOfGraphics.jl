@@ -1,26 +1,49 @@
-# ------------------------------------------------
-# -------------------- Legend --------------------
-# ------------------------------------------------
-
-MakieLayout.Legend(figpos, aog::Union{Layer,Layers}) = 
-    Legend(figpos, Entries(aog))
-    
-function MakieLayout.Legend(figpos, entries::Entries)
-    legend = _Legend_(entries)
-    isnothing(legend) && return
-    
-    if figpos isa FigureGrid
-        figpos_new = figpos.figure[:,end + 1]
-    else
-        figpos_new = figpos
-    end
-
-    Legend(figpos_new, legend...)
+function MakieLayout.Legend(fg::FigureGrid)
+	colorbar = _Colorbar_(fg)
+    legend = _Legend_(fg)
+    if !isnothing(colorbar)
+		Colorbar(fg.figure[:, end + 1]; colorbar...)
+	end
+	if !isnothing(legend)
+		Legend(fg.figure[:, end + 1], legend...)
+	end
 end
 
-function _Legend_(entries)
-    named_scales = entries.scales.named
-    named_labels = copy(entries.labels.named)
+function has_zcolor(entry::Entry)
+	return entry.plottype <: Union{Heatmap, Contour, Contourf, Surface} &&
+		!haskey(entry.mappings, :color) &&
+		!haskey(entry.attributes, :color)
+end
+
+function getlabeledcolorbar(grid)
+	scales, labels = first(grid).scales, first(grid).labels
+	entries = Iterators.flatten(ae.entries for ae in grid)
+	key = any(has_zcolor, entries) ? 3 : :color
+	label, scale = get(labels, key, nothing), get(scales, key, nothing)
+	return scale isa ContinuousScale ? Labeled(label, scale) : nothing
+end
+
+function _Colorbar_(fg::FigureGrid)
+	grid = fg.grid
+	labeledcolorbar = getlabeledcolorbar(grid)
+	isnothing(labeledcolorbar) && return
+	label, colorscale = getlabel(labeledcolorbar), getvalue(labeledcolorbar)
+	colormap = current_default_theme().Colorbar.colormap[]
+	entries = Iterators.flatten(ae.entries for ae in grid)
+	for entry in entries
+		colormap = to_value(get(entry.attributes, :colormap, colormap))
+	end
+	limits = colorscale.extrema
+    return (; label, limits, colormap)
+end
+
+function _Legend_(fg::FigureGrid)
+	grid = fg.grid
+	entries = Iterators.flatten(ae.entries for ae in grid)
+
+	# assume all subplots have same scales, to be changed to support free scales
+    named_scales = first(grid).scales.named
+    named_labels = copy(first(grid).labels.named)
 
     # remove keywords that don't support legends
 	for key in [:row, :col, :layout, :stack, :dodge, :group]
@@ -33,7 +56,7 @@ function _Legend_(entries)
     # if no legend-worthy keyword remains return nothing
     isempty(named_labels) && return nothing
 
-	attr_dict = mapreduce((a, b) -> mergewith!(union, a, b), entries.entries) do entry
+	attr_dict = mapreduce((a, b) -> mergewith!(union, a, b), entries) do entry
 		# FIXME: this should probably use the rescaled values
 		defaultplottype = AbstractPlotting.plottype(entry.mappings.positional...)
 		plottype = AbstractPlotting.plottype(entry.plottype, defaultplottype)
@@ -68,50 +91,6 @@ function _Legend_(entries)
 	return elements_list, labels_list, nonemptytitles
 end
 
-# ------------------------------------------------
-# ----- LegendElements with more defaults --------
-# ------------------------------------------------
-
-function from_default_theme(attr)
-    theme = default_styles()
-    return get(theme, attr) do
-        AbstractPlotting.current_default_theme()[attr]
-    end
-end
-
-line_element(;
-             color=from_default_theme(:color),
-             linestyle=from_default_theme(:linestyle),
-             linewidth=from_default_theme(:linewidth),
-             kwargs...) = 
-    LineElement(; color, linestyle, linewidth, kwargs...)
-
-marker_element(;
-               color=from_default_theme(:color),
-               marker=from_default_theme(:marker),
-               strokecolor=from_default_theme(:strokecolor),
-               markerpoints=[Point2f0(0.5, 0.5)],
-               kwargs...) =
-    MarkerElement( ; color, marker, strokecolor, markerpoints, kwargs...)
-
-poly_element(;
-             color=from_default_theme(:color),
-             strokecolor=:transparent,
-             kwargs...) = 
-    PolyElement(; color, strokecolor, kwargs...)
-
-legend_elements(::Type{Scatter}; kwargs...) = [marker_element(; kwargs...)]
-legend_elements(::Type{Lines}; kwargs...) = [line_element(; kwargs...)]
-legend_elements(::Type{Contour}; kwargs...) = [line_element(; kwargs...)]
-
-function legend_elements(::Type{LinesFill}; color=from_default_theme(:color), fillalpha=0.15, kwargs...)
-	meshcolor = to_color((color, fillalpha))
-	return [poly_element(; color=meshcolor, kwargs...), line_element(; color, kwargs...)]
-end
-
-legend_elements(::Any; linewidth=0, strokecolor=:transparent, kwargs...) =
-	[poly_element(; linewidth, kwargs...)]
-
 #Notes
 
 # TODO: correctly handle composite plot types (now fall back to poly)
@@ -119,17 +98,3 @@ legend_elements(::Any; linewidth=0, strokecolor=:transparent, kwargs...) =
 # TODO: make legend updateable?
 # TODO: allow custom attributes in legend elements?
 # TODO: avoid recomputing `Entries`
-
-# WIP colorbar implementation
-
-# function _legend(P, attribute, scale::ContinuousScale, title)
-#     extrema = scale.extrema
-#     # @unpack f, extrema = scale
-#     n_ticks = 4
-    
-#     ticks = MakieLayout.locateticks(extrema..., n_ticks)
-
-#     label_kw = [(label = L(tick), kw = KW(attribute, tick)) for tick in ticks]
-    
-#     (; title, P, label_kw)
-# end
