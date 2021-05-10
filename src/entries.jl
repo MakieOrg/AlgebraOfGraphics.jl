@@ -71,7 +71,7 @@ function compute_axes_grid(fig, e::Entries; axis=NamedTuple())
     labeledcolorbar = getlabeledcolorbar(axes_grid)
     if !isnothing(labeledcolorbar)
         colorrange = getvalue(labeledcolorbar).extrema
-        for entry in Iterators.flatten(ae.entries for ae in axes_grid)
+        for entry in entries(axes_grid)
             entry.attributes[:colorrange] = colorrange
         end
     end
@@ -194,6 +194,8 @@ function AbstractPlotting.plot!(ae::AxisEntries)
     end
     return axis
 end
+
+entries(grid::AbstractMatrix{AxisEntries}) = Iterators.flatten(ae.entries for ae in grid)
 
 struct FigureGrid
     figure::Figure

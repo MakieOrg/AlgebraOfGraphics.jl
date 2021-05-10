@@ -17,8 +17,7 @@ end
 
 function getlabeledcolorbar(grid)
 	scales, labels = first(grid).scales, first(grid).labels
-	entries = Iterators.flatten(ae.entries for ae in grid)
-	key = any(has_zcolor, entries) ? 3 : :color
+	key = any(has_zcolor, entries(grid)) ? 3 : :color
 	label, scale = get(labels, key, nothing), get(scales, key, nothing)
 	return scale isa ContinuousScale ? Labeled(label, scale) : nothing
 end
@@ -29,8 +28,7 @@ function _Colorbar_(fg::FigureGrid)
 	isnothing(labeledcolorbar) && return
 	label, colorscale = getlabel(labeledcolorbar), getvalue(labeledcolorbar)
 	colormap = current_default_theme().Colorbar.colormap[]
-	entries = Iterators.flatten(ae.entries for ae in grid)
-	for entry in entries
+	for entry in entries(grid)
 		colormap = to_value(get(entry.attributes, :colormap, colormap))
 	end
 	limits = colorscale.extrema
@@ -39,7 +37,6 @@ end
 
 function _Legend_(fg::FigureGrid)
 	grid = fg.grid
-	entries = Iterators.flatten(ae.entries for ae in grid)
 
 	# assume all subplots have same scales, to be changed to support free scales
     named_scales = first(grid).scales.named
@@ -56,7 +53,7 @@ function _Legend_(fg::FigureGrid)
     # if no legend-worthy keyword remains return nothing
     isempty(named_labels) && return nothing
 
-	attr_dict = mapreduce((a, b) -> mergewith!(union, a, b), entries) do entry
+	attr_dict = mapreduce((a, b) -> mergewith!(union, a, b), entries(grid)) do entry
 		# FIXME: this should probably use the rescaled values
 		defaultplottype = AbstractPlotting.plottype(entry.mappings.positional...)
 		plottype = AbstractPlotting.plottype(entry.plottype, defaultplottype)
