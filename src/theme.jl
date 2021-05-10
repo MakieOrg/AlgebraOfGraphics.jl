@@ -42,6 +42,7 @@ end
 
 const font_folder = joinpath(dirname(@__DIR__), "assets", "fonts")
 
+firasans(weight) = joinpath(font_folder, "FiraSans-$(weight).ttf")
 opensans(weight) = joinpath(font_folder, "OpenSans-$(weight).ttf")
 
 function aog_theme()
@@ -54,11 +55,11 @@ function aog_theme()
         leftspinecolor=:darkgray,
         xtickcolor=:darkgray,
         ytickcolor=:darkgray,
-        xticklabelfont=opensans("Light"),
-        yticklabelfont=opensans("Light"),
-        xlabelfont=opensans("SemiBold"),
-        ylabelfont=opensans("SemiBold"),
-        titlefont=opensans("SemiBold"),
+        xticklabelfont=firasans("Light"),
+        yticklabelfont=firasans("Light"),
+        xlabelfont=firasans("Medium"),
+        ylabelfont=firasans("Medium"),
+        titlefont=firasans("Medium"),
     )
     Axis3 = (
         protrusions=55, # to include label on z axis, should be fixed in AbstractPlotting
@@ -71,20 +72,20 @@ function aog_theme()
         xtickcolor=:darkgray,
         ytickcolor=:darkgray,
         ztickcolor=:darkgray,
-        xticklabelfont=opensans("Light"),
-        yticklabelfont=opensans("Light"),
-        zticklabelfont=opensans("Light"),
-        xlabelfont=opensans("SemiBold"),
-        ylabelfont=opensans("SemiBold"),
-        zlabelfont=opensans("SemiBold"),
-        titlefont=opensans("SemiBold"),
+        xticklabelfont=firasans("Light"),
+        yticklabelfont=firasans("Light"),
+        zticklabelfont=firasans("Light"),
+        xlabelfont=firasans("Medium"),
+        ylabelfont=firasans("Medium"),
+        zlabelfont=firasans("Medium"),
+        titlefont=firasans("Medium"),
     )
     Legend= (
         framevisible=false,
         gridshalign=:left,
         padding=(0f0, 0f0, 0f0, 0f0),
-        labelfont=opensans("Light"),
-        titlefont=opensans("SemiBold"),
+        labelfont=firasans("Light"),
+        titlefont=firasans("Medium"),
     )
     return (; Axis, Axis3, Legend)
 end
