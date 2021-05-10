@@ -14,6 +14,9 @@ end
 Base.get(args::Arguments, i::Int, default) = get(args.positional, i, default)
 Base.get(args::Arguments, sym::Symbol, default) = get(args.named, sym, default)
 
+Base.haskey(args::Arguments, i::Int) = haskey(args.positional, i)
+Base.haskey(args::Arguments, sym::Symbol) = haskey(args.named, sym)
+
 Base.getindex(args::Arguments, i::Int) = args.positional[i]
 Base.getindex(args::Arguments, sym::Symbol) = args.named[sym]
 

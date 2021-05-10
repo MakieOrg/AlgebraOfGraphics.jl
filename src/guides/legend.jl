@@ -9,11 +9,19 @@ function MakieLayout.Legend(fg::FigureGrid)
 	end
 end
 
+function getlabeledcolorbar(scales, labels)
+	for key in (:color, 3)
+		label, scale = get(labels, key, nothing), get(scales, key, nothing)
+		scale isa ContinuousScale && return Labeled(label, scale)
+	end
+	return
+end
+
 function _Colorbar_(fg::FigureGrid)
     grid = fg.grid
-    colorscale = get(first(grid).scales, :color, nothing)
-    colorscale isa ContinuousScale || return
-    label = first(grid).labels[:color]
+	labeledcolorbar = getlabeledcolorbar(first(grid).scales, first(grid).labels)
+	isnothing(labeledcolorbar) && return
+	label, colorscale = getlabel(labeledcolorbar), getvalue(labeledcolorbar)
 	limits = colorscale.extrema
     return (; label, limits)
 end
