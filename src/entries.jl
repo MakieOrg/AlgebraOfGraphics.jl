@@ -67,6 +67,15 @@ function compute_axes_grid(fig, e::Entries; axis=NamedTuple())
         end
     end
 
+    # Link colors
+    labeledcolorbar = getlabeledcolorbar(axes_grid)
+    if !isnothing(labeledcolorbar)
+        colorrange = getvalue(labeledcolorbar).extrema
+        for entry in entries(axes_grid)
+            entry.attributes[:colorrange] = colorrange
+        end
+    end
+
     return axes_grid
 
 end
@@ -163,10 +172,9 @@ function AbstractPlotting.plot!(ae::AxisEntries)
             get!(named, key, val)
         end
 
-        # Set dodging and colorrange information
-        dodge, colorscale = get(scales, :dodge, nothing), get(scales, :color, nothing)
+        # Set dodging information
+        dodge = get(scales, :dodge, nothing)
         isa(dodge, CategoricalScale) && (named[:n_dodge] = maximum(dodge.plot))
-        isa(colorscale, ContinuousScale) && (named[:colorrange] = colorscale.extrema)
 
         # Implement alpha transparency
         alpha = pop!(named, :alpha, nothing)
@@ -186,6 +194,8 @@ function AbstractPlotting.plot!(ae::AxisEntries)
     end
     return axis
 end
+
+entries(grid::AbstractMatrix{AxisEntries}) = Iterators.flatten(ae.entries for ae in grid)
 
 struct FigureGrid
     figure::Figure
