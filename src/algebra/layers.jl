@@ -35,10 +35,11 @@ function Entries(s::OneOrMoreLayers, palettes=NamedTuple())
     entries = Entry[]
     for labeledentries in process_transformations(layers)
         for le in labeledentries
-            entry = Entry(le.plottype, map(getvalue, le.mappings), le.attributes)
-            push!(entries, entry)
-            mergewith!(mergesummaries, summaries, map(summary, entry.mappings))
-            mergewith!(mergelabels, labels, map(getlabel, le.mappings))
+            vals = arguments(map(getvalue, le.positional)...; map(getvalue, le.named)...)
+            labs = arguments(map(getlabel, le.positional)...; map(getlabel, le.named)...)
+            push!(entries, Entry(le.plottype, vals, le.attributes))
+            mergewith!(mergesummaries, summaries, map(summary, vals))
+            mergewith!(mergelabels, labels, labs)
         end
     end
     palettes = merge!(default_palettes(), arguments(; palettes...))

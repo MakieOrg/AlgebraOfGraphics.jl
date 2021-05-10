@@ -109,3 +109,4 @@ function resizetocontent!(fg::FigureGrid)
     resizetocontent!(fg.figure)
     return fg
 end
+

@@ -20,6 +20,7 @@ using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, normalize, weights, AbstractWeights, sturges
 using DataAPI: refarray
 
+import OrderedCollections: LittleDict
 import GLM, Loess
 import FileIO
 

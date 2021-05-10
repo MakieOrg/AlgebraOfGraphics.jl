@@ -1,51 +1,72 @@
+const KeyType = Union{Symbol, Int}
+
 struct Arguments
-    positional::Vector{Any}
-    named::Dict{Symbol, Any}
+    keys::Vector{KeyType}
+    values::Vector{Any}
 end
 
-Arguments(v::AbstractVector) = Arguments(v, Dict{Symbol, Any}())
+Arguments(v::AbstractVector) = Arguments(eachindex(v), v)
+
+Base.keys(a::Arguments) = a.keys
+Base.values(a::Arguments) = a.values
+Base.pairs(a::Arguments) = Iterators.map(Pair, keys(a), values(a))
 
 function arguments(args...; kwargs...)
-    positional = collect(Any, args)
-    named = Dict{Symbol, Any}(kwargs)
-    return Arguments(positional, named)
+    k = (keys(args)..., keys(kwargs)...)
+    v = (values(args)..., values(kwargs)...)
+    return Arguments(collect(KeyType, k), collect(Any, v))
 end
 
-Base.get(args::Arguments, i::Int, default) = get(args.positional, i, default)
-Base.get(args::Arguments, sym::Symbol, default) = get(args.named, sym, default)
+Base.haskey(args::Arguments, key::KeyType) = key in keys(args)
 
-Base.haskey(args::Arguments, i::Int) = haskey(args.positional, i)
-Base.haskey(args::Arguments, sym::Symbol) = haskey(args.named, sym)
+to_idx(args::Arguments, key::KeyType) = findfirst(==(key), keys(args))
+from_idx(args::Arguments, idx) = values(args)[idx]
 
-Base.getindex(args::Arguments, i::Int) = args.positional[i]
-Base.getindex(args::Arguments, sym::Symbol) = args.named[sym]
+function Base.get(args::Arguments, key::KeyType, default)
+    idx = to_idx(args, key)
+    return isnothing(idx) ? default : values(args)[idx]
+end
+Base.getindex(args::Arguments, key::KeyType) = from_idx(args, to_idx(args, key))
 
-Base.setindex!(args::Arguments, val, i::Int) = (args.positional[i] = val)
-Base.setindex!(args::Arguments, val, sym::Symbol) = (args.named[sym] = val)
+function Base.setindex!(args::Arguments, val, key::KeyType)
+    idx = to_idx(args, key)
+    if isnothing(idx)
+        push!(keys(args), key)    
+        push!(values(args), val)
+    else
+        values(args)[idx] = val
+    end
+    return val
+end
 
-Base.pop!(args::Arguments, i::Int, default) = pop!(args.positional, i, default)
-Base.pop!(args::Arguments, sym::Symbol, default) = pop!(args.named, sym, default)
+function Base.pop!(args::Arguments, key::KeyType, default)
+    idx = to_idx(args, key)
+    if isnothing(idx)
+        return default
+    else
+        deleteat!(keys(args), idx)
+        return deleteat!(values(args), idx)
+    end
+end
 
-Base.copy(args::Arguments) = Arguments(copy(args.positional), copy(args.named))
+Base.copy(args::Arguments) = Arguments(copy(keys(args)), copy(values(args)))
 
 function Base.map(f, a::Arguments, as::Arguments...)
-    is = eachindex(a.positional)
-    ks = keys(a.named)
-    function g(i)
-        vals = map(t -> t[i], (a, as...))
-        return f(vals...)
-    end
-    positional = collect(Any, Iterators.map(g, is))
-    named = Dict{Symbol, Any}(k => g(k) for k in ks)
-    return Arguments(positional, named)
+    keys = a.keys
+    values = [f(map(t -> t[key], (a, as...))...) for key in keys]
+    return Arguments(keys, values)
 end
 
 function Base.mergewith!(op, a::Arguments, b::Arguments)
-    la, lb = length(a.positional), length(b.positional)
-    for i in 1:lb
-        (i ≤ la) ? (a[i] = op(a[i], b[i])) : push!(a.positional, b[i])
+    for (key, value) in pairs(b)
+        idx = to_idx(a, key)
+        if isnothing(idx)
+            push!(keys(a), key)
+            push!(values(a), value)
+        else
+            values(a)[idx] = op(values(a)[idx], value)
+        end
     end
-    mergewith!(op, a.named, b.named)
     return a
 end
 
@@ -56,7 +77,7 @@ Base.merge!(a::Arguments, b::Arguments) = mergewith!(latter, a, b)
 Base.merge(a::Arguments, b::Arguments) = merge!(copy(a), b)
 
 function separate!(continuous::Arguments)
-    discrete = Dict{Symbol, Any}()
+    discrete = LittleDict{Symbol, Any}()
     for (k, v) in continuous.named
         label, value = getlabel(v), getvalue(v)
         iscontinuous(value) && continue

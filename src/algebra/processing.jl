@@ -76,11 +76,12 @@ getvalue(x::Labeled) = x.value
 getlabel(x) = ""
 getvalue(x) = x
 
-function process_data(data, mappings′)
-    mappings = map(mappings′) do x
-        return map(Base.Fix1(NameTransformationLabel, data), maybewrap(x))
+function process_data(data, positional′, named′)
+    positional, named = map((positional′, named′)) do tup
+        return map(x -> map(Base.Fix1(NameTransformationLabel, data), maybewrap(x)), tup)
     end
-    axs = Broadcast.combine_axes(mappings.positional..., values(mappings.named)...)
+    axs = Broadcast.combine_axes(positional..., named...)
+    mappings = arguments(positional...; named...)
     labeledarrays = map(mappings) do ntls
         names = map(ntl -> ntl.name, ntls)
         transformations = map(ntl -> ntl.transformation, ntls)
@@ -97,7 +98,7 @@ end
 process_transformations(layers::Layers) = map(process_transformations, layers)
 
 function process_transformations(layer::Layer)
-    init = process_data(layer.data, layer.mappings)
+    init = process_data(layer.data, layer.positional, layer.named)
     res = foldl(process_transformations, layer.transformations; init)
     return res isa Entry ? splitapply(res) : res
 end

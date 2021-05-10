@@ -1,23 +1,23 @@
 struct Layer
     transformations::Tuple
     data::Any
-    mappings::Arguments
+    positional::Tuple
+    named::NamedTuple
 end
 
-Layer(transformations::Tuple=()) = Layer(transformations, nothing, arguments())
+Layer(transformations::Tuple=()) = Layer(transformations, nothing, (), (;))
 
-data(df) = Layer((), columns(df), arguments())
-mapping(args...; kwargs...) = Layer((), nothing, arguments(args...; kwargs...))
+data(df) = Layer((), columns(df), (), (;))
+mapping(args...; kwargs...) = Layer((), nothing, args, values(kwargs))
 
 function Base.:*(l1::Layer, l2::Layer)
     t1, t2 = l1.transformations, l2.transformations
     d1, d2 = l1.data, l2.data
-    m1, m2 = l1.mappings, l2.mappings
+    p1, p2 = l1.positional, l2.positional
+    n1, n2 = l1.named, l2.named
     transformations = (t1..., t2...)
     data = isnothing(d2) ? d1 : d2
-    mappings = Arguments(
-        vcat(m1.positional, m2.positional),
-        merge(m1.named, m2.named)
-    )
-    return Layer(transformations, data, mappings)
+    positional =(p1..., p2...)
+    named = merge(n1, n2)
+    return Layer(transformations, data, positional, named)
 end
