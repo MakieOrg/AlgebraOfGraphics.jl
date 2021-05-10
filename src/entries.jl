@@ -72,7 +72,7 @@ function compute_axes_grid(fig, e::Entries; axis=NamedTuple())
     if !isnothing(labeledcolorbar)
         colorrange = getvalue(labeledcolorbar).extrema
         for entry in Iterators.flatten(ae.entries for ae in axes_grid)
-            get!(entry.attributes, :colorrange, colorrange)
+            entry.attributes[:colorrange] = colorrange
         end
     end
 
