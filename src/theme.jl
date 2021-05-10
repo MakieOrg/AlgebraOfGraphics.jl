@@ -81,9 +81,10 @@ function aog_theme()
     )
     Legend= (
         framevisible=false,
-        labelfont=AlgebraOfGraphics.opensans("Light"),
-        titlefont=AlgebraOfGraphics.opensans("SemiBold"),
         gridshalign=:left,
+        padding=(0f0, 0f0, 0f0, 0f0),
+        labelfont=opensans("Light"),
+        titlefont=opensans("SemiBold"),
     )
     return (; Axis, Axis3, Legend)
 end

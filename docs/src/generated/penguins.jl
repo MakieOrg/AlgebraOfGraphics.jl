@@ -157,7 +157,7 @@ draw(plt; axis)
 # fit and the contour lines.
 # We can lighten the markers using alpha transparency.
 
-layers = density() * visual(Contour, linewidth = 1.5) + linear() + visual(alpha = 0.5)
+layers = density() * visual(Contour) + linear() + visual(alpha = 0.5)
 plt = penguin_bill * layers * mapping(color = :species)
 draw(plt; axis)
 
