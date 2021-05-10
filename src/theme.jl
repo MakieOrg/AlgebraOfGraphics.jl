@@ -80,14 +80,21 @@ function aog_theme()
         zlabelfont=firasans("Medium"),
         titlefont=firasans("Medium"),
     )
-    Legend= (
+    Legend = (
         framevisible=false,
         gridshalign=:left,
         padding=(0f0, 0f0, 0f0, 0f0),
         labelfont=firasans("Light"),
         titlefont=firasans("Medium"),
     )
-    return (; Axis, Axis3, Legend)
+    Colorbar = (
+        colormap=:batlow,
+        flip_vertical_label=true,
+        spinewidth=0,
+        ticklabelfont=firasans("Light"),
+        labelfont=firasans("Medium"),
+    )
+    return (; Axis, Axis3, Legend, Colorbar)
 end
 
 function set_aog_theme!()
