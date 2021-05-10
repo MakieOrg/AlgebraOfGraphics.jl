@@ -2,28 +2,39 @@ function MakieLayout.Legend(fg::FigureGrid)
 	colorbar = _Colorbar_(fg)
     legend = _Legend_(fg)
     if !isnothing(colorbar)
-		Colorbar(fg.figure[:, end + 1]; colorbar.label, colorbar.limits)
+		Colorbar(fg.figure[:, end + 1]; colorbar...)
 	end
 	if !isnothing(legend)
 		Legend(fg.figure[:, end + 1], legend...)
 	end
 end
 
-function getlabeledcolorbar(scales, labels)
-	for key in (:color, 3)
-		label, scale = get(labels, key, nothing), get(scales, key, nothing)
-		scale isa ContinuousScale && return Labeled(label, scale)
-	end
-	return
+function has_zcolor(entry::Entry)
+	return entry.plottype <: Union{Heatmap, Contour, Contourf, Surface} &&
+		!haskey(entry.mappings, :color) &&
+		!haskey(entry.attributes, :color)
+end
+
+function getlabeledcolorbar(grid)
+	scales, labels = first(grid).scales, first(grid).labels
+	entries = Iterators.flatten(ae.entries for ae in grid)
+	key = any(has_zcolor, entries) ? 3 : :color
+	label, scale = get(labels, key, nothing), get(scales, key, nothing)
+	return scale isa ContinuousScale ? Labeled(label, scale) : nothing
 end
 
 function _Colorbar_(fg::FigureGrid)
-    grid = fg.grid
-	labeledcolorbar = getlabeledcolorbar(first(grid).scales, first(grid).labels)
+	grid = fg.grid
+	labeledcolorbar = getlabeledcolorbar(grid)
 	isnothing(labeledcolorbar) && return
 	label, colorscale = getlabel(labeledcolorbar), getvalue(labeledcolorbar)
+	colormap = current_default_theme().Colorbar.colormap[]
+	entries = Iterators.flatten(ae.entries for ae in grid)
+	for entry in entries
+		colormap = to_value(get(entry.attributes, :colormap, colormap))
+	end
 	limits = colorscale.extrema
-    return (; label, limits)
+    return (; label, limits, colormap)
 end
 
 function _Legend_(fg::FigureGrid)
