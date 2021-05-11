@@ -44,6 +44,7 @@ makedocs(;
             "generated/entries.md",
         ],
         "API.md",
+        "philosophy.md",
     ],
     strict = true,
 )
