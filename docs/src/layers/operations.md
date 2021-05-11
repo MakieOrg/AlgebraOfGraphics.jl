@@ -5,7 +5,7 @@
 Each layer is composed of data, mappings, and transformations.
 Datasets can be replaced, mappings can be merged, and transformations can be
 concatenated. These operations, taken together, define an associative operation
-on layers, which we call multiplication (`*`).
+on layers, which we call multiplication `*`.
 
 Multiplication is primarily useful to combine partially defined layers.
 

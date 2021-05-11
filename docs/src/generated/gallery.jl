@@ -212,12 +212,7 @@ layers = linear() + mapping(color=:z)
 plt = xyc * layers
 draw(plt, axis=(aspect=1,), figure=(resolution=(800, 400),))
 
-# ## Multiple selection
-#
-# Selecting multiple columns at once can have two possible applications. One is
-# "wide data", the other is on-the-fly creating of novel columns.
-#
-# ### Wide data
+# ## Wide data
 
 df = (a=randn(100), b=randn(100), c=randn(100))
 labels = ["Trace 1", "Trace 2", "Trace 3"]
@@ -251,7 +246,7 @@ plt = data(df) *
     )
 draw(plt)
 
-# ### Wide data for time series
+# ## Time series
 
 using Dates
 
@@ -276,7 +271,7 @@ plt = data(df) *
     visual(Lines)
 draw(plt)
 
-# ### New columns on the fly
+# ## New columns on the fly
 
 df = (x=rand(100), y=rand(100), z=rand(100), c=rand(["a", "b"], 100))
 layers = linear() + mapping(color=:z)
