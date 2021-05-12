@@ -35,6 +35,31 @@ function _Colorbar_(fg::FigureGrid)
     return (; label, limits, colormap)
 end
 
+"""
+	plottypes_attributes(entries)
+
+Return plottypes and relative attributes, as two vectors of the same length,
+for the given `entries`.
+"""
+function plottypes_attributes(entries)
+	plottypes = PlotFunc[]
+	attributes = Vector{Symbol}[]
+	for entry in entries
+		# FIXME: this should probably use the rescaled values
+		defaultplottype = AbstractPlotting.plottype(entry.mappings.positional...)
+		plottype = AbstractPlotting.plottype(entry.plottype, defaultplottype)
+		n = findfirst(==(plottype), plottypes)
+		attrs = keys(entry.mappings.named)
+		if isnothing(n)
+			push!(plottypes, plottype)
+			push!(attributes, collect(Symbol, attrs))
+		else
+			union!(attributes[n], attrs)
+		end
+	end
+	return plottypes, attributes
+end
+
 function _Legend_(fg::FigureGrid)
 	grid = fg.grid
 
@@ -53,17 +78,11 @@ function _Legend_(fg::FigureGrid)
     # if no legend-worthy keyword remains return nothing
     isempty(named_labels) && return nothing
 
-	attr_dict = mapreduce((a, b) -> mergewith!(union, a, b), entries(grid)) do entry
-		# FIXME: this should probably use the rescaled values
-		defaultplottype = AbstractPlotting.plottype(entry.mappings.positional...)
-		plottype = AbstractPlotting.plottype(entry.plottype, defaultplottype)
-		attrs = keys(entry.mappings.named)
-		return LittleDict{PlotFunc, Vector{Symbol}}(plottype => collect(attrs))
-    end
-
 	titles = unique!(collect(String, values(named_labels)))
 	# empty strings create difficulties with the layout
 	nonemptytitles = map(t -> isempty(t) ? " " : t, titles)
+
+	plottypes, attributes = plottypes_attributes(entries(grid))
 
 	labels_list = Vector{String}[]
 	elements_list = Vector{Vector{LegendElement}}[]
@@ -72,12 +91,12 @@ function _Legend_(fg::FigureGrid)
 		label_attrs = [key for (key, val) in named_labels if val == title]
 		first_scale = named_scales[first(label_attrs)]
 		labels = map(string, first_scale.data)
-		plottypes = [P => attrs ∩ label_attrs for (P, attrs) in pairs(attr_dict)]
-		filter!(t -> !isempty(last(t)), plottypes)
 		elements = map(eachindex(first_scale.data)) do idx
 			local elements = LegendElement[]
-			for (P, attrs) in plottypes
-				options = [attr => named_scales[attr].plot[idx] for attr in attrs]
+			for (P, attrs) in zip(plottypes, attributes)
+				shared_attrs = attrs ∩ label_attrs
+				isempty(shared_attrs) && continue
+				options = [attr => named_scales[attr].plot[idx] for attr in shared_attrs]
 				append!(elements, legend_elements(P; options...))
 			end
 			return elements
@@ -94,4 +113,3 @@ end
 # TODO: check that all scales for the same label agree on the data
 # TODO: make legend updateable?
 # TODO: allow custom attributes in legend elements?
-# TODO: avoid recomputing `Entries`
