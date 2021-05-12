@@ -49,8 +49,12 @@ end
 
 # Logic to infer good scales
 function default_scales(summaries, palettes)
-    palettes = merge!(map(_ -> automatic, summaries), palettes)
-    return map(default_scale, summaries, palettes)
+    defaults = ArgDict()
+    for (key, val) in pairs(summaries)
+        palette = get(palettes, key, automatic)
+        defaults[key] = default_scale(val, palette)
+    end
+    return defaults
 end
 
 # Logic to create ticks from a scale

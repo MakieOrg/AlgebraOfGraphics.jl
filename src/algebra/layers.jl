@@ -28,7 +28,7 @@ mergesummaries(s1::Tuple, s2::Tuple) = extend_extrema(s1, s2)
 
 mergelabels(a, b) = a
 
-function Entries(s::OneOrMoreLayers, palettes=NamedTuple())
+function entries_scales_labels(s::OneOrMoreLayers, palettes=NamedTuple())
     layers::Layers = s
     summaries = ArgDict()
     labels = ArgDict()
@@ -41,13 +41,23 @@ function Entries(s::OneOrMoreLayers, palettes=NamedTuple())
                 return (; values, labels, summaries)
             end
             push!(entries, Entry(le.plottype, positional.values, named.values, le.attributes))
-            mergewith!(mergesummaries, summaries, iterate_pairs(positional.summaries, named.summaries))
-            mergewith!(mergelabels, labels, iterate_pairs(positional.labels, named.labels))
+            mergewith!(
+                mergesummaries,
+                summaries,
+                pairs(positional.summaries),
+                pairs(named.summaries)
+            )
+            mergewith!(
+                mergelabels,
+                labels,
+                pairs(positional.labels),
+                pairs(named.labels)
+            )
         end
     end
     palettes = merge(default_palettes(), palettes)
     scales = default_scales(summaries, palettes)
-    return Entries(entries, scales, labels)
+    return entries, scales, labels
 end
 
 function AbstractPlotting.plot!(fig, s::OneOrMoreLayers;

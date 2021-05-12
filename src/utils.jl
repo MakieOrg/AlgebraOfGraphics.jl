@@ -101,8 +101,6 @@ maybewrap(x) = fill(x)
 unwrap(x) = x
 unwrap(x::AbstractArray{<:Any, 0}) = x[]
 
-iterate_pairs(args...) = Iterators.flatten(map(pairs, args))
-
 function separate(f, nt::NamedTuple)
     filtered_keys = filter(key -> f(nt[key]), keys(nt))
     filtered_nt = NamedTuple{filtered_keys}(nt)
