@@ -49,8 +49,6 @@ draw(layers * xy)
 
 # ## Faceting
 #
-# The "facet style" is only applied with an explicit call to `facet!`.
-#
 # ### Facet grid
 
 df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
