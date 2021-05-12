@@ -42,54 +42,74 @@ end
     @test entry.named[:marker].value == ["a" "b"]
 end
 
-df = (x = rand(1000), y = rand(1000), z = rand(1000), c = rand(["a", "b", "c"], 1000))
-d = mapping(:x => exp, [:y, :z], color = :c, marker = dims(1) => t -> ["a", "b"][t])
-layer = data(df) * d
-le = AlgebraOfGraphics.process_data(layer)
-entries = AlgebraOfGraphics.splitapply(le)
-entries[1]
-
-f = identity
-positional, named = map(getvalue, le.positional), map(getvalue, le.named)
-
-axs = Broadcast.combine_axes(positional..., named...)
-
-list = Entry[]
-for c in CartesianIndices(axs)
-    p, n = nested_map((positional, named)) do v
-        I = Broadcast.newindex(v, c)
-        return v[I]
+@testset "splitapply" begin
+    df = (x = rand(1000), y = rand(1000), z = rand(1000), c = rand(["a", "b", "c"], 1000))
+    df.c[1:3] .= ["a", "b", "c"] # ensure all three values exist
+    d = mapping(:x => exp, [:y, :z], color = :c, marker = dims(1) => t -> ["1", "2"][t])
+    layer = data(df) * d
+    le = AlgebraOfGraphics.process_data(layer)
+    entries = AlgebraOfGraphics.splitapply(le)
+    @test length(entries) == 6
+    for i in 1: 6
+        @test entries[i].plottype === Any
+        @test isempty(entries[i].attributes)
     end
-    grouping_cols = Tuple(m for (_, m) in named if m isa AbstractVector && !iscontinuous(m))
-    foreach(indices_iterator(grouping_cols)) do idxs
-            submappings = map(labels, mappings) do label, v
-                I = ntuple(ndims(v)) do n
-                    i = n == 1 ? idxs : c[n-1]
-                    return adjust_index(axs[n], axes(v, n), i)
-                end
-                return Labeled(label, view(v, I...))
-            end
-            discrete, continuous = separate!(submappings)
-            new_entries = maybewrap(f(Entry(le.plottype, continuous, le.attributes)))
-            for new_entry in maybewrap(new_entries)
-                push!(list, recombine!(discrete, new_entry))
-            end
-        end
-    end
-return list
-    
-    1 == AlgebraOfGraphics.Labeled("x", df.x)
-    AlgebraOfGraphics.process_transformations(layers)
-    @test layers[1].transformations[1] isa AlgebraOfGraphics.Visual
-    @test layers[1].transformations[1].attributes[:color] == :red
-    @test layers[1].positional == (:x, :y)
-    @test layers[1].named == (color=:c,)
-    @test layers[1].data == df
-# end
 
+    @test entries[1].positional[1].label == "x"
+    @test entries[1].positional[1].value == exp.(df.x[df.c .== "a"])
+    @test entries[1].positional[2].label == "y"
+    @test entries[1].positional[2].value == df.y[df.c .== "a"]
+    @test entries[1].named[:color].label == "c"
+    @test entries[1].named[:color].value == fill("a")
+    @test entries[1].named[:marker].label == ""
+    @test entries[1].named[:marker].value == fill("1")
 
-    AlgebraOfGraphics.process_transformations(layers)
-1
+    @test entries[2].positional[1].label == "x"
+    @test entries[2].positional[1].value == exp.(df.x[df.c .== "a"])
+    @test entries[2].positional[2].label == "z"
+    @test entries[2].positional[2].value == df.z[df.c .== "a"]
+    @test entries[2].named[:color].label == "c"
+    @test entries[2].named[:color].value == fill("a")
+    @test entries[2].named[:marker].label == ""
+    @test entries[2].named[:marker].value == fill("2")
+
+    @test entries[3].positional[1].label == "x"
+    @test entries[3].positional[1].value == exp.(df.x[df.c .== "b"])
+    @test entries[3].positional[2].label == "y"
+    @test entries[3].positional[2].value == df.y[df.c .== "b"]
+    @test entries[3].named[:color].label == "c"
+    @test entries[3].named[:color].value == fill("b")
+    @test entries[3].named[:marker].label == ""
+    @test entries[3].named[:marker].value == fill("1")
+
+    @test entries[4].positional[1].label == "x"
+    @test entries[4].positional[1].value == exp.(df.x[df.c .== "b"])
+    @test entries[4].positional[2].label == "z"
+    @test entries[4].positional[2].value == df.z[df.c .== "b"]
+    @test entries[4].named[:color].label == "c"
+    @test entries[4].named[:color].value == fill("b")
+    @test entries[4].named[:marker].label == ""
+    @test entries[4].named[:marker].value == fill("2")
+
+    @test entries[5].positional[1].label == "x"
+    @test entries[5].positional[1].value == exp.(df.x[df.c .== "c"])
+    @test entries[5].positional[2].label == "y"
+    @test entries[5].positional[2].value == df.y[df.c .== "c"]
+    @test entries[5].named[:color].label == "c"
+    @test entries[5].named[:color].value == fill("c")
+    @test entries[5].named[:marker].label == ""
+    @test entries[5].named[:marker].value == fill("1")
+
+    @test entries[6].positional[1].label == "x"
+    @test entries[6].positional[1].value == exp.(df.x[df.c .== "c"])
+    @test entries[6].positional[2].label == "z"
+    @test entries[6].positional[2].value == df.z[df.c .== "c"]
+    @test entries[6].named[:color].label == "c"
+    @test entries[6].named[:color].value == fill("c")
+    @test entries[6].named[:marker].label == ""
+    @test entries[6].named[:marker].value == fill("2")
+end
+
 # mappings = pairs.(getproperty.(res, :mapping))
 # @test last(mappings[1][1]).value == mapping(df[idx1, :x], df[idx1, :y]).value
 # @test last(mappings[1][2]).value == mapping(df[idx2, :x], df[idx2, :y]).value

@@ -9,19 +9,18 @@ function indices_iterator(cols)
     return (sortperm(gp)[rg] for rg in gp)
 end
 
-adjust_index(ax, idx::Int) = length(ax) == 1 ? 1 : idx
-adjust_index(ax, idxs::AbstractArray) = length(ax) == 1 ? one.(idxs) : idxs
-adjust_index(ax, idxs::Colon) = idxs
-
-getnewindex(v, i) = v[Broadcast.newindex(v, i)]
-
-function subselect(labeledarray::Labeled, idxs, c::CartesianIndex=CartesianIndex())
-    labels, array = getlabel(labeledarray), getvalue(labeledarray)
-    I = ntuple(ndims(array)) do n
-        i = n == 1 ? idxs : c[n-1]
-        return adjust_index(axes(array, n), i)
+function adjust_index(axs::NTuple{N, Any}, c::CartesianIndex) where N
+    return ntuple(N) do n
+        ax = axs[n]
+        return length(ax) == 1 ? only(ax) : c[n]
     end
-    return Labeled(getnewindex(labels, c), view(array, I...))
+end
+
+function subselect(labeledarray::Labeled, idxs, c::CartesianIndex)
+    labels, array = getlabel(labeledarray), getvalue(labeledarray)
+    label = labels[adjust_index(axes(labels), c)...]
+    subarray = view(array, idxs, adjust_index(tail(axes(array)), c)...)
+    return Labeled(label, subarray)
 end
 
 splitapply(le::Entry) = splitapply(identity, le)
@@ -29,17 +28,19 @@ splitapply(le::Entry) = splitapply(identity, le)
 function splitapply(f, le::Entry)
     positional, named = le.positional, le.named
     axs = Broadcast.combine_axes(map(getvalue, positional)..., map(getvalue, named)...)
-    discrete, continuous = separate(named) do lv
-        v = getvalue(lv)
-        return v isa AbstractVector && !iscontinuous(v)
-    end
+    discrete, continuous = separate(lv -> !iscontinuous(getvalue(lv)), named)
+    grouping = filter(lv -> isa(getvalue(lv), AbstractVector), Tuple(discrete))
     list = Entry[]
-    foreach(indices_iterator(discrete)) do idxs
+    foreach(indices_iterator(grouping)) do idxs
         for c in CartesianIndices(tail(axs))
             subpositional, subcontinuous = nested_map((positional, continuous)) do l
                 return subselect(l, idxs, c)
             end
-            subdiscrete = map(v -> subselect(v, first(idxs)), discrete)
+            subdiscrete = map(discrete) do l
+                v = getvalue(l)
+                i = idxs === Colon() || size(v, 1) == 1 ? firstindex(v, 1) : first(idxs)
+                return subselect(l, i, c)
+            end
             new_entries = f(Entry(le.plottype, subpositional, subcontinuous, le.attributes))
             for new_entry in maybewrap(new_entries)
                 push!(
