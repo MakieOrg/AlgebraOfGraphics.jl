@@ -34,15 +34,7 @@ end
 
 const ArgDict = Dict{Union{Symbol, Int}, Any}
 
-struct Entries
-    entries::Vector{Entry}
-    scales::ArgDict
-    labels::ArgDict
-end
-
-Entries() = Entries(Entry[], argdict(), argdict())
-
-function compute_axes_grid(fig, e::Entries; axis=NamedTuple())
+function compute_axes_grid(fig, e; axis=NamedTuple())
 
     rowcol = (:row, :col)
 
@@ -92,17 +84,17 @@ function compute_axes_grid(fig, e::Entries; axis=NamedTuple())
 
 end
 
-function AbstractPlotting.plot(entries::Entries; axis=NamedTuple(), figure=NamedTuple())
-    fig = Figure(; figure...)
-    grid = plot!(fig, entries; axis)
-    return FigureGrid(fig, grid)
-end
+# function AbstractPlotting.plot(entries::Entries; axis=NamedTuple(), figure=NamedTuple())
+#     fig = Figure(; figure...)
+#     grid = plot!(fig, entries; axis)
+#     return FigureGrid(fig, grid)
+# end
 
-function AbstractPlotting.plot!(fig, entries::Entries; axis=NamedTuple())
-    axes_grid = compute_axes_grid(fig, entries; axis)
-    foreach(plot!, axes_grid)
-    return axes_grid
-end
+# function AbstractPlotting.plot!(fig, entries::Entries; axis=NamedTuple())
+#     axes_grid = compute_axes_grid(fig, entries; axis)
+#     foreach(plot!, axes_grid)
+#     return axes_grid
+# end
 
 """
     AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, labels, scales)

@@ -15,59 +15,53 @@ using AlgebraOfGraphics, Test
     @test AlgebraOfGraphics.midpoints(1:10) == 1.5:9.5
 end
 
-# @testset "product" begin
-#     s = dims() * mapping(1:2, ["a", "b"], color = dims(1))
-#     ps = pairs(s)
-#     @test ps[1] == Pair((color = 1,), mapping(1, "a"))
-#     @test ps[2] == Pair((color = 2,), mapping(2, "b"))
-# end
+@testset "layers" begin
+    df = (x = rand(1000), y = rand(1000), c = rand(["a", "b", "c"], 1000))
+    d = mapping(:x, :y, color = :c)
+    s = visual(color = :red) + mapping(markersize = :c)
+    layers = data(df) * d * s
+    @test layers[1].transformations[1] isa AlgebraOfGraphics.Visual
+    @test layers[1].transformations[1].attributes[:color] == :red
+    @test layers[1].positional == (:x, :y)
+    @test layers[1].named == (color=:c,)
+    @test layers[1].data == df
+end
 
-# @testset "contexts" begin
-#     mpg = dataset("ggplot2", "mpg")
-#     d = mapping(:Cyl, :Hwy, color = :Year => categorical)
-#     s = visual(color = :red, font = 10) + mapping(markersize = :Year)
-#     res = data(mpg) * d * s
-#     @test res[1].options == (color = :red, font = 10)
+# mappings = pairs.(getproperty.(res, :mapping))
+# @test last(mappings[1][1]).value == mapping(df[idx1, :x], df[idx1, :y]).value
+# @test last(mappings[1][2]).value == mapping(df[idx2, :x], df[idx2, :y]).value
+# @test last(mappings[2][1]).value == mapping(df[idx1, :x], df[idx1, :y], markersize = df[idx1, :c]).value
+# @test last(mappings[2][2]).value == mapping(df[idx2, :x], df[idx2, :y], markersize = df[idx2, :c]).value
 
-#     idx1 = mpg.Year .== 1999
-#     idx2 = mpg.Year .== 2008
+# @test first(mappings[1][1]).color isa NamedDimsArray
+# @test only(first(mappings[1][1]).color) == 1999
+# @test dimnames(first(mappings[1][1]).color) == (:c,)
 
-#     mappings = pairs.(getproperty.(res, :mapping))
-#     @test last(mappings[1][1]).value == mapping(mpg[idx1, :Cyl], mpg[idx1, :Hwy]).value
-#     @test last(mappings[1][2]).value == mapping(mpg[idx2, :Cyl], mpg[idx2, :Hwy]).value
-#     @test last(mappings[2][1]).value == mapping(mpg[idx1, :Cyl], mpg[idx1, :Hwy], markersize = mpg[idx1, :Year]).value
-#     @test last(mappings[2][2]).value == mapping(mpg[idx2, :Cyl], mpg[idx2, :Hwy], markersize = mpg[idx2, :Year]).value
+# @test first(mappings[1][2]).color isa NamedDimsArray
+# @test only(first(mappings[1][2]).color) == 2008
+# @test dimnames(first(mappings[1][2]).color) == (:c,)
 
-#     @test first(mappings[1][1]).color isa NamedDimsArray
-#     @test only(first(mappings[1][1]).color) == 1999
-#     @test dimnames(first(mappings[1][1]).color) == (:Year,)
+# @test first(mappings[2][1]).color isa NamedDimsArray
+# @test only(first(mappings[2][1]).color) == 1999
+# @test dimnames(first(mappings[2][1]).color) == (:c,)
 
-#     @test first(mappings[1][2]).color isa NamedDimsArray
-#     @test only(first(mappings[1][2]).color) == 2008
-#     @test dimnames(first(mappings[1][2]).color) == (:Year,)
+# @test first(mappings[2][2]).color isa NamedDimsArray
+# @test only(first(mappings[2][2]).color) == 2008
+# @test dimnames(first(mappings[2][2]).color) == (:c,)
 
-#     @test first(mappings[2][1]).color isa NamedDimsArray
-#     @test only(first(mappings[2][1]).color) == 1999
-#     @test dimnames(first(mappings[2][1]).color) == (:Year,)
+# @test_throws ArgumentError data(df) * mapping(:Cyll)
 
-#     @test first(mappings[2][2]).color isa NamedDimsArray
-#     @test only(first(mappings[2][2]).color) == 2008
-#     @test dimnames(first(mappings[2][2]).color) == (:Year,)
+# x = rand(5, 3, 2)
+# y = rand(5, 3)
+# s = dims(1) * mapping(x, y, color = dims(2)) 
 
-#     @test_throws ArgumentError data(mpg) * mapping(:Cyll)
-
-#     x = rand(5, 3, 2)
-#     y = rand(5, 3)
-#     s = dims(1) * mapping(x, y, color = dims(2)) 
-
-#     res = pairs(s)
-#     for (i, r) in enumerate(res)
-#         group, st = r
-#         @test group == (; color = mod1(i, 3))
-#         xsl = x[:, mod1(i, 3), (i > 3) + 1]
-#         ysl = y[:, mod1(i, 3)]
-#         @test st.value == mapping(xsl, ysl).value
-#     end
+# res = pairs(s)
+# for (i, r) in enumerate(res)
+#     group, st = r
+#     @test group == (; color = mod1(i, 3))
+#     xsl = x[:, mod1(i, 3), (i > 3) + 1]
+#     ysl = y[:, mod1(i, 3)]
+#     @test st.value == mapping(xsl, ysl).value
 # end
 
 # @testset "compute specs" begin
@@ -94,4 +88,11 @@ end
 #     @test dimnames(res[4].pkeys.color) == (:c,)
 #     @test res[3].mapping.value == mapping([1], [10], size = [3]).value
 #     @test res[4].mapping.value == mapping([2], [20], size = [4]).value
+# end
+
+# @testset "product" begin
+#     s = dims() * mapping(1:2, ["a", "b"], color = dims(1))
+#     ps = pairs(s)
+#     @test ps[1] == Pair((color = 1,), mapping(1, "a"))
+#     @test ps[2] == Pair((color = 2,), mapping(2, "b"))
 # end
