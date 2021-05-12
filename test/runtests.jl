@@ -27,6 +27,35 @@ end
     @test layers[1].data == df
 end
 
+@testset "process_data" begin
+    df = (x = rand(1000), y = rand(1000), z = rand(100), c = rand(["a", "b", "c"], 1000))
+    d = mapping(:x => exp, [:y, :z], color = :c, marker = dims(1) => t -> ["a", "b"][t])
+    layer = data(df) * d
+    entry = AlgebraOfGraphics.process_data(layer)
+    @test only(entry.positional[1]).label == "x"
+    @test only(entry.positional[1]).value == map(exp, df.x)
+    @test entry.positional[2][1].label == "y"
+    @test entry.positional[2][1].value == df.y
+    @test entry.positional[2][2].label == "z"
+    @test entry.positional[2][2].value == df.z
+    @test only(entry.named[:color]).label == "c"
+    @test only(entry.named[:color]).value == df.c
+    @test only(entry.named[:marker]).label == ""
+    @test only(entry.named[:marker]).value == ["a", "b"]
+end
+
+    1 == AlgebraOfGraphics.Labeled("x", df.x)
+    AlgebraOfGraphics.process_transformations(layers)
+    @test layers[1].transformations[1] isa AlgebraOfGraphics.Visual
+    @test layers[1].transformations[1].attributes[:color] == :red
+    @test layers[1].positional == (:x, :y)
+    @test layers[1].named == (color=:c,)
+    @test layers[1].data == df
+# end
+
+
+    AlgebraOfGraphics.process_transformations(layers)
+1
 # mappings = pairs.(getproperty.(res, :mapping))
 # @test last(mappings[1][1]).value == mapping(df[idx1, :x], df[idx1, :y]).value
 # @test last(mappings[1][2]).value == mapping(df[idx2, :x], df[idx2, :y]).value

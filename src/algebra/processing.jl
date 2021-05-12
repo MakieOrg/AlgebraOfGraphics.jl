@@ -1,105 +1,67 @@
-struct DimsSelector{N}
-    dims::NTuple{N, Int}
-end
-dims(args...) = DimsSelector(args)
+## Grouping machinery
 
-function (d::DimsSelector)(c::CartesianIndex{N}) where N
-    t = ntuple(N) do n
-        return n in d.dims ? c[n] : 1
+fast_hashed(v::AbstractVector) = isbitstype(eltype(v)) ? PooledArray(v) : v
+
+function indices_iterator(cols)
+    isempty(cols) && return Ref(Colon())
+    grouping_sa = StructArray(map(refarray∘fast_hashed, cols))
+    gp = GroupPerm(grouping_sa)
+    return (sortperm(gp)[rg] for rg in gp)
+end
+
+splitapply(x::AbstractArray{<:Pair}) = x
+
+splitapply(le::Entry) = splitapply(identity, le)
+
+function splitapply(f, le::Entry)
+    positional, named = map(getvalue, le.positional), map(getvalue, le.named)
+    axs = Broadcast.combine_axes(positional..., named...)
+    iter = (m for (_, m) in named if m isa AbstractVector && !iscontinuous(m))
+    grouping_cols = Tuple(iter)
+    list = Entry[]
+    foreach(indices_iterator(grouping_cols)) do idxs
+        for c in CartesianIndices(tail(axs))
+            submappings = map(labels, mappings) do label, v
+                I = ntuple(ndims(v)) do n
+                    i = n == 1 ? idxs : c[n-1]
+                    return adjust_index(axs[n], axes(v, n), i)
+                end
+                return Labeled(label, view(v, I...))
+            end
+            discrete, continuous = separate!(submappings)
+            new_entries = maybewrap(f(Entry(le.plottype, continuous, le.attributes)))
+            for new_entry in maybewrap(new_entries)
+                push!(list, recombine!(discrete, new_entry))
+            end
+        end
     end
-    return CartesianIndex(t)
+    return list
 end
 
-compute_label(data, name::StringLike) = string(name)
-compute_label(data, name::Integer) = string(columnnames(data)[name])
-compute_label(data, name::DimsSelector) = ""
+## Transform `Layers` into list of `Entry`
 
-struct NameTransformationLabel
-    name::Any
-    transformation::Any
-    label::String
-end
-
-function NameTransformationLabel(name, transformation, label::Symbol)
-    return NameTransformationLabel(name, transformation, string(label))
-end
-
-function NameTransformationLabel(data, x::Union{StringLike, Integer, DimsSelector})
-    return NameTransformationLabel(x, identity, compute_label(data, x))
-end
-
-function NameTransformationLabel(data, x::Pair{<:Any, <:StringLike})
-    name, label = x
-    return NameTransformationLabel(name, identity, label)
-end
-
-function NameTransformationLabel(data, x::Pair{<:Any, <:Any})
-    name, transformation = x
-    label = compute_label(data, name)
-    return NameTransformationLabel(name, transformation, label)
-end
-
-function NameTransformationLabel(data, x::Pair{<:Any, <:Pair})
-    name, transformation_label = x
-    transformation, label = transformation_label
-    return NameTransformationLabel(name, transformation, label)
-end
-
-function apply_context(data, axs, names::ArrayLike)
-    return map(name -> apply_context(data, axs, name), names)
-end
-
-apply_context(data, axs, name::StringLike) = getcolumn(data, Symbol(name))
-
-function apply_context(data, axs, idx::Integer)
-    name = columnnames(data)[idx]
-    return getcolumn(data, name)
-end
-
-function apply_context(data, axs::NTuple{N, Any}, d::DimsSelector) where N
-    sz = ntuple(N) do n
-        return n in d.dims ? length(axs[n]) : 1
-    end
-    return reshape(CartesianIndices(sz), 1, sz...)
-end
-
-struct Labeled{T}
-    label::AbstractString
-    value::T
-end
-
-Labeled(x) = Labeled(getlabel(x), getvalue(x))
-
-getlabel(x::Labeled) = x.label
-getvalue(x::Labeled) = x.value
-
-getlabel(x) = ""
-getvalue(x) = x
+nested_map(f, (a, b)::Tuple) = map(f, a), map(f, b)
 
 function process_data(data, positional′, named′)
-    positional, named = map((positional′, named′)) do tup
-        return map(x -> map(Base.Fix1(NameTransformationLabel, data), maybewrap(x)), tup)
+    positional, named = nested_map((positional′, named′)) do x
+        return map(y -> NameTransformationLabel(data, y), maybewrap(x))
     end
     axs = Broadcast.combine_axes(positional..., named...)
-    labeledarrays = map((positional, named)) do tup
-        return map(tup) do ntls
-            names = map(ntl -> ntl.name, ntls)
-            transformations = map(ntl -> ntl.transformation, ntls)
-            labels = map(ntl -> ntl.label, ntls)
-            res = map(transformations, names) do transformation, name
-                cols = apply_context(data, axs, maybewrap(name))
-                map(transformation, cols...)
-            end
-            return Labeled(join(unique(labels), ' '), unnest(res))
+    labeledarrays = nested_map((positional, named)) do ntls
+        return map(ntls) do ntl
+            cols = apply_context(data, axs, maybewrap(ntl.name))
+            Labeled(ntl.label, map(ntl.transformation, cols...))
         end
     end
     return Entry(Any, labeledarrays..., Dict{Symbol, Any}())
 end
 
+process_data(layer::Layer) = process_data(layer.data, layer.positional, layer.named)
+
 process_transformations(layers::Layers) = map(process_transformations, layers)
 
 function process_transformations(layer::Layer)
-    init = process_data(layer.data, layer.positional, layer.named)
+    init = process_data(layer)
     res = foldl(process_transformations, layer.transformations; init)
     return res isa Entry ? splitapply(res) : res
 end

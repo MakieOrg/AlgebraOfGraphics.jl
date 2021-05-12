@@ -76,15 +76,6 @@ function assert_equal(a, b)
     return a
 end
 
-function unnest(arr::AbstractArray{<:AbstractArray})
-    inner_size = mapreduce(size, assert_equal, arr)
-    outer_size = size(arr)
-    flattened = reduce(vcat, map(vec, vec(arr)))
-    return reshape(flattened, inner_size..., outer_size...)
-end
-
-unnest(arr::NTuple{<:Any, <:AbstractArray}) = unnest(collect(arr))
-
 adjust_index(rg1, rg2, idx::Integer) = idx in rg2 ? idx : only(rg2)
 adjust_index(rg1, rg2, idxs::AbstractArray) = map(idx -> adjust_index(rg1, rg2, idx), idxs)
 adjust_index(rg1, rg2, ::Colon) = rg1 == rg2 ? Colon() : fill(only(rg2), length(rg1))
