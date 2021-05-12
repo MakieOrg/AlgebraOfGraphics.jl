@@ -60,12 +60,14 @@ function plottypes_attributes(entries)
     return plottypes, attributes
 end
 
+hassymbolkey((k, v)::Pair) = k isa Symbol
+
 function _Legend_(fg::FigureGrid)
     grid = fg.grid
 
     # assume all subplots have same scales, to be changed to support free scales
-    scales = first(grid).scales
-    labels = copy(first(grid).labels)
+    scales = filter(hassymbolkey, first(grid).scales)
+    labels = filter(hassymbolkey, first(grid).labels)
 
     # remove keywords that don't support legends
     for key in [:row, :col, :layout, :stack, :dodge, :group]

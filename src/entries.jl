@@ -31,7 +31,6 @@ struct AxisEntries
 end
 
 AbstractPlotting.Axis(ae::AxisEntries) = ae.axis
-Entries(ae::AxisEntries) = Entries(ae.entries, ae.labels, ae.scales)
 
 function prefix(i::Int, sym::Symbol)
     var = (:x, :y, :z)[i]
@@ -41,7 +40,7 @@ end
 # Slightly complex machinery to recombine stacked barplots
 function mustbemerged(e::Entry)
     isbarplot = e.plottype <: BarPlot
-    hasstack = :stack in keys(e.mappings.named) || :stack in keys(e.attributes)
+    hasstack = :stack in keys(e.named) || :stack in keys(e.attributes)
     return isbarplot && hasstack
 end
 
@@ -76,12 +75,15 @@ function combine(entries::AbstractVector{Entry})
     return combinedentries
 end
 
+mapkeys(f, tup::Tuple) = map(f, keys(tup))
+mapkeys(f, ::NamedTuple{names}) where {names} = NamedTuple{names}(map(f, names))
+
 function AbstractPlotting.plot!(ae::AxisEntries)
     axis, entries, labels, scales = ae.axis, ae.entries, ae.labels, ae.scales
     for entry in combine(entries)
         plottype, attributes = entry.plottype, copy(entry.attributes)
         positional, named = map((entry.positional, entry.named)) do tup
-            return map(keys(tup)) do key
+            return mapkeys(tup) do key
                 return unwrap(rescale(tup[key], scales[key]))
             end
         end
