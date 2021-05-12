@@ -136,7 +136,7 @@ To remedy this, AlgebraOfGraphics aims to provide solid, opinionated default set
 In particular, it uses a
 [conservative, colorblind-friendly palette](https://www.nature.com/articles/nmeth.1618?WT.ec_id=NMETH-201106)
 and a
-[perceptually uniform, universally readable color map](https://www.nature.com/articles/nmeth.1618?WT.ec_id=NMETH-201106). It follows
+[perceptually uniform, universally readable color map](https://www.nature.com/articles/s41467-020-19160-7). It follows
 [IBM guidelines](https://www.ibm.com/design/language/typography/type-basics/#titles-and-subtitles)
 to differentiate titles and labels from tick labels via font weight, while
 using the same typeface at a readable size.

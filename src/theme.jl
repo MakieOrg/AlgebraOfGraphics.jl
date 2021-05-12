@@ -22,7 +22,7 @@ end
 
 # Batlow colormap
 # Crameri, Fabio, Grace E. Shephard, and Philip J. Heron. "The misuse of colour in science communication." Nature communications 11.1 (2020): 1-10.
-# https://www.nature.com/articles/s41467-020-19160-7?source=techstories.org
+# https://www.nature.com/articles/s41467-020-19160-7
 
 function default_styles()
     return (
