@@ -4,34 +4,53 @@ fast_hashed(v::AbstractVector) = isbitstype(eltype(v)) ? PooledArray(v) : v
 
 function indices_iterator(cols)
     isempty(cols) && return Ref(Colon())
-    grouping_sa = StructArray(map(refarray∘fast_hashed, cols))
+    grouping_sa = StructArray(map(refarray∘fast_hashed∘getvalue, cols))
     gp = GroupPerm(grouping_sa)
     return (sortperm(gp)[rg] for rg in gp)
 end
 
-splitapply(x::AbstractArray{<:Pair}) = x
+adjust_index(ax, idx::Int) = length(ax) == 1 ? 1 : idx
+adjust_index(ax, idxs::AbstractArray) = length(ax) == 1 ? one.(idxs) : idxs
+adjust_index(ax, idxs::Colon) = idxs
+
+getnewindex(v, i) = v[Broadcast.newindex(v, i)]
+
+function subselect(labeledarray::Labeled, idxs, c::CartesianIndex=CartesianIndex())
+    labels, array = getlabel(labeledarray), getvalue(labeledarray)
+    I = ntuple(ndims(array)) do n
+        i = n == 1 ? idxs : c[n-1]
+        return adjust_index(axes(array, n), i)
+    end
+    return Labeled(getnewindex(labels, c), view(array, I...))
+end
 
 splitapply(le::Entry) = splitapply(identity, le)
 
 function splitapply(f, le::Entry)
-    positional, named = map(getvalue, le.positional), map(getvalue, le.named)
-    axs = Broadcast.combine_axes(positional..., named...)
-    iter = (m for (_, m) in named if m isa AbstractVector && !iscontinuous(m))
-    grouping_cols = Tuple(iter)
+    positional, named = le.positional, le.named
+    axs = Broadcast.combine_axes(map(getvalue, positional)..., map(getvalue, named)...)
+    discrete, continuous = separate(named) do lv
+        v = getvalue(lv)
+        return v isa AbstractVector && !iscontinuous(v)
+    end
     list = Entry[]
-    foreach(indices_iterator(grouping_cols)) do idxs
+    foreach(indices_iterator(discrete)) do idxs
         for c in CartesianIndices(tail(axs))
-            submappings = map(labels, mappings) do label, v
-                I = ntuple(ndims(v)) do n
-                    i = n == 1 ? idxs : c[n-1]
-                    return adjust_index(axs[n], axes(v, n), i)
-                end
-                return Labeled(label, view(v, I...))
+            subpositional, subcontinuous = nested_map((positional, continuous)) do l
+                return subselect(l, idxs, c)
             end
-            discrete, continuous = separate!(submappings)
-            new_entries = maybewrap(f(Entry(le.plottype, continuous, le.attributes)))
+            subdiscrete = map(v -> subselect(v, first(idxs)), discrete)
+            new_entries = f(Entry(le.plottype, subpositional, subcontinuous, le.attributes))
             for new_entry in maybewrap(new_entries)
-                push!(list, recombine!(discrete, new_entry))
+                push!(
+                    list,
+                    Entry(
+                        new_entry.plottype,
+                        new_entry.positional,
+                        merge(subdiscrete, new_entry.named),
+                        new_entry.attributes
+                    )
+                )
             end
         end
     end
@@ -42,16 +61,26 @@ end
 
 nested_map(f, (a, b)::Tuple) = map(f, a), map(f, b)
 
+function unnest(arr::AbstractArray{<:AbstractArray})
+    inner_size = mapreduce(size, assert_equal, arr)
+    outer_size = size(arr)
+    flattened = reduce(vcat, map(vec, vec(arr)))
+    return reshape(flattened, inner_size..., outer_size...)
+end
+
+unnest(arr::NTuple{<:Any, <:AbstractArray}) = unnest(collect(arr))
+
 function process_data(data, positional′, named′)
     positional, named = nested_map((positional′, named′)) do x
         return map(y -> NameTransformationLabel(data, y), maybewrap(x))
     end
     axs = Broadcast.combine_axes(positional..., named...)
     labeledarrays = nested_map((positional, named)) do ntls
-        return map(ntls) do ntl
+        nested = map(ntls) do ntl
             cols = apply_context(data, axs, maybewrap(ntl.name))
-            Labeled(ntl.label, map(ntl.transformation, cols...))
+            return map(ntl.transformation, cols...)
         end
+        return Labeled(map(ntl -> ntl.label, ntls), unnest(nested))
     end
     return Entry(Any, labeledarrays..., Dict{Symbol, Any}())
 end

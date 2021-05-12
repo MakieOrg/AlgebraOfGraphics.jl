@@ -60,11 +60,11 @@ function apply_context(data, axs::NTuple{N, Any}, d::DimsSelector) where N
     sz = ntuple(N) do n
         return n in d.dims ? length(axs[n]) : 1
     end
-    return CartesianIndices(sz)
+    return reshape(CartesianIndices(sz), 1, sz...)
 end
 
-struct Labeled{T}
-    label::AbstractString
+struct Labeled{S, T}
+    label::S
     value::T
 end
 

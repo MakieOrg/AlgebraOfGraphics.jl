@@ -1,19 +1,4 @@
-const ArrayLike = Union{AbstractArray, Tuple}
-const StringLike = Union{AbstractString, Symbol}
-
-function cycle(v::AbstractVector, i::Int)
-    ax = axes(v, 1)
-    return v[first(ax) + mod(i - first(ax), length(ax))]
-end
-
-"""
-    iscontinuous(v::AbstractArray)
-
-Determine whether `v` should be treated as a continuous or categorical vector.
-"""
-iscontinuous(::AbstractArray) = false
-iscontinuous(::AbstractArray{<:Number}) = true
-iscontinuous(::AbstractArray{<:Union{Date, DateTime}}) = true
+## Layout helpers
 
 isaxis2d(::Axis) = true
 isaxis2d(::Any) = false
@@ -47,6 +32,40 @@ function deleteemptyaxes!(aes::Matrix{AxisEntries})
     end
 end
 
+function resizetocontent!(fig::Figure)
+    figsize = size(fig.scene)
+    sz = map((Col(), Row()), figsize) do dir, currentsize
+        inferredsize = determinedirsize(fig.layout, dir)
+        return ceil(Int, something(inferredsize, currentsize))
+    end
+    sz == figsize || resize!(fig.scene, sz)
+    return fig
+end
+
+function resizetocontent!(fg::FigureGrid)
+    resizetocontent!(fg.figure)
+    return fg
+end
+
+## Scale helpers
+
+const ArrayLike = Union{AbstractArray, Tuple}
+const StringLike = Union{AbstractString, Symbol}
+
+function cycle(v::AbstractVector, i::Int)
+    ax = axes(v, 1)
+    return v[first(ax) + mod(i - first(ax), length(ax))]
+end
+
+"""
+    iscontinuous(v::AbstractArray)
+
+Determine whether `v` should be treated as a continuous or categorical vector.
+"""
+iscontinuous(::AbstractArray) = false
+iscontinuous(::AbstractArray{<:Number}) = true
+iscontinuous(::AbstractArray{<:Union{Date, DateTime}}) = true
+
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 
 push_different!(v, val) = !isempty(v) && isequal(last(v), val) || push!(v, val) 
@@ -76,29 +95,16 @@ function assert_equal(a, b)
     return a
 end
 
-adjust_index(rg1, rg2, idx::Integer) = idx in rg2 ? idx : only(rg2)
-adjust_index(rg1, rg2, idxs::AbstractArray) = map(idx -> adjust_index(rg1, rg2, idx), idxs)
-adjust_index(rg1, rg2, ::Colon) = rg1 == rg2 ? Colon() : fill(only(rg2), length(rg1))
-
 maybewrap(x::ArrayLike) = x
 maybewrap(x) = fill(x)
 
 unwrap(x) = x
 unwrap(x::AbstractArray{<:Any, 0}) = x[]
 
-function resizetocontent!(fig::Figure)
-    figsize = size(fig.scene)
-    sz = map((Col(), Row()), figsize) do dir, currentsize
-        inferredsize = determinedirsize(fig.layout, dir)
-        return ceil(Int, something(inferredsize, currentsize))
-    end
-    sz == figsize || resize!(fig.scene, sz)
-    return fig
-end
-
-function resizetocontent!(fg::FigureGrid)
-    resizetocontent!(fg.figure)
-    return fg
-end
-
 iterate_pairs(args...) = Iterators.flatten(map(pairs, args))
+
+function separate(f, nt::NamedTuple)
+    filtered_keys = filter(key -> f(nt[key]), keys(nt))
+    filtered_nt = NamedTuple{filtered_keys}(nt)
+    return filtered_nt, Base.structdiff(nt, filtered_nt)
+end

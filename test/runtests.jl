@@ -28,22 +28,56 @@ end
 end
 
 @testset "process_data" begin
-    df = (x = rand(1000), y = rand(1000), z = rand(100), c = rand(["a", "b", "c"], 1000))
+    df = (x = rand(1000), y = rand(1000), z = rand(1000), c = rand(["a", "b", "c"], 1000))
     d = mapping(:x => exp, [:y, :z], color = :c, marker = dims(1) => t -> ["a", "b"][t])
     layer = data(df) * d
     entry = AlgebraOfGraphics.process_data(layer)
-    @test only(entry.positional[1]).label == "x"
-    @test only(entry.positional[1]).value == map(exp, df.x)
-    @test entry.positional[2][1].label == "y"
-    @test entry.positional[2][1].value == df.y
-    @test entry.positional[2][2].label == "z"
-    @test entry.positional[2][2].value == df.z
-    @test only(entry.named[:color]).label == "c"
-    @test only(entry.named[:color]).value == df.c
-    @test only(entry.named[:marker]).label == ""
-    @test only(entry.named[:marker]).value == ["a", "b"]
+    @test entry.positional[1].label == fill("x")
+    @test entry.positional[1].value == map(exp, df.x)
+    @test entry.positional[2].label == ["y", "z"]
+    @test entry.positional[2].value == [df.y df.z]
+    @test entry.named[:color].label == fill("c")
+    @test entry.named[:color].value == df.c
+    @test entry.named[:marker].label == fill("")
+    @test entry.named[:marker].value == ["a" "b"]
 end
 
+df = (x = rand(1000), y = rand(1000), z = rand(1000), c = rand(["a", "b", "c"], 1000))
+d = mapping(:x => exp, [:y, :z], color = :c, marker = dims(1) => t -> ["a", "b"][t])
+layer = data(df) * d
+le = AlgebraOfGraphics.process_data(layer)
+entries = AlgebraOfGraphics.splitapply(le)
+entries[1]
+
+f = identity
+positional, named = map(getvalue, le.positional), map(getvalue, le.named)
+
+axs = Broadcast.combine_axes(positional..., named...)
+
+list = Entry[]
+for c in CartesianIndices(axs)
+    p, n = nested_map((positional, named)) do v
+        I = Broadcast.newindex(v, c)
+        return v[I]
+    end
+    grouping_cols = Tuple(m for (_, m) in named if m isa AbstractVector && !iscontinuous(m))
+    foreach(indices_iterator(grouping_cols)) do idxs
+            submappings = map(labels, mappings) do label, v
+                I = ntuple(ndims(v)) do n
+                    i = n == 1 ? idxs : c[n-1]
+                    return adjust_index(axs[n], axes(v, n), i)
+                end
+                return Labeled(label, view(v, I...))
+            end
+            discrete, continuous = separate!(submappings)
+            new_entries = maybewrap(f(Entry(le.plottype, continuous, le.attributes)))
+            for new_entry in maybewrap(new_entries)
+                push!(list, recombine!(discrete, new_entry))
+            end
+        end
+    end
+return list
+    
     1 == AlgebraOfGraphics.Labeled("x", df.x)
     AlgebraOfGraphics.process_transformations(layers)
     @test layers[1].transformations[1] isa AlgebraOfGraphics.Visual

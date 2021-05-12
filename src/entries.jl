@@ -13,25 +13,6 @@ Entry(positional::Tuple, named::NamedTuple=(;); attributes...) =
 
 Entry(named::NamedTuple; attributes...) = Entry(Any, (), named; attributes...)
 
-function separate(entry::Entry)
-    named = entry.named
-    discrete_keys = filter(keys(named)) do key
-        return !iscontinuous(named[key])
-    end
-    discrete = NamedTuple{discrete_keys}(named)
-    continuous = Base.structdiff(named, discrete)
-    return discrete => Entry(entry.plottype, entry.positional, continuous, entry.attributes)
-end
-
-function recombine(discrete, entry::Entry)
-    return Entry(
-        entry.plottype,
-        entry.positional,
-        merge(discrete, entry.named),
-        entry.attributes
-    )
-end
-
 const ArgDict = Dict{Union{Symbol, Int}, Any}
 
 function compute_axes_grid(fig, e; axis=NamedTuple())
