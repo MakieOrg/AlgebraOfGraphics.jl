@@ -46,10 +46,10 @@ function plottypes_attributes(entries)
     attributes = Vector{Symbol}[]
     for entry in entries
         # FIXME: this should probably use the rescaled values
-        defaultplottype = AbstractPlotting.plottype(entry.mappings.positional...)
+        defaultplottype = AbstractPlotting.plottype(entry.positional...)
         plottype = AbstractPlotting.plottype(entry.plottype, defaultplottype)
         n = findfirst(==(plottype), plottypes)
-        attrs = keys(entry.mappings.named)
+        attrs = keys(entry.named)
         if isnothing(n)
             push!(plottypes, plottype)
             push!(attributes, collect(Symbol, attrs))
@@ -64,21 +64,21 @@ function _Legend_(fg::FigureGrid)
     grid = fg.grid
 
     # assume all subplots have same scales, to be changed to support free scales
-    named_scales = first(grid).scales.named
-    named_labels = copy(first(grid).labels.named)
+    scales = first(grid).scales
+    labels = copy(first(grid).labels)
 
     # remove keywords that don't support legends
     for key in [:row, :col, :layout, :stack, :dodge, :group]
-        pop!(named_labels, key, nothing)
+        pop!(labels, key, nothing)
     end
-    for (key, val) in named_scales
-        val isa ContinuousScale && pop!(named_labels, key, nothing)
+    for (key, val) in scales
+        val isa ContinuousScale && pop!(labels, key, nothing)
     end
 
     # if no legend-worthy keyword remains return nothing
-    isempty(named_labels) && return nothing
+    isempty(labels) && return nothing
 
-    titles = unique!(collect(String, values(named_labels)))
+    titles = unique!(collect(String, values(labels)))
     # empty strings create difficulties with the layout
     nonemptytitles = map(t -> isempty(t) ? " " : t, titles)
 
@@ -88,15 +88,15 @@ function _Legend_(fg::FigureGrid)
     elements_list = Vector{Vector{LegendElement}}[]
 
     for title in titles
-        label_attrs = [key for (key, val) in named_labels if val == title]
-        first_scale = named_scales[first(label_attrs)]
+        label_attrs = [key for (key, val) in labels if val == title]
+        first_scale = scales[first(label_attrs)]
         labels = map(string, first_scale.data)
         elements = map(eachindex(first_scale.data)) do idx
             local elements = LegendElement[]
             for (P, attrs) in zip(plottypes, attributes)
                 shared_attrs = attrs ∩ label_attrs
                 isempty(shared_attrs) && continue
-                options = [attr => named_scales[attr].plot[idx] for attr in shared_attrs]
+                options = [attr => scales[attr].plot[idx] for attr in shared_attrs]
                 append!(elements, legend_elements(P; options...))
             end
             return elements

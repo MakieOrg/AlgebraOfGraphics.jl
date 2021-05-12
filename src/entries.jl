@@ -15,68 +15,6 @@ Entry(named::NamedTuple; attributes...) = Entry(Any, (), named; attributes...)
 
 const ArgDict = Dict{Union{Symbol, Int}, Any}
 
-function compute_axes_grid(fig, e; axis=NamedTuple())
-
-    rowcol = (:row, :col)
-
-    layout_scale, scales... = map((:layout, rowcol...)) do sym
-        return get(e.scales, sym, nothing)
-    end
-
-    grid_size = map(scales, (first, last)) do scale, f
-        isnothing(scale) || return maximum(scale.plot)
-        isnothing(layout_scale) || return maximum(f, layout_scale.plot)
-        return 1
-    end
-
-    axes_grid = map(CartesianIndices(grid_size)) do c
-        type = get(axis, :type, Axis)
-        options = Base.structdiff(axis, (; type))
-        ax = type(fig[Tuple(c)...]; options...)
-        return AxisEntries(ax, Entry[], e.scales, e.labels)
-    end
-
-    for entry in e.entries
-        rows, cols = map(rowcol, scales, (first, last)) do sym, scale, f
-            v = get(entry.mappings, sym, nothing)
-            layout_v = get(entry.mappings, :layout, nothing)
-            # without layout info, plot on all axes
-            # all values in `v` and `layout_v` are equal
-            isnothing(v) || return rescale(v[1:1], scale)
-            isnothing(layout_v) || return map(f, rescale(layout_v[1:1], layout_scale))
-            return 1:f(grid_size)
-        end
-        for i in rows, j in cols
-            ae = axes_grid[i, j]
-            push!(ae.entries, entry)
-        end
-    end
-
-    # Link colors
-    labeledcolorbar = getlabeledcolorbar(axes_grid)
-    if !isnothing(labeledcolorbar)
-        colorrange = getvalue(labeledcolorbar).extrema
-        for entry in entries(axes_grid)
-            entry.attributes[:colorrange] = colorrange
-        end
-    end
-
-    return axes_grid
-
-end
-
-# function AbstractPlotting.plot(entries::Entries; axis=NamedTuple(), figure=NamedTuple())
-#     fig = Figure(; figure...)
-#     grid = plot!(fig, entries; axis)
-#     return FigureGrid(fig, grid)
-# end
-
-# function AbstractPlotting.plot!(fig, entries::Entries; axis=NamedTuple())
-#     axes_grid = compute_axes_grid(fig, entries; axis)
-#     foreach(plot!, axes_grid)
-#     return axes_grid
-# end
-
 """
     AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, labels, scales)
 
@@ -141,32 +79,35 @@ end
 function AbstractPlotting.plot!(ae::AxisEntries)
     axis, entries, labels, scales = ae.axis, ae.entries, ae.labels, ae.scales
     for entry in combine(entries)
-        plottype, mappings, attributes = entry.plottype, entry.mappings, entry.attributes
-        trace = map(unwrap∘rescale, mappings, scales)
-        positional, named = trace.positional, trace.named
-        merge!(named, attributes)
+        plottype, attributes = entry.plottype, copy(entry.attributes)
+        positional, named = map((entry.positional, entry.named)) do tup
+            return map(keys(tup)) do key
+                return unwrap(rescale(tup[key], scales[key]))
+            end
+        end
+        merge!(attributes, pairs(named))
 
         # Remove layout info
         for sym in [:col, :row, :layout]
-            pop!(named, sym, nothing)
+            pop!(attributes, sym, nothing)
         end
 
         # Implement defaults
         for (key, val) in pairs(default_styles())
             key == :color && has_zcolor(entry) && continue # do not overwrite contour color
-            get!(named, key, val)
+            get!(attributes, key, val)
         end
 
         # Set dodging information
         dodge = get(scales, :dodge, nothing)
-        isa(dodge, CategoricalScale) && (named[:n_dodge] = maximum(dodge.plot))
+        isa(dodge, CategoricalScale) && (attributes[:n_dodge] = maximum(dodge.plot))
 
         # Implement alpha transparency
-        alpha = pop!(named, :alpha, nothing)
-        color = get(named, :color, nothing)
-        !isnothing(color) && alpha isa Number && (named[:color] = (color, alpha))
+        alpha = pop!(attributes, :alpha, nothing)
+        color = get(attributes, :color, nothing)
+        !isnothing(color) && alpha isa Number && (attributes[:color] = (color, alpha))
 
-        plot!(plottype, axis, positional...; named...)
+        plot!(plottype, axis, positional...; attributes...)
     end
     # TODO: support log colorscale
     ndims = isaxis2d(ae) ? 2 : 3
