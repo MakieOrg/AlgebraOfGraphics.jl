@@ -17,7 +17,7 @@ function adjust_index(axs::NTuple{N, Any}, c::CartesianIndex) where N
 end
 
 function subselect(labeledarray::Labeled, idxs, c::CartesianIndex)
-    labels, array = getlabel(labeledarray), getvalue(labeledarray)
+    labels, array = maybewrap(getlabel(labeledarray)), getvalue(labeledarray)
     label = labels[adjust_index(axes(labels), c)...]
     subarray = view(array, idxs, adjust_index(tail(axes(array)), c)...)
     return Labeled(label, subarray)

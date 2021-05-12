@@ -28,8 +28,8 @@ function groupreduce(agg, le::Entry)
         default_plottype = categoricalplottypes[length(summaries)]
         return Entry(
             AbstractPlotting.plottype(entry.plottype, default_plottype),
-            arguments(labeled_result...),
-            entry.named,
+            labeled_result,
+            (;),
             entry.attributes
         )
     end
