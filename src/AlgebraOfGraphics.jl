@@ -19,7 +19,6 @@ using PooledArrays: PooledArray
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, normalize, weights, AbstractWeights, sturges
 using DataAPI: refarray
-using OrderedCollections: LittleDict
 
 import GLM, Loess
 import FileIO
