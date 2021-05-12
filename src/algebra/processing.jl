@@ -81,18 +81,19 @@ function process_data(data, positional′, named′)
         return map(x -> map(Base.Fix1(NameTransformationLabel, data), maybewrap(x)), tup)
     end
     axs = Broadcast.combine_axes(positional..., named...)
-    mappings = arguments(positional...; named...)
-    labeledarrays = map(mappings) do ntls
-        names = map(ntl -> ntl.name, ntls)
-        transformations = map(ntl -> ntl.transformation, ntls)
-        labels = map(ntl -> ntl.label, ntls)
-        res = map(transformations, names) do transformation, name
-            cols = apply_context(data, axs, maybewrap(name))
-            map(transformation, cols...)
+    labeledarrays = map((positional, named)) do tup
+        return map(tup) do ntls
+            names = map(ntl -> ntl.name, ntls)
+            transformations = map(ntl -> ntl.transformation, ntls)
+            labels = map(ntl -> ntl.label, ntls)
+            res = map(transformations, names) do transformation, name
+                cols = apply_context(data, axs, maybewrap(name))
+                map(transformation, cols...)
+            end
+            return Labeled(join(unique(labels), ' '), unnest(res))
         end
-        return Labeled(join(unique(labels), ' '), unnest(res))
     end
-    return Entry(Any, labeledarrays, Dict{Symbol, Any}())
+    return Entry(Any, labeledarrays..., Dict{Symbol, Any}())
 end
 
 process_transformations(layers::Layers) = map(process_transformations, layers)

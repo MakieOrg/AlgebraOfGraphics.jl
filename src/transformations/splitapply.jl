@@ -13,7 +13,7 @@ splitapply(le::Entry) = splitapply(identity, le)
 
 # TODO: make sure to also pool categorical positional mappings here
 function splitapply(f, le::Entry)
-    labels, mappings = map(getlabel, le.mappings), map(getvalue, le.mappings)
+    labels, positional, named = map(getlabel, le.mappings), map(getvalue, le.mappings)
     axs = Broadcast.combine_axes(mappings.positional..., values(mappings.named)...)
     iter = (m for (k, m) in mappings.named if m isa AbstractVector && !iscontinuous(m))
     grouping_cols = Tuple(iter)

@@ -110,3 +110,4 @@ function resizetocontent!(fg::FigureGrid)
     return fg
 end
 
+iterate_pairs(args...) = Iterators.flatten(map(pairs, args))

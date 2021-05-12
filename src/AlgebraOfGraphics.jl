@@ -33,7 +33,6 @@ export draw, draw!
 export facet!
 export set_aog_theme!
 
-include("arguments.jl")
 include("theme.jl")
 include("scales.jl")
 include("entries.jl")

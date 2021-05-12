@@ -19,10 +19,9 @@ function _groupreduce(agg, summaries::Tuple, values...)
 end
 
 function groupreduce(agg, le::Entry)
-    summaries = Tuple(map(summary∘getvalue, le.mappings.positional[1:end-1]))
+    summaries = Tuple(map(summary∘getvalue, front(le.positional)))
     return splitapply(le) do entry
-        mappings = entry.mappings
-        labels, values = map(getlabel, mappings.positional), map(getvalue, mappings.positional)
+        labels, values = map(getlabel, entry.positional), map(getvalue, entry.positional)
         results = _groupreduce(agg, summaries, values...)
         result = (summaries..., results)
         labeled_result = map(Labeled, labels, result)
@@ -30,6 +29,7 @@ function groupreduce(agg, le::Entry)
         return Entry(
             AbstractPlotting.plottype(entry.plottype, default_plottype),
             arguments(labeled_result...),
+            entry.named,
             entry.attributes
         )
     end

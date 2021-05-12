@@ -11,11 +11,10 @@ end
 
 function (f::FrequencyAnalysis)(entry::Entry)
     plottype = entry.plottype
-    mappings = copy(entry.mappings)
-    N = length(getvalue(mappings[1]))
-    push!(mappings.positional, Labeled("count", fill(nothing, N)))
-    attributes = entry.attributes
-    return groupreduce(Counter, Entry(plottype, mappings, attributes))
+    N = length(getvalue(entry.positional[1]))
+    augmented = (entry.positional..., Labeled("count", fill(nothing, N)))
+    named, attributes = entry.named, entry.attributes
+    return groupreduce(Counter, Entry(plottype, augmented, named, attributes))
 end
 
 """

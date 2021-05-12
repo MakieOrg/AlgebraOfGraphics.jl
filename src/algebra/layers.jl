@@ -30,19 +30,22 @@ mergelabels(a, b) = a
 
 function Entries(s::OneOrMoreLayers, palettes=NamedTuple())
     layers::Layers = s
-    summaries = arguments()
-    labels = arguments()
+    summaries = ArgDict()
+    labels = ArgDict()
     entries = Entry[]
     for labeledentries in process_transformations(layers)
         for le in labeledentries
-            vals = arguments(map(getvalue, le.positional)...; map(getvalue, le.named)...)
-            labs = arguments(map(getlabel, le.positional)...; map(getlabel, le.named)...)
-            push!(entries, Entry(le.plottype, vals, le.attributes))
-            mergewith!(mergesummaries, summaries, map(summary, vals))
-            mergewith!(mergelabels, labels, labs)
+            positional, named = map((le.positional, le.named)) do tup
+                local values, labels = map(getvalue, tup), map(getlabel, tup)
+                local summaries = map(summary, values)
+                return (; values, labels, summaries)
+            end
+            push!(entries, Entry(le.plottype, positional.values, named.values, le.attributes))
+            mergewith!(mergesummaries, summaries, iterate_pairs(positional.summaries, named.summaries))
+            mergewith!(mergelabels, labels, iterate_pairs(positional.labels, named.labels))
         end
     end
-    palettes = merge!(default_palettes(), arguments(; palettes...))
+    palettes = merge(default_palettes(), palettes)
     scales = default_scales(summaries, palettes)
     return Entries(entries, scales, labels)
 end

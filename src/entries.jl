@@ -1,34 +1,46 @@
 struct Entry
     plottype::PlotFunc
-    mappings::Arguments
+    positional::Tuple
+    named::NamedTuple
     attributes::Dict{Symbol, Any}
 end
 
-Entry(plottype::PlotFunc=Any, mappings=arguments(); attributes...) =
-    Entry(plottype, mappings, Dict{Symbol, Any}(attributes))
+Entry(plottype::PlotFunc=Any, positional::Tuple=(), named::NamedTuple=(;); attributes...) =
+    Entry(plottype, positional, named, Dict{Symbol, Any}(attributes))
 
-Entry(mappings::Arguments; attributes...) = Entry(Any, mappings; attributes...)
+Entry(positional::Tuple, named::NamedTuple=(;); attributes...) =
+    Entry(Any, positional, named; attributes...)
 
-function separate!(entry::Entry)
-    discrete, _ = separate!(entry.mappings)
-    return discrete => entry
+Entry(named::NamedTuple; attributes...) = Entry(Any, (), named; attributes...)
+
+function separate(entry::Entry)
+    named = entry.named
+    discrete_keys = filter(keys(named)) do key
+        return !iscontinuous(named[key])
+    end
+    discrete = NamedTuple{discrete_keys}(named)
+    continuous = Base.structdiff(named, discrete)
+    return discrete => Entry(entry.plottype, entry.positional, continuous, entry.attributes)
 end
 
-function recombine!(discrete, entry::Entry)
+function recombine(discrete, entry::Entry)
     return Entry(
         entry.plottype,
-        recombine!(discrete, entry.mappings),
+        entry.positional,
+        merge(discrete, entry.named),
         entry.attributes
     )
 end
 
+const ArgDict = Dict{Union{Symbol, Int}, Any}
+
 struct Entries
     entries::Vector{Entry}
-    scales::Arguments
-    labels::Arguments
+    scales::ArgDict
+    labels::ArgDict
 end
 
-Entries() = Entries(Entry[], arguments(), arguments())
+Entries() = Entries(Entry[], argdict(), argdict())
 
 function compute_axes_grid(fig, e::Entries; axis=NamedTuple())
 
@@ -103,8 +115,8 @@ such as `log10`. Other scales may be supported in the future.
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
-    scales::Arguments
-    labels::Arguments
+    scales::ArgDict
+    labels::ArgDict
 end
 
 AbstractPlotting.Axis(ae::AxisEntries) = ae.axis
