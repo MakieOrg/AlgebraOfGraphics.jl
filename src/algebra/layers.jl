@@ -26,7 +26,11 @@ function summary(e::Entry)
     summaries = Dict{KeyType, Any}()
     for (i, tup) in enumerate((e.primary, e.positional, e.named))
         for (key, val) in pairs(tup)
-            summaries[key] = i > 1 && iscontinuous(val) ? extrema(val) : collect(uniquesorted(vec(val)))
+            summaries[key] = if i > 1 && iscontinuous(val)
+                AbstractPlotting.extrema_nan(val)
+            else
+                collect(uniquesorted(vec(val)))
+            end
         end
     end
     return Entry(e; summaries)
