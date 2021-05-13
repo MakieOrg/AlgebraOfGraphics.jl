@@ -21,15 +21,10 @@ end
 function groupreduce(agg, entry::Entry)
     summaries = map(collect∘uniquesorted, front(entry.positional))
     return splitapply(entry) do entry
-        result = (summaries..., _groupreduce(agg, summaries, entry.positional...))
+        positional = (summaries..., _groupreduce(agg, summaries, entry.positional...))
+        named = (;)
         default_plottype = categoricalplottypes[length(summaries)]
-        return Entry(
-            AbstractPlotting.plottype(entry.plottype, default_plottype),
-            entry.primary,
-            result,
-            (;),
-            entry.labels;
-            entry.attributes...
-        )
+        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        return Entry(entry; plottype, positional, named)
     end
 end

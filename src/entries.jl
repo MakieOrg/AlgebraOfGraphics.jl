@@ -1,22 +1,19 @@
 const KeyType = Union{Symbol, Int}
 
-struct Entry
-    plottype::PlotFunc
-    primary::NamedTuple
-    positional::Tuple
-    named::NamedTuple
-    scales::Dict{KeyType, Any}
-    labels::Dict{KeyType, Any}
-    attributes::Dict{Symbol, Any}
+Base.@kwdef struct Entry
+    plottype::PlotFunc=Any
+    primary::NamedTuple=(;)
+    positional::Tuple=()
+    named::NamedTuple=(;)
+    summaries::Dict{KeyType, Any}=Dict{KeyType, Any}()
+    labels::Dict{KeyType, Any}=Dict{KeyType, Any}()
+    attributes::Dict{Symbol, Any}=Dict{Symbol, Any}()
 end
 
-function Entry(plottype::PlotFunc, primary::NamedTuple, positional::Tuple, named::NamedTuple, labels=Dict{KeyType, Any}(); attributes...)
-    scales, attributes = Dict{KeyType, Any}(), Dict{Symbol, Any}(attributes)
-    return Entry(plottype, primary, positional, named, scales, labels, attributes)
+function Entry(e::Entry; kwargs...)
+    nt = (; e.plottype, e.primary, e.positional, e.named, e.summaries, e.labels, e.attributes)
+    return Entry(; merge(nt, values(kwargs))...)
 end
-
-Entry(primary::NamedTuple, positional::Tuple, named::NamedTuple, labels=Dict{KeyType, Any}(); attributes...) =
-    Entry(Any, primary, positional, named, labels; attributes...)
 
 """
     AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, labels, scales)

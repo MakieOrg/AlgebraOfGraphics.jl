@@ -9,7 +9,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries})
         entries = ae.entries
         vs = Iterators.filter(
             !isnothing,
-            (get(entry.mappings, :layout, nothing) for entry in entries)
+            (get(entry.primary, :layout, nothing) for entry in entries)
         )
         it = iterate(vs)
         if isnothing(it)

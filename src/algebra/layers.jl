@@ -23,13 +23,13 @@ function Base.:*(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
 end
 
 function summary(e::Entry)
-    scales = Dict{KeyType, Any}()
+    summaries = Dict{KeyType, Any}()
     for (i, tup) in enumerate((e.primary, e.positional, e.named))
         for (key, val) in pairs(tup)
-            scales[key] = i > 1 && iscontinuous(val) ? extrema(val) : collect(uniquesorted(vec(val)))
+            summaries[key] = i > 1 && iscontinuous(val) ? extrema(val) : collect(uniquesorted(vec(val)))
         end
     end
-    return Entry(e.plottype, e.primary, e.positional, e.named, scales, e.labels, e.attributes)
+    return Entry(e; summaries)
 end
 
 mergesummaries(s1::AbstractVector, s2::AbstractVector) = mergesorted(s1, s2)
@@ -42,7 +42,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     layers::Layers = s
     labels = Dict{KeyType, Any}()
     entries = [summary(entry) for layer in layers for entry in process_transformations(layer)]
-    summaries = mapfoldl(entry -> entry.scales, mergewith!(mergesummaries), entries, init=Dict{KeyType, Any}())
+    summaries = mapfoldl(entry -> entry.summaries, mergewith!(mergesummaries), entries, init=Dict{KeyType, Any}())
     labels = mapfoldl(entry -> entry.labels, mergewith!(mergelabels), entries, init=Dict{KeyType, Any}())
 
     palettes = merge(default_palettes(), palettes)

@@ -26,19 +26,14 @@ function (d::DensityAnalysis)(le::Entry)
     end
     return splitapply(le) do entry
         N = length(entry.positional)
-        result = _density(entry.positional...; entry.named..., options...)
+        positional = _density(entry.positional...; entry.named..., options...)
+        named = (;)
         labels = copy(entry.labels)
         labels[N + 1] = "pdf"
         plottypes = [LinesFill, Heatmap, Volume]
         default_plottype = plottypes[N]
-        return Entry(
-            AbstractPlotting.plottype(entry.plottype, default_plottype),
-            entry.primary,
-            result,
-            (;),
-            labels;
-            entry.attributes...
-        )
+        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        return Entry(entry; plottype, positional, named, labels)
     end
 end
 

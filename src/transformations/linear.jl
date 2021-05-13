@@ -26,20 +26,15 @@ function (l::LinearAnalysis)(le::Entry)
         if !isnothing(interval)
             ŷ, lower, upper = map(vec, pred) # GLM prediction returns matrices
             default_plottype = LinesFill
-            attributes = (; lower, upper)
+            named = (; lower, upper)
         else
             ŷ = vec(pred) # GLM prediction returns matrix
             default_plottype = Lines
-            attributes = (;)
+            named = (;)
         end
-        return Entry(
-            AbstractPlotting.plottype(entry.plottype, default_plottype),
-            entry.primary,
-            (x̂, ŷ),
-            attributes,
-            entry.labels;
-            entry.attributes...
-        )
+        positional = (x̂, ŷ)
+        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        return Entry(entry; plottype, positional, named)
     end
 end
 

@@ -40,7 +40,13 @@ function splitapply(f, entry::Entry)
                 return w[Broadcast.newindex(w, c)]
             end
 
-            input = Entry(entry.plottype, subprimary, subpositional, subnamed, sublabels; entry.attributes...)
+            input = Entry(
+                entry,
+                primary=subprimary,
+                positional=subpositional,
+                named=subnamed,
+                labels=sublabels,
+            )
             append!(list, maybewrap(f(input)))
         end
     end
@@ -80,7 +86,7 @@ function process_data(data, positional′, named′)
             end
         end
     end
-    return Entry(Any, (; primary...), Tuple(positional), (; named...), labels)
+    return Entry(; primary=NamedTuple(primary), positional=Tuple(positional), named=NamedTuple(named), labels)
 end
 
 function process_data(layer::Layer)
