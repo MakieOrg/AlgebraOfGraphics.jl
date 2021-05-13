@@ -10,11 +10,19 @@ struct FrequencyAnalysis
 end
 
 function (f::FrequencyAnalysis)(entry::Entry)
-    plottype = entry.plottype
-    N = length(getvalue(entry.positional[1]))
-    augmented = (entry.positional..., Labeled("count", fill(nothing, N)))
-    named, attributes = entry.named, entry.attributes
-    return groupreduce(Counter, Entry(plottype, augmented, named, attributes))
+    plottype, primary, positional, named, labels =
+        entry.plottype, entry.primary, entry.positional, entry.named, copy(entry.labels)
+    labels[length(positional) + 1] = "count"
+    N = length(positional[1])
+    augmented_entry =Entry(
+        plottype,
+        primary,
+        (positional..., fill(nothing, N)),
+        named,
+        labels;
+        entry.attributes...
+    )
+    return groupreduce(Counter, augmented_entry)
 end
 
 """

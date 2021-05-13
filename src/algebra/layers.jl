@@ -22,7 +22,16 @@ function Base.:*(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
     return Layers([el1 * el2 for el1 in l1 for el2 in l2])
 end
 
-summary(v) = iscontinuous(v) ? extrema(v) : collect(uniquesorted(vec(v)))
+function summary(e::Entry)
+    scales = Dict{KeyType, Any}()
+    for (i, tup) in enumerate((e.primary, e.positional, e.named))
+        for (key, val) in pairs(tup)
+            scales[key] = i > 1 && iscontinuous(val) ? extrema(val) : collect(uniquesorted(vec(val)))
+        end
+    end
+    return Entry(e.plottype, e.primary, e.positional, e.named, scales, e.labels, e.attributes)
+end
+
 mergesummaries(s1::AbstractVector, s2::AbstractVector) = mergesorted(s1, s2)
 mergesummaries(s1::Tuple, s2::Tuple) = extend_extrema(s1, s2)
 
@@ -31,31 +40,13 @@ mergelabels(a, b) = a
 function compute_axes_grid(fig, s::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
     layers::Layers = s
-    summaries = Dict{KeyType, Any}()
     labels = Dict{KeyType, Any}()
-    entries = Entry[]
-    for labeledentries in process_transformations(layers)
-        for le in labeledentries
-            positional, named = map((le.positional, le.named)) do tup
-                local values, labels = map(getvalue, tup), map(getlabel, tup)
-                local summaries = map(summary, values)
-                return (; values, labels, summaries)
-            end
-            push!(entries, Entry(le.plottype, positional.values, named.values, le.attributes))
-            mergewith!(
-                mergesummaries,
-                summaries,
-                pairs(positional.summaries),
-                pairs(named.summaries)
-            )
-            mergewith!(
-                mergelabels,
-                labels,
-                pairs(positional.labels),
-                pairs(named.labels)
-            )
-        end
-    end
+    entries = [summary(entry) for layer in layers for entry in process_transformations(layer)]
+    summaries = mapfoldl(entry -> entry.scales, mergewith!(mergesummaries), entries, init=Dict{KeyType, Any}())
+    labels = mapfoldl(entry -> entry.labels, mergewith!(mergelabels), entries, init=Dict{KeyType, Any}())
+
+    @show summaries
+
     palettes = merge(default_palettes(), palettes)
     scales = default_scales(summaries, palettes)
 

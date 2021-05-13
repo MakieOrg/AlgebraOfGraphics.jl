@@ -88,8 +88,6 @@ function process_data(layer::Layer)
     return process_data(layer.data, positional, named)
 end
 
-process_transformations(layers::Layers) = map(process_transformations, layers)
-
 function process_transformations(layer::Layer)
     init = process_data(layer)
     res = foldl(process_transformations, layer.transformations; init)

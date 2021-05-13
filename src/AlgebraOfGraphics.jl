@@ -24,7 +24,7 @@ import GLM, Loess
 import FileIO
 
 export hideinnerdecorations!, deleteemptyaxes!
-export arguments, Entry, AxisEntries
+export Entry, AxisEntries
 export renamer, nonnumeric
 export density, histogram, linear, smooth, expectation, frequency
 export visual, data, dims, mapping

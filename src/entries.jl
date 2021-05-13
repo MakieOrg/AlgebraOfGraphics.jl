@@ -85,12 +85,12 @@ function AbstractPlotting.plot!(ae::AxisEntries)
     axis, entries, labels, scales = ae.axis, ae.entries, ae.labels, ae.scales
     for entry in combine(entries)
         plottype, attributes = entry.plottype, copy(entry.attributes)
-        positional, named = map((entry.positional, entry.named)) do tup
+        primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
             return mapkeys(tup) do key
                 return unwrap(rescale(tup[key], scales[key]))
             end
         end
-        merge!(attributes, pairs(named))
+        merge!(attributes, pairs(named), pairs(primary))
 
         # Remove layout info
         for sym in [:col, :row, :layout]
