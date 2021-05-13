@@ -14,44 +14,52 @@ function subselect(arr, idxs, c′::CartesianIndex)
     return view(arr, idxs, Tuple(c)...)
 end
 
-nested_map(f, (a, b)::Tuple) = map(f, a), map(f, b)
+function shape(entry::Entry)
+    tup = (entry.primary..., entry.positional..., entry.named...)
+    return Broadcast.combine_axes(map(maybewrap, tup)...)
+end
+
+function shape(layer::Layer)
+    tup = (layer.positional..., layer.named...)
+    return Broadcast.combine_axes(map(maybewrap, tup)...)
+end
 
 splitapply(entry::Entry) = splitapply(identity, entry)
 
 function splitapply(f, entry::Entry)
-    primary, positional, named = entry.primary, entry.positional, entry.named
-    axs = Broadcast.combine_axes(primary..., positional..., named...)
-    grouping = filter(v -> isa(v, AbstractVector), Tuple(primary))
-    list = Entry[]
+    axs = shape(entry)
+    grouping = filter(Tuple(entry.primary)) do v
+        return v isa AbstractVector
+    end
+    entries = Entry[]
     foreach(indices_iterator(grouping)) do idxs
         for c in CartesianIndices(tail(axs))
-            subpositional, subnamed = nested_map((positional, named)) do arr
-                return subselect(arr, idxs, c)
-            end
+            selector = arr -> subselect(arr, idxs, c)
+            positional = map(selector, entry.positional)
+            named = map(selector, entry.named)
 
-            subprimary = map(primary) do arr
-                i = idxs === Colon() || size(arr, 1) == 1 ? firstindex(arr, 1) : first(idxs)
+            primary = map(entry.primary) do arr
+                i = if idxs === Colon() || size(arr, 1) == 1
+                    firstindex(arr, 1)
+                else
+                    first(idxs)
+                end
                 return subselect(arr, i, c)
             end
 
-            sublabels = copy(entry.labels)
-            map!(values(sublabels)) do l
+            labels = copy(entry.labels)
+            map!(values(labels)) do l
                 w = maybewrap(l)
                 return w[Broadcast.newindex(w, c)]
             end
 
-            input = Entry(
-                entry,
-                primary=subprimary,
-                positional=subpositional,
-                named=subnamed,
-                labels=sublabels,
-            )
+            input = Entry(entry; primary, positional, named, labels)
+
             # TODO: for analyses returning several entries, rearrange in correct order.
-            append!(list, maybewrap(f(input)))
+            append!(entries, maybewrap(f(input)))
         end
     end
-    return list
+    return entries
 end
 
 ## Transform `Layers` into list of `Entry`
@@ -66,36 +74,45 @@ end
 unnest(arr::NTuple{<:Any, <:AbstractArray}) = unnest(collect(arr))
 
 # FIXME: can this be simplified?
-function Entry(layer::Layer)
-    positionalwrapped = map(maybewrap, layer.positional)
-    namedwrapped = map(maybewrap, layer.named)
-    data = layer.data
-    axs = Broadcast.combine_axes(positionalwrapped..., namedwrapped...)
+"""
+    to_entry(layer::Layer)
+
+Convert `layer` to equivalent entry, excluding transformations.
+"""
+function to_entry(layer::Layer)
+    axs = shape(layer)
     labels = Dict{KeyType, Any}()
-    primary, positional, named = [], [], []
-    for c in (positionalwrapped, namedwrapped)
+    primary_pairs, positional_list, named_pairs = [], [], []
+    for c in (layer.positional, layer.named)
         for (key, val) in pairs(c)
-            ntls = map(y -> NameTransformationLabel(data, y), val)
+            ntls = map(maybewrap(val)) do t
+                return NameTransformationLabel(layer.data, t)
+            end
             labels[key] = map(ntl -> ntl.label, ntls)
             nested = map(ntls) do ntl
-                cols = apply_context(data, axs, maybewrap(ntl.name))
+                cols = apply_context(layer.data, axs, maybewrap(ntl.name))
                 return map(ntl.transformation, cols...)
             end
             v = unnest(nested)
+            isdims = any(ntl -> ntl.name isa DimsSelector, ntls)
+            isprimary = isdims || !iscontinuous(v)
             if key isa Int
-                push!(positional, v)
-            elseif any(ntl -> ntl.name isa DimsSelector, ntls) || !iscontinuous(v)
-                push!(primary, key => v)
+                push!(positional_list, v)
+            elseif isprimary
+                push!(primary_pairs, key => v)
             else
-                push!(named, key => v)
+                push!(named_pairs, key => v)
             end
         end
     end
-    return Entry(; primary=NamedTuple(primary), positional=Tuple(positional), named=NamedTuple(named), labels)
+    primary = NamedTuple(primary_pairs)
+    positional = Tuple(positional_list)
+    named = NamedTuple(named_pairs)
+    return Entry(; primary, positional, named, labels)
 end
 
 function process(layer::Layer)
-    init = Entry(layer)
+    init = to_entry(layer)
     res = foldl(process, layer.transformations; init)
     return res isa Entry ? splitapply(res) : res
 end

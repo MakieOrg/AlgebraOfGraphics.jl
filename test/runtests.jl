@@ -31,7 +31,7 @@ end
     df = (x=rand(1000), y=rand(1000), z=rand(1000), c=rand(["a", "b", "c"], 1000))
     d = mapping(:x => exp, [:y, :z], color=:c, marker = dims(1) => t -> ["a", "b"][t])
     layer = data(df) * d
-    entry = Entry(layer)
+    entry = AlgebraOfGraphics.to_entry(layer)
     @test entry.positional[1] == map(exp, df.x)
     @test entry.positional[2] == [df.y df.z]
     @test entry.primary[:color] == df.c
@@ -48,7 +48,7 @@ end
     df.c[1:3] .= ["a", "b", "c"] # ensure all three values exist
     d = mapping(:x => exp, [:y, :z], color=:c, marker=dims(1) => t -> ["1", "2"][t], markersize=:w)
     layer = data(df) * d
-    le = Entry(layer)
+    le = AlgebraOfGraphics.to_entry(layer)
     entries = AlgebraOfGraphics.splitapply(le)
     @test length(entries) == 6
     for i in 1: 6
