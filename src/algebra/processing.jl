@@ -9,19 +9,22 @@ function indices_iterator(cols)
     return (sortperm(gp)[rg] for rg in gp)
 end
 
-function subselect(arr, idxs, c′::CartesianIndex)
-    c = Broadcast.newindex(CartesianIndices(tail(axes(arr))), c′)
-    return view(arr, idxs, Tuple(c)...)
+function subselect(arr, idxs, c::CartesianIndex)
+    c′ = Broadcast.newindex(CartesianIndices(tail(axes(arr))), c)
+    return view(arr, idxs, Tuple(c′)...)
 end
 
-function shape(entry::Entry)
-    tup = (entry.primary..., entry.positional..., entry.named...)
-    return Broadcast.combine_axes(map(maybewrap, tup)...)
+function subselectprimary(arr, idxs, c::CartesianIndex)
+    i = idxs === Colon() || size(arr, 1) == 1 ? firstindex(arr, 1) : first(idxs)
+    return subselect(arr, i, c)
 end
 
-function shape(layer::Layer)
-    tup = (layer.positional..., layer.named...)
-    return Broadcast.combine_axes(map(maybewrap, tup)...)
+allvariables(e::Entry) = (e.primary..., e.positional..., e.named...)
+allvariables(l::Layer) = (l.positional..., l.named...)
+
+function shape(x::Union{Entry, Layer})
+    vars = map(maybewrap, allvariables(x))
+    return Broadcast.combine_axes(vars...)
 end
 
 splitapply(entry::Entry) = splitapply(identity, entry)
@@ -34,23 +37,14 @@ function splitapply(f, entry::Entry)
     entries = Entry[]
     foreach(indices_iterator(grouping)) do idxs
         for c in CartesianIndices(tail(axs))
-            selector = arr -> subselect(arr, idxs, c)
-            positional = map(selector, entry.positional)
-            named = map(selector, entry.named)
-
-            primary = map(entry.primary) do arr
-                i = if idxs === Colon() || size(arr, 1) == 1
-                    firstindex(arr, 1)
-                else
-                    first(idxs)
-                end
-                return subselect(arr, i, c)
-            end
+            primary = map(arr -> subselectprimary(arr, idxs, c), entry.primary)
+            positional = map(arr -> subselect(arr, idxs, c), entry.positional)
+            named = map(arr -> subselect(arr, idxs, c), entry.named)
 
             labels = copy(entry.labels)
             map!(values(labels)) do l
-                w = maybewrap(l)
-                return w[Broadcast.newindex(w, c)]
+                l′ = maybewrap(l)
+                return l′[Broadcast.newindex(l′, c)]
             end
 
             input = Entry(entry; primary, positional, named, labels)
@@ -73,7 +67,6 @@ end
 
 unnest(arr::NTuple{<:Any, <:AbstractArray}) = unnest(collect(arr))
 
-# FIXME: can this be simplified?
 """
     to_entry(layer::Layer)
 

@@ -100,9 +100,3 @@ maybewrap(x) = fill(x)
 
 maybeunwrap(x) = x
 maybeunwrap(x::AbstractArray{<:Any, 0}) = x[]
-
-function separate(f, nt::NamedTuple)
-    filtered_keys = filter(key -> f(nt[key]), keys(nt))
-    filtered_nt = NamedTuple{filtered_keys}(nt)
-    return filtered_nt, Base.structdiff(nt, filtered_nt)
-end

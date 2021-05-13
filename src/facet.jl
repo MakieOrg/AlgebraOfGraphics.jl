@@ -84,7 +84,8 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
             return (0f0, 0f0, gap, 0f0)
         end
         for n in 1:N
-            Label(fig[1, n, Top()], string(col_dict[n]); padding=labelpadding, facetlabelattributes...)
+            Label(fig[1, n, Top()], string(col_dict[n]);
+                padding=labelpadding, facetlabelattributes...)
         end
         protrusion = lift(
             (xs...) -> maximum(x -> x.bottom, xs),
