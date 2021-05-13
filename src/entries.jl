@@ -32,11 +32,6 @@ end
 
 AbstractPlotting.Axis(ae::AxisEntries) = ae.axis
 
-function prefix(i::Int, sym::Symbol)
-    var = (:x, :y, :z)[i]
-    return Symbol(var, sym)
-end
-
 # Slightly complex machinery to recombine stacked barplots
 function mustbemerged(e::Entry)
     isbarplot = e.plottype <: BarPlot
@@ -113,10 +108,10 @@ function AbstractPlotting.plot!(ae::AxisEntries)
     end
     # TODO: support log colorscale
     ndims = isaxis2d(ae) ? 2 : 3
-    for i in 1:ndims
+    for (i, var) in zip(1:ndims, (:x, :y, :z))
         label, scale = get(labels, i, nothing), get(scales, i, nothing)
         any(isnothing, (label, scale)) && continue
-        axislabel, axisticks, axisscale = prefix.(i, (:label, :ticks, :scale))
+        axislabel, axisticks, axisscale = Symbol.(var, (:label, :ticks, :scale))
         getproperty(axis, axisticks)[] = ticks(scale)
         getproperty(axis, axislabel)[] = string(label)
     end
