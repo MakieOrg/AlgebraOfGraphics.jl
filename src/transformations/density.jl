@@ -26,8 +26,7 @@ function (d::DensityAnalysis)(le::Entry)
     end
     return splitapply(le) do entry
         N = length(entry.positional)
-        positional = _density(entry.positional...; entry.named..., options...)
-        named = (;)
+        positional, named = _density(entry.positional...; entry.named..., options...), (;)
         labels = copy(entry.labels)
         labels[N + 1] = "pdf"
         plottypes = [LinesFill, Heatmap, Volume]
