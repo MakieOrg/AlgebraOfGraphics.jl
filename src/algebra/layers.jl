@@ -31,8 +31,8 @@ mergelabels(a, b) = a
 function compute_axes_grid(fig, s::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
     layers::Layers = s
-    summaries = ArgDict()
-    labels = ArgDict()
+    summaries = Dict{KeyType, Any}()
+    labels = Dict{KeyType, Any}()
     entries = Entry[]
     for labeledentries in process_transformations(layers)
         for le in labeledentries

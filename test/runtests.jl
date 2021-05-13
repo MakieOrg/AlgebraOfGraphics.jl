@@ -32,14 +32,15 @@ end
     d = mapping(:x => exp, [:y, :z], color = :c, marker = dims(1) => t -> ["a", "b"][t])
     layer = data(df) * d
     entry = AlgebraOfGraphics.process_data(layer)
-    @test entry.positional[1].label == fill("x")
-    @test entry.positional[1].value == map(exp, df.x)
-    @test entry.positional[2].label == ["y", "z"]
-    @test entry.positional[2].value == [df.y df.z]
-    @test entry.named[:color].label == fill("c")
-    @test entry.named[:color].value == df.c
-    @test entry.named[:marker].label == fill("")
-    @test entry.named[:marker].value == ["a" "b"]
+    @test entry.positional[1] == map(exp, df.x)
+    @test entry.positional[2] == [df.y df.z]
+    @test entry.primary[:color] == df.c
+    @test entry.primary[:marker] == ["a" "b"]
+    @test entry.named == (;)
+    @test entry.labels[1] == fill("x")
+    @test entry.labels[2] ==  ["y", "z"]
+    @test entry.labels[:color] == fill("c")
+    @test entry.labels[:marker] == fill("")
 end
 
 @testset "splitapply" begin

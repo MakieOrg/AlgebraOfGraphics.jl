@@ -72,21 +72,34 @@ end
 unnest(arr::NTuple{<:Any, <:AbstractArray}) = unnest(collect(arr))
 
 function process_data(data, positional′, named′)
-    positional, named = nested_map((positional′, named′)) do x
-        return map(y -> NameTransformationLabel(data, y), maybewrap(x))
-    end
-    axs = Broadcast.combine_axes(positional..., named...)
-    labeledarrays = nested_map((positional, named)) do ntls
-        nested = map(ntls) do ntl
-            cols = apply_context(data, axs, maybewrap(ntl.name))
-            return map(ntl.transformation, cols...)
+    axs = Broadcast.combine_axes(positional′..., named′...)
+    labels = Dict{KeyType, Any}()
+    primary, positional, named = [], [], []
+    for c in (positional′, named′)
+        for (key, val) in pairs(c)
+            ntls = map(y -> NameTransformationLabel(data, y), val)
+            labels[key] = map(ntl -> ntl.label, ntls)
+            nested = map(ntls) do ntl
+                cols = apply_context(data, axs, maybewrap(ntl.name))
+                return map(ntl.transformation, cols...)
+            end
+            v = unnest(nested)
+            if key isa Int
+                push!(positional, v)
+            elseif any(ntl -> ntl.name isa DimsSelector, ntls) || !iscontinuous(v)
+                push!(primary, key => v)
+            else
+                push!(named, key => v)
+            end
         end
-        return Labeled(map(ntl -> ntl.label, ntls), unnest(nested))
     end
-    return Entry(Any, labeledarrays..., Dict{Symbol, Any}())
+    return Entry(Any, (; primary...), Tuple(positional), (; named...), labels)
 end
 
-process_data(layer::Layer) = process_data(layer.data, layer.positional, layer.named)
+function process_data(layer::Layer)
+    positional, named = map(maybewrap, layer.positional), map(maybewrap, layer.named)
+    return process_data(layer.data, positional, named)
+end
 
 process_transformations(layers::Layers) = map(process_transformations, layers)
 

@@ -49,7 +49,7 @@ end
 
 # Logic to infer good scales
 function default_scales(summaries, palettes)
-    defaults = ArgDict()
+    defaults = Dict{KeyType, Any}()
     for (key, val) in pairs(summaries)
         palette = get(palettes, key, automatic)
         defaults[key] = default_scale(val, palette)

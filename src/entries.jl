@@ -1,19 +1,22 @@
+const KeyType = Union{Symbol, Int}
+
 struct Entry
     plottype::PlotFunc
+    primary::NamedTuple
     positional::Tuple
     named::NamedTuple
+    scales::Dict{KeyType, Any}
+    labels::Dict{KeyType, Any}
     attributes::Dict{Symbol, Any}
 end
 
-Entry(plottype::PlotFunc=Any, positional::Tuple=(), named::NamedTuple=(;); attributes...) =
-    Entry(plottype, positional, named, Dict{Symbol, Any}(attributes))
+function Entry(plottype::PlotFunc, primary::NamedTuple, positional::Tuple, named::NamedTuple, labels=Dict{KeyType, Any}(); attributes...)
+    scales, attributes = Dict{KeyType, Any}(), Dict{Symbol, Any}(attributes)
+    return Entry(plottype, primary, positional, named, scales, labels, attributes)
+end
 
-Entry(positional::Tuple, named::NamedTuple=(;); attributes...) =
-    Entry(Any, positional, named; attributes...)
-
-Entry(named::NamedTuple; attributes...) = Entry(Any, (), named; attributes...)
-
-const ArgDict = Dict{Union{Symbol, Int}, Any}
+Entry(primary::NamedTuple, positional::Tuple, named::NamedTuple, labels=Dict{KeyType, Any}(); attributes...) =
+    Entry(Any, primary, positional, named, labels; attributes...)
 
 """
     AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, labels, scales)
@@ -26,8 +29,8 @@ such as `log10`. Other scales may be supported in the future.
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
-    scales::ArgDict
-    labels::ArgDict
+    scales::Dict{KeyType, Any}
+    labels::Dict{KeyType, Any}
 end
 
 AbstractPlotting.Axis(ae::AxisEntries) = ae.axis
