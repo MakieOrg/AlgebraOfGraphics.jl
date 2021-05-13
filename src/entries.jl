@@ -33,41 +33,27 @@ end
 AbstractPlotting.Axis(ae::AxisEntries) = ae.axis
 
 # Slightly complex machinery to recombine stacked barplots
-function mustbemerged(e::Entry)
-    isbarplot = e.plottype <: BarPlot
-    hasstack = :stack in keys(e.named) || :stack in keys(e.attributes)
-    return isbarplot && hasstack
+function mergeable(e1::Entry, e2::Entry)
+    for e in (e1, e2)
+        e.plottype <: BarPlot || return false
+        haskey(e.primary, :stack) || return false
+    end
+    return true
 end
 
-# Combine both entries as a unique entry with longer data
-function stack!(e1::Entry, e2::Entry)
-    p1, p2 = e1.plottype, e2.plottype
-    m1, m2 = e1.mappings, e2.mappings
-    a1, a2 = e1.attributes, e2.attributes
-    l1, l2 = length(m1[1]), length(m2[1])
-    assert_equal(p1, p2)
-    for (k, v) in pairs(a1)
-        assert_equal(v, a2[k])
-    end
-    mergewith!(m1, m2) do v1, v2
-        long1 = size(v1) == () ? fill(v1[], l1) : v1
-        long2 = size(v2) == () ? fill(v2[], l2) : v2
-        return vcat(long1, long2)
-    end
-    return e1
+function lengthen_primary(e::Entry)
+    N = length(first(e.positional))
+    primary = map(t -> fill(only(t), N), e.primary)
+    return Entry(e; primary)
 end
 
-function combine(entries::AbstractVector{Entry})
-    combinedentries = Entry[]
-    for entry in entries
-        idx = findfirst(mustbemerged, combinedentries)
-        if !isnothing(idx) && mustbemerged(entry)
-            stack!(combinedentries[idx], entry)
-        else
-            push!(combinedentries, entry)
-        end
-    end
-    return combinedentries
+# Combine entries as a unique entry with longer data
+function stack(short_entries::AbstractVector{Entry})
+    entries = map(lengthen_primary, short_entries)
+    primary = map(vcat, map(entry -> entry.primary, entries)...)
+    positional = map(vcat, map(entry -> entry.positional, entries)...)
+    named = map(vcat, map(entry -> entry.named, entries)...)
+    return Entry(first(entries); primary, positional, named)
 end
 
 mapkeys(f, tup::Tuple) = map(f, keys(tup))
@@ -75,11 +61,17 @@ mapkeys(f, ::NamedTuple{names}) where {names} = NamedTuple{names}(map(f, names))
 
 function AbstractPlotting.plot!(ae::AxisEntries)
     axis, entries, labels, scales = ae.axis, ae.entries, ae.labels, ae.scales
-    for entry in combine(entries)
+    i, N = 1, length(entries)
+    while i ≤ N
+        j = i + 1
+        while j ≤ N && mergeable(entries[i], entries[j])
+            j += 1
+        end
+        entry, i = j == i + 1 ? entries[i] : stack(entries[i:j-1]), j
         plottype, attributes = entry.plottype, copy(entry.attributes)
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
             return mapkeys(tup) do key
-                return unwrap(rescale(tup[key], scales[key]))
+                return maybeunwrap(rescale(tup[key], scales[key]))
             end
         end
         merge!(attributes, pairs(named), pairs(primary))

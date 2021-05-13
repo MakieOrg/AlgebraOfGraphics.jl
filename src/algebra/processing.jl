@@ -47,6 +47,7 @@ function splitapply(f, entry::Entry)
                 named=subnamed,
                 labels=sublabels,
             )
+            # TODO: for analyses returning several entries, rearrange in correct order.
             append!(list, maybewrap(f(input)))
         end
     end

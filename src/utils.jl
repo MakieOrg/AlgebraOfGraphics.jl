@@ -98,8 +98,8 @@ end
 maybewrap(x::ArrayLike) = x
 maybewrap(x) = fill(x)
 
-unwrap(x) = x
-unwrap(x::AbstractArray{<:Any, 0}) = x[]
+maybeunwrap(x) = x
+maybeunwrap(x::AbstractArray{<:Any, 0}) = x[]
 
 function separate(f, nt::NamedTuple)
     filtered_keys = filter(key -> f(nt[key]), keys(nt))
