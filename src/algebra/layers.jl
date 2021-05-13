@@ -44,10 +44,19 @@ mergelabels(a, b) = a
 function compute_axes_grid(fig, s::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
     layers::Layers = s
-    labels = Dict{KeyType, Any}()
-    entries = [summary(entry) for layer in layers for entry in process_transformations(layer)]
-    summaries = mapfoldl(entry -> entry.summaries, mergewith!(mergesummaries), entries, init=Dict{KeyType, Any}())
-    labels = mapfoldl(entry -> entry.labels, mergewith!(mergelabels), entries, init=Dict{KeyType, Any}())
+    entries = [summary(e) for layer in layers for e in process(layer)]
+    summaries = mapfoldl(
+        entry -> entry.summaries,
+        mergewith!(mergesummaries),
+        entries,
+        init=Dict{KeyType, Any}()
+    )
+    labels = mapfoldl(
+        entry -> entry.labels,
+        mergewith!(mergelabels),
+        entries,
+        init=Dict{KeyType, Any}()
+    )
 
     palettes = merge(default_palettes(), palettes)
     scales = default_scales(summaries, palettes)

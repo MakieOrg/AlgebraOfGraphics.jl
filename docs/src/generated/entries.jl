@@ -38,13 +38,13 @@ ae = AxisEntries(
         2 => ContinuousScale(identity, (0, 4)),
         :color => ContinuousScale(identity, (1, N)),
         :marker => CategoricalScale(["a", "b", "c"], [:circle, :utriangle, :dtriangle]),
-    ), #scales
+    ), # scales
     Dict(
         1 => "x",
         2 => "y",
         :color => "identity",
         :marker => "function"
-    ), #labels
+    ), # labels
 )
 plot!(ae)
 fig

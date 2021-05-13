@@ -65,11 +65,15 @@ end
 
 unnest(arr::NTuple{<:Any, <:AbstractArray}) = unnest(collect(arr))
 
-function process_data(data, positional′, named′)
-    axs = Broadcast.combine_axes(positional′..., named′...)
+# FIXME: can this be simplified?
+function Entry(layer::Layer)
+    positionalwrapped = map(maybewrap, layer.positional)
+    namedwrapped = map(maybewrap, layer.named)
+    data = layer.data
+    axs = Broadcast.combine_axes(positionalwrapped..., namedwrapped...)
     labels = Dict{KeyType, Any}()
     primary, positional, named = [], [], []
-    for c in (positional′, named′)
+    for c in (positionalwrapped, namedwrapped)
         for (key, val) in pairs(c)
             ntls = map(y -> NameTransformationLabel(data, y), val)
             labels[key] = map(ntl -> ntl.label, ntls)
@@ -90,17 +94,12 @@ function process_data(data, positional′, named′)
     return Entry(; primary=NamedTuple(primary), positional=Tuple(positional), named=NamedTuple(named), labels)
 end
 
-function process_data(layer::Layer)
-    positional, named = map(maybewrap, layer.positional), map(maybewrap, layer.named)
-    return process_data(layer.data, positional, named)
-end
-
-function process_transformations(layer::Layer)
-    init = process_data(layer)
-    res = foldl(process_transformations, layer.transformations; init)
+function process(layer::Layer)
+    init = Entry(layer)
+    res = foldl(process, layer.transformations; init)
     return res isa Entry ? splitapply(res) : res
 end
 
-process_transformations(v::AbstractArray{Entry}, f) = map(f, v)
+process(v::AbstractArray{Entry}, f) = map(f, v)
 
-process_transformations(le::Entry, f) = f(le)
+process(le::Entry, f) = f(le)
