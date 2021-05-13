@@ -11,7 +11,8 @@ end
 
 function has_zcolor(entry::Entry)
     return entry.plottype <: Union{Heatmap, Contour, Contourf, Surface} &&
-        !haskey(entry.mappings, :color) &&
+        !haskey(entry.primary, :color) &&
+        !haskey(entry.named, :color) &&
         !haskey(entry.attributes, :color)
 end
 
@@ -19,14 +20,14 @@ function getlabeledcolorbar(grid)
     scales, labels = first(grid).scales, first(grid).labels
     key = any(has_zcolor, entries(grid)) ? 3 : :color
     label, scale = get(labels, key, nothing), get(scales, key, nothing)
-    return scale isa ContinuousScale ? Labeled(label, scale) : nothing
+    return scale isa ContinuousScale ? (label, scale) : nothing
 end
 
 function _Colorbar_(fg::FigureGrid)
     grid = fg.grid
     labeledcolorbar = getlabeledcolorbar(grid)
     isnothing(labeledcolorbar) && return
-    label, colorscale = getlabel(labeledcolorbar), getvalue(labeledcolorbar)
+    label, colorscale = labeledcolorbar
     colormap = current_default_theme().Colorbar.colormap[]
     for entry in entries(grid)
         colormap = to_value(get(entry.attributes, :colormap, colormap))

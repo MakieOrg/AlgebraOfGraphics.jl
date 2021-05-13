@@ -71,8 +71,8 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
 
     for entry in e.entries
         rows, cols = map(rowcol, scales, (first, last)) do sym, scale, f
-            v = get(entry.named, sym, nothing)
-            layout_v = get(entry.named, :layout, nothing)
+            v = get(entry.primary, sym, nothing)
+            layout_v = get(entry.primary, :layout, nothing)
             # without layout info, plot on all axes
             # all values in `v` and `layout_v` are equal
             isnothing(v) || return rescale(v[1:1], scale)
@@ -88,8 +88,9 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     # Link colors
     labeledcolorbar = getlabeledcolorbar(axes_grid)
     if !isnothing(labeledcolorbar)
-        colorrange = getvalue(labeledcolorbar).extrema
-        for entry in entries(axes_grid)
+        _, colorbar = labeledcolorbar
+        colorrange = colorbar.extrema
+        for entry in AlgebraOfGraphics.entries(axes_grid)
             entry.attributes[:colorrange] = colorrange
         end
     end
