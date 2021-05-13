@@ -45,8 +45,6 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     summaries = mapfoldl(entry -> entry.scales, mergewith!(mergesummaries), entries, init=Dict{KeyType, Any}())
     labels = mapfoldl(entry -> entry.labels, mergewith!(mergelabels), entries, init=Dict{KeyType, Any}())
 
-    @show summaries
-
     palettes = merge(default_palettes(), palettes)
     scales = default_scales(summaries, palettes)
 
