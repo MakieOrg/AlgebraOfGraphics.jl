@@ -4,63 +4,50 @@ fast_hashed(v::AbstractVector) = isbitstype(eltype(v)) ? PooledArray(v) : v
 
 function indices_iterator(cols)
     isempty(cols) && return Ref(Colon())
-    grouping_sa = StructArray(map(refarray∘fast_hashed∘getvalue, cols))
+    grouping_sa = StructArray(map(refarray∘fast_hashed, cols))
     gp = GroupPerm(grouping_sa)
     return (sortperm(gp)[rg] for rg in gp)
 end
 
-function adjust_index(axs::NTuple{N, Any}, c::CartesianIndex) where N
-    return ntuple(N) do n
-        ax = axs[n]
-        return length(ax) == 1 ? only(ax) : c[n]
-    end
+function subselect(arr, idxs, c′::CartesianIndex)
+    c = Broadcast.newindex(CartesianIndices(tail(axes(arr))), c′)
+    return view(arr, idxs, Tuple(c)...)
 end
 
-function subselect(labeledarray::Labeled, idxs, c::CartesianIndex)
-    labels, array = maybewrap(getlabel(labeledarray)), getvalue(labeledarray)
-    label = labels[adjust_index(axes(labels), c)...]
-    subarray = view(array, idxs, adjust_index(tail(axes(array)), c)...)
-    return Labeled(label, subarray)
-end
+nested_map(f, (a, b)::Tuple) = map(f, a), map(f, b)
 
-splitapply(le::Entry) = splitapply(identity, le)
+splitapply(entry::Entry) = splitapply(identity, entry)
 
-function splitapply(f, le::Entry)
-    positional, named = le.positional, le.named
-    axs = Broadcast.combine_axes(map(getvalue, positional)..., map(getvalue, named)...)
-    discrete, continuous = separate(lv -> !iscontinuous(getvalue(lv)), named)
-    grouping = filter(lv -> isa(getvalue(lv), AbstractVector), Tuple(discrete))
+function splitapply(f, entry::Entry)
+    primary, positional, named = entry.primary, entry.positional, entry.named
+    axs = Broadcast.combine_axes(primary..., positional..., named...)
+    grouping = filter(v -> isa(v, AbstractVector), Tuple(primary))
     list = Entry[]
     foreach(indices_iterator(grouping)) do idxs
         for c in CartesianIndices(tail(axs))
-            subpositional, subcontinuous = nested_map((positional, continuous)) do l
-                return subselect(l, idxs, c)
+            subpositional, subnamed = nested_map((positional, named)) do arr
+                return subselect(arr, idxs, c)
             end
-            subdiscrete = map(discrete) do l
-                v = getvalue(l)
-                i = idxs === Colon() || size(v, 1) == 1 ? firstindex(v, 1) : first(idxs)
-                return subselect(l, i, c)
+
+            subprimary = map(primary) do arr
+                i = idxs === Colon() || size(arr, 1) == 1 ? firstindex(arr, 1) : first(idxs)
+                return subselect(arr, i, c)
             end
-            new_entries = f(Entry(le.plottype, subpositional, subcontinuous, le.attributes))
-            for new_entry in maybewrap(new_entries)
-                push!(
-                    list,
-                    Entry(
-                        new_entry.plottype,
-                        new_entry.positional,
-                        merge(subdiscrete, new_entry.named),
-                        new_entry.attributes
-                    )
-                )
+
+            sublabels = copy(entry.labels)
+            map!(values(sublabels)) do l
+                w = maybewrap(l)
+                return w[Broadcast.newindex(w, c)]
             end
+
+            input = Entry(entry.plottype, subprimary, subpositional, subnamed, sublabels; entry.attributes...)
+            append!(list, maybewrap(f(input)))
         end
     end
     return list
 end
 
 ## Transform `Layers` into list of `Entry`
-
-nested_map(f, (a, b)::Tuple) = map(f, a), map(f, b)
 
 function unnest(arr::AbstractArray{<:AbstractArray})
     inner_size = mapreduce(size, assert_equal, arr)

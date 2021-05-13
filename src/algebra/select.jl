@@ -62,16 +62,3 @@ function apply_context(data, axs::NTuple{N, Any}, d::DimsSelector) where N
     end
     return reshape(CartesianIndices(sz), 1, sz...)
 end
-
-struct Labeled{S, T}
-    label::S
-    value::T
-end
-
-Labeled(x) = Labeled(getlabel(x), getvalue(x))
-
-getlabel(x::Labeled) = x.label
-getvalue(x::Labeled) = x.value
-
-getlabel(x) = ""
-getvalue(x) = x
