@@ -24,7 +24,7 @@ import GLM, Loess
 import FileIO
 
 export hideinnerdecorations!, deleteemptyaxes!
-export arguments, Entry, Entries, AxisEntries
+export Entry, AxisEntries
 export renamer, nonnumeric
 export density, histogram, linear, smooth, expectation, frequency
 export visual, data, dims, mapping
@@ -32,18 +32,16 @@ export draw, draw!
 export facet!
 export set_aog_theme!
 
-include("arguments.jl")
 include("theme.jl")
 include("scales.jl")
 include("entries.jl")
-include("utils.jl")
 include("facet.jl")
 include("helpers.jl")
 include("algebra/layer.jl")
 include("algebra/layers.jl")
+include("algebra/select.jl")
 include("algebra/processing.jl")
 include("recipes/linesfill.jl")
-include("transformations/splitapply.jl")
 include("transformations/visual.jl")
 include("transformations/linear.jl")
 include("transformations/smooth.jl")

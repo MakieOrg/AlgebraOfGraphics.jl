@@ -49,8 +49,13 @@ end
 
 # Logic to infer good scales
 function default_scales(summaries, palettes)
-    palettes = merge!(map(_ -> automatic, summaries), palettes)
-    return map(default_scale, summaries, palettes)
+    defaults = Dict{KeyType, Any}()
+    for (key, val) in pairs(summaries)
+        # ensure `palette === automatic` for integer keys
+        palette = key in propertynames(palettes) ? palettes[key] : automatic
+        defaults[key] = default_scale(val, palette)
+    end
+    return defaults
 end
 
 # Logic to create ticks from a scale
@@ -71,4 +76,47 @@ function continuousticks(min::T, max::T) where T<:Union{Date, DateTime}
     min_pure, max_pure = min_ms/Millisecond(1), max_ms/Millisecond(1)
     dates, labels = optimize_datetime_ticks(min_pure, max_pure)
     return (dates .-  min_pure, labels)
+end
+
+## Scale helpers
+
+const ArrayLike = Union{AbstractArray, Tuple}
+const StringLike = Union{AbstractString, Symbol}
+
+function cycle(v::AbstractVector, i::Int)
+    ax = axes(v, 1)
+    return v[first(ax) + mod(i - first(ax), length(ax))]
+end
+
+"""
+    iscontinuous(v::AbstractArray)
+
+Determine whether `v` should be treated as a continuous or categorical vector.
+"""
+iscontinuous(::AbstractArray) = false
+iscontinuous(::AbstractArray{<:Number}) = true
+iscontinuous(::AbstractArray{<:Union{Date, DateTime}}) = true
+
+extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
+
+push_different!(v, val) = !isempty(v) && isequal(last(v), val) || push!(v, val) 
+
+function mergesorted(v1, v2)
+    issorted(v1) && issorted(v2) || throw(ArgumentError("arguments must be sorted"))
+    T = promote_type(eltype(v1), eltype(v2))
+    v = sizehint!(T[], length(v1) + length(v2))
+    i1, i2 = 1, 1
+    while i2 ≤ length(v2)
+        while i1 ≤ length(v1) && isless(v1[i1], v2[i2])
+            push_different!(v, v1[i1])
+            i1 += 1
+        end
+        push_different!(v, v2[i2])
+        i2 += 1
+    end
+    while i1 ≤ length(v1)
+        push_different!(v, v1[i1])
+        i1 += 1
+    end
+    return v
 end

@@ -18,19 +18,12 @@ function _groupreduce(agg, summaries::Tuple, values...)
     return map(value, results)
 end
 
-function groupreduce(agg, le::Entry)
-    summaries = Tuple(map(summary∘getvalue, le.mappings.positional[1:end-1]))
-    return splitapply(le) do entry
-        mappings = entry.mappings
-        labels, values = map(getlabel, mappings.positional), map(getvalue, mappings.positional)
-        results = _groupreduce(agg, summaries, values...)
-        result = (summaries..., results)
-        labeled_result = map(Labeled, labels, result)
+function groupreduce(agg, entry::Entry)
+    summaries = map(collect∘uniquesorted, front(entry.positional))
+    return splitapply(entry) do entry
+        positional, named = (summaries..., _groupreduce(agg, summaries, entry.positional...)), (;)
         default_plottype = categoricalplottypes[length(summaries)]
-        return Entry(
-            AbstractPlotting.plottype(entry.plottype, default_plottype),
-            arguments(labeled_result...),
-            entry.attributes
-        )
+        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        return Entry(entry; plottype, positional, named)
     end
 end

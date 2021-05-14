@@ -93,8 +93,6 @@ draw(specs)
 # linear
 # ```
 
-using AlgebraOfGraphics, CairoMakie
-
 x = 1:0.05:10
 a = rand(1:7, length(x))
 y = 1.2 .* x .+ a .+ 0.5 .* randn.()

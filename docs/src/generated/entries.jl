@@ -7,7 +7,9 @@
 # An `AxisEntries` object is
 # made of four components:
 # - axis,
-# - entries.
+# - entries,
+# - scales,
+# - labels.
 
 using AlgebraOfGraphics, CairoMakie
 using AlgebraOfGraphics: CategoricalScale, ContinuousScale
@@ -19,23 +21,30 @@ ae = AxisEntries(
     Axis(fig[1, 1]),
     [
         Entry(
-            Scatter,
-            arguments(rg, cosh.(rg), color=1:N, marker=fill("b", N));
-            markersize = 15
+            plottype=Scatter,
+            positional=(rg, cosh.(rg)),
+            named=(color=1:N, marker=fill("b", N));
+            attributes=Dict(:markersize => 15)
         ),
         Entry(
-            Scatter,
-            arguments(rg, sinh.(rg), color=1:N, marker=fill("c", N));
-            markersize = 15
+            plottype=Scatter,
+            positional=(rg, sinh.(rg)),
+            named=(color=1:N, marker=fill("c", N));
+            attributes=Dict(:markersize => 15)
         ),
     ],
-    arguments(
-        ContinuousScale(identity, (0, 4)),
-        ContinuousScale(identity, (0, 4)),
-        color=ContinuousScale(identity, (1, N)),
-        marker=CategoricalScale(["a", "b", "c"], [:circle, :utriangle, :dtriangle]), #scales
-    ),
-    arguments("x", "y", color="identity", marker="function"), #labels
+    Dict(
+        1 => ContinuousScale(identity, (0, 4)),
+        2 => ContinuousScale(identity, (0, 4)),
+        :color => ContinuousScale(identity, (1, N)),
+        :marker => CategoricalScale(["a", "b", "c"], [:circle, :utriangle, :dtriangle]),
+    ), # scales
+    Dict(
+        1 => "x",
+        2 => "y",
+        :color => "identity",
+        :marker => "function"
+    ), # labels
 )
 plot!(ae)
 fig

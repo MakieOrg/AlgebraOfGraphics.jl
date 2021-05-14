@@ -9,9 +9,8 @@ add_intercept_column(x::AbstractVector{T}) where {T} = [ones(T, length(x)) x]
 # TODO: add multidimensional version
 function (l::LinearAnalysis)(le::Entry)
     return splitapply(le) do entry
-        labels, mappings = map(getlabel, entry.mappings), map(getvalue, entry.mappings)
-        x, y = mappings.positional
-        wts = get(mappings, :wts, similar(x, 0))
+        x, y = entry.positional
+        wts = get(entry.named, :wts, similar(x, 0))
         npoints = get(l.options, :npoints, 200)
         interval = get(l.options, :interval, length(wts) > 0 ? nothing : :confidence)
         dropcollinear = false
@@ -27,17 +26,14 @@ function (l::LinearAnalysis)(le::Entry)
         if !isnothing(interval)
             ŷ, lower, upper = map(vec, pred) # GLM prediction returns matrices
             default_plottype = LinesFill
-            attributes = (; lower, upper)
+            positional, named = (x̂, ŷ), (; lower, upper)
         else
             ŷ = vec(pred) # GLM prediction returns matrix
             default_plottype = Lines
-            attributes = (;)
+            positional, named = (x̂, ŷ), (;)
         end
-        return Entry(
-            AbstractPlotting.plottype(entry.plottype, default_plottype),
-            arguments(map(Labeled, labels.positional, (x̂, ŷ))...; attributes...),
-            entry.attributes
-        )
+        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        return Entry(entry; plottype, positional, named)
     end
 end
 

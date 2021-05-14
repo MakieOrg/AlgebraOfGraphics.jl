@@ -1,107 +1,107 @@
-struct DimsSelector{N}
-    dims::NTuple{N, Int}
-end
-dims(args...) = DimsSelector(args)
+## Grouping machinery
 
-function (d::DimsSelector)(c::CartesianIndex{N}) where N
-    t = ntuple(N) do n
-        return n in d.dims ? c[n] : 1
+fast_hashed(v::AbstractVector) = isbitstype(eltype(v)) ? PooledArray(v) : v
+
+function indices_iterator(cols)
+    isempty(cols) && return (:,)
+    grouping_sa = StructArray(map(refarray∘fast_hashed, cols))
+    gp = GroupPerm(grouping_sa)
+    return (sortperm(gp)[rg] for rg in gp)
+end
+
+function validprimaryindices(v, idxs, c::CartesianIndex)
+    i = idxs === (:) ? firstindex(v, 1) : clamp(first(idxs), axes(v, 1))
+    t = validtailindices(v, c)
+    return (i, t...)
+end
+
+validtailindices(v, c::CartesianIndex) =
+    Tuple(Broadcast.newindex(CartesianIndices(tail(axes(v))), c))
+
+validindices(v, c::CartesianIndex) = Tuple(Broadcast.newindex(v, c))
+
+function subgroup(e::Entry, idxs, c::CartesianIndex)
+    primary = map(v -> view(v, validprimaryindices(v, idxs, c)...), e.primary)
+    positional = map(v -> view(v, idxs, validtailindices(v, c)...), e.positional)
+    named = map(v -> view(v, idxs, validtailindices(v, c)...), e.named)
+    labels = copy(e.labels)
+    map!(values(labels)) do l
+        l′ = Broadcast.broadcastable(l)
+        return l′[validindices(l′, c)...]
     end
-    return CartesianIndex(t)
+    return Entry(e; primary, positional, named, labels)
 end
 
-compute_label(data, name::StringLike) = string(name)
-compute_label(data, name::Integer) = string(columnnames(data)[name])
-compute_label(data, name::DimsSelector) = ""
+allvariables(e::Entry) = (e.primary..., e.positional..., e.named...)
+allvariables(l::Layer) = (l.positional..., l.named...)
 
-struct NameTransformationLabel
-    name::Any
-    transformation::Any
-    label::String
+function shape(x::Union{Entry, Layer})
+    arrays = map(var -> var isa ArrayLike ? var : fill(nothing), allvariables(x))
+    return Broadcast.combine_axes(arrays...)
 end
 
-function NameTransformationLabel(name, transformation, label::Symbol)
-    return NameTransformationLabel(name, transformation, string(label))
-end
+splitapply(entry::Entry) = splitapply(identity, entry)
 
-function NameTransformationLabel(data, x::Union{StringLike, Integer, DimsSelector})
-    return NameTransformationLabel(x, identity, compute_label(data, x))
-end
-
-function NameTransformationLabel(data, x::Pair{<:Any, <:StringLike})
-    name, label = x
-    return NameTransformationLabel(name, identity, label)
-end
-
-function NameTransformationLabel(data, x::Pair{<:Any, <:Any})
-    name, transformation = x
-    label = compute_label(data, name)
-    return NameTransformationLabel(name, transformation, label)
-end
-
-function NameTransformationLabel(data, x::Pair{<:Any, <:Pair})
-    name, transformation_label = x
-    transformation, label = transformation_label
-    return NameTransformationLabel(name, transformation, label)
-end
-
-function apply_context(data, axs, names::ArrayLike)
-    return map(name -> apply_context(data, axs, name), names)
-end
-
-apply_context(data, axs, name::StringLike) = getcolumn(data, Symbol(name))
-
-function apply_context(data, axs, idx::Integer)
-    name = columnnames(data)[idx]
-    return getcolumn(data, name)
-end
-
-function apply_context(data, axs::NTuple{N, Any}, d::DimsSelector) where N
-    sz = ntuple(N) do n
-        return n in d.dims ? length(axs[n]) : 1
-    end
-    return reshape(CartesianIndices(sz), 1, sz...)
-end
-
-struct Labeled{T}
-    label::AbstractString
-    value::T
-end
-
-Labeled(x) = Labeled(getlabel(x), getvalue(x))
-
-getlabel(x::Labeled) = x.label
-getvalue(x::Labeled) = x.value
-
-getlabel(x) = ""
-getvalue(x) = x
-
-function process_data(data, mappings′)
-    mappings = map(mappings′) do x
-        return map(Base.Fix1(NameTransformationLabel, data), maybewrap(x))
-    end
-    axs = Broadcast.combine_axes(mappings.positional..., values(mappings.named)...)
-    labeledarrays = map(mappings) do ntls
-        names = map(ntl -> ntl.name, ntls)
-        transformations = map(ntl -> ntl.transformation, ntls)
-        labels = map(ntl -> ntl.label, ntls)
-        res = map(transformations, names) do transformation, name
-            cols = apply_context(data, axs, maybewrap(name))
-            map(transformation, cols...)
+function splitapply(f, entry::Entry)
+    axs = shape(entry)
+    grouping = filter(v -> v isa AbstractVector, Tuple(entry.primary))
+    entries = Entry[]
+    foreach(indices_iterator(grouping)) do idxs
+        for c in CartesianIndices(tail(axs))
+            # TODO: for analyses returning several entries, rearrange in correct order.
+            res = f(subgroup(entry, idxs, c))
+            res isa Entry ? push!(entries, res) : append!(entries, res)
         end
-        return Labeled(join(unique(labels), ' '), unnest(res))
     end
-    return Entry(Any, labeledarrays, Dict{Symbol, Any}())
+    return entries
 end
 
-process_transformations(layers::Layers) = map(process_transformations, layers)
+## Transform `Layers` into list of `Entry`
 
-function process_transformations(layer::Layer)
-    init = process_data(layer.data, layer.mappings)
-    res = foldl(process_transformations, layer.transformations; init)
+assert_equal(a, b) = (@assert(a == b); a)
+
+function unnest(arr::AbstractArray{<:AbstractArray})
+    inner_size = mapreduce(size, assert_equal, arr)
+    outer_size = size(arr)
+    flattened = reduce(vcat, map(vec, vec(arr)))
+    return reshape(flattened, inner_size..., outer_size...)
+end
+
+unnest(arr::NTuple{<:Any, <:AbstractArray}) = unnest(collect(arr))
+
+"""
+    to_entry(layer::Layer)
+
+Convert `layer` to equivalent entry, excluding transformations.
+"""
+function to_entry(layer::Layer)
+    labels = Dict{KeyType, Any}()
+    primary_pairs, positional_list, named_pairs = [], [], []
+    for c in (layer.positional, layer.named)
+        for (key, val) in pairs(c)
+            l, arr = getlabeledarray(layer, val)
+            labels[key] = l
+            if key isa Int
+                push!(positional_list, arr)
+            elseif !iscontinuous(arr)
+                push!(primary_pairs, key => arr)
+            else
+                push!(named_pairs, key => arr)
+            end
+        end
+    end
+    primary = NamedTuple(primary_pairs)
+    positional = Tuple(positional_list)
+    named = NamedTuple(named_pairs)
+    return Entry(; primary, positional, named, labels)
+end
+
+function process(layer::Layer)
+    init = to_entry(layer)
+    res = foldl(process, layer.transformations; init)
     return res isa Entry ? splitapply(res) : res
 end
 
-process_transformations(v::AbstractArray{Entry}, f) = map(f, v)
+process(v::AbstractArray{Entry}, f) = map(f, v)
 
-process_transformations(le::Entry, f) = f(le)
+process(le::Entry, f) = f(le)

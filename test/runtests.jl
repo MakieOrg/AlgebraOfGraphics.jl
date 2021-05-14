@@ -15,83 +15,85 @@ using AlgebraOfGraphics, Test
     @test AlgebraOfGraphics.midpoints(1:10) == 1.5:9.5
 end
 
-# @testset "product" begin
-#     s = dims() * mapping(1:2, ["a", "b"], color = dims(1))
-#     ps = pairs(s)
-#     @test ps[1] == Pair((color = 1,), mapping(1, "a"))
-#     @test ps[2] == Pair((color = 2,), mapping(2, "b"))
-# end
+@testset "layers" begin
+    df = (x = rand(1000), y = rand(1000), c = rand(["a", "b", "c"], 1000))
+    d = mapping(:x, :y, color=:c)
+    s = visual(color=:red) + mapping(markersize=:c)
+    layers = data(df) * d * s
+    @test layers[1].transformations[1] isa AlgebraOfGraphics.Visual
+    @test layers[1].transformations[1].attributes[:color] == :red
+    @test layers[1].positional == (:x, :y)
+    @test layers[1].named == (color=:c,)
+    @test layers[1].data == df
+end
 
-# @testset "contexts" begin
-#     mpg = dataset("ggplot2", "mpg")
-#     d = mapping(:Cyl, :Hwy, color = :Year => categorical)
-#     s = visual(color = :red, font = 10) + mapping(markersize = :Year)
-#     res = data(mpg) * d * s
-#     @test res[1].options == (color = :red, font = 10)
+@testset "process_data" begin
+    df = (x=rand(1000), y=rand(1000), z=rand(1000), c=rand(["a", "b", "c"], 1000))
+    d = mapping(:x => exp, [:y, :z], color=:c, marker = dims(1) => t -> ["a", "b"][t])
+    layer = data(df) * d
+    entry = AlgebraOfGraphics.to_entry(layer)
+    @test entry.positional[1] == map(exp, df.x)
+    @test entry.positional[2] == [df.y df.z]
+    @test entry.primary[:color] == df.c
+    @test entry.primary[:marker] == ["a" "b"]
+    @test entry.named == (;)
+    @test entry.labels[1] == fill("x")
+    @test entry.labels[2] ==  ["y", "z"]
+    @test entry.labels[:color] == fill("c")
+    @test entry.labels[:marker] == fill("")
+end
 
-#     idx1 = mpg.Year .== 1999
-#     idx2 = mpg.Year .== 2008
+@testset "splitapply" begin
+    df = (x=rand(1000), y=rand(1000), z=rand(1000), w=rand(1000), c=rand(["a", "b", "c"], 1000))
+    df.c[1:3] .= ["a", "b", "c"] # ensure all three values exist
+    d = mapping(:x => exp, [:y, :z], color=:c, marker=dims(1) => t -> ["1", "2"][t], markersize=:w)
+    layer = data(df) * d
+    le = AlgebraOfGraphics.to_entry(layer)
+    entries = AlgebraOfGraphics.splitapply(le)
+    @test length(entries) == 6
+    for i in 1: 6
+        @test entries[i].plottype === Any
+        @test isempty(entries[i].attributes)
+        @test entries[i].labels[1] == "x"
+        @test entries[i].labels[2] == (isodd(i) ? "y" : "z")
+        @test entries[i].labels[:color] == "c"
+        @test entries[i].labels[:marker] == ""
+        @test entries[i].labels[:markersize] == "w"
+    end
 
-#     mappings = pairs.(getproperty.(res, :mapping))
-#     @test last(mappings[1][1]).value == mapping(mpg[idx1, :Cyl], mpg[idx1, :Hwy]).value
-#     @test last(mappings[1][2]).value == mapping(mpg[idx2, :Cyl], mpg[idx2, :Hwy]).value
-#     @test last(mappings[2][1]).value == mapping(mpg[idx1, :Cyl], mpg[idx1, :Hwy], markersize = mpg[idx1, :Year]).value
-#     @test last(mappings[2][2]).value == mapping(mpg[idx2, :Cyl], mpg[idx2, :Hwy], markersize = mpg[idx2, :Year]).value
+    @test entries[1].primary[:color] == fill("a")
+    @test entries[1].primary[:marker] == fill("1")
+    @test entries[1].positional[1] == exp.(df.x[df.c .== "a"])
+    @test entries[1].positional[2] == df.y[df.c .== "a"]
+    @test entries[1].named[:markersize] == df.w[df.c .== "a"]
 
-#     @test first(mappings[1][1]).color isa NamedDimsArray
-#     @test only(first(mappings[1][1]).color) == 1999
-#     @test dimnames(first(mappings[1][1]).color) == (:Year,)
+    @test entries[2].primary[:color] == fill("a")
+    @test entries[2].primary[:marker] == fill("2")
+    @test entries[2].positional[1] == exp.(df.x[df.c .== "a"])
+    @test entries[2].positional[2] == df.z[df.c .== "a"]
+    @test entries[2].named[:markersize] == df.w[df.c .== "a"]
 
-#     @test first(mappings[1][2]).color isa NamedDimsArray
-#     @test only(first(mappings[1][2]).color) == 2008
-#     @test dimnames(first(mappings[1][2]).color) == (:Year,)
+    @test entries[3].primary[:color] == fill("b")
+    @test entries[3].primary[:marker] == fill("1")
+    @test entries[3].positional[1] == exp.(df.x[df.c .== "b"])
+    @test entries[3].positional[2] == df.y[df.c .== "b"]
+    @test entries[3].named[:markersize] == df.w[df.c .== "b"]
 
-#     @test first(mappings[2][1]).color isa NamedDimsArray
-#     @test only(first(mappings[2][1]).color) == 1999
-#     @test dimnames(first(mappings[2][1]).color) == (:Year,)
+    @test entries[4].primary[:color] == fill("b")
+    @test entries[4].primary[:marker] == fill("2")
+    @test entries[4].positional[1] == exp.(df.x[df.c .== "b"])
+    @test entries[4].positional[2] == df.z[df.c .== "b"]
+    @test entries[4].named[:markersize] == df.w[df.c .== "b"]
 
-#     @test first(mappings[2][2]).color isa NamedDimsArray
-#     @test only(first(mappings[2][2]).color) == 2008
-#     @test dimnames(first(mappings[2][2]).color) == (:Year,)
+    @test entries[5].primary[:color] == fill("c")
+    @test entries[5].primary[:marker] == fill("1")
+    @test entries[5].positional[1] == exp.(df.x[df.c .== "c"])
+    @test entries[5].positional[2] == df.y[df.c .== "c"]
+    @test entries[5].named[:markersize] == df.w[df.c .== "c"]
 
-#     @test_throws ArgumentError data(mpg) * mapping(:Cyll)
-
-#     x = rand(5, 3, 2)
-#     y = rand(5, 3)
-#     s = dims(1) * mapping(x, y, color = dims(2)) 
-
-#     res = pairs(s)
-#     for (i, r) in enumerate(res)
-#         group, st = r
-#         @test group == (; color = mod1(i, 3))
-#         xsl = x[:, mod1(i, 3), (i > 3) + 1]
-#         ysl = y[:, mod1(i, 3)]
-#         @test st.value == mapping(xsl, ysl).value
-#     end
-# end
-
-# @testset "compute specs" begin
-#     wong = default_palettes[:color][]
-#     t = (x = [1, 2], y = [10, 20], z = [3, 4], c = ["a", "b"])
-#     d = mapping(:x, :y, color = :c)
-#     s = visual(:log) * visual(font = 10) + mapping(size = :z)
-#     ds = data(t) * d
-#     sl = ds * s
-#     @test length(sl) == 2
-
-#     res = run_pipeline(sl)
-
-#     @test res[1].options.color == wong[1]
-#     @test res[2].options.color == wong[2]
-#     @test dimnames(res[1].pkeys.color) == (:c,)
-#     @test dimnames(res[2].pkeys.color) == (:c,)
-#     @test res[1].mapping.value == mapping([1], [10]).value
-#     @test res[2].mapping.value == mapping([2], [20]).value
-
-#     @test res[3].options.color == wong[1]
-#     @test res[4].options.color == wong[2]
-#     @test dimnames(res[3].pkeys.color) == (:c,)
-#     @test dimnames(res[4].pkeys.color) == (:c,)
-#     @test res[3].mapping.value == mapping([1], [10], size = [3]).value
-#     @test res[4].mapping.value == mapping([2], [20], size = [4]).value
-# end
+    @test entries[6].primary[:color] == fill("c")
+    @test entries[6].primary[:marker] == fill("2")
+    @test entries[6].positional[1] == exp.(df.x[df.c .== "c"])
+    @test entries[6].positional[2] == df.z[df.c .== "c"]
+    @test entries[6].named[:markersize] == df.w[df.c .== "c"]
+end

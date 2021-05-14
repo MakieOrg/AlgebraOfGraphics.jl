@@ -11,7 +11,8 @@ end
 
 function has_zcolor(entry::Entry)
     return entry.plottype <: Union{Heatmap, Contour, Contourf, Surface} &&
-        !haskey(entry.mappings, :color) &&
+        !haskey(entry.primary, :color) &&
+        !haskey(entry.named, :color) &&
         !haskey(entry.attributes, :color)
 end
 
@@ -19,14 +20,14 @@ function getlabeledcolorbar(grid)
     scales, labels = first(grid).scales, first(grid).labels
     key = any(has_zcolor, entries(grid)) ? 3 : :color
     label, scale = get(labels, key, nothing), get(scales, key, nothing)
-    return scale isa ContinuousScale ? Labeled(label, scale) : nothing
+    return scale isa ContinuousScale ? (label, scale) : nothing
 end
 
 function _Colorbar_(fg::FigureGrid)
     grid = fg.grid
     labeledcolorbar = getlabeledcolorbar(grid)
     isnothing(labeledcolorbar) && return
-    label, colorscale = getlabel(labeledcolorbar), getvalue(labeledcolorbar)
+    label, colorscale = labeledcolorbar
     colormap = current_default_theme().Colorbar.colormap[]
     for entry in entries(grid)
         colormap = to_value(get(entry.attributes, :colormap, colormap))
@@ -46,10 +47,10 @@ function plottypes_attributes(entries)
     attributes = Vector{Symbol}[]
     for entry in entries
         # FIXME: this should probably use the rescaled values
-        defaultplottype = AbstractPlotting.plottype(entry.mappings.positional...)
+        defaultplottype = AbstractPlotting.plottype(entry.positional...)
         plottype = AbstractPlotting.plottype(entry.plottype, defaultplottype)
         n = findfirst(==(plottype), plottypes)
-        attrs = keys(entry.mappings.named)
+        attrs = (keys(entry.primary)..., keys(entry.named)...)
         if isnothing(n)
             push!(plottypes, plottype)
             push!(attributes, collect(Symbol, attrs))
@@ -60,25 +61,27 @@ function plottypes_attributes(entries)
     return plottypes, attributes
 end
 
+hassymbolkey((k, v)::Pair) = k isa Symbol
+
 function _Legend_(fg::FigureGrid)
     grid = fg.grid
 
     # assume all subplots have same scales, to be changed to support free scales
-    named_scales = first(grid).scales.named
-    named_labels = copy(first(grid).labels.named)
+    scales = filter(hassymbolkey, first(grid).scales)
+    labels = filter(hassymbolkey, first(grid).labels)
 
     # remove keywords that don't support legends
     for key in [:row, :col, :layout, :stack, :dodge, :group]
-        pop!(named_labels, key, nothing)
+        pop!(labels, key, nothing)
     end
-    for (key, val) in named_scales
-        val isa ContinuousScale && pop!(named_labels, key, nothing)
+    for (key, val) in scales
+        val isa ContinuousScale && pop!(labels, key, nothing)
     end
 
     # if no legend-worthy keyword remains return nothing
-    isempty(named_labels) && return nothing
+    isempty(labels) && return nothing
 
-    titles = unique!(collect(String, values(named_labels)))
+    titles = unique!(collect(String, values(labels)))
     # empty strings create difficulties with the layout
     nonemptytitles = map(t -> isempty(t) ? " " : t, titles)
 
@@ -88,20 +91,19 @@ function _Legend_(fg::FigureGrid)
     elements_list = Vector{Vector{LegendElement}}[]
 
     for title in titles
-        label_attrs = [key for (key, val) in named_labels if val == title]
-        first_scale = named_scales[first(label_attrs)]
-        labels = map(string, first_scale.data)
+        label_attrs = [key for (key, val) in labels if val == title]
+        first_scale = scales[first(label_attrs)]
         elements = map(eachindex(first_scale.data)) do idx
             local elements = LegendElement[]
             for (P, attrs) in zip(plottypes, attributes)
                 shared_attrs = attrs ∩ label_attrs
                 isempty(shared_attrs) && continue
-                options = [attr => named_scales[attr].plot[idx] for attr in shared_attrs]
+                options = [attr => scales[attr].plot[idx] for attr in shared_attrs]
                 append!(elements, legend_elements(P; options...))
             end
             return elements
         end
-        push!(labels_list, labels)
+        push!(labels_list, map(string, first_scale.data))
         push!(elements_list, elements)
     end
     return elements_list, labels_list, nonemptytitles

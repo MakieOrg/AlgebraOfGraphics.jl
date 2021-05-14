@@ -30,28 +30,20 @@ struct HistogramAnalysis
 end
 
 function (h::HistogramAnalysis)(le::Entry)
-    summaries = map(summary∘getvalue, le.mappings.positional)
-    extrema = get(h.options, :extrema, Tuple(summaries))
-    options = merge(h.options, pairs((; extrema)))
+    options = copy(h.options)
+    get!(options, :extrema, map(extrema, le.positional))
 
     return splitapply(le) do entry
-        labels, mappings = map(getlabel, entry.mappings), map(getvalue, entry.mappings)
-        hist = _histogram(mappings.positional...; mappings.named..., options...)
+        hist = _histogram(entry.positional...; entry.named..., options...)
         normalization = get(options, :normalization, :none)
-        newlabel = normalization == :none ? "count" : string(normalization)
-        N = length(mappings.positional)
+        N = length(entry.positional)
+        labels, attributes = copy(entry.labels), copy(entry.attributes)
+        labels[N + 1] = normalization == :none ? "count" : string(normalization)
         default_plottype = categoricalplottypes[N]
-        kwargs = N == 1 ? (width=step(hist.edges[1]), x_gap=0, dodge_gap=0) : (;)
-        labeled_result = map(
-            Labeled,
-            vcat(labels.positional, newlabel),
-            (map(midpoints, hist.edges)..., hist.weights)
-        )
-        return Entry(
-            AbstractPlotting.plottype(entry.plottype, default_plottype),
-            Arguments(labeled_result),
-            merge(entry.attributes, pairs(kwargs))
-        )
+        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        N == 1 && (attributes[:width] = step(hist.edges[1]))
+        positional, named = (map(midpoints, hist.edges)..., hist.weights), (;)
+        return Entry(entry; plottype, positional, named, labels, attributes)
     end
 end
 

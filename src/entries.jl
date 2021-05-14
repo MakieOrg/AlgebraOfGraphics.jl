@@ -1,95 +1,18 @@
-struct Entry
-    plottype::PlotFunc
-    mappings::Arguments
-    attributes::Dict{Symbol, Any}
+const KeyType = Union{Symbol, Int}
+
+Base.@kwdef struct Entry
+    plottype::PlotFunc=Any
+    primary::NamedTuple=(;)
+    positional::Tuple=()
+    named::NamedTuple=(;)
+    summaries::Dict{KeyType, Any}=Dict{KeyType, Any}()
+    labels::Dict{KeyType, Any}=Dict{KeyType, Any}()
+    attributes::Dict{Symbol, Any}=Dict{Symbol, Any}()
 end
 
-Entry(plottype::PlotFunc=Any, mappings=arguments(); attributes...) =
-    Entry(plottype, mappings, Dict{Symbol, Any}(attributes))
-
-Entry(mappings::Arguments; attributes...) = Entry(Any, mappings; attributes...)
-
-function separate!(entry::Entry)
-    discrete, _ = separate!(entry.mappings)
-    return discrete => entry
-end
-
-function recombine!(discrete, entry::Entry)
-    return Entry(
-        entry.plottype,
-        recombine!(discrete, entry.mappings),
-        entry.attributes
-    )
-end
-
-struct Entries
-    entries::Vector{Entry}
-    scales::Arguments
-    labels::Arguments
-end
-
-Entries() = Entries(Entry[], arguments(), arguments())
-
-function compute_axes_grid(fig, e::Entries; axis=NamedTuple())
-
-    rowcol = (:row, :col)
-
-    layout_scale, scales... = map((:layout, rowcol...)) do sym
-        return get(e.scales, sym, nothing)
-    end
-
-    grid_size = map(scales, (first, last)) do scale, f
-        isnothing(scale) || return maximum(scale.plot)
-        isnothing(layout_scale) || return maximum(f, layout_scale.plot)
-        return 1
-    end
-
-    axes_grid = map(CartesianIndices(grid_size)) do c
-        type = get(axis, :type, Axis)
-        options = Base.structdiff(axis, (; type))
-        ax = type(fig[Tuple(c)...]; options...)
-        return AxisEntries(ax, Entry[], e.scales, e.labels)
-    end
-
-    for entry in e.entries
-        rows, cols = map(rowcol, scales, (first, last)) do sym, scale, f
-            v = get(entry.mappings, sym, nothing)
-            layout_v = get(entry.mappings, :layout, nothing)
-            # without layout info, plot on all axes
-            # all values in `v` and `layout_v` are equal
-            isnothing(v) || return rescale(v[1:1], scale)
-            isnothing(layout_v) || return map(f, rescale(layout_v[1:1], layout_scale))
-            return 1:f(grid_size)
-        end
-        for i in rows, j in cols
-            ae = axes_grid[i, j]
-            push!(ae.entries, entry)
-        end
-    end
-
-    # Link colors
-    labeledcolorbar = getlabeledcolorbar(axes_grid)
-    if !isnothing(labeledcolorbar)
-        colorrange = getvalue(labeledcolorbar).extrema
-        for entry in entries(axes_grid)
-            entry.attributes[:colorrange] = colorrange
-        end
-    end
-
-    return axes_grid
-
-end
-
-function AbstractPlotting.plot(entries::Entries; axis=NamedTuple(), figure=NamedTuple())
-    fig = Figure(; figure...)
-    grid = plot!(fig, entries; axis)
-    return FigureGrid(fig, grid)
-end
-
-function AbstractPlotting.plot!(fig, entries::Entries; axis=NamedTuple())
-    axes_grid = compute_axes_grid(fig, entries; axis)
-    foreach(plot!, axes_grid)
-    return axes_grid
+function Entry(e::Entry; kwargs...)
+    nt = (; e.plottype, e.primary, e.positional, e.named, e.summaries, e.labels, e.attributes)
+    return Entry(; merge(nt, values(kwargs))...)
 end
 
 """
@@ -103,92 +26,85 @@ such as `log10`. Other scales may be supported in the future.
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
-    scales::Arguments
-    labels::Arguments
+    scales::Dict{KeyType, Any}
+    labels::Dict{KeyType, Any}
 end
 
 AbstractPlotting.Axis(ae::AxisEntries) = ae.axis
-Entries(ae::AxisEntries) = Entries(ae.entries, ae.labels, ae.scales)
-
-function prefix(i::Int, sym::Symbol)
-    var = (:x, :y, :z)[i]
-    return Symbol(var, sym)
-end
 
 # Slightly complex machinery to recombine stacked barplots
-function mustbemerged(e::Entry)
-    isbarplot = e.plottype <: BarPlot
-    hasstack = :stack in keys(e.mappings.named) || :stack in keys(e.attributes)
-    return isbarplot && hasstack
+function mergeable(e1::Entry, e2::Entry)
+    for e in (e1, e2)
+        e.plottype <: BarPlot || return false
+        haskey(e.primary, :stack) || return false
+    end
+    return true
 end
 
-# Combine both entries as a unique entry with longer data
-function stack!(e1::Entry, e2::Entry)
-    p1, p2 = e1.plottype, e2.plottype
-    m1, m2 = e1.mappings, e2.mappings
-    a1, a2 = e1.attributes, e2.attributes
-    l1, l2 = length(m1[1]), length(m2[1])
-    assert_equal(p1, p2)
-    for (k, v) in pairs(a1)
-        assert_equal(v, a2[k])
-    end
-    mergewith!(m1, m2) do v1, v2
-        long1 = size(v1) == () ? fill(v1[], l1) : v1
-        long2 = size(v2) == () ? fill(v2[], l2) : v2
-        return vcat(long1, long2)
-    end
-    return e1
+function lengthen_primary(e::Entry)
+    N = length(first(e.positional))
+    primary = map(t -> fill(only(t), N), e.primary)
+    return Entry(e; primary)
 end
 
-function combine(entries::AbstractVector{Entry})
-    combinedentries = Entry[]
-    for entry in entries
-        idx = findfirst(mustbemerged, combinedentries)
-        if !isnothing(idx) && mustbemerged(entry)
-            stack!(combinedentries[idx], entry)
-        else
-            push!(combinedentries, entry)
-        end
-    end
-    return combinedentries
+# Combine entries as a unique entry with longer data
+function stack(short_entries::AbstractVector{Entry})
+    entries = map(lengthen_primary, short_entries)
+    primary = map(vcat, map(entry -> entry.primary, entries)...)
+    positional = map(vcat, map(entry -> entry.positional, entries)...)
+    named = map(vcat, map(entry -> entry.named, entries)...)
+    return Entry(first(entries); primary, positional, named)
 end
+
+mapkeys(f, tup::Tuple) = map(f, keys(tup))
+mapkeys(f, ::NamedTuple{names}) where {names} = NamedTuple{names}(map(f, names))
 
 function AbstractPlotting.plot!(ae::AxisEntries)
     axis, entries, labels, scales = ae.axis, ae.entries, ae.labels, ae.scales
-    for entry in combine(entries)
-        plottype, mappings, attributes = entry.plottype, entry.mappings, entry.attributes
-        trace = map(unwrap∘rescale, mappings, scales)
-        positional, named = trace.positional, trace.named
-        merge!(named, attributes)
+    i, N = 1, length(entries)
+    while i ≤ N
+        j = i + 1
+        while j ≤ N && mergeable(entries[i], entries[j])
+            j += 1
+        end
+        entry, i = j == i + 1 ? entries[i] : stack(entries[i:j-1]), j
+        plottype, attributes = entry.plottype, copy(entry.attributes)
+        primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
+            return mapkeys(tup) do key
+                rescaled = rescale(tup[key], scales[key])
+                return isempty(size(rescaled)) ? rescaled[] : rescaled
+            end
+        end
+        merge!(attributes, pairs(named), pairs(primary))
 
         # Remove layout info
         for sym in [:col, :row, :layout]
-            pop!(named, sym, nothing)
+            pop!(attributes, sym, nothing)
         end
 
         # Implement defaults
         for (key, val) in pairs(default_styles())
             key == :color && has_zcolor(entry) && continue # do not overwrite contour color
-            get!(named, key, val)
+            get!(attributes, key, val)
         end
 
         # Set dodging information
         dodge = get(scales, :dodge, nothing)
-        isa(dodge, CategoricalScale) && (named[:n_dodge] = maximum(dodge.plot))
+        isa(dodge, CategoricalScale) && (attributes[:n_dodge] = maximum(dodge.plot))
 
         # Implement alpha transparency
-        alpha = pop!(named, :alpha, nothing)
-        color = get(named, :color, nothing)
-        !isnothing(color) && alpha isa Number && (named[:color] = (color, alpha))
+        alpha = pop!(attributes, :alpha, nothing)
+        color = get(attributes, :color, nothing)
+        !isnothing(color) && alpha isa Number && (attributes[:color] = (color, alpha))
 
-        plot!(plottype, axis, positional...; named...)
+        plot!(plottype, axis, positional...; attributes...)
     end
     # TODO: support log colorscale
     ndims = isaxis2d(ae) ? 2 : 3
-    for i in 1:ndims
+    for (i, var) in zip(1:ndims, (:x, :y, :z))
         label, scale = get(labels, i, nothing), get(scales, i, nothing)
         any(isnothing, (label, scale)) && continue
-        axislabel, axisticks, axisscale = prefix.(i, (:label, :ticks, :scale))
+        axislabel, axisticks, axisscale = Symbol.(var, (:label, :ticks, :scale))
         getproperty(axis, axisticks)[] = ticks(scale)
         getproperty(axis, axislabel)[] = string(label)
     end

@@ -8,28 +8,31 @@ DensityAnalysis(; kwargs...) = DensityAnalysis(Dict{Symbol, Any}(kwargs))
 _kde(data::NTuple{1, Any}; kwargs...) = kde(data...; kwargs...)
 _kde(data::Tuple; kwargs...) = kde(data; kwargs...)
 
-function _density(data...; extrema, npoints=200, kwargs...)
+applydatalimits(f::Function, d) = map(f, d)
+applydatalimits(i::Tuple, d) = i
+
+function _density(data...; datalimits=extrema, npoints=200, kwargs...)
     k = _kde(data; kwargs...)
-    rgs = map(e -> range(e...; length=npoints), extrema)
+    es = applydatalimits(datalimits, data)
+    rgs = map(e -> range(e...; length=npoints), es)
     res = pdf(k, rgs...)
     return (rgs..., res)
 end
 
 function (d::DensityAnalysis)(le::Entry)
-    summaries = map(summary∘getvalue, le.mappings.positional)
-    extrema = get(d.options, :extrema, Tuple(summaries))
-    options = merge(d.options, pairs((; extrema)))
+    options = copy(d.options)
+    get!(options, :datalimits) do
+        return map(extrema, le.positional)
+    end
     return splitapply(le) do entry
-        labels, mappings = map(getlabel, entry.mappings), map(getvalue, entry.mappings)
-        result = _density(mappings.positional...; mappings.named..., options...)
-        labeled_result = map(Labeled, vcat(labels.positional, "pdf"), collect(result))
+        N = length(entry.positional)
+        positional, named = _density(entry.positional...; entry.named..., options...), (;)
+        labels = copy(entry.labels)
+        labels[N + 1] = "pdf"
         plottypes = [LinesFill, Heatmap, Volume]
-        default_plottype = plottypes[length(mappings.positional)]
-        return Entry(
-            AbstractPlotting.plottype(entry.plottype, default_plottype),
-            Arguments(labeled_result),
-            entry.attributes
-        )
+        default_plottype = plottypes[N]
+        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        return Entry(entry; plottype, positional, named, labels)
     end
 end
 
