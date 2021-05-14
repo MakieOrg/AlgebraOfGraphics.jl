@@ -15,13 +15,13 @@ function midpoints(edges::AbstractRange)
     return range(min + s / 2, step=s, length=l - 1)
 end
 
-function _histogram(data...; bins=sturges(length(data[1])), wts=automatic,
+function _histogram(data...; bins=sturges(length(data[1])), weights=automatic,
     normalization=:none, extrema, closed=:left)
 
     bins_tuple = bins isa Tuple ? bins : map(_ -> bins, data)
     edges = compute_edges(data, extrema, bins_tuple, closed)
-    weights = wts === automatic ? () : (to_weights(wts),)
-    h = fit(Histogram, data, weights..., edges)
+    w = weights === automatic ? () : (to_weights(weights),)
+    h = fit(Histogram, data, w..., edges)
     return normalize(h, mode=normalization)
 end
 
@@ -49,7 +49,7 @@ end
 
 
 """
-    histogram(; bins=automatic, wts=automatic, normalization=:none)
+    histogram(; bins=automatic, weights=automatic, normalization=:none)
 
 Compute a histogram. `bins` can be an `Int` to create that
 number of equal-width bins over the range of `values`.
@@ -63,7 +63,7 @@ can be normalized by setting `normalization`. Possible values are:
    represents the fraction of probability mass for each bin and does not have
    norm 1.
 *  `:none`: Do not normalize.
-Weighted data is supported via the keyword `wts`.
+Weighted data is supported via the keyword `weights`.
 
 !!! note
 
