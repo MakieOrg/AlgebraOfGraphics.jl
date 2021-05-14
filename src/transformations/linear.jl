@@ -10,12 +10,12 @@ add_intercept_column(x::AbstractVector{T}) where {T} = [ones(T, length(x)) x]
 function (l::LinearAnalysis)(le::Entry)
     return splitapply(le) do entry
         x, y = entry.positional
-        wts = get(entry.named, :wts, similar(x, 0))
+        weights = get(entry.named, :weights, similar(x, 0))
         npoints = get(l.options, :npoints, 200)
-        interval = get(l.options, :interval, length(wts) > 0 ? nothing : :confidence)
+        interval = get(l.options, :interval, length(weights) > 0 ? nothing : :confidence)
         dropcollinear = false
         lin_model = try
-            GLM.lm(add_intercept_column(x), collect(y); wts, dropcollinear)
+            GLM.lm(add_intercept_column(x), collect(y); wts=weights, dropcollinear)
         catch e
             @warn "linear fit not possible"
             nothing
@@ -40,7 +40,7 @@ end
 """
     linear(; interval)
 
-Compute a linear fit of `y ~ 1 + x`. An optional named mapping `wts` determines the weights.
+Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent.
 Valid values of interval are `:confidence` delimiting the uncertainty of the predicted
 relationship, and `:prediction` delimiting estimated bounds for new data points.
