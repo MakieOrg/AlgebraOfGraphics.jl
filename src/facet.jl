@@ -118,3 +118,52 @@ function facet!(fg::FigureGrid)
     facet!(fg.figure, fg.grid)
     return fg
 end
+
+## Layout helpers
+
+isaxis2d(::Axis) = true
+isaxis2d(::Any) = false
+isaxis2d(ae::AxisEntries) = isaxis2d(Axis(ae))
+
+for sym in [:hidexdecorations!, :hideydecorations!, :hidedecorations!]
+    @eval function $sym(ae::AxisEntries; kwargs...)
+        axis = Axis(ae)
+        isaxis2d(axis) && $sym(axis; kwargs...)
+    end
+end
+
+for sym in [:linkxaxes!, :linkyaxes!, :linkaxes!]
+    @eval function $sym(ae::AxisEntries, aes::AxisEntries...)
+        axs = filter(isaxis2d, map(Axis, (ae, aes...)))
+        isempty(axs) || $sym(axs...)
+    end
+end
+
+function hideinnerdecorations!(aes::Matrix{AxisEntries})
+    options = (label=true, ticks=true, minorticks=true, grid=false, minorgrid=false)
+    foreach(ae -> hidexdecorations!(ae; options...), aes[1:end-1, :])
+    foreach(ae -> hideydecorations!(ae; options...), aes[:, 2:end])
+end
+
+function deleteemptyaxes!(aes::Matrix{AxisEntries})
+    for ae in aes
+        if isempty(ae.entries)
+            delete!(Axis(ae))
+        end
+    end
+end
+
+function resizetocontent!(fig::Figure)
+    figsize = size(fig.scene)
+    sz = map((Col(), Row()), figsize) do dir, currentsize
+        inferredsize = determinedirsize(fig.layout, dir)
+        return ceil(Int, something(inferredsize, currentsize))
+    end
+    sz == figsize || resize!(fig.scene, sz)
+    return fig
+end
+
+function resizetocontent!(fg::FigureGrid)
+    resizetocontent!(fg.figure)
+    return fg
+end

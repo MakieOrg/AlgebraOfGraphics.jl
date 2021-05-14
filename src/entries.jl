@@ -71,7 +71,8 @@ function AbstractPlotting.plot!(ae::AxisEntries)
         plottype, attributes = entry.plottype, copy(entry.attributes)
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
             return mapkeys(tup) do key
-                return maybeunwrap(rescale(tup[key], scales[key]))
+                rescaled = rescale(tup[key], scales[key])
+                return isempty(size(rescaled)) ? rescaled[] : rescaled
             end
         end
         merge!(attributes, pairs(named), pairs(primary))

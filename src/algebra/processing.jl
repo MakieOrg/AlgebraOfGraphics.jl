@@ -3,7 +3,7 @@
 fast_hashed(v::AbstractVector) = isbitstype(eltype(v)) ? PooledArray(v) : v
 
 function indices_iterator(cols)
-    isempty(cols) && return Ref(Colon())
+    isempty(cols) && return (:,)
     grouping_sa = StructArray(map(refarray∘fast_hashed, cols))
     gp = GroupPerm(grouping_sa)
     return (sortperm(gp)[rg] for rg in gp)
@@ -35,6 +35,9 @@ end
 allvariables(e::Entry) = (e.primary..., e.positional..., e.named...)
 allvariables(l::Layer) = (l.positional..., l.named...)
 
+maybewrap(x::ArrayLike) = x
+maybewrap(x) = fill(x)
+
 function shape(x::Union{Entry, Layer})
     vars = map(maybewrap, allvariables(x))
     return Broadcast.combine_axes(vars...)
@@ -56,6 +59,8 @@ function splitapply(f, entry::Entry)
 end
 
 ## Transform `Layers` into list of `Entry`
+
+assert_equal(a, b) = (@assert(a == b); a)
 
 function unnest(arr::AbstractArray{<:AbstractArray})
     inner_size = mapreduce(size, assert_equal, arr)

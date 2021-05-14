@@ -35,7 +35,6 @@ export set_aog_theme!
 include("theme.jl")
 include("scales.jl")
 include("entries.jl")
-include("utils.jl")
 include("facet.jl")
 include("helpers.jl")
 include("algebra/layer.jl")
