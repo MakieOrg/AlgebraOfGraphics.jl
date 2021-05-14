@@ -35,12 +35,9 @@ end
 allvariables(e::Entry) = (e.primary..., e.positional..., e.named...)
 allvariables(l::Layer) = (l.positional..., l.named...)
 
-maybewrap(x::ArrayLike) = x
-maybewrap(x) = fill(x)
-
 function shape(x::Union{Entry, Layer})
-    vars = map(maybewrap, allvariables(x))
-    return Broadcast.combine_axes(vars...)
+    arrays = map(var -> var isa ArrayLike ? var : fill(nothing), allvariables(x))
+    return Broadcast.combine_axes(arrays...)
 end
 
 splitapply(entry::Entry) = splitapply(identity, entry)
@@ -52,7 +49,8 @@ function splitapply(f, entry::Entry)
     foreach(indices_iterator(grouping)) do idxs
         for c in CartesianIndices(tail(axs))
             # TODO: for analyses returning several entries, rearrange in correct order.
-            append!(entries, maybewrap(f(subgroup(entry, idxs, c))))
+            res = f(subgroup(entry, idxs, c))
+            res isa Entry ? push!(entries, res) : append!(entries, res)
         end
     end
     return entries
