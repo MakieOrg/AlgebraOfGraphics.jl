@@ -10,6 +10,8 @@ function (d::DimsSelector)(c::CartesianIndex{N}) where N
     return CartesianIndex(t)
 end
 
+Broadcast.broadcastable(d::DimsSelector) = Ref(d)
+
 compute_label(data, name::StringLike) = string(name)
 compute_label(data, name::Integer) = string(columnnames(data)[name])
 compute_label(data, name::DimsSelector) = ""
@@ -45,20 +47,37 @@ function NameTransformationLabel(data, x::Pair{<:Any, <:Pair})
     return NameTransformationLabel(name, transformation, label)
 end
 
-function apply_context(data, axs, names::ArrayLike)
-    return map(name -> apply_context(data, axs, name), names)
-end
+apply_context(data, shape, name::StringLike) = getcolumn(data, Symbol(name))
 
-apply_context(data, axs, name::StringLike) = getcolumn(data, Symbol(name))
-
-function apply_context(data, axs, idx::Integer)
+function apply_context(data, shape, idx::Integer)
     name = columnnames(data)[idx]
     return getcolumn(data, name)
 end
 
-function apply_context(data, axs::NTuple{N, Any}, d::DimsSelector) where N
+function apply_context(data, shape::NTuple{N, Any}, d::DimsSelector) where N
     sz = ntuple(N) do n
-        return n in d.dims ? length(axs[n]) : 1
+        return n in d.dims ? length(shape[n]) : 1
     end
     return reshape(CartesianIndices(sz), 1, sz...)
+end
+
+apply_context(layer::Layer, name) = apply_context(layer.data, shape(layer), name)
+
+"""
+    getlabeledarray(layer::Layer, s)
+
+Return a label and an array from a selector `s`.
+"""
+getlabeledarray(layer::Layer, s) = getlabeledarray(layer, fill(s))
+
+function getlabeledarray(layer::Layer, s::ArrayLike)
+    ntls = map(x -> NameTransformationLabel(layer.data, x), s)
+    labels = map(ntl -> ntl.label, ntls)
+    nested = map(ntls) do ntl
+        names = Broadcast.broadcastable(ntl.name)
+        cols = map(name -> apply_context(layer, name), names)
+        return map(ntl.transformation, cols...)
+    end
+    v = unnest(nested)
+    return labels, v
 end

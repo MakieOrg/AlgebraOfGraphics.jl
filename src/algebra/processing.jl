@@ -82,17 +82,10 @@ function to_entry(layer::Layer)
     primary_pairs, positional_list, named_pairs = [], [], []
     for c in (layer.positional, layer.named)
         for (key, val) in pairs(c)
-            ntls = map(maybewrap(val)) do t
-                return NameTransformationLabel(layer.data, t)
-            end
-            labels[key] = map(ntl -> ntl.label, ntls)
-            nested = map(ntls) do ntl
-                cols = apply_context(layer.data, axs, maybewrap(ntl.name))
-                return map(ntl.transformation, cols...)
-            end
-            v = unnest(nested)
-            isdims = any(ntl -> ntl.name isa DimsSelector, ntls)
-            isprimary = isdims || !iscontinuous(v)
+            l, v = getlabeledarray(layer, val)
+            labels[key] = l
+            # isdims = any(ntl -> ntl.name isa DimsSelector, ntls)
+            isprimary = !iscontinuous(v)
             if key isa Int
                 push!(positional_list, v)
             elseif isprimary
