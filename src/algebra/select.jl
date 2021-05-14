@@ -10,58 +10,44 @@ function (d::DimsSelector)(c::CartesianIndex{N}) where N
     return CartesianIndex(t)
 end
 
-Broadcast.broadcastable(d::DimsSelector) = Ref(d)
+getlabeledvector(data, shape, name::StringLike) = string(name), getcolumn(data, Symbol(name))
 
-compute_label(data, name::StringLike) = string(name)
-compute_label(data, name::Integer) = string(columnnames(data)[name])
-compute_label(data, name::DimsSelector) = ""
-
-struct NameTransformationLabel
-    name::Any
-    transformation::Any
-    label::String
-end
-
-function NameTransformationLabel(name, transformation, label::Symbol)
-    return NameTransformationLabel(name, transformation, string(label))
-end
-
-function NameTransformationLabel(data, x::Union{StringLike, Integer, DimsSelector})
-    return NameTransformationLabel(x, identity, compute_label(data, x))
-end
-
-function NameTransformationLabel(data, x::Pair{<:Any, <:StringLike})
-    name, label = x
-    return NameTransformationLabel(name, identity, label)
-end
-
-function NameTransformationLabel(data, x::Pair{<:Any, <:Any})
-    name, transformation = x
-    label = compute_label(data, name)
-    return NameTransformationLabel(name, transformation, label)
-end
-
-function NameTransformationLabel(data, x::Pair{<:Any, <:Pair})
-    name, transformation_label = x
-    transformation, label = transformation_label
-    return NameTransformationLabel(name, transformation, label)
-end
-
-apply_context(data, shape, name::StringLike) = getcolumn(data, Symbol(name))
-
-function apply_context(data, shape, idx::Integer)
+function getlabeledvector(data, shape, idx::Integer)
     name = columnnames(data)[idx]
-    return getcolumn(data, name)
+    return getlabeledvector(data, shape, name)
 end
 
-function apply_context(data, shape::NTuple{N, Any}, d::DimsSelector) where N
+function getlabeledvector(data, shape::NTuple{N, Any}, d::DimsSelector) where N
     sz = ntuple(N) do n
         return n in d.dims ? length(shape[n]) : 1
     end
-    return reshape(CartesianIndices(sz), 1, sz...)
+    return "", reshape(CartesianIndices(sz), 1, sz...)
 end
 
-apply_context(layer::Layer, name) = apply_context(layer.data, shape(layer), name)
+getlabeledvector(layer::Layer, name::Union{StringLike, Integer, DimsSelector}) =
+    getlabeledvector(layer.data, shape(layer), name)
+
+function getlabeledvector(layer::Layer, x::Pair{<:Any, <:StringLike})
+    name, label = x
+    _, v = getlabeledvector(layer, name)
+    return label, v
+end
+
+function getlabeledvector(layer::Layer, x::Pair{<:Any, <:Any})
+    name, transformation = x
+    # consider supporting automated labeling for multiple names here
+    label, v = getlabeledvector(layer, name)
+    return label, map(transformation, v)
+end
+
+function getlabeledvector(layer::Layer, x::Pair{<:Any, <:Pair})
+    name, transformation_label = x
+    transformation, label = transformation_label
+    names = name isa ArrayLike ? name : fill(name)
+    vs = map(name -> last(getlabeledvector(layer, name)), names)
+    v = map(transformation, vs...)
+    return label, v
+end
 
 """
     getlabeledarray(layer::Layer, s)
@@ -70,14 +56,9 @@ Return a label and an array from a selector `s`.
 """
 getlabeledarray(layer::Layer, s) = getlabeledarray(layer, fill(s))
 
-function getlabeledarray(layer::Layer, s::ArrayLike)
-    ntls = map(x -> NameTransformationLabel(layer.data, x), s)
-    labels = map(ntl -> ntl.label, ntls)
-    nested = map(ntls) do ntl
-        names = Broadcast.broadcastable(ntl.name)
-        cols = map(name -> apply_context(layer, name), names)
-        return map(ntl.transformation, cols...)
-    end
-    v = unnest(nested)
-    return labels, v
+function getlabeledarray(layer::Layer, selectors::ArrayLike)
+    labelsvectors = map(s -> getlabeledvector(layer, s), selectors)
+    labels, vectors = map(first, labelsvectors), map(last, labelsvectors)
+    arr = unnest(vectors)
+    return labels, arr
 end

@@ -77,21 +77,18 @@ unnest(arr::NTuple{<:Any, <:AbstractArray}) = unnest(collect(arr))
 Convert `layer` to equivalent entry, excluding transformations.
 """
 function to_entry(layer::Layer)
-    axs = shape(layer)
     labels = Dict{KeyType, Any}()
     primary_pairs, positional_list, named_pairs = [], [], []
     for c in (layer.positional, layer.named)
         for (key, val) in pairs(c)
-            l, v = getlabeledarray(layer, val)
+            l, arr = getlabeledarray(layer, val)
             labels[key] = l
-            # isdims = any(ntl -> ntl.name isa DimsSelector, ntls)
-            isprimary = !iscontinuous(v)
             if key isa Int
-                push!(positional_list, v)
-            elseif isprimary
-                push!(primary_pairs, key => v)
+                push!(positional_list, arr)
+            elseif !iscontinuous(arr)
+                push!(primary_pairs, key => arr)
             else
-                push!(named_pairs, key => v)
+                push!(named_pairs, key => arr)
             end
         end
     end
