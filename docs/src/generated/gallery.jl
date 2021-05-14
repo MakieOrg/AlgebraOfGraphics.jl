@@ -278,7 +278,7 @@ group = [isodd(i + j) ? "light square" : "dark square" for i in 0:7 for j in 0:7
 df = (; geometry, group)
 
 plt = data(df) * visual(Poly) * mapping(:geometry, color = :group)
-draw(plt)
+draw(plt; axis=(aspect=1,))
 
 # ## New columns on the fly
 
