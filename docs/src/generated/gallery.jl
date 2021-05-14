@@ -269,6 +269,17 @@ plt = data(df) *
     visual(Lines)
 draw(plt)
 
+# ## Geometries
+
+using GeometryBasics
+
+geometry = [Rect(Vec(i, j), Vec(1, 1)) for i in 0:7 for j in 0:7]
+group = [isodd(i + j) ? "light square" : "dark square" for i in 0:7 for j in 0:7]
+df = (; geometry, group)
+
+plt = data(df) * visual(Poly) * mapping(:geometry, color = :group)
+draw(plt)
+
 # ## New columns on the fly
 
 df = (x=rand(100), y=rand(100), z=rand(100), c=rand(["a", "b"], 100))

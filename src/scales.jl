@@ -36,15 +36,18 @@ end
 
 Base.length(c::CategoricalScale) = length(c.data)
 
-function default_scale(summary, palette)
-    iscont = summary isa Tuple
-    return if iscont
-        f = palette isa Function ? palette : identity
-        ContinuousScale(f, summary)
-    else
-        plot = apply_palette(palette, summary)
-        return CategoricalScale(summary, plot)
-    end
+rescale(values, ::Nothing) = values
+
+default_scale(::Nothing, palette) = nothing
+
+function default_scale(summary::Tuple, palette)
+    f = palette isa Function ? palette : identity
+    return ContinuousScale(f, summary)
+end
+
+function default_scale(summary::AbstractVector, palette)
+    plot = apply_palette(palette, summary)
+    return CategoricalScale(summary, plot)
 end
 
 # Logic to infer good scales
@@ -96,6 +99,9 @@ Determine whether `v` should be treated as a continuous or categorical vector.
 iscontinuous(::AbstractArray) = false
 iscontinuous(::AbstractArray{<:Number}) = true
 iscontinuous(::AbstractArray{<:Union{Date, DateTime}}) = true
+
+isgeometry(::AbstractArray{<:AbstractGeometry}) = true
+isgeometry(::AbstractArray{T}) where {T} = eltype(T) <: AbstractGeometry
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 

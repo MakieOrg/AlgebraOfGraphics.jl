@@ -4,6 +4,7 @@ using Base: front, tail
 using Dates
 using Tables: rows, columns, getcolumn, columnnames
 using StructArrays: StructArrays, components, uniquesorted, GroupPerm, StructArray
+using GeometryBasics: AbstractGeometry
 using Colors: RGB, RGBA, red, green, blue, Color
 using PlotUtils: optimize_datetime_ticks
 using AbstractPlotting
