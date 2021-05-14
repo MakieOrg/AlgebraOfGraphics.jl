@@ -9,14 +9,27 @@ function indices_iterator(cols)
     return (sortperm(gp)[rg] for rg in gp)
 end
 
-function subselect(arr, idxs, c::CartesianIndex)
-    c′ = Broadcast.newindex(CartesianIndices(tail(axes(arr))), c)
-    return view(arr, idxs, Tuple(c′)...)
+function validprimaryindices(v, idxs, c::CartesianIndex)
+    i = idxs === (:) ? firstindex(v, 1) : clamp(first(idxs), axes(v, 1))
+    t = validtailindices(v, c)
+    return (i, t...)
 end
 
-function subselectprimary(arr, idxs, c::CartesianIndex)
-    i = idxs === Colon() || size(arr, 1) == 1 ? firstindex(arr, 1) : first(idxs)
-    return subselect(arr, i, c)
+validtailindices(v, c::CartesianIndex) =
+    Tuple(Broadcast.newindex(CartesianIndices(tail(axes(v))), c))
+
+validindices(v, c::CartesianIndex) = Tuple(Broadcast.newindex(v, c))
+
+function subgroup(e::Entry, idxs, c::CartesianIndex)
+    primary = map(v -> view(v, validprimaryindices(v, idxs, c)...), e.primary)
+    positional = map(v -> view(v, idxs, validtailindices(v, c)...), e.positional)
+    named = map(v -> view(v, idxs, validtailindices(v, c)...), e.named)
+    labels = copy(e.labels)
+    map!(values(labels)) do l
+        l′ = Broadcast.broadcastable(l)
+        return l′[validindices(l′, c)...]
+    end
+    return Entry(e; primary, positional, named, labels)
 end
 
 allvariables(e::Entry) = (e.primary..., e.positional..., e.named...)
@@ -31,26 +44,12 @@ splitapply(entry::Entry) = splitapply(identity, entry)
 
 function splitapply(f, entry::Entry)
     axs = shape(entry)
-    grouping = filter(Tuple(entry.primary)) do v
-        return v isa AbstractVector
-    end
+    grouping = filter(v -> v isa AbstractVector, Tuple(entry.primary))
     entries = Entry[]
     foreach(indices_iterator(grouping)) do idxs
         for c in CartesianIndices(tail(axs))
-            primary = map(arr -> subselectprimary(arr, idxs, c), entry.primary)
-            positional = map(arr -> subselect(arr, idxs, c), entry.positional)
-            named = map(arr -> subselect(arr, idxs, c), entry.named)
-
-            labels = copy(entry.labels)
-            map!(values(labels)) do l
-                l′ = maybewrap(l)
-                return l′[Broadcast.newindex(l′, c)]
-            end
-
-            input = Entry(entry; primary, positional, named, labels)
-
             # TODO: for analyses returning several entries, rearrange in correct order.
-            append!(entries, maybewrap(f(input)))
+            append!(entries, maybewrap(f(subgroup(entry, idxs, c))))
         end
     end
     return entries

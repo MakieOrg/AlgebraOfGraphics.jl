@@ -51,7 +51,8 @@ end
 function default_scales(summaries, palettes)
     defaults = Dict{KeyType, Any}()
     for (key, val) in pairs(summaries)
-        palette = get(palettes, key, automatic)
+        # ensure `palette === automatic` for integer keys
+        palette = key in propertynames(palettes) ? palettes[key] : automatic
         defaults[key] = default_scale(val, palette)
     end
     return defaults
