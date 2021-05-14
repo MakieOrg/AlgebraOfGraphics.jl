@@ -28,6 +28,8 @@ function summary(e::Entry)
         for (key, val) in pairs(tup)
             summaries[key] = if i > 1 && iscontinuous(val)
                 AbstractPlotting.extrema_nan(val)
+            elseif i == 2 && isgeometry(val)
+                nothing
             else
                 collect(uniquesorted(vec(val)))
             end
@@ -38,6 +40,7 @@ end
 
 mergesummaries(s1::AbstractVector, s2::AbstractVector) = mergesorted(s1, s2)
 mergesummaries(s1::Tuple, s2::Tuple) = extend_extrema(s1, s2)
+mergesummaries(::Nothing, ::Nothing) = nothing
 
 mergelabels(a, b) = a
 
