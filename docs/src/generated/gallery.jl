@@ -299,6 +299,7 @@ t = mktempdir() do dir
     end
     Shapefile.Table(joinpath(dir, "add_coastline_medium_res_polygon_v7_4.shp"))
 end
+
 ## Draw map
 plt = geodata(t) * mapping(:geometry, color = :surface) * visual(Poly)
 draw(plt; axis=(aspect=1,))
