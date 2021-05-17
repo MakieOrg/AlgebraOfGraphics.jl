@@ -286,32 +286,21 @@ draw(plt; axis=(aspect=1,))
 #
 # [^1]: Gerrish, L., Fretwell, P., & Cooper, P. (2021). Medium resolution vector polygons of the Antarctic coastline (7.4) [Data set]. UK Polar Data Centre, Natural Environment Research Council, UK Research & Innovation. https://doi.org/10.5285/747e63e-9d93-49c2-bafc-cf3d3f8e5afa
 
-using Downloads, Shapefile, GeoInterface, ZipFile
-
-url = "https://data.bas.ac.uk/download/7be3ab29-7caa-46b8-a355-2e3233796e86"
-dir = mktempdir()
-zip_archive = joinpath(dir, "shapefile.zip")
-Downloads.download(url, zip_archive)
-r = ZipFile.Reader(zip_archive)
-for f in r.files
-    open(joinpath(dir, f.name), "w") do io
-        write(io, read(f, String));
+## Download, extract, and load shapefile
+using Shapefile, ZipFile
+using Downloads: download
+t = mktempdir() do dir
+    url = "https://data.bas.ac.uk/download/7be3ab29-7caa-46b8-a355-2e3233796e86"
+    r = ZipFile.Reader(seekstart(download(url, IOBuffer())))
+    for f in r.files
+        open(joinpath(dir, f.name), write = true) do io
+            write(io, read(f, String));
+        end
     end
+    Shapefile.Table(joinpath(dir, "add_coastline_medium_res_polygon_v7_4.shp"))
 end
-t = Shapefile.Table(joinpath(dir, "add_coastline_medium_res_polygon_v7_4.shp"))
-shps = Shapefile.shapes(t)
-
-polygons = map(shps) do shp
-    coords = GeoInterface.coordinates(shp)
-    polys = map(coords) do c
-        exterior, interiors... = map(pts -> map(Point2, pts), c)
-        return GeometryBasics.Polygon(exterior, interiors)
-    end
-    return GeometryBasics.MultiPolygon(polys)
-end
-
-df = (; polygons, t.surface)
-plt = data(df) * mapping(:polygons, color = :surface) * visual(Poly)
+## Draw map
+plt = geodata(t) * mapping(:geometry, color = :surface) * visual(Poly)
 draw(plt; axis=(aspect=1,))
 
 # ## New columns on the fly
