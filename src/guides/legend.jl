@@ -47,8 +47,7 @@ function plottypes_attributes(entries)
     attributes = Vector{Symbol}[]
     for entry in entries
         # FIXME: this should probably use the rescaled values
-        defaultplottype = AbstractPlotting.plottype(entry.positional...)
-        plottype = AbstractPlotting.plottype(entry.plottype, defaultplottype)
+        plottype = AbstractPlotting.plottype(entry.plottype, entry.positional...)
         n = findfirst(==(plottype), plottypes)
         attrs = (keys(entry.primary)..., keys(entry.named)...)
         if isnothing(n)

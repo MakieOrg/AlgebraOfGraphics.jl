@@ -68,14 +68,14 @@ function AbstractPlotting.plot!(ae::AxisEntries)
             j += 1
         end
         entry, i = j == i + 1 ? entries[i] : stack(entries[i:j-1]), j
-        plottype, attributes = entry.plottype, copy(entry.attributes)
+        attributes = copy(entry.attributes)
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
             return mapkeys(tup) do key
                 rescaled = rescale(tup[key], scales[key])
                 return isempty(size(rescaled)) ? rescaled[] : rescaled
             end
         end
-        merge!(attributes, pairs(named), pairs(primary))
+        merge!(attributes, pairs(primary), pairs(named))
 
         # Remove layout info
         for sym in [:col, :row, :layout]
@@ -97,6 +97,7 @@ function AbstractPlotting.plot!(ae::AxisEntries)
         color = get(attributes, :color, nothing)
         !isnothing(color) && alpha isa Number && (attributes[:color] = (color, alpha))
 
+        plottype = AbstractPlotting.plottype(entry.plottype, positional...)
         plot!(plottype, axis, positional...; attributes...)
     end
     # TODO: support log colorscale
