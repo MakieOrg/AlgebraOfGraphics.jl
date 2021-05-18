@@ -112,7 +112,7 @@ layers = linear() + mapping(col = :sex)
 plt = penguin_bill * layers * mapping(color = :species)
 draw(plt; axis)
 
-# See how both plots show the same fit, because the sex mapping is not applied
+# See how both plots show the same fit, because the `sex` mapping is not applied
 # to `linear()`. The following on the other hand produces a separate fit for
 # males and females:
 
