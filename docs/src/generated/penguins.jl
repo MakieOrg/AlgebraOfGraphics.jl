@@ -105,11 +105,19 @@ layers = linear() + mapping(marker = :sex)
 plt = penguin_bill * layers * mapping(color = :species)
 draw(plt; axis)
 
-# This plot is getting a little bit crowded. We could instead analyze female and
+# This plot is getting a little bit crowded. We could instead show female and
 # male penguins in separate subplots.
 
 layers = linear() + mapping(col = :sex)
 plt = penguin_bill * layers * mapping(color = :species)
+draw(plt; axis)
+
+# See how both plots show the same fit, because the sex mapping is not applied
+# to `linear()`. The following on the other hand produces a separate fit for
+# males and females:
+
+layers = linear() + mapping()
+plt = penguin_bill * layers * mapping(color = :species, col = :sex)
 draw(plt; axis)
 
 # ## Smooth density plots
@@ -161,7 +169,7 @@ draw(plt; axis)
 
 # ## Correlating three variables
 #
-# We are now mostly up to speed with `bill` size, but we have not consider how
+# We are now mostly up to speed with `bill` size, but we have not considered how
 # it relates to other penguin features, such as their weight.
 # For that, a possible approach is to use a continuous color
 # on a gradient to denote weight and different marker shapes to denote species.
