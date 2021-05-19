@@ -213,8 +213,8 @@ draw(plt; axis)
 
 using LIBSVM
 
-##  use approximately 75% of penguins for training
-train = rand(nrow(penguins)) .≤ 0.75
+## use approximately 80% of penguins for training
+train = rand(nrow(penguins)) .≤ 0.8
 
 ## fit model on training data and make predictions on the whole dataset
 X = hcat(penguins.bill_length_mm, penguins.bill_depth_mm)
