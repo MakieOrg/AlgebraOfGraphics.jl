@@ -232,26 +232,26 @@ fit!(model, X[train, :], y[train])
 ## incorporate relevant information in the dataset
 penguins.train = train
 penguins.predicted_species = ŷ
-penguins.correct_prediction = penguins.species .== penguins.predicted_species
 nothing #hide
 
 # Now, we have all the columns we need to evaluate how well our classifier performed.
 
 axis = (width = 225, height = 225)
 dataset =:train => renamer(true => "training", false => "testing") => "Dataset"
+accuracy = (:species, :predicted_species) => isequal => "accuracy"
 plt = data(penguins) *
     expectation() *
-    mapping(:species, :correct_prediction => "accuracy") *
+    mapping(:species, accuracy) *
     mapping(col = dataset)
 draw(plt; axis)
 
-# That is a bit hard to read, as all values are very close to `1`. Let us visualize the
-# error rate instead by negating the `correct_prediction` column before computing
-# the expectation.
+# That is a bit hard to read, as all values are very close to `1`.
+# Let us visualize the error rate instead.
 
+error_rate = (:species, :predicted_species) => !isequal => "error rate"
 plt = data(penguins) *
     expectation() *
-    mapping(:species, :correct_prediction => (!) => "error rate") *
+    mapping(:species, error_rate) *
     mapping(col = dataset)
 draw(plt; axis)
 
