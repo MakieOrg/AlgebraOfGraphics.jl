@@ -196,3 +196,77 @@ draw(plt; axis)
 
 # Note that static 3D plot can be misleading, as they only show one projection
 # of 3D data. They are mostly useful when shown interactively.
+#
+# ## Machine Learning
+#
+# Finally, let us use Machine Learning techniques to build an automated penguin classifier!
+#
+# We would like to investigate whether it is possible to predict the species of a penguin
+# based on its bill size. To do so, we will use a standard classifier technique
+# called [Support-Vector Machine](https://en.wikipedia.org/wiki/Support-vector_machine).
+#
+# The strategy is quite simple. We split the data into training and testing
+# subdatasets. We then train our classifier on the training dataset and use it to
+# make predictions on the whole data. We then add the new columns obtained this way
+# to the dataset and visually inspect how well the classifier performed in both
+# training and testing.
+
+using LIBSVM
+
+##  use approximately 75% of penguins for training
+train = rand(nrow(penguins)) .≤ 0.75
+
+## fit model on training data and make predictions on the whole dataset
+X = hcat(penguins.bill_length_mm, penguins.bill_depth_mm)
+y = penguins.species
+model = SVC() # Support-Vector Machine Classiier
+fit!(model, X[train, :], y[train])
+ŷ = predict(model, X)
+
+## incorporate relevant information in the dataset
+penguins.train = train
+penguins.predicted_species = ŷ
+penguins.correct_prediction = penguins.species .== penguins.predicted_species
+nothing #hide
+
+# Now, we have all the columns we need to evaluate how well our classifier performed.
+
+axis = (width = 225, height = 225)
+dataset =:train => renamer(true => "training", false => "testing") => "Dataset"
+plt = data(penguins) *
+    expectation() *
+    mapping(:species, :correct_prediction => "accuracy") *
+    mapping(col = dataset)
+draw(plt; axis)
+
+# That is a bit hard to read, as all values are very close to `1`. Let us visualize the
+# error rate instead by negating the `correct_prediction` column before computing
+# the expectation.
+
+plt = data(penguins) *
+    expectation() *
+    mapping(:species, :correct_prediction => (!) => "error rate") *
+    mapping(col = dataset)
+draw(plt; axis)
+
+# So, mostly our classifier is doing quite well, but there are some mistakes,
+# especially among `Chinstrap` penguins. Using *at the same time* the `species` and
+# `predicted_species` mappings on different attributes, we can see which penguins
+# are problematic.
+
+prediction = :predicted_species => "predicted species"
+datalayer = mapping(color = prediction, row = :species, col = dataset)
+plt = penguin_bill * datalayer
+draw(plt; axis)
+
+# Um, some of the penguins are indeed being misclassified... Let us try to understand why
+# by adding an extra layer, which describes the density of the distributions of the three
+# species.
+
+pdflayer = density() * visual(Contour, colormap=Reverse(:grays)) * mapping(group = :species)
+layers = pdflayer + datalayer
+plt = penguin_bill * layers
+draw(plt; axis)
+
+# We can conclude that the classifier is doing a reasonable job:
+# it is mostly making mistakes on outlier penguins.

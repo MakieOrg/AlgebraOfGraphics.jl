@@ -2,8 +2,11 @@ using AlgebraOfGraphics
 using Documenter
 using Literate, Glob
 using CairoMakie
+using Random
 
-CairoMakie.activate!()
+Random.seed!(1234)
+
+CairoMakie.activate!(type="svg")
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 
