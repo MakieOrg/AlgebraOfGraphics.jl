@@ -3,7 +3,7 @@ using Documenter
 using Literate, Glob
 using CairoMakie
 
-CairoMakie.activate!()
+CairoMakie.activate!(type="svg")
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 
