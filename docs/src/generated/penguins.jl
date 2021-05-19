@@ -211,15 +211,21 @@ draw(plt; axis)
 # to the dataset and visually inspect how well the classifier performed in both
 # training and testing.
 
-using LIBSVM
+using LIBSVM, Random
 
 ## use approximately 80% of penguins for training
-train = rand(nrow(penguins)) .≤ 0.8
+Random.seed!(1234) # for reproducibility
+N = nrow(penguins)
+train = fill(false, N)
+perm = randperm(N)
+train_idxs = perm[1:floor(Int, 0.8N)]
+train[train_idxs] .= true
+nothing # hide
 
 ## fit model on training data and make predictions on the whole dataset
 X = hcat(penguins.bill_length_mm, penguins.bill_depth_mm)
 y = penguins.species
-model = SVC() # Support-Vector Machine Classiier
+model = SVC() # Support-Vector Machine Classifier
 fit!(model, X[train, :], y[train])
 ŷ = predict(model, X)
 

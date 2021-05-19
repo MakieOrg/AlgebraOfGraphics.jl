@@ -2,9 +2,6 @@ using AlgebraOfGraphics
 using Documenter
 using Literate, Glob
 using CairoMakie
-using Random
-
-Random.seed!(1234)
 
 CairoMakie.activate!(type="svg")
 
