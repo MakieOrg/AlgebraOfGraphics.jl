@@ -17,18 +17,18 @@ function shape(x::Union{Entry, Layer})
     return Broadcast.combine_axes(arrays...)
 end
 
-function getnewindex(u, c)
-    v = Broadcast.broadcastable(u)
-    return v[Broadcast.newindex(v, c)]
-end
-
 function splitapply(f, entry::Entry)
     entries = Entry[]
-    for c in CartesianIndices(shape(entry))
+    for I in Iterators.product(shape(entry)...)
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
-            return map(v -> v[c], tup)
+            return map(v -> v[I...], tup)
         end
-        labels = Dict(k => getnewindex(v, c) for (k, v) in pairs(entry.labels))
+        c = CartesianIndex(tail(I))
+        labels = Dict{KeyType, Any}()
+        for (k, s) in pairs(entry.labels)
+            v = Broadcast.broadcastable(s)
+            labels[k] = v[Broadcast.newindex(v, c)]
+        end
         input = Entry(entry; primary, positional, named, labels)
         output = f(input)
         isa(output, Entry) ? push!(entries, output) : append!(entries, output)
@@ -46,7 +46,7 @@ haszerodims(::Tuple) = false
 
 function subgroups(vs, perm, rgs, axs)
     return map(Iterators.product(rgs, CartesianIndices(axs))) do (rg, c)
-        v = getnewindex(vs, c)
+        v = vs[Broadcast.newindex(vs, c)]
         return haszerodims(v) || rg === (:) ? v : view(v, perm[rg])
     end
 end
@@ -103,11 +103,11 @@ function to_entry(layer::Layer)
     primary = NamedTuple(primary_pairs)
     positional = Tuple(positional_list)
     named = NamedTuple(named_pairs)
-    return group(Entry(; primary, positional, named, labels))
+    return Entry(; primary, positional, named, labels)
 end
 
 function process(layer::Layer)
-    init = to_entry(layer)
+    init = group(to_entry(layer))
     res = foldl(process, layer.transformations; init)
     return res isa Entry ? splitapply(identity, res) : res
 end
