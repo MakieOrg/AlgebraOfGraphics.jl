@@ -31,7 +31,9 @@ end
 
 function (h::HistogramAnalysis)(le::Entry)
     options = copy(h.options)
-    get!(options, :extrema, map(extrema, le.positional))
+    get!(options, :extrema) do
+        return map(v -> mapreduce(extrema, extend_extrema, v), le.positional)
+    end
 
     return splitapply(le) do entry
         hist = _histogram(entry.positional...; entry.named..., options...)
