@@ -39,21 +39,21 @@ end
 assert_equal(a, b) = (@assert(a == b); a)
 getuniquevalue(v) = reduce(assert_equal, v)
 
+haszerodims(::AbstractArray) = false
+haszerodims(::AbstractArray{<:Any, 0}) = true
+haszerodims(::Ref) = true
+haszerodims(::Tuple) = false
+
 function subgroups(vs, perm, rgs, axs)
     return map(Iterators.product(rgs, CartesianIndices(axs))) do (rg, c)
         v = getnewindex(vs, c)
-        if rg === (:)
-            return v
-        else
-            idxs = [clamp(perm[i], axes(v, 1)) for i in rg]
-            return view(v, idxs)
-        end
+        return haszerodims(v) || rg === (:) ? v : view(v, perm[rg])
     end
 end
 
 function group(entry::Entry)
     grouping = foldl(entry.primary, init=()) do acc, v
-        return isempty(size(v)) ? (acc..., only(v)) : acc
+        return haszerodims(v) ? (acc..., only(v)) : acc
     end
     perm, rgs = permutation_ranges(grouping)
     axs = CartesianIndices(shape(entry))
@@ -71,11 +71,28 @@ Convert `layer` to equivalent entry, excluding transformations.
 """
 function to_entry(layer::Layer)
     labels = Dict{KeyType, Any}()
+    axs = shape(layer)
     primary_pairs, positional_list, named_pairs = [], [], []
     for c in (layer.positional, layer.named)
         for (key, val) in pairs(c)
-            l, arr = getlabeledarray(layer, val)
-            labels[key] = l
+            if val isa ArrayLike
+                labeled_arr = map(val) do s
+                    local vs, (f, label) = select(layer.data, s)
+                    return label, map(f, vs...)
+                end
+                label, arr = map(first, labeled_arr), map(last, labeled_arr)
+            else
+                vs, (f, label) = select(layer.data, val)
+                if vs isa DimsSelector
+                    sz = ntuple(length(axs)) do n
+                        return n in vs.dims ? length(axs[n]) : 1
+                    end
+                    arr = map(fill∘f, CartesianIndices(sz))
+                else
+                    arr = fill(map(f, vs...))
+                end
+            end
+            labels[key] = label
             if key isa Int
                 push!(positional_list, arr)
             elseif all(iscontinuous, arr)

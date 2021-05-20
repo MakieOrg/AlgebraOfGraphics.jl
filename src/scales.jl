@@ -96,9 +96,9 @@ end
 
 Determine whether `v` should be treated as a continuous or categorical vector.
 """
-iscontinuous(::AbstractArray) = false
-iscontinuous(::AbstractArray{<:Number}) = true
-iscontinuous(::AbstractArray{<:Union{Date, DateTime}}) = true
+function iscontinuous(v)
+    return !haszerodims(v) && eltype(v) <: Union{Number, Date, DateTime}
+end
 
 isgeometry(::AbstractArray{<:AbstractGeometry}) = true
 isgeometry(::AbstractArray{T}) where {T} = eltype(T) <: AbstractGeometry
