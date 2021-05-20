@@ -3,7 +3,7 @@
 fast_hashed(v::AbstractVector) = isbitstype(eltype(v)) ? PooledArray(v) : v
 
 function permutation_ranges(cols)
-    isempty(cols) && return [:], nothing
+    isempty(cols) && return nothing, [:]
     grouping_sa = StructArray(map(refarray∘fast_hashed, cols))
     gp = GroupPerm(grouping_sa)
     return sortperm(gp), collect(gp)
@@ -17,22 +17,36 @@ function shape(x::Union{Entry, Layer})
     return Broadcast.combine_axes(arrays...)
 end
 
-function splitapply(f, entry::Entry)
-    
+function getnewindex(u, c)
+    v = Broadcast.broadcastable(u)
+    return v[Broadcast.newindex(v, c)]
+end
 
+function splitapply(f, entry::Entry)
+    entries = Entry[]
+    for c in CartesianIndices(first(allvariables(entry)))
+        primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
+            return map(v -> v[c], tup)
+        end
+        labels = Dict(k => getnewindex(v, c) for (k, v) in pairs(entry.labels))
+        input = Entry(entry; primary, positional, named, labels)
+        output = f(input)
+        isa(output, Entry) ? push!(entries, output) : append!(entries, output)
+    end
+    return entries
 end
 
 assert_equal(a, b) = (@assert(a == b); a)
 getuniquevalue(v) = reduce(assert_equal, v)
 
-function subgroups(v, perm, rgs, axs)
+function subgroups(vs, perm, rgs, axs)
     return map(Iterators.product(rgs, CartesianIndices(axs))) do (rg, c)
-        u = v[Broadcast.newindex(v, c)]
+        v = getnewindex(vs, c)
         if rg === (:)
-            return u
+            return v
         else
-            idxs = [clamp(perm[i], axes(u, 1)) for i in rg]
-            return view(u, idxs)
+            idxs = [clamp(perm[i], axes(v, 1)) for i in rg]
+            return view(v, idxs)
         end
     end
 end
@@ -44,9 +58,9 @@ function group(entry::Entry)
     perm, rgs = permutation_ranges(grouping)
     axs = CartesianIndices(shape(entry))
     primary′, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
-        return map(v -> subgroups(v, perm, rgs, axs), tup)
+        return map(vs -> subgroups(vs, perm, rgs, axs), tup)
     end
-    primary = map(vs -> map(getuniquevalue, vs), primary′)
+    primary = map(vs -> map(fill∘getuniquevalue, vs), primary′)
     return Entry(entry; primary, positional, named)
 end
 
@@ -80,7 +94,7 @@ end
 function process(layer::Layer)
     init = to_entry(layer)
     res = foldl(process, layer.transformations; init)
-    return res isa Entry ? splitapply(res) : res
+    return res isa Entry ? splitapply(identity, res) : res
 end
 
 process(v::AbstractArray{Entry}, f) = map(f, v)
