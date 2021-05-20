@@ -37,10 +37,10 @@ end
     @test entry.primary[:color] == fill(df.c)
     @test entry.primary[:marker] == [fill("a"), fill("b")]
     @test entry.named == (;)
-    @test entry.labels[1] == ["x", "x"]
+    @test entry.labels[1] == fill("x")
     @test entry.labels[2] ==  ["y", "z"]
-    @test entry.labels[:color] == ["c", "c"]
-    @test entry.labels[:marker] == ["", ""]
+    @test entry.labels[:color] == fill("c")
+    @test entry.labels[:marker] == ""
 end
 
 @testset "splitapply" begin
