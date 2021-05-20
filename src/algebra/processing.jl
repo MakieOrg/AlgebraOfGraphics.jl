@@ -24,7 +24,7 @@ end
 
 function splitapply(f, entry::Entry)
     entries = Entry[]
-    for c in CartesianIndices(first(allvariables(entry)))
+    for c in CartesianIndices(shape(entry))
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
             return map(v -> v[c], tup)
         end
@@ -75,23 +75,20 @@ function to_entry(layer::Layer)
     primary_pairs, positional_list, named_pairs = [], [], []
     for c in (layer.positional, layer.named)
         for (key, val) in pairs(c)
-            if val isa ArrayLike
-                labeled_arr = map(val) do s
+            if isdimsselector(val)
+                vs, (f, label) = select(layer.data, val)
+                d = only(vs) # multiple dims selectors in same mapping are disallowed
+                sz = ntuple(length(axs)) do n
+                    return n in d.dims ? length(axs[n]) : 1
+                end
+                arr = map(fill∘f, CartesianIndices(sz))
+            else
+                vals = val isa ArrayLike ? val : fill(val)
+                labeled_arr = map(vals) do s
                     local vs, (f, label) = select(layer.data, s)
                     return label, map(f, vs...)
                 end
                 label, arr = map(first, labeled_arr), map(last, labeled_arr)
-            else
-                vs, (f, label) = select(layer.data, val)
-                if all(x -> x isa DimsSelector, vs)
-                    d = only(vs) # multiple dims selectors in same mapping are disallowed
-                    sz = ntuple(length(axs)) do n
-                        return n in d.dims ? length(axs[n]) : 1
-                    end
-                    arr = map(fill∘f, CartesianIndices(sz))
-                else
-                    arr = fill(map(f, vs...))
-                end
             end
             labels[key] = label
             if key isa Int
