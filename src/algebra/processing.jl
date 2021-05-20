@@ -60,7 +60,7 @@ function group(entry::Entry)
     primary′, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
         return map(vs -> subgroups(vs, perm, rgs, axs), tup)
     end
-    primary = map(vs -> map(fill∘getuniquevalue, vs), primary′)
+    primary = map(vs -> map(getuniquevalue, vs), primary′)
     return Entry(entry; primary, positional, named)
 end
 

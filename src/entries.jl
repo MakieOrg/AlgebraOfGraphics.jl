@@ -43,14 +43,20 @@ end
 
 function lengthen_primary(e::Entry)
     N = length(first(e.positional))
-    primary = map(t -> fill(only(t), N), e.primary)
+    primary = map(t -> fill(t, N), e.primary)
     return Entry(e; primary)
+end
+
+function maybecollapse(v::AbstractArray)
+    f = first(v)
+    return all(isequal(f), v) ? fill(f) : v
 end
 
 # Combine entries as a unique entry with longer data
 function stack(short_entries::AbstractVector{Entry})
     entries = map(lengthen_primary, short_entries)
-    primary = map(vcat, map(entry -> entry.primary, entries)...)
+    primary′ = map(vcat, map(entry -> entry.primary, entries)...)
+    primary = map(maybecollapse, primary′)
     positional = map(vcat, map(entry -> entry.positional, entries)...)
     named = map(vcat, map(entry -> entry.named, entries)...)
     return Entry(first(entries); primary, positional, named)
@@ -67,7 +73,7 @@ function Makie.plot!(ae::AxisEntries)
         while j ≤ N && mergeable(entries[i], entries[j])
             j += 1
         end
-        entry, i = j == i + 1 ? entries[i] : stack(entries[i:j-1]), j
+        entry, i = stack(entries[i:j-1]), j
         attributes = copy(entry.attributes)
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
             return mapkeys(tup) do key

@@ -26,7 +26,9 @@ function summary(e::Entry)
     summaries = Dict{KeyType, Any}()
     for (i, tup) in enumerate((e.primary, e.positional, e.named))
         for (key, val) in pairs(tup)
-            summaries[key] = if i > 1 && iscontinuous(val)
+            summaries[key] = if i == 1
+                [val]
+            elseif iscontinuous(val)
                 Makie.extrema_nan(val)
             elseif i == 2 && isgeometry(val)
                 nothing
@@ -91,8 +93,8 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             layout_v = get(entry.primary, :layout, nothing)
             # without layout info, plot on all axes
             # all values in `v` and `layout_v` are equal
-            isnothing(v) || return rescale(v[1:1], scale)
-            isnothing(layout_v) || return map(f, rescale(layout_v[1:1], layout_scale))
+            isnothing(v) || return rescale(fill(v), scale)
+            isnothing(layout_v) || return map(f, rescale(fill(layout_v), layout_scale))
             return 1:f(grid_size)
         end
         for i in rows, j in cols
