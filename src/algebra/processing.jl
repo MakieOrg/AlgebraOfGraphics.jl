@@ -77,7 +77,7 @@ function to_entry(layer::Layer)
         for (key, val) in pairs(c)
             if isdimsselector(val)
                 vs, (f, label) = select(layer.data, val)
-                d = only(vs) # multiple dims selectors in same mapping are disallowed
+                d = only(vs) # multiple dims selectors in the same mapping are disallowed
                 sz = ntuple(length(axs)) do n
                     return n in d.dims ? length(axs[n]) : 1
                 end
