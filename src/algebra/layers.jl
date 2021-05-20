@@ -27,7 +27,7 @@ function summary(e::Entry)
     for (i, tup) in enumerate((e.primary, e.positional, e.named))
         for (key, val) in pairs(tup)
             summaries[key] = if i > 1 && iscontinuous(val)
-                AbstractPlotting.extrema_nan(val)
+                Makie.extrema_nan(val)
             elseif i == 2 && isgeometry(val)
                 nothing
             else
@@ -115,14 +115,14 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
 
 end
 
-function AbstractPlotting.plot!(fig, s::OneOrMoreLayers;
+function Makie.plot!(fig, s::OneOrMoreLayers;
                                 axis=NamedTuple(), palettes=NamedTuple())
     grid = compute_axes_grid(fig, s; axis, palettes)
     foreach(plot!, grid)
     return grid
 end
 
-function AbstractPlotting.plot(s::OneOrMoreLayers;
+function Makie.plot(s::OneOrMoreLayers;
                                axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
     fig = Figure(; figure...)
     grid = plot!(fig, s; axis, palettes)

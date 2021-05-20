@@ -15,7 +15,7 @@ function (l::SmoothAnalysis)(le::Entry)
         x̂ = collect(range(min, max, length=npoints))
         ŷ = Loess.predict(model, x̂)
         positional, named = (x̂, ŷ), (;)
-        plottype = AbstractPlotting.plottype(entry.plottype, Lines)
+        plottype = Makie.plottype(entry.plottype, Lines)
         return Entry(entry; plottype, positional, named)
     end
 end

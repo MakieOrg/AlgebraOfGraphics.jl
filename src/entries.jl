@@ -30,7 +30,7 @@ struct AxisEntries
     labels::Dict{KeyType, Any}
 end
 
-AbstractPlotting.Axis(ae::AxisEntries) = ae.axis
+Makie.Axis(ae::AxisEntries) = ae.axis
 
 # Slightly complex machinery to recombine stacked barplots
 function mergeable(e1::Entry, e2::Entry)
@@ -59,7 +59,7 @@ end
 mapkeys(f, tup::Tuple) = map(f, keys(tup))
 mapkeys(f, ::NamedTuple{names}) where {names} = NamedTuple{names}(map(f, names))
 
-function AbstractPlotting.plot!(ae::AxisEntries)
+function Makie.plot!(ae::AxisEntries)
     axis, entries, labels, scales = ae.axis, ae.entries, ae.labels, ae.scales
     i, N = 1, length(entries)
     while i ≤ N
@@ -97,7 +97,7 @@ function AbstractPlotting.plot!(ae::AxisEntries)
         color = get(attributes, :color, nothing)
         !isnothing(color) && alpha isa Number && (attributes[:color] = (color, alpha))
 
-        plottype = AbstractPlotting.plottype(entry.plottype, positional...)
+        plottype = Makie.plottype(entry.plottype, positional...)
         plot!(plottype, axis, positional...; attributes...)
     end
     # TODO: support log colorscale

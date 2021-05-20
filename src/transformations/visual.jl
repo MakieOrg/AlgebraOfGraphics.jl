@@ -5,7 +5,7 @@ end
 Visual(plottype=Any; kwargs...) = Visual(plottype, Dict{Symbol, Any}(kwargs))
 
 function (v::Visual)(e::Entry)
-    plottype = AbstractPlotting.plottype(v.plottype, e.plottype)
+    plottype = Makie.plottype(v.plottype, e.plottype)
     attributes = merge(e.attributes, v.attributes)
     return Entry(e; plottype, attributes)
 end

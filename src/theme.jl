@@ -62,7 +62,7 @@ function aog_theme()
         titlefont=firasans("Medium"),
     )
     Axis3 = (
-        protrusions=55, # to include label on z axis, should be fixed in AbstractPlotting
+        protrusions=55, # to include label on z axis, should be fixed in Makie
         xgridvisible=false,
         ygridvisible=false,
         zgridvisible=false,

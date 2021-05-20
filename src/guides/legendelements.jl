@@ -1,7 +1,7 @@
 function from_default_theme(attr)
     theme = default_styles()
     return get(theme, attr) do
-        AbstractPlotting.current_default_theme()[attr]
+        Makie.current_default_theme()[attr]
     end
 end
 
