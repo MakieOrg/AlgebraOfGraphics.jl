@@ -10,10 +10,6 @@ function (d::DimsSelector)(c::CartesianIndex{N}) where N
     return CartesianIndex(t)
 end
 
-isdimsselector(selector) = false
-isdimsselector(selector::Pair) = isdimsselector(first(selector))
-isdimsselector(selector::DimsSelector) = true
-
 select(data, d::DimsSelector) = (d,) => identity => ""
 
 function select(data, name::StringLike)

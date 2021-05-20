@@ -55,8 +55,7 @@ end
 # Combine entries as a unique entry with longer data
 function stack(short_entries::AbstractVector{Entry})
     entries = map(lengthen_primary, short_entries)
-    primary′ = map(vcat, map(entry -> entry.primary, entries)...)
-    primary = map(maybecollapse, primary′)
+    primary = map(maybecollapse∘vcat, map(entry -> entry.primary, entries)...)
     positional = map(vcat, map(entry -> entry.positional, entries)...)
     named = map(vcat, map(entry -> entry.named, entries)...)
     return Entry(first(entries); primary, positional, named)

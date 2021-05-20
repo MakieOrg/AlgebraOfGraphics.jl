@@ -64,6 +64,27 @@ function group(entry::Entry)
     return Entry(entry; primary, positional, named)
 end
 
+function getlabeledarray(layer::Layer, selector::Union{DimsSelector, Pair{<:DimsSelector}})
+    axs = shape(layer)
+    vs, (f, label) = select(layer.data, selector)
+    d = only(vs) # multiple dims selectors in the same mapping are disallowed
+    sz = ntuple(length(axs)) do n
+        return n in d.dims ? length(axs[n]) : 1
+    end
+    arr = map(fill∘f, CartesianIndices(sz))
+    return label, arr
+end
+
+getlabeledarray(layer::Layer, selector) = getlabeledarray(layer, fill(selector))
+
+function getlabeledarray(layer::Layer, selector::ArrayLike)
+    labeled_arr = map(selector) do s
+        local vs, (f, label) = select(layer.data, s)
+        return label, map(f, vs...)
+    end
+    return map(first, labeled_arr), map(last, labeled_arr)
+end
+
 """
     to_entry(layer::Layer)
 
@@ -71,25 +92,10 @@ Convert `layer` to equivalent entry, excluding transformations.
 """
 function to_entry(layer::Layer)
     labels = Dict{KeyType, Any}()
-    axs = shape(layer)
     primary_pairs, positional_list, named_pairs = [], [], []
     for c in (layer.positional, layer.named)
         for (key, val) in pairs(c)
-            if isdimsselector(val)
-                vs, (f, label) = select(layer.data, val)
-                d = only(vs) # multiple dims selectors in the same mapping are disallowed
-                sz = ntuple(length(axs)) do n
-                    return n in d.dims ? length(axs[n]) : 1
-                end
-                arr = map(fill∘f, CartesianIndices(sz))
-            else
-                vals = val isa ArrayLike ? val : fill(val)
-                labeled_arr = map(vals) do s
-                    local vs, (f, label) = select(layer.data, s)
-                    return label, map(f, vs...)
-                end
-                label, arr = map(first, labeled_arr), map(last, labeled_arr)
-            end
+            label, arr = getlabeledarray(layer, val)
             labels[key] = label
             if key isa Int
                 push!(positional_list, arr)
