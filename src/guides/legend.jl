@@ -47,7 +47,7 @@ function plottypes_attributes(entries)
     attributes = Vector{Symbol}[]
     for entry in entries
         # FIXME: this should probably use the rescaled values
-        plottype = AbstractPlotting.plottype(entry.plottype, entry.positional...)
+        plottype = Makie.plottype(entry.plottype, entry.positional...)
         n = findfirst(==(plottype), plottypes)
         attrs = (keys(entry.primary)..., keys(entry.named)...)
         if isnothing(n)

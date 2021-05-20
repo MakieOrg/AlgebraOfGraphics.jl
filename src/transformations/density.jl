@@ -31,7 +31,7 @@ function (d::DensityAnalysis)(le::Entry)
         labels[N + 1] = "pdf"
         plottypes = [LinesFill, Heatmap, Volume]
         default_plottype = plottypes[N]
-        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        plottype = Makie.plottype(entry.plottype, default_plottype)
         return Entry(entry; plottype, positional, named, labels)
     end
 end

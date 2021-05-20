@@ -8,9 +8,9 @@ using GeometryBasics: AbstractGeometry, Polygon, MultiPolygon
 using GeoInterface: coordinates, geotype
 using Colors: RGB, RGBA, red, green, blue, Color
 using PlotUtils: optimize_datetime_ticks
-using AbstractPlotting
-using AbstractPlotting: current_default_theme, to_value, automatic, Automatic, PlotFunc, ATTRIBUTES
-import AbstractPlotting.MakieLayout: hidexdecorations!,
+using Makie
+using Makie: current_default_theme, to_value, automatic, Automatic, PlotFunc, ATTRIBUTES
+import Makie.MakieLayout: hidexdecorations!,
                                      hideydecorations!,
                                      hidedecorations!,
                                      linkaxes!,

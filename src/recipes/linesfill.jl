@@ -20,7 +20,7 @@ $(ATTRIBUTES)
     )
 end
 
-function AbstractPlotting.plot!(p::LinesFill)
+function Makie.plot!(p::LinesFill)
     lines!(p, p[1:2]...;
         color = p.color,
         linestyle = p.linestyle,

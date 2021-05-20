@@ -32,7 +32,7 @@ function (l::LinearAnalysis)(le::Entry)
             default_plottype = Lines
             positional, named = (x̂, ŷ), (;)
         end
-        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        plottype = Makie.plottype(entry.plottype, default_plottype)
         return Entry(entry; plottype, positional, named)
     end
 end

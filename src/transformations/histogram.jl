@@ -40,7 +40,7 @@ function (h::HistogramAnalysis)(le::Entry)
         labels, attributes = copy(entry.labels), copy(entry.attributes)
         labels[N + 1] = normalization == :none ? "count" : string(normalization)
         default_plottype = categoricalplottypes[N]
-        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        plottype = Makie.plottype(entry.plottype, default_plottype)
         N == 1 && (attributes[:width] = step(hist.edges[1]))
         positional, named = (map(midpoints, hist.edges)..., hist.weights), (;)
         return Entry(entry; plottype, positional, named, labels, attributes)

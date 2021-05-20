@@ -23,7 +23,7 @@ function groupreduce(agg, entry::Entry)
     return splitapply(entry) do entry
         positional, named = (summaries..., _groupreduce(agg, summaries, entry.positional...)), (;)
         default_plottype = categoricalplottypes[length(summaries)]
-        plottype = AbstractPlotting.plottype(entry.plottype, default_plottype)
+        plottype = Makie.plottype(entry.plottype, default_plottype)
         return Entry(entry; plottype, positional, named)
     end
 end
