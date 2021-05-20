@@ -11,11 +11,11 @@ using PlotUtils: optimize_datetime_ticks
 using Makie
 using Makie: current_default_theme, to_value, automatic, Automatic, PlotFunc, ATTRIBUTES
 import Makie.MakieLayout: hidexdecorations!,
-                                     hideydecorations!,
-                                     hidedecorations!,
-                                     linkaxes!,
-                                     linkxaxes!,
-                                     linkyaxes!
+                          hideydecorations!,
+                          hidedecorations!,
+                          linkaxes!,
+                          linkxaxes!,
+                          linkyaxes!
 using GridLayoutBase: determinedirsize, Col, Row
 using PooledArrays: PooledArray
 using KernelDensity: kde, pdf
