@@ -85,6 +85,12 @@ function getlabeledarray(layer::Layer, selector::ArrayLike)
     return map(first, labeled_arr), map(last, labeled_arr)
 end
 
+function separate(nt::NamedTuple)
+    continuous_keys = filter(key -> all(iscontinuous, nt[key]), keys(nt))
+    continuous = NamedTuple{continuous_keys}(nt)
+    return Base.structdiff(nt, continuous), continuous
+end
+
 """
     to_entry(layer::Layer)
 
@@ -92,23 +98,14 @@ Convert `layer` to equivalent entry, excluding transformations.
 """
 function to_entry(layer::Layer)
     labels = Dict{KeyType, Any}()
-    primary_pairs, positional_list, named_pairs = [], [], []
-    for c in (layer.positional, layer.named)
-        for (key, val) in pairs(c)
-            label, arr = getlabeledarray(layer, val)
+    positional, named′ = map((layer.positional, layer.named)) do tup
+        return mapkeys(tup) do key            
+            label, arr = getlabeledarray(layer, tup[key])
             labels[key] = label
-            if key isa Int
-                push!(positional_list, arr)
-            elseif all(iscontinuous, arr)
-                push!(named_pairs, key => arr)
-            else
-                push!(primary_pairs, key => arr)
-            end
+            return arr
         end
     end
-    primary = NamedTuple(primary_pairs)
-    positional = Tuple(positional_list)
-    named = NamedTuple(named_pairs)
+    primary, named = separate(named′)
     return Entry(; primary, positional, named, labels)
 end
 

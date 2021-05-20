@@ -61,7 +61,7 @@ function stack(short_entries::AbstractVector{Entry})
     return Entry(first(entries); primary, positional, named)
 end
 
-mapkeys(f, tup::Tuple) = map(f, keys(tup))
+mapkeys(f, tup::Tuple) = ntuple(f, length(tup))
 mapkeys(f, ::NamedTuple{names}) where {names} = NamedTuple{names}(map(f, names))
 
 function Makie.plot!(ae::AxisEntries)
