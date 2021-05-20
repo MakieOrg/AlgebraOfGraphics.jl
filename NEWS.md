@@ -6,3 +6,4 @@
 - Analyses now require parentheses (i.e. `linear()` instead of `linear`).
 - Rename `layout_x` and `layout_y` to `col` and `row`.
 - Rename `wts` keyword argument to `weights`.
+- `categorical` has been replaced by `nonnumeric`
