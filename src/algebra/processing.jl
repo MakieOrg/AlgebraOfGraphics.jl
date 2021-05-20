@@ -36,7 +36,7 @@ function splitapply(f, entry::Entry)
     return entries
 end
 
-assert_equal(a, b) = (@assert(a == b); a)
+assert_equal(a, b) = (@assert(isequal(a, b)); a)
 getuniquevalue(v) = reduce(assert_equal, v)
 
 haszerodims(::AbstractArray) = false
@@ -83,9 +83,10 @@ function to_entry(layer::Layer)
                 label, arr = map(first, labeled_arr), map(last, labeled_arr)
             else
                 vs, (f, label) = select(layer.data, val)
-                if vs isa DimsSelector
+                if all(x -> x isa DimsSelector, vs)
+                    d = only(vs) # multiple dims selectors in same mapping are disallowed
                     sz = ntuple(length(axs)) do n
-                        return n in vs.dims ? length(axs[n]) : 1
+                        return n in d.dims ? length(axs[n]) : 1
                     end
                     arr = map(fill∘f, CartesianIndices(sz))
                 else

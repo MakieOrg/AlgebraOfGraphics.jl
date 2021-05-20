@@ -10,7 +10,7 @@ function (d::DimsSelector)(c::CartesianIndex{N}) where N
     return CartesianIndex(t)
 end
 
-select(data, d::DimsSelector) = d => identity => ""
+select(data, d::DimsSelector) = (d,) => identity => ""
 
 function select(data, name::StringLike)
     v = getcolumn(data, Symbol(name))
