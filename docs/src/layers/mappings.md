@@ -31,7 +31,7 @@ df.var"bill length (cm)" = map(t -> t + 10, df.bill_length_mm)
 data(df) * mapping("bill length (cm)") # strings are also accepted for column names
 ```
 
-### Row-by=row versus
+### Row-by-row versus whole-column operations
 
 The pair syntax acts *row by row*, unlike, e.g., `DataFrames.transform`.
 This has several advantages.
@@ -69,7 +69,7 @@ AlgebraOfGraphics.renamer
 AlgebraOfGraphics.nonnumeric
 ```
 
-Examples
+### Examples
 
 ```julia
 # column `train` has two unique values, `true` and `false`
