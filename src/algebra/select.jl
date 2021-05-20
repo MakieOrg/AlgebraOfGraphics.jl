@@ -58,7 +58,5 @@ getlabeledarray(layer::Layer, s) = getlabeledarray(layer, fill(s))
 
 function getlabeledarray(layer::Layer, selectors::ArrayLike)
     labelsvectors = map(s -> getlabeledvector(layer, s), selectors)
-    labels, vectors = map(first, labelsvectors), map(last, labelsvectors)
-    arr = unnest(vectors)
-    return labels, arr
+    return map(first, labelsvectors), map(last, labelsvectors)
 end

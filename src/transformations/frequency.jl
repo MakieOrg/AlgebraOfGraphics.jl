@@ -9,8 +9,10 @@ struct FrequencyAnalysis
     options::Dict{Symbol, Any}
 end
 
+to_nothings(v) = fill(nothing, axes(v))
+
 function (f::FrequencyAnalysis)(entry::Entry)
-    positional = (entry.positional..., fill(nothing, length(first(entry.positional))))
+    positional = (entry.positional..., map(to_nothings, first(entry.positional)))
     labels = copy(entry.labels)
     labels[length(positional)] = "count"
     augmented_entry = Entry(entry; positional, labels)

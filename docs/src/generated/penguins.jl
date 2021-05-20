@@ -21,6 +21,7 @@ set_aog_theme!()
 
 axis = (width = 225, height = 225)
 penguin_frequency = data(penguins) * frequency() * mapping(:species)
+entry = AlgebraOfGraphics.to_entry(penguin_frequency * mapping(color = :island))
 draw(penguin_frequency; axis)
 
 # Next, let us see whether the distribution is the same across islands.

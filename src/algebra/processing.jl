@@ -2,34 +2,11 @@
 
 fast_hashed(v::AbstractVector) = isbitstype(eltype(v)) ? PooledArray(v) : v
 
-function indices_iterator(cols)
-    isempty(cols) && return (:,)
+function permutation_ranges(cols)
+    isempty(cols) && return [:], nothing
     grouping_sa = StructArray(map(refarray∘fast_hashed, cols))
     gp = GroupPerm(grouping_sa)
-    return (sortperm(gp)[rg] for rg in gp)
-end
-
-function validprimaryindices(v, idxs, c::CartesianIndex)
-    i = idxs === (:) ? firstindex(v, 1) : clamp(first(idxs), axes(v, 1))
-    t = validtailindices(v, c)
-    return (i, t...)
-end
-
-validtailindices(v, c::CartesianIndex) =
-    Tuple(Broadcast.newindex(CartesianIndices(tail(axes(v))), c))
-
-validindices(v, c::CartesianIndex) = Tuple(Broadcast.newindex(v, c))
-
-function subgroup(e::Entry, idxs, c::CartesianIndex)
-    primary = map(v -> view(v, validprimaryindices(v, idxs, c)...), e.primary)
-    positional = map(v -> view(v, idxs, validtailindices(v, c)...), e.positional)
-    named = map(v -> view(v, idxs, validtailindices(v, c)...), e.named)
-    labels = copy(e.labels)
-    map!(values(labels)) do l
-        l′ = Broadcast.broadcastable(l)
-        return l′[validindices(l′, c)...]
-    end
-    return Entry(e; primary, positional, named, labels)
+    return sortperm(gp), collect(gp)
 end
 
 allvariables(e::Entry) = (e.primary..., e.positional..., e.named...)
@@ -40,34 +17,38 @@ function shape(x::Union{Entry, Layer})
     return Broadcast.combine_axes(arrays...)
 end
 
-splitapply(entry::Entry) = splitapply(identity, entry)
-
 function splitapply(f, entry::Entry)
-    axs = shape(entry)
-    grouping = filter(v -> v isa AbstractVector, Tuple(entry.primary))
-    entries = Entry[]
-    foreach(indices_iterator(grouping)) do idxs
-        for c in CartesianIndices(tail(axs))
-            # TODO: for analyses returning several entries, rearrange in correct order.
-            res = f(subgroup(entry, idxs, c))
-            res isa Entry ? push!(entries, res) : append!(entries, res)
-        end
-    end
-    return entries
-end
+    
 
-## Transform `Layers` into list of `Entry`
+end
 
 assert_equal(a, b) = (@assert(a == b); a)
+getuniquevalue(v) = reduce(assert_equal, v)
 
-function unnest(arr::AbstractArray{<:AbstractArray})
-    inner_size = mapreduce(size, assert_equal, arr)
-    outer_size = size(arr)
-    flattened = reduce(vcat, map(vec, vec(arr)))
-    return reshape(flattened, inner_size..., outer_size...)
+function subgroups(v, perm, rgs, axs)
+    return map(Iterators.product(rgs, CartesianIndices(axs))) do (rg, c)
+        u = v[Broadcast.newindex(v, c)]
+        if rg === (:)
+            return u
+        else
+            idxs = [clamp(perm[i], axes(u, 1)) for i in rg]
+            return view(u, idxs)
+        end
+    end
 end
 
-unnest(arr::NTuple{<:Any, <:AbstractArray}) = unnest(collect(arr))
+function group(entry::Entry)
+    grouping = foldl(entry.primary, init=()) do acc, v
+        return isempty(size(v)) ? (acc..., only(v)) : acc
+    end
+    perm, rgs = permutation_ranges(grouping)
+    axs = CartesianIndices(shape(entry))
+    primary′, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
+        return map(v -> subgroups(v, perm, rgs, axs), tup)
+    end
+    primary = map(vs -> map(getuniquevalue, vs), primary′)
+    return Entry(entry; primary, positional, named)
+end
 
 """
     to_entry(layer::Layer)
@@ -83,17 +64,17 @@ function to_entry(layer::Layer)
             labels[key] = l
             if key isa Int
                 push!(positional_list, arr)
-            elseif !iscontinuous(arr)
-                push!(primary_pairs, key => arr)
-            else
+            elseif all(iscontinuous, arr)
                 push!(named_pairs, key => arr)
+            else
+                push!(primary_pairs, key => arr)
             end
         end
     end
     primary = NamedTuple(primary_pairs)
     positional = Tuple(positional_list)
     named = NamedTuple(named_pairs)
-    return Entry(; primary, positional, named, labels)
+    return group(Entry(; primary, positional, named, labels))
 end
 
 function process(layer::Layer)
