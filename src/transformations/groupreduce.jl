@@ -19,7 +19,9 @@ function _groupreduce(agg, summaries::Tuple, values...)
 end
 
 function groupreduce(agg, entry::Entry)
-    summaries = map(collect∘uniquesorted, front(entry.positional))
+    summaries = map(front(entry.positional)) do v
+        return mapreduce(collect∘uniquesorted, mergesorted, v)
+    end
     return splitapply(entry) do entry
         positional, named = (summaries..., _groupreduce(agg, summaries, entry.positional...)), (;)
         default_plottype = categoricalplottypes[length(summaries)]

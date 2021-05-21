@@ -2,34 +2,11 @@
 
 fast_hashed(v::AbstractVector) = isbitstype(eltype(v)) ? PooledArray(v) : v
 
-function indices_iterator(cols)
-    isempty(cols) && return (:,)
+function permutation_ranges(cols)
+    isempty(cols) && return nothing, [:]
     grouping_sa = StructArray(map(refarray∘fast_hashed, cols))
     gp = GroupPerm(grouping_sa)
-    return (sortperm(gp)[rg] for rg in gp)
-end
-
-function validprimaryindices(v, idxs, c::CartesianIndex)
-    i = idxs === (:) ? firstindex(v, 1) : clamp(first(idxs), axes(v, 1))
-    t = validtailindices(v, c)
-    return (i, t...)
-end
-
-validtailindices(v, c::CartesianIndex) =
-    Tuple(Broadcast.newindex(CartesianIndices(tail(axes(v))), c))
-
-validindices(v, c::CartesianIndex) = Tuple(Broadcast.newindex(v, c))
-
-function subgroup(e::Entry, idxs, c::CartesianIndex)
-    primary = map(v -> view(v, validprimaryindices(v, idxs, c)...), e.primary)
-    positional = map(v -> view(v, idxs, validtailindices(v, c)...), e.positional)
-    named = map(v -> view(v, idxs, validtailindices(v, c)...), e.named)
-    labels = copy(e.labels)
-    map!(values(labels)) do l
-        l′ = Broadcast.broadcastable(l)
-        return l′[validindices(l′, c)...]
-    end
-    return Entry(e; primary, positional, named, labels)
+    return sortperm(gp), collect(gp)
 end
 
 allvariables(e::Entry) = (e.primary..., e.positional..., e.named...)
@@ -40,34 +17,79 @@ function shape(x::Union{Entry, Layer})
     return Broadcast.combine_axes(arrays...)
 end
 
-splitapply(entry::Entry) = splitapply(identity, entry)
-
 function splitapply(f, entry::Entry)
-    axs = shape(entry)
-    grouping = filter(v -> v isa AbstractVector, Tuple(entry.primary))
     entries = Entry[]
-    foreach(indices_iterator(grouping)) do idxs
-        for c in CartesianIndices(tail(axs))
-            # TODO: for analyses returning several entries, rearrange in correct order.
-            res = f(subgroup(entry, idxs, c))
-            res isa Entry ? push!(entries, res) : append!(entries, res)
+    for I in Iterators.product(shape(entry)...)
+        primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
+            return map(v -> v[I...], tup)
         end
+        c = CartesianIndex(tail(I))
+        labels = Dict{KeyType, Any}()
+        for (k, s) in pairs(entry.labels)
+            v = Broadcast.broadcastable(s)
+            labels[k] = v[Broadcast.newindex(v, c)]
+        end
+        input = Entry(entry; primary, positional, named, labels)
+        output = f(input)
+        isa(output, Entry) ? push!(entries, output) : append!(entries, output)
     end
     return entries
 end
 
-## Transform `Layers` into list of `Entry`
+assert_equal(a, b) = (@assert(isequal(a, b)); a)
+getuniquevalue(v) = reduce(assert_equal, v)
 
-assert_equal(a, b) = (@assert(a == b); a)
+haszerodims(::AbstractArray) = false
+haszerodims(::AbstractArray{<:Any, 0}) = true
+haszerodims(::Ref) = true
+haszerodims(::Tuple) = false
 
-function unnest(arr::AbstractArray{<:AbstractArray})
-    inner_size = mapreduce(size, assert_equal, arr)
-    outer_size = size(arr)
-    flattened = reduce(vcat, map(vec, vec(arr)))
-    return reshape(flattened, inner_size..., outer_size...)
+function subgroups(vs, perm, rgs, axs)
+    return map(Iterators.product(rgs, CartesianIndices(axs))) do (rg, c)
+        v = vs[Broadcast.newindex(vs, c)]
+        return haszerodims(v) || rg === (:) ? v : view(v, perm[rg])
+    end
 end
 
-unnest(arr::NTuple{<:Any, <:AbstractArray}) = unnest(collect(arr))
+function group(entry::Entry)
+    grouping = foldl(entry.primary, init=()) do acc, v
+        return haszerodims(v) ? (acc..., only(v)) : acc
+    end
+    perm, rgs = permutation_ranges(grouping)
+    axs = CartesianIndices(shape(entry))
+    primary′, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
+        return map(vs -> subgroups(vs, perm, rgs, axs), tup)
+    end
+    primary = map(vs -> map(getuniquevalue, vs), primary′)
+    return Entry(entry; primary, positional, named)
+end
+
+function getlabeledarray(layer::Layer, selector::Union{DimsSelector, Pair{<:DimsSelector}})
+    axs = shape(layer)
+    vs, (f, label) = select(layer.data, selector)
+    d = only(vs) # multiple dims selectors in the same mapping are disallowed
+    sz = ntuple(length(axs)) do n
+        return n in d.dims ? length(axs[n]) : 1
+    end
+    arr = map(fill∘f, CartesianIndices(sz))
+    return label, arr
+end
+
+getlabeledarray(layer::Layer, selector) = getlabeledarray(layer, fill(selector))
+
+function getlabeledarray(layer::Layer, selector::ArrayLike)
+    labeled_arr = map(selector) do s
+        local vs, (f, label) = select(layer.data, s)
+        return label, map(f, vs...)
+    end
+    return map(first, labeled_arr), map(last, labeled_arr)
+end
+
+function separate(nt::NamedTuple)
+    continuous_keys = filter(key -> all(iscontinuous, nt[key]), keys(nt))
+    continuous = NamedTuple{continuous_keys}(nt)
+    return Base.structdiff(nt, continuous), continuous
+end
 
 """
     to_entry(layer::Layer)
@@ -76,30 +98,21 @@ Convert `layer` to equivalent entry, excluding transformations.
 """
 function to_entry(layer::Layer)
     labels = Dict{KeyType, Any}()
-    primary_pairs, positional_list, named_pairs = [], [], []
-    for c in (layer.positional, layer.named)
-        for (key, val) in pairs(c)
-            l, arr = getlabeledarray(layer, val)
-            labels[key] = l
-            if key isa Int
-                push!(positional_list, arr)
-            elseif !iscontinuous(arr)
-                push!(primary_pairs, key => arr)
-            else
-                push!(named_pairs, key => arr)
-            end
+    positional, named′ = map((layer.positional, layer.named)) do tup
+        return mapkeys(tup) do key            
+            label, arr = getlabeledarray(layer, tup[key])
+            labels[key] = label
+            return arr
         end
     end
-    primary = NamedTuple(primary_pairs)
-    positional = Tuple(positional_list)
-    named = NamedTuple(named_pairs)
+    primary, named = separate(named′)
     return Entry(; primary, positional, named, labels)
 end
 
 function process(layer::Layer)
-    init = to_entry(layer)
+    init = group(to_entry(layer))
     res = foldl(process, layer.transformations; init)
-    return res isa Entry ? splitapply(res) : res
+    return res isa Entry ? splitapply(identity, res) : res
 end
 
 process(v::AbstractArray{Entry}, f) = map(f, v)

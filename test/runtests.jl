@@ -32,15 +32,15 @@ end
     d = mapping(:x => exp, [:y, :z], color=:c, marker = dims(1) => t -> ["a", "b"][t])
     layer = data(df) * d
     entry = AlgebraOfGraphics.to_entry(layer)
-    @test entry.positional[1] == map(exp, df.x)
-    @test entry.positional[2] == [df.y df.z]
-    @test entry.primary[:color] == df.c
-    @test entry.primary[:marker] == ["a" "b"]
+    @test entry.positional[1] == fill(map(exp, df.x))
+    @test entry.positional[2] == [df.y, df.z]
+    @test entry.primary[:color] == fill(df.c)
+    @test entry.primary[:marker] == [fill("a"), fill("b")]
     @test entry.named == (;)
     @test entry.labels[1] == fill("x")
     @test entry.labels[2] ==  ["y", "z"]
     @test entry.labels[:color] == fill("c")
-    @test entry.labels[:marker] == fill("")
+    @test entry.labels[:marker] == ""
 end
 
 @testset "splitapply" begin
@@ -49,50 +49,50 @@ end
     d = mapping(:x => exp, [:y, :z], color=:c, marker=dims(1) => t -> ["1", "2"][t], markersize=:w)
     layer = data(df) * d
     le = AlgebraOfGraphics.to_entry(layer)
-    entries = AlgebraOfGraphics.splitapply(le)
+    entries = AlgebraOfGraphics.splitapply(identity, AlgebraOfGraphics.group(le))
     @test length(entries) == 6
     for i in 1: 6
         @test entries[i].plottype === Any
         @test isempty(entries[i].attributes)
         @test entries[i].labels[1] == "x"
-        @test entries[i].labels[2] == (isodd(i) ? "y" : "z")
+        @test entries[i].labels[2] == (i ≤ 3 ? "y" : "z")
         @test entries[i].labels[:color] == "c"
         @test entries[i].labels[:marker] == ""
         @test entries[i].labels[:markersize] == "w"
     end
 
-    @test entries[1].primary[:color] == fill("a")
-    @test entries[1].primary[:marker] == fill("1")
+    @test entries[1].primary[:color] == "a"
+    @test entries[1].primary[:marker] == "1"
     @test entries[1].positional[1] == exp.(df.x[df.c .== "a"])
     @test entries[1].positional[2] == df.y[df.c .== "a"]
     @test entries[1].named[:markersize] == df.w[df.c .== "a"]
+    
+    @test entries[2].primary[:color] == "b"
+    @test entries[2].primary[:marker] == "1"
+    @test entries[2].positional[1] == exp.(df.x[df.c .== "b"])
+    @test entries[2].positional[2] == df.y[df.c .== "b"]
+    @test entries[2].named[:markersize] == df.w[df.c .== "b"]
+    
+    @test entries[3].primary[:color] == "c"
+    @test entries[3].primary[:marker] == "1"
+    @test entries[3].positional[1] == exp.(df.x[df.c .== "c"])
+    @test entries[3].positional[2] == df.y[df.c .== "c"]
+    @test entries[3].named[:markersize] == df.w[df.c .== "c"]
 
-    @test entries[2].primary[:color] == fill("a")
-    @test entries[2].primary[:marker] == fill("2")
-    @test entries[2].positional[1] == exp.(df.x[df.c .== "a"])
-    @test entries[2].positional[2] == df.z[df.c .== "a"]
-    @test entries[2].named[:markersize] == df.w[df.c .== "a"]
+    @test entries[4].primary[:color] == "a"
+    @test entries[4].primary[:marker] == "2"
+    @test entries[4].positional[1] == exp.(df.x[df.c .== "a"])
+    @test entries[4].positional[2] == df.z[df.c .== "a"]
+    @test entries[4].named[:markersize] == df.w[df.c .== "a"]
 
-    @test entries[3].primary[:color] == fill("b")
-    @test entries[3].primary[:marker] == fill("1")
-    @test entries[3].positional[1] == exp.(df.x[df.c .== "b"])
-    @test entries[3].positional[2] == df.y[df.c .== "b"]
-    @test entries[3].named[:markersize] == df.w[df.c .== "b"]
+    @test entries[5].primary[:color] == "b"
+    @test entries[5].primary[:marker] == "2"
+    @test entries[5].positional[1] == exp.(df.x[df.c .== "b"])
+    @test entries[5].positional[2] == df.z[df.c .== "b"]
+    @test entries[5].named[:markersize] == df.w[df.c .== "b"]
 
-    @test entries[4].primary[:color] == fill("b")
-    @test entries[4].primary[:marker] == fill("2")
-    @test entries[4].positional[1] == exp.(df.x[df.c .== "b"])
-    @test entries[4].positional[2] == df.z[df.c .== "b"]
-    @test entries[4].named[:markersize] == df.w[df.c .== "b"]
-
-    @test entries[5].primary[:color] == fill("c")
-    @test entries[5].primary[:marker] == fill("1")
-    @test entries[5].positional[1] == exp.(df.x[df.c .== "c"])
-    @test entries[5].positional[2] == df.y[df.c .== "c"]
-    @test entries[5].named[:markersize] == df.w[df.c .== "c"]
-
-    @test entries[6].primary[:color] == fill("c")
-    @test entries[6].primary[:marker] == fill("2")
+    @test entries[6].primary[:color] == "c"
+    @test entries[6].primary[:marker] == "2"
     @test entries[6].positional[1] == exp.(df.x[df.c .== "c"])
     @test entries[6].positional[2] == df.z[df.c .== "c"]
     @test entries[6].named[:markersize] == df.w[df.c .== "c"]

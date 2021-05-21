@@ -22,7 +22,7 @@ end
 function (d::DensityAnalysis)(le::Entry)
     options = copy(d.options)
     get!(options, :datalimits) do
-        return map(extrema, le.positional)
+        return map(v -> mapreduce(extrema, extend_extrema, v), le.positional)
     end
     return splitapply(le) do entry
         N = length(entry.positional)

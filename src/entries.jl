@@ -43,20 +43,25 @@ end
 
 function lengthen_primary(e::Entry)
     N = length(first(e.positional))
-    primary = map(t -> fill(only(t), N), e.primary)
+    primary = map(t -> fill(t, N), e.primary)
     return Entry(e; primary)
+end
+
+function maybecollapse(v::AbstractArray)
+    f = first(v)
+    return all(isequal(f), v) ? fill(f) : v
 end
 
 # Combine entries as a unique entry with longer data
 function stack(short_entries::AbstractVector{Entry})
     entries = map(lengthen_primary, short_entries)
-    primary = map(vcat, map(entry -> entry.primary, entries)...)
+    primary = map(maybecollapse∘vcat, map(entry -> entry.primary, entries)...)
     positional = map(vcat, map(entry -> entry.positional, entries)...)
     named = map(vcat, map(entry -> entry.named, entries)...)
     return Entry(first(entries); primary, positional, named)
 end
 
-mapkeys(f, tup::Tuple) = map(f, keys(tup))
+mapkeys(f, tup::Tuple) = ntuple(f, length(tup))
 mapkeys(f, ::NamedTuple{names}) where {names} = NamedTuple{names}(map(f, names))
 
 function Makie.plot!(ae::AxisEntries)
@@ -67,12 +72,12 @@ function Makie.plot!(ae::AxisEntries)
         while j ≤ N && mergeable(entries[i], entries[j])
             j += 1
         end
-        entry, i = j == i + 1 ? entries[i] : stack(entries[i:j-1]), j
+        entry, i = stack(entries[i:j-1]), j
         attributes = copy(entry.attributes)
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
             return mapkeys(tup) do key
                 rescaled = rescale(tup[key], scales[key])
-                return isempty(size(rescaled)) ? rescaled[] : rescaled
+                return haszerodims(rescaled) ? rescaled[] : rescaled
             end
         end
         merge!(attributes, pairs(primary), pairs(named))

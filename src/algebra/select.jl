@@ -10,55 +10,35 @@ function (d::DimsSelector)(c::CartesianIndex{N}) where N
     return CartesianIndex(t)
 end
 
-getlabeledvector(data, shape, name::StringLike) = string(name), getcolumn(data, Symbol(name))
+select(data, d::DimsSelector) = (d,) => identity => ""
 
-function getlabeledvector(data, shape, idx::Integer)
+function select(data, name::StringLike)
+    v = getcolumn(data, Symbol(name))
+    return (v,) => identity => string(name)
+end
+
+function select(data, idx::Integer)
     name = columnnames(data)[idx]
-    return getlabeledvector(data, shape, name)
+    return select(data, name)
 end
 
-function getlabeledvector(data, shape::NTuple{N, Any}, d::DimsSelector) where N
-    sz = ntuple(N) do n
-        return n in d.dims ? length(shape[n]) : 1
-    end
-    return "", reshape(CartesianIndices(sz), 1, sz...)
-end
-
-getlabeledvector(layer::Layer, name::Union{StringLike, Integer, DimsSelector}) =
-    getlabeledvector(layer.data, shape(layer), name)
-
-function getlabeledvector(layer::Layer, x::Pair{<:Any, <:StringLike})
+function select(data, x::Pair{<:Any, <:StringLike})
     name, label = x
-    _, v = getlabeledvector(layer, name)
-    return label, v
+    vs, _ = select(data, name)
+    return vs => identity => string(label)
 end
 
-function getlabeledvector(layer::Layer, x::Pair{<:Any, <:Any})
+function select(data, x::Pair{<:Any, <:Any})
     name, transformation = x
     # consider supporting automated labeling for multiple names here
-    label, v = getlabeledvector(layer, name)
-    return label, map(transformation, v)
+    vs, (_, label) = select(data, name)
+    return vs => transformation => label
 end
 
-function getlabeledvector(layer::Layer, x::Pair{<:Any, <:Pair})
+function select(data, x::Pair{<:Any, <:Pair})
     name, transformation_label = x
     transformation, label = transformation_label
     names = name isa ArrayLike ? name : fill(name)
-    vs = map(name -> last(getlabeledvector(layer, name)), names)
-    v = map(transformation, vs...)
-    return label, v
-end
-
-"""
-    getlabeledarray(layer::Layer, s)
-
-Return a label and an array from a selector `s`.
-"""
-getlabeledarray(layer::Layer, s) = getlabeledarray(layer, fill(s))
-
-function getlabeledarray(layer::Layer, selectors::ArrayLike)
-    labelsvectors = map(s -> getlabeledvector(layer, s), selectors)
-    labels, vectors = map(first, labelsvectors), map(last, labelsvectors)
-    arr = unnest(vectors)
-    return labels, arr
+    vs = map(name -> only(first(select(data, name))), names)
+    return vs => transformation => label
 end
