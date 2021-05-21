@@ -15,9 +15,12 @@ function Entry(e::Entry; kwargs...)
 end
 
 function Base.map(f, e::Entry)
-    p = StructArray(e.positional)
-    n = isempty(e.named) ? fill((;), axes(p)) : StructArray(e.named)
-    outputs = map(f, p, n)
+    axs = shape(e)
+    outputs = map(CartesianIndices(axs)) do c
+        p = map(v -> getnewindex(v, c), e.positional)
+        n = map(v -> getnewindex(v, c), e.named)
+        return f(p, n)
+    end
     positional = components(StructArray(map(first, outputs)))
     named = components(StructArray(map(last, outputs)))
     return Entry(e; positional, named)

@@ -87,7 +87,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     for e in entries
         for c in CartesianIndices(shape(e))
             primary, positional, named = map((e.primary, e.positional, e.named)) do tup
-                return map(v -> v[c], tup)
+                return map(v -> getnewindex(v, c), tup)
             end
             rows, cols = compute_grid_positions(scales, primary)
             entry = Entry(e; primary, positional, named)
