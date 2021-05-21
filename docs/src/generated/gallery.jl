@@ -234,14 +234,7 @@ df = (sepal_length=rand(100), sepal_width=rand(100), petal_length=rand(100), pet
 xvars = ["sepal_length", "sepal_width"]
 yvars = ["petal_length" "petal_width"]
 layers = linear() + visual(Scatter)
-plt = data(df) *
-    layers *
-    mapping(
-        xvars .=> "sepal",
-        yvars .=> "petal",
-        row=dims(1) => c -> split(xvars[c], '_')[2],
-        col=dims(2) => c -> split(yvars[c], '_')[2],
-    )
+plt = data(df) * layers * mapping(xvars, yvars, col=dims(1), row=dims(2))
 draw(plt)
 
 # ## Time series

@@ -43,7 +43,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
         textsize=titlesize,
     )
 
-    if !isnothing(row_scale)
+    if !isnothing(row_scale) && all(isequal(ax.ylabel[]), (Axis(ae).ylabel for ae in aes))
         for ae in aes
             Axis(ae).ylabelvisible[] = false
         end
@@ -75,7 +75,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
         Label(fig[:, 1, Left()], ax.ylabel;
             rotation=π/2, padding=ylabelpadding, ylabelattributes...)
     end
-    if !isnothing(col_scale)
+    if !isnothing(col_scale) && all(isequal(ax.xlabel[]), (Axis(ae).xlabel for ae in aes))
         for ae in aes
             Axis(ae).xlabelvisible[] = false
         end
