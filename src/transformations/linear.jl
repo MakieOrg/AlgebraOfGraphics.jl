@@ -8,33 +8,27 @@ add_intercept_column(x::AbstractVector{T}) where {T} = [ones(T, length(x)) x]
 
 # TODO: add multidimensional version
 function (l::LinearAnalysis)(le::Entry)
-    return splitapply(le) do entry
-        x, y = entry.positional
-        weights = get(entry.named, :weights, similar(x, 0))
+    entry = map(le) do p, n
+        x, y = p
+        weights = get(n, :weights, similar(x, 0))
         npoints = get(l.options, :npoints, 200)
         interval = get(l.options, :interval, length(weights) > 0 ? nothing : :confidence)
-        dropcollinear = false
-        lin_model = try
-            GLM.lm(add_intercept_column(x), collect(y); wts=weights, dropcollinear)
-        catch e
-            @warn "linear fit not possible"
-            nothing
-        end
+        dropcollinear = get(l.options, :dropcollinear, false)
+        lin_model = GLM.lm(add_intercept_column(x), collect(y); wts=weights, dropcollinear)
         isnothing(lin_model) && return Entry[]
         x̂ = range(extrema(x)..., length=npoints)
         pred = GLM.predict(lin_model, add_intercept_column(x̂); interval)
-        if !isnothing(interval)
+        return if !isnothing(interval)
             ŷ, lower, upper = map(vec, pred) # GLM prediction returns matrices
-            default_plottype = LinesFill
-            positional, named = (x̂, ŷ), (; lower, upper)
+            (x̂, ŷ), (; lower, upper)
         else
             ŷ = vec(pred) # GLM prediction returns matrix
-            default_plottype = Lines
-            positional, named = (x̂, ŷ), (;)
+            (x̂, ŷ), (;)
         end
-        plottype = Makie.plottype(entry.plottype, default_plottype)
-        return Entry(entry; plottype, positional, named)
     end
+    default_plottype = isempty(entry.named) ? Lines : LinesFill
+    plottype = Makie.plottype(entry.plottype, default_plottype)
+    return Entry(entry; plottype)
 end
 
 """

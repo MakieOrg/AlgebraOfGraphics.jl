@@ -24,16 +24,16 @@ function (d::DensityAnalysis)(le::Entry)
     get!(options, :datalimits) do
         return map(v -> mapreduce(extrema, extend_extrema, v), le.positional)
     end
-    return splitapply(le) do entry
-        N = length(entry.positional)
-        positional, named = _density(entry.positional...; entry.named..., options...), (;)
-        labels = copy(entry.labels)
-        labels[N + 1] = "pdf"
-        plottypes = [LinesFill, Heatmap, Volume]
-        default_plottype = plottypes[N]
-        plottype = Makie.plottype(entry.plottype, default_plottype)
-        return Entry(entry; plottype, positional, named, labels)
+    entry = map(le) do p, n
+        return _density(p...; n..., options...), (;)
     end
+    N = length(le.positional)
+    labels = copy(le.labels)
+    labels[N + 1] = "pdf"
+    plottypes = [LinesFill, Heatmap, Volume]
+    default_plottype = plottypes[N]
+    plottype = Makie.plottype(le.plottype, default_plottype)
+    return Entry(entry; plottype, labels)
 end
 
 """

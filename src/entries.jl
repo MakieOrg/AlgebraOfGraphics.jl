@@ -15,6 +15,15 @@ function Entry(e::Entry; kwargs...)
     return Entry(; merge(nt, values(kwargs))...)
 end
 
+function Base.map(f, e::Entry)
+    p = StructArray(e.positional)
+    n = isempty(e.named) ? fill((;), axes(p)) : StructArray(e.named)
+    outputs = map(f, p, n)
+    positional = components(StructArray(map(first, outputs)))
+    named = components(StructArray(map(last, outputs)))
+    return Entry(e; positional, named)
+end
+
 """
     AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, labels, scales)
 
