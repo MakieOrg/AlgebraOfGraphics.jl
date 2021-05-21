@@ -111,10 +111,6 @@ end
 
 function process(layer::Layer)
     init = group(to_entry(layer))
-    res = foldl(process, layer.transformations; init)
+    res = foldl(|>, layer.transformations; init)
     return res isa Entry ? splitapply(identity, res) : res
 end
-
-process(v::AbstractArray{Entry}, f) = map(f, v)
-
-process(le::Entry, f) = f(le)
