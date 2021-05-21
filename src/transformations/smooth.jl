@@ -5,19 +5,18 @@ end
 SmoothAnalysis(; kwargs...) = SmoothAnalysis(Dict{Symbol, Any}(kwargs))
 
 function (l::SmoothAnalysis)(le::Entry)
-    return splitapply(le) do entry
-        options = copy(l.options)
-        npoints = pop!(options, :npoints, 200)
-        x, y = entry.positional
+    options = copy(l.options)
+    npoints = pop!(options, :npoints, 200)
+    entry = map(le) do p, _
+        x, y = p
         min, max = extrema(x)
-        min < max || return Entry[]
         model = Loess.loess(Float64.(x), Float64.(y); options...)
         x̂ = collect(range(min, max, length=npoints))
         ŷ = Loess.predict(model, x̂)
-        positional, named = (x̂, ŷ), (;)
-        plottype = Makie.plottype(entry.plottype, Lines)
-        return Entry(entry; plottype, positional, named)
+        return (x̂, ŷ), (;)
     end
+    plottype = Makie.plottype(entry.plottype, Lines)
+    return Entry(entry; plottype)
 end
 
 """

@@ -18,14 +18,15 @@ function _groupreduce(agg, summaries::Tuple, values...)
     return map(value, results)
 end
 
-function groupreduce(agg, entry::Entry)
-    summaries = map(front(entry.positional)) do v
+function groupreduce(agg, e::Entry)
+    summaries = map(front(e.positional)) do v
         return mapreduce(collect∘uniquesorted, mergesorted, v)
     end
-    return splitapply(entry) do entry
-        positional, named = (summaries..., _groupreduce(agg, summaries, entry.positional...)), (;)
-        default_plottype = categoricalplottypes[length(summaries)]
-        plottype = Makie.plottype(entry.plottype, default_plottype)
-        return Entry(entry; plottype, positional, named)
+    entry = map(e) do p, _
+        positional, named = (summaries..., _groupreduce(agg, summaries, p...)), (;)
+        return positional, named
     end
+    default_plottype = categoricalplottypes[length(summaries)]
+    plottype = Makie.plottype(entry.plottype, default_plottype)
+    return Entry(entry; plottype)
 end

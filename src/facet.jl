@@ -16,7 +16,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries})
             delete!(ax)
         else
             v, _ = it
-            ax.title[] = string(first(v))
+            ax.title[] = string(v)
         end
     end
     return
@@ -32,7 +32,9 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
     hideinnerdecorations!(aes)
     linkaxes!(aes...)
 
-    ax = Axis(aes[1])
+    nonempty_aes = filter(ae -> !isempty(ae.entries), aes)
+
+    ax = Axis(first(nonempty_aes))
     titlegap = ax.titlegap
     titlecolor = ax.titlecolor
     titlefont = ax.titlefont
@@ -43,7 +45,10 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
         textsize=titlesize,
     )
 
-    if !isnothing(row_scale)
+    consistent_xlabels = all(ae -> Axis(ae).xlabel[] == ax.xlabel[], nonempty_aes)
+    consistent_ylabels = all(ae -> Axis(ae).ylabel[] == ax.ylabel[], nonempty_aes)
+
+    if !isnothing(row_scale) && consistent_ylabels
         for ae in aes
             Axis(ae).ylabelvisible[] = false
         end
@@ -75,7 +80,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
         Label(fig[:, 1, Left()], ax.ylabel;
             rotation=π/2, padding=ylabelpadding, ylabelattributes...)
     end
-    if !isnothing(col_scale)
+    if !isnothing(col_scale) && consistent_xlabels
         for ae in aes
             Axis(ae).xlabelvisible[] = false
         end

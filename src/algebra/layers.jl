@@ -22,84 +22,82 @@ function Base.:*(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
     return Layers([el1 * el2 for el1 in l1 for el2 in l2])
 end
 
-function summary(e::Entry)
-    summaries = Dict{KeyType, Any}()
-    for (i, tup) in enumerate((e.primary, e.positional, e.named))
-        for (key, val) in pairs(tup)
-            summaries[key] = if i == 1
-                [val]
-            elseif iscontinuous(val)
-                Makie.extrema_nan(val)
-            elseif i == 2 && isgeometry(val)
-                nothing
-            else
-                collect(uniquesorted(vec(val)))
-            end
-        end
+uniquevalues(v::ArrayLike) = collect(uniquesorted(vec(v)))
+
+function uniquevalues(e::Entry)
+    uv = Dict{KeyType, Any}()
+    for (key, val) in pairs(e.primary)
+        uv[key] = uniquevalues(val)
     end
-    return Entry(e; summaries)
+    for (key, val) in pairs(e.positional)
+        all(iscontinuous, val) && continue
+        all(isgeometry, val) && continue
+        uv[key] = mapreduce(uniquevalues, mergesorted, val)
+    end
+    return uv
 end
 
-mergesummaries(s1::AbstractVector, s2::AbstractVector) = mergesorted(s1, s2)
-mergesummaries(s1::Tuple, s2::Tuple) = extend_extrema(s1, s2)
-mergesummaries(::Nothing, ::Nothing) = nothing
+function extremas(e::Entry)
+    es = Dict{KeyType, Any}()
+    for tup in (e.positional, e.named)
+        for (key, val) in pairs(tup)
+            all(iscontinuous, val) || continue
+            es[key] = mapreduce(Makie.extrema_nan, extend_extrema, val)
+        end
+    end
+    return es
+end
 
-mergelabels(a, b) = a
+function compute_grid_positions(scales, primary=(;))
+    return map((:row, :col), (first, last)) do sym, f
+        scale = get(scales, sym, nothing)
+        lscale = get(scales, :layout, nothing)
+        return if !isnothing(scale)
+            rg = Base.OneTo(maximum(scale.plot))
+            haskey(primary, sym) ? rescale(fill(primary[sym]), scale) : rg
+        elseif !isnothing(lscale)
+            rg = Base.OneTo(maximum(f, lscale.plot))
+            haskey(primary, :layout) ? map(f, rescale(fill(primary[:layout]), lscale)) : rg
+        else
+            Base.OneTo(1)
+        end
+    end
+end
 
 function compute_axes_grid(fig, s::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
     layers::Layers = s
-    entries = [summary(e) for layer in layers for e in process(layer)]
-    summaries = mapfoldl(
-        entry -> entry.summaries,
-        mergewith!(mergesummaries),
-        entries,
-        init=Dict{KeyType, Any}()
-    )
-    labels = mapfoldl(
-        entry -> entry.labels,
-        mergewith!(mergelabels),
-        entries,
-        init=Dict{KeyType, Any}()
-    )
-
+    entries = map(process, layers)
+    
+    uv = mapreduce(uniquevalues, mergewith!(mergesorted), entries)
+    es = mapreduce(extremas, mergewith!(extend_extrema), entries)
+ 
     palettes = merge(default_palettes(), palettes)
-    scales = default_scales(summaries, palettes)
+    scales = default_scales(merge(uv, es), palettes)
 
-    e = (; entries, scales, labels)
+    axs = compute_grid_positions(scales)
 
-    rowcol = (:row, :col)
-
-    layout_scale, scales... = map((:layout, rowcol...)) do sym
-        return get(e.scales, sym, nothing)
-    end
-
-    grid_size = map(scales, (first, last)) do scale, f
-        isnothing(scale) || return maximum(scale.plot)
-        isnothing(layout_scale) || return maximum(f, layout_scale.plot)
-        return 1
-    end
-
-    axes_grid = map(CartesianIndices(grid_size)) do c
+    axes_grid = map(CartesianIndices(axs)) do c
         type = get(axis, :type, Axis)
         options = Base.structdiff(axis, (; type))
         ax = type(fig[Tuple(c)...]; options...)
-        return AxisEntries(ax, Entry[], e.scales, e.labels)
+        return AxisEntries(ax, Entry[], scales, Dict{KeyType, Any}())
     end
 
-    for entry in e.entries
-        rows, cols = map(rowcol, scales, (first, last)) do sym, scale, f
-            v = get(entry.primary, sym, nothing)
-            layout_v = get(entry.primary, :layout, nothing)
-            # without layout info, plot on all axes
-            # all values in `v` and `layout_v` are equal
-            isnothing(v) || return rescale(fill(v), scale)
-            isnothing(layout_v) || return map(f, rescale(fill(layout_v), layout_scale))
-            return 1:f(grid_size)
-        end
-        for i in rows, j in cols
-            ae = axes_grid[i, j]
-            push!(ae.entries, entry)
+    for e in entries
+        for c in CartesianIndices(shape(e))
+            primary, positional, named = map((e.primary, e.positional, e.named)) do tup
+                return map(v -> v[c], tup)
+            end
+            rows, cols = compute_grid_positions(scales, primary)
+            entry = Entry(e; primary, positional, named)
+            labels = copy(e.labels)
+            map!(l -> getnewindex(l, c), values(labels))
+            for i in rows, j in cols
+                ae = axes_grid[i, j]
+                push!(ae.entries, entry)
+                merge!(assert_equal, ae.labels, labels)
+            end
         end
     end
 

@@ -35,20 +35,23 @@ function (h::HistogramAnalysis)(le::Entry)
         return map(v -> mapreduce(extrema, extend_extrema, v), le.positional)
     end
 
-    return splitapply(le) do entry
-        hist = _histogram(entry.positional...; entry.named..., options...)
-        normalization = get(options, :normalization, :none)
-        N = length(entry.positional)
-        labels, attributes = copy(entry.labels), copy(entry.attributes)
-        labels[N + 1] = normalization == :none ? "count" : string(normalization)
-        default_plottype = categoricalplottypes[N]
-        plottype = Makie.plottype(entry.plottype, default_plottype)
-        N == 1 && (attributes[:width] = step(hist.edges[1]))
-        positional, named = (map(midpoints, hist.edges)..., hist.weights), (;)
-        return Entry(entry; plottype, positional, named, labels, attributes)
+    entry = map(le) do p, n
+        hist = _histogram(p...; n..., options...)
+        return (map(midpoints, hist.edges)..., hist.weights), (;)
     end
-end
 
+    N = length(le.positional)
+    labels, attributes = copy(entry.labels), copy(entry.attributes)
+    normalization = get(options, :normalization, :none)
+    labels[N + 1] = normalization == :none ? "count" : string(normalization)
+    if N == 1
+        attributes[:dodge_gap] = 0
+        attributes[:x_gap] = 0
+    end
+    default_plottype = categoricalplottypes[N]
+    plottype = Makie.plottype(entry.plottype, default_plottype)
+    return Entry(entry; plottype, labels, attributes)
+end
 
 """
     histogram(; bins=automatic, weights=automatic, normalization=:none)

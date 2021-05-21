@@ -225,7 +225,7 @@ draw(plt)
 df = (a=rand(100), b=rand(100), c=rand(100), d=rand(100))
 labels = ["Trace 1", "Trace 2", "Trace 3"]
 layers = linear() + visual(Scatter)
-plt = data(df) * layers * mapping(1, 2:4, color=dims(1) => c -> labels[c])
+plt = data(df) * layers * mapping(1, 2:4 .=> "value", color=dims(1) => c -> labels[c])
 draw(plt)
 
 # The wide format is combined with broadcast semantics.
@@ -234,14 +234,7 @@ df = (sepal_length=rand(100), sepal_width=rand(100), petal_length=rand(100), pet
 xvars = ["sepal_length", "sepal_width"]
 yvars = ["petal_length" "petal_width"]
 layers = linear() + visual(Scatter)
-plt = data(df) *
-    layers *
-    mapping(
-        xvars .=> "sepal",
-        yvars .=> "petal",
-        row=dims(1) => c -> split(xvars[c], '_')[2],
-        col=dims(2) => c -> split(yvars[c], '_')[2],
-    )
+plt = data(df) * layers * mapping(xvars, yvars, col=dims(1), row=dims(2))
 draw(plt)
 
 # ## Time series
@@ -254,7 +247,7 @@ z = cumsum(randn(length(x)))
 df = (; x, y, z)
 labels = ["series 1", "series 2", "series 3", "series 4", "series 5"]
 plt = data(df) *
-    mapping(:x, [:y, :z], color=dims(1)=>(c -> labels[c])=>"series ") *
+    mapping(:x, [:y, :z] .=> "value", color=dims(1) => (c -> labels[c]) => "series ") *
     visual(Lines)
 draw(plt)
 
@@ -265,7 +258,7 @@ y = cumsum(randn(length(x)))
 z = cumsum(randn(length(x)))
 df = (; x, y, z)
 plt = data(df) *
-    mapping(:x, [:y, :z], color=dims(1)=>(c -> labels[c])=>"series ") *
+    mapping(:x, [:y, :z] .=> "value", color=dims(1) => (c -> labels[c])=>"series ") *
     visual(Lines)
 draw(plt)
 

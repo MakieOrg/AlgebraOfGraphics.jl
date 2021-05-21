@@ -5,14 +5,22 @@ Base.@kwdef struct Entry
     primary::NamedTuple=(;)
     positional::Tuple=()
     named::NamedTuple=(;)
-    summaries::Dict{KeyType, Any}=Dict{KeyType, Any}()
     labels::Dict{KeyType, Any}=Dict{KeyType, Any}()
     attributes::Dict{Symbol, Any}=Dict{Symbol, Any}()
 end
 
 function Entry(e::Entry; kwargs...)
-    nt = (; e.plottype, e.primary, e.positional, e.named, e.summaries, e.labels, e.attributes)
+    nt = (; e.plottype, e.primary, e.positional, e.named, e.labels, e.attributes)
     return Entry(; merge(nt, values(kwargs))...)
+end
+
+function Base.map(f, e::Entry)
+    p = StructArray(e.positional)
+    n = isempty(e.named) ? fill((;), axes(p)) : StructArray(e.named)
+    outputs = map(f, p, n)
+    positional = components(StructArray(map(first, outputs)))
+    named = components(StructArray(map(last, outputs)))
+    return Entry(e; positional, named)
 end
 
 """
@@ -76,7 +84,7 @@ function Makie.plot!(ae::AxisEntries)
         attributes = copy(entry.attributes)
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
             return mapkeys(tup) do key
-                rescaled = rescale(tup[key], scales[key])
+                rescaled = rescale(tup[key], get(scales, key, nothing))
                 return haszerodims(rescaled) ? rescaled[] : rescaled
             end
         end

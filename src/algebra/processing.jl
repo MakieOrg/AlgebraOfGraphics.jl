@@ -17,25 +17,6 @@ function shape(x::Union{Entry, Layer})
     return Broadcast.combine_axes(arrays...)
 end
 
-function splitapply(f, entry::Entry)
-    entries = Entry[]
-    for I in Iterators.product(shape(entry)...)
-        primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
-            return map(v -> v[I...], tup)
-        end
-        c = CartesianIndex(tail(I))
-        labels = Dict{KeyType, Any}()
-        for (k, s) in pairs(entry.labels)
-            v = Broadcast.broadcastable(s)
-            labels[k] = v[Broadcast.newindex(v, c)]
-        end
-        input = Entry(entry; primary, positional, named, labels)
-        output = f(input)
-        isa(output, Entry) ? push!(entries, output) : append!(entries, output)
-    end
-    return entries
-end
-
 assert_equal(a, b) = (@assert(isequal(a, b)); a)
 getuniquevalue(v) = reduce(assert_equal, v)
 
@@ -44,24 +25,35 @@ haszerodims(::AbstractArray{<:Any, 0}) = true
 haszerodims(::Ref) = true
 haszerodims(::Tuple) = false
 
+function getnewindex(u, c)
+    v = Broadcast.broadcastable(u)
+    return v[Broadcast.newindex(v, c)]
+end
+
 function subgroups(vs, perm, rgs, axs)
     return map(Iterators.product(rgs, CartesianIndices(axs))) do (rg, c)
-        v = vs[Broadcast.newindex(vs, c)]
+        v = getnewindex(vs, c)
         return haszerodims(v) || rg === (:) ? v : view(v, perm[rg])
     end
 end
+
+shiftdims(v::AbstractArray) = reshape(v, 1, axes(v)...)
+shiftdims(v::Tuple) = shiftdims(collect(v))
+shiftdims(v) = v
 
 function group(entry::Entry)
     grouping = foldl(entry.primary, init=()) do acc, v
         return haszerodims(v) ? (acc..., only(v)) : acc
     end
     perm, rgs = permutation_ranges(grouping)
-    axs = CartesianIndices(shape(entry))
+    axs = shape(entry)
     primary′, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
         return map(vs -> subgroups(vs, perm, rgs, axs), tup)
     end
     primary = map(vs -> map(getuniquevalue, vs), primary′)
-    return Entry(entry; primary, positional, named)
+    labels = copy(entry.labels)
+    map!(shiftdims, values(labels))
+    return Entry(entry; primary, positional, named, labels)
 end
 
 function getlabeledarray(layer::Layer, selector::Union{DimsSelector, Pair{<:DimsSelector}})
@@ -111,10 +103,5 @@ end
 
 function process(layer::Layer)
     init = group(to_entry(layer))
-    res = foldl(process, layer.transformations; init)
-    return res isa Entry ? splitapply(identity, res) : res
+    return foldl(|>, layer.transformations; init)
 end
-
-process(v::AbstractArray{Entry}, f) = map(f, v)
-
-process(le::Entry, f) = f(le)
