@@ -47,10 +47,9 @@ function group(entry::Entry)
     end
     perm, rgs = permutation_ranges(grouping)
     axs = shape(entry)
-    primary′, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
+    primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
         return map(vs -> subgroups(vs, perm, rgs, axs), tup)
     end
-    primary = map(vs -> map(getuniquevalue, vs), primary′)
     labels = copy(entry.labels)
     map!(shiftdims, values(labels))
     return Entry(entry; primary, positional, named, labels)
@@ -75,9 +74,9 @@ function getlabeledarray(layer::Layer, s)
     elseif isnothing(data)
         vs, (f, label) = select(data, s)
         iscont = all(v -> all(iscontinuous, v), vs)
-        arr = iscont ? map(x -> map(f, x...), zip(vs...)) : map(f, vs...)
+        arr = iscont ? map(x -> map(f, x...), zip(vs...)) : map(fill∘f, vs...)
     else
-        selector = s isa ArrayLike ? s : fill(s)
+        selector = s isa AbstractArray ? s : fill(s)
         labeled_arr = map(selector) do s
             local vs, (f, label) = select(data, s)
             return label, map(f, vs...)
@@ -107,7 +106,19 @@ Convert `layer` to equivalent entry, excluding transformations.
 """
 function to_entry(layer::Layer)
     entry = process_mappings(layer)
-    return isnothing(layer.data) ? entry : group(entry)
+    grouped_entry = if isnothing(layer.data)
+        axs = shape(entry)
+        primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
+            return map(tup) do v
+                return map(v -> getnewindex(v, c), CartesianIndices(axs))
+            end
+        end
+        Entry(entry; primary, positional, named)
+    else
+        group(entry)
+    end
+    primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
+    return Entry(grouped_entry; primary)
 end
 
 function process(layer::Layer)
