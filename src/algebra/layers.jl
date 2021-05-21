@@ -53,20 +53,15 @@ function uniquevalues(e::Entry)
     return uv
 end
 
-mergesummaries(s1::AbstractVector, s2::AbstractVector) = mergesorted(s1, s2)
-mergesummaries(s1::Tuple, s2::Tuple) = extend_extrema(s1, s2)
-mergesummaries(::Nothing, ::Nothing) = nothing
-
-mergelabels(a, b) = a
-
-layoutkeys(entry::Entry) = layoutkeys(entry.primary, shape(entry))
-
-function layoutkeys(primary, shp)
-    return map(CartesianIndices(shp)) do c
-        nt = map(v -> v[c], primary)
-        ks = filter(in((:row, :col, :layout)), keys(nt))
-        return NamedTuple{(ks)}(nt)
+function extremas(e::Entry)
+    es = Dict{KeyType, Any}()
+    for tup in (e.positional, e.named)
+        for (key, val) in pairs(tup)
+            all(iscontinuous, val) || continue
+            es[key] = mapreduce(Makie.extrema_nan, extend_extrema, val)
+        end
     end
+    return es
 end
 
 function compute_grid_positions(scales, primary=(;))
@@ -75,10 +70,10 @@ function compute_grid_positions(scales, primary=(;))
         lscale = get(scales, :layout, nothing)
         return if !isnothing(scale)
             rg = Base.OneTo(maximum(scale.plot))
-            haskey(primary, sym) ? rg : rescale(fill(primary[sym]), scale)
+            haskey(primary, sym) ? rescale(fill(primary[sym]), scale) : rg
         elseif !isnothing(lscale)
             rg = Base.OneTo(maximum(f, lscale.plot))
-            haskey(primary, :layout) ? rg : rescale(fill(primary[:layout]), lscale)
+            haskey(primary, :layout) ? rescale(fill(primary[:layout]), lscale) : rg
         else
             Base.OneTo(1)
         end
@@ -89,17 +84,12 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
     layers::Layers = s
     entries = map(process, layers)
-    uv = mapreduce(uniquevalues, mergewith!(mergesummaries), entries)
-
-    # summaries = mapfoldl(
-    #     entry -> entry.summaries,
-    #     mergewith!(mergesummaries),
-    #     entries,
-    #     init=Dict{KeyType, Any}()
-    # )
+    
+    uv = mapreduce(uniquevalues, mergewith!(mergesorted), entries)
+    es = mapreduce(extremas, mergewith!(extend_extrema), entries)
 
     palettes = merge(default_palettes(), palettes)
-    scales = default_scales(uv, palettes)
+    scales = default_scales(merge(uv, es), palettes)
 
     axs = compute_grid_positions(scales)
 
@@ -125,7 +115,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             for i in rows, j in cols
                 ae = axes_grid[i, j]
                 push!(ae.entries, entry)
-                mergewith!(mergelabels, ae.labels, labels)
+                merge!(ae.labels, labels)
             end
         end
     end
