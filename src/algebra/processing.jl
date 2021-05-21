@@ -32,7 +32,9 @@ function subgroups(vs, perm, rgs, axs)
     end
 end
 
-shiftdims(v) = v isa ArrayLike ? reshape(v, 1, axes(v)...) : v
+shiftdims(v::AbstractArray) = reshape(v, 1, axes(v)...)
+shiftdims(v::Tuple) = shiftdims(collect(v))
+shiftdims(v) = v
 
 function group(entry::Entry)
     grouping = foldl(entry.primary, init=()) do acc, v

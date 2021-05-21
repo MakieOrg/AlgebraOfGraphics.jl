@@ -22,24 +22,6 @@ function Base.:*(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
     return Layers([el1 * el2 for el1 in l1 for el2 in l2])
 end
 
-# function summary(e::Entry)
-#     summaries = Dict{KeyType, Any}()
-#     for (i, tup) in enumerate((e.primary, e.positional, e.named))
-#         for (key, val) in pairs(tup)
-#             summaries[key] = if i == 1
-#                 [val]
-#             elseif iscontinuous(val)
-#                 Makie.extrema_nan(val)
-#             elseif i == 2 && isgeometry(val)
-#                 nothing
-#             else
-#                 collect(uniquesorted(vec(val)))
-#             end
-#         end
-#     end
-#     return Entry(e; summaries)
-# end
-
 uniquevalues(v::ArrayLike) = collect(uniquesorted(vec(v)))
 
 function uniquevalues(e::Entry)
@@ -48,7 +30,12 @@ function uniquevalues(e::Entry)
         uv[key] = uniquevalues(val)
     end
     for (key, val) in pairs(e.positional)
-        uv[key] = mapreduce(uniquevalues, mergesorted, val)
+        all(iscontinuous, val) && continue
+        uv[key] = if all(isgeometry, val)
+            nothing
+        else
+            mapreduce(uniquevalues, mergesorted, val)
+        end
     end
     return uv
 end
@@ -73,7 +60,7 @@ function compute_grid_positions(scales, primary=(;))
             haskey(primary, sym) ? rescale(fill(primary[sym]), scale) : rg
         elseif !isnothing(lscale)
             rg = Base.OneTo(maximum(f, lscale.plot))
-            haskey(primary, :layout) ? rescale(fill(primary[:layout]), lscale) : rg
+            haskey(primary, :layout) ? map(f, rescale(fill(primary[:layout]), lscale)) : rg
         else
             Base.OneTo(1)
         end
@@ -87,7 +74,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     
     uv = mapreduce(uniquevalues, mergewith!(mergesorted), entries)
     es = mapreduce(extremas, mergewith!(extend_extrema), entries)
-
+ 
     palettes = merge(default_palettes(), palettes)
     scales = default_scales(merge(uv, es), palettes)
 
