@@ -16,7 +16,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries})
             delete!(ax)
         else
             v, _ = it
-            ax.title[] = string(first(v))
+            ax.title[] = string(v)
         end
     end
     return
