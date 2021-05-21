@@ -5,13 +5,12 @@ Base.@kwdef struct Entry
     primary::NamedTuple=(;)
     positional::Tuple=()
     named::NamedTuple=(;)
-    summaries::Dict{KeyType, Any}=Dict{KeyType, Any}()
     labels::Dict{KeyType, Any}=Dict{KeyType, Any}()
     attributes::Dict{Symbol, Any}=Dict{Symbol, Any}()
 end
 
 function Entry(e::Entry; kwargs...)
-    nt = (; e.plottype, e.primary, e.positional, e.named, e.summaries, e.labels, e.attributes)
+    nt = (; e.plottype, e.primary, e.positional, e.named, e.labels, e.attributes)
     return Entry(; merge(nt, values(kwargs))...)
 end
 
