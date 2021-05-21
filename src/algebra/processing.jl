@@ -106,17 +106,7 @@ Convert `layer` to equivalent entry, excluding transformations.
 """
 function to_entry(layer::Layer)
     entry = process_mappings(layer)
-    grouped_entry = if isnothing(layer.data)
-        axs = shape(entry)
-        primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
-            return map(tup) do v
-                return map(v -> getnewindex(v, c), CartesianIndices(axs))
-            end
-        end
-        Entry(entry; primary, positional, named)
-    else
-        group(entry)
-    end
+    grouped_entry = isnothing(layer.data) ? entry : group(entry)
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
     return Entry(grouped_entry; primary)
 end

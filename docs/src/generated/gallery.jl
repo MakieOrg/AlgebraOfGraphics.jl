@@ -323,8 +323,14 @@ draw(m)
 
 #
 
-m = mapping(x, [y z], color=["a", "b", "c"])
+m = mapping(x, [y z], color=dims(1) => c -> ["a", "b", "c"][c])
 draw(m)
+
+#
+
+m = mapping(x, [y z], color=["1" "2"])
+layers = visual(Scatter) + linear()
+draw(m * layers)
 
 # ## Legend merging
 
