@@ -49,7 +49,15 @@ end
     d = mapping(:x => exp, [:y, :z], color=:c, marker=dims(1) => t -> ["1", "2"][t], markersize=:w)
     layer = data(df) * d
     le = AlgebraOfGraphics.to_entry(layer)
-    entries = AlgebraOfGraphics.splitapply(identity, AlgebraOfGraphics.group(le))
+    e = AlgebraOfGraphics.group(le)
+    entries = map(CartesianIndices(AlgebraOfGraphics.shape(e))) do c
+        primary, positional, named = map((e.primary, e.positional, e.named)) do tup
+            return map(v -> v[c], tup)
+        end
+        labels = copy(e.labels)
+        map!(l -> AlgebraOfGraphics.getnewindex(l, c), values(labels))
+        return Entry(e; primary, positional, named, labels)
+    end
     @test length(entries) == 6
     for i in 1: 6
         @test entries[i].plottype === Any

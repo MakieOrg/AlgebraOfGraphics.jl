@@ -25,9 +25,14 @@ haszerodims(::AbstractArray{<:Any, 0}) = true
 haszerodims(::Ref) = true
 haszerodims(::Tuple) = false
 
+function getnewindex(u, c)
+    v = Broadcast.broadcastable(u)
+    return v[Broadcast.newindex(v, c)]
+end
+
 function subgroups(vs, perm, rgs, axs)
     return map(Iterators.product(rgs, CartesianIndices(axs))) do (rg, c)
-        v = vs[Broadcast.newindex(vs, c)]
+        v = getnewindex(vs, c)
         return haszerodims(v) || rg === (:) ? v : view(v, perm[rg])
     end
 end
@@ -41,7 +46,7 @@ function group(entry::Entry)
         return haszerodims(v) ? (acc..., only(v)) : acc
     end
     perm, rgs = permutation_ranges(grouping)
-    axs = CartesianIndices(shape(entry))
+    axs = shape(entry)
     primary′, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
         return map(vs -> subgroups(vs, perm, rgs, axs), tup)
     end

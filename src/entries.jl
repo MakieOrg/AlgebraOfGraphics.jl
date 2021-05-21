@@ -85,7 +85,7 @@ function Makie.plot!(ae::AxisEntries)
         attributes = copy(entry.attributes)
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
             return mapkeys(tup) do key
-                rescaled = rescale(tup[key], scales[key])
+                rescaled = rescale(tup[key], get(scales, key, nothing))
                 return haszerodims(rescaled) ? rescaled[] : rescaled
             end
         end

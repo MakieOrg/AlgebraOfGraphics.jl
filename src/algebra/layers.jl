@@ -31,11 +31,8 @@ function uniquevalues(e::Entry)
     end
     for (key, val) in pairs(e.positional)
         all(iscontinuous, val) && continue
-        uv[key] = if all(isgeometry, val)
-            nothing
-        else
-            mapreduce(uniquevalues, mergesorted, val)
-        end
+        all(isgeometry, val) && continue
+        uv[key] = mapreduce(uniquevalues, mergesorted, val)
     end
     return uv
 end
@@ -95,10 +92,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             rows, cols = compute_grid_positions(scales, primary)
             entry = Entry(e; primary, positional, named)
             labels = copy(e.labels)
-            map!(values(labels)) do l
-                ls = Broadcast.broadcastable(l)
-                return ls[Broadcast.newindex(ls, c)]
-            end
+            map!(l -> getnewindex(l, c), values(labels))
             for i in rows, j in cols
                 ae = axes_grid[i, j]
                 push!(ae.entries, entry)
