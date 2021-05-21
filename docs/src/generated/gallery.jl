@@ -299,10 +299,27 @@ draw(plt; axis=(aspect=1,))
 
 # ## New columns on the fly
 
+# Use a `Tuple` to pass combine several columns into a unique operation.
+
 df = (x=rand(100), y=rand(100), z=rand(100), c=rand(["a", "b"], 100))
 layers = linear() + mapping(color=:z)
 plt = data(df) * layers * mapping(:x, (:x, :y, :z) => (+) => "x + y + z", layout=:c)
 draw(plt)
+
+# ## Pre-grouped data
+
+x = [rand(10) for i in 1:3]
+y = [rand(10) for i in 1:3]
+z = [rand(10) for i in 1:3]
+c = ["a", "b", "c"]
+
+m = mapping(x, y, color=c => (t -> "Type " * t ) => "Category")
+draw(m)
+
+#
+
+m = mapping(x, (y, z) => (+) => "sum", color=c => (t -> "Type " * t ) => "Category")
+draw(m)
 
 # ## Legend merging
 

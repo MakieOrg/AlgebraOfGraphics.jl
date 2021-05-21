@@ -92,11 +92,12 @@ function cycle(v::AbstractVector, i::Int)
 end
 
 """
-    iscontinuous(v::AbstractArray)
+    iscontinuous(v)
 
 Determine whether `v` should be treated as a continuous or categorical vector.
 """
-function iscontinuous(v)
+function iscontinuous(u)
+    v = Broadcast.broadcastable(u)
     return !haszerodims(v) && eltype(v) <: Union{Number, Date, DateTime}
 end
 

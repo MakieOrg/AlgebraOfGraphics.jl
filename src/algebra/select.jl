@@ -22,6 +22,8 @@ function select(data, idx::Integer)
     return select(data, name)
 end
 
+select(::Nothing, v::AbstractArray) = (v,) => identity => ""
+
 function select(data, x::Pair{<:Any, <:StringLike})
     name, label = x
     vs, _ = select(data, name)
@@ -38,7 +40,7 @@ end
 function select(data, x::Pair{<:Any, <:Pair})
     name, transformation_label = x
     transformation, label = transformation_label
-    names = name isa ArrayLike ? name : fill(name)
+    names = name isa Tuple ? name : fill(name)
     vs = map(name -> only(first(select(data, name))), names)
     return vs => transformation => label
 end

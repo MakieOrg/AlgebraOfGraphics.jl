@@ -56,39 +56,38 @@ function group(entry::Entry)
     return Entry(entry; primary, positional, named, labels)
 end
 
-function getlabeledarray(layer::Layer, selector::Union{DimsSelector, Pair{<:DimsSelector}})
-    axs = shape(layer)
-    vs, (f, label) = select(layer.data, selector)
-    d = only(vs) # multiple dims selectors in the same mapping are disallowed
-    sz = ntuple(length(axs)) do n
-        return n in d.dims ? length(axs[n]) : 1
-    end
-    arr = map(fill∘f, CartesianIndices(sz))
-    return label, arr
-end
-
-getlabeledarray(layer::Layer, selector) = getlabeledarray(layer, fill(selector))
-
-function getlabeledarray(layer::Layer, selector::ArrayLike)
-    labeled_arr = map(selector) do s
-        local vs, (f, label) = select(layer.data, s)
-        return label, map(f, vs...)
-    end
-    return map(first, labeled_arr), map(last, labeled_arr)
-end
-
 function separate(nt::NamedTuple)
     continuous_keys = filter(key -> all(iscontinuous, nt[key]), keys(nt))
     continuous = NamedTuple{continuous_keys}(nt)
     return Base.structdiff(nt, continuous), continuous
 end
 
-"""
-    to_entry(layer::Layer)
+function getlabeledarray(layer::Layer, s)
+    data, axs = layer.data, shape(layer)
+    isdims = s isa DimsSelector || s isa Pair && first(s) isa DimsSelector
+    if isdims
+        vs, (f, label) = select(data, selector)
+        d = only(vs) # multiple dims selectors in the same mapping are disallowed
+        sz = ntuple(length(axs)) do n
+            return n in d.dims ? length(axs[n]) : 1
+        end
+        arr = map(fill∘f, CartesianIndices(sz))
+    elseif isnothing(data)
+        vs, (f, label) = select(data, s)
+        iscont = all(v -> all(iscontinuous, v), vs)
+        arr = iscont ? map(x -> map(f, x...), zip(vs...)) : map(f, vs...)
+    else
+        selector = s isa ArrayLike ? s : fill(s)
+        labeled_arr = map(selector) do s
+            local vs, (f, label) = select(data, s)
+            return label, map(f, vs...)
+        end
+        label, arr = map(first, labeled_arr), map(last, labeled_arr)
+    end
+    return label, arr
+end
 
-Convert `layer` to equivalent entry, excluding transformations.
-"""
-function to_entry(layer::Layer)
+function transform(layer::Layer)
     labels = Dict{KeyType, Any}()
     positional, named′ = map((layer.positional, layer.named)) do tup
         return mapkeys(tup) do key            
@@ -101,7 +100,17 @@ function to_entry(layer::Layer)
     return Entry(; primary, positional, named, labels)
 end
 
+"""
+    to_entry(layer::Layer)
+
+Convert `layer` to equivalent entry, excluding transformations.
+"""
+function to_entry(layer::Layer)
+    entry = transform(layer)
+    return isnothing(layer.data) ? entry : group(entry)
+end
+
 function process(layer::Layer)
-    init = group(to_entry(layer))
+    init = to_entry(layer)
     return foldl(|>, layer.transformations; init)
 end
