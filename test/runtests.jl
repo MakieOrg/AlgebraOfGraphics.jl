@@ -27,11 +27,11 @@ end
     @test layers[1].data == df
 end
 
-@testset "process_data" begin
+@testset "process_mappings" begin
     df = (x=rand(1000), y=rand(1000), z=rand(1000), c=rand(["a", "b", "c"], 1000))
     d = mapping(:x => exp, [:y, :z], color=:c, marker = dims(1) => t -> ["a", "b"][t])
     layer = data(df) * d
-    entry = AlgebraOfGraphics.to_entry(layer)
+    entry = AlgebraOfGraphics.process_mappings(layer)
     @test entry.positional[1] == fill(map(exp, df.x))
     @test entry.positional[2] == [df.y, df.z]
     @test entry.primary[:color] == fill(df.c)
@@ -43,13 +43,12 @@ end
     @test entry.labels[:marker] == ""
 end
 
-@testset "splitapply" begin
+@testset "grouping" begin
     df = (x=rand(1000), y=rand(1000), z=rand(1000), w=rand(1000), c=rand(["a", "b", "c"], 1000))
     df.c[1:3] .= ["a", "b", "c"] # ensure all three values exist
     d = mapping(:x => exp, [:y, :z], color=:c, marker=dims(1) => t -> ["1", "2"][t], markersize=:w)
     layer = data(df) * d
-    le = AlgebraOfGraphics.to_entry(layer)
-    e = AlgebraOfGraphics.group(le)
+    e = AlgebraOfGraphics.to_entry(layer)
     entries = map(CartesianIndices(AlgebraOfGraphics.shape(e))) do c
         primary, positional, named = map((e.primary, e.positional, e.named)) do tup
             return map(v -> v[c], tup)

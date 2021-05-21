@@ -66,7 +66,7 @@ function getlabeledarray(layer::Layer, s)
     data, axs = layer.data, shape(layer)
     isdims = s isa DimsSelector || s isa Pair && first(s) isa DimsSelector
     if isdims
-        vs, (f, label) = select(data, selector)
+        vs, (f, label) = select(data, s)
         d = only(vs) # multiple dims selectors in the same mapping are disallowed
         sz = ntuple(length(axs)) do n
             return n in d.dims ? length(axs[n]) : 1
@@ -87,7 +87,7 @@ function getlabeledarray(layer::Layer, s)
     return label, arr
 end
 
-function transform(layer::Layer)
+function process_mappings(layer::Layer)
     labels = Dict{KeyType, Any}()
     positional, named′ = map((layer.positional, layer.named)) do tup
         return mapkeys(tup) do key            
@@ -106,7 +106,7 @@ end
 Convert `layer` to equivalent entry, excluding transformations.
 """
 function to_entry(layer::Layer)
-    entry = transform(layer)
+    entry = process_mappings(layer)
     return isnothing(layer.data) ? entry : group(entry)
 end
 
