@@ -96,7 +96,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             for i in rows, j in cols
                 ae = axes_grid[i, j]
                 push!(ae.entries, entry)
-                merge!(ae.labels, labels)
+                merge!(assert_equal, ae.labels, labels)
             end
         end
     end
