@@ -17,14 +17,17 @@ mapping(:weight_mm => "weight (mm)", :height_mm => "height (mm)", marker = :gend
 
 A convenience `pair`-based syntax can be used to transform variables on-the-fly
 and rename the respective column.
-The main issue is that AlgebraOfGraphics mappings work on single rows instead of whole columns. For example, with `df::DataFrame`, this
+
+Let us assume the table `df` contains a column called `bill_length_mm`.
+We can apply an element-wise transformation and rename the column on the fly as
+follows.
 
 ```julia
 data(df) * mapping(:bill_length_mm => (t -> t + 10) => "bill length (cm)")
 ```
 
-avoids storing a renamed column in the `DataFrame`, which is also a reasonable
-approach and could be done in the following way:
+A possible alternative, if `df` is a `DataFrame`, would be to store a renamed,
+modified column directly in `df`, which can be achieved in the following way: 
 
 ```julia
 df.var"bill length (cm)" = map(t -> t + 10, df.bill_length_mm)
@@ -47,7 +50,8 @@ they should be done by adding a new column to the underlying dataset beforehand.
 
 ### Functions of several arguments
 
-Another point I noticed in the machine learning tutorial section: AlgebraOfGraphics allows giving multiple input variables as a tuple or array:
+In the case of functions of several arguments, such as `isequal`, the input
+variables must be passed as a `Tuple`.
 
 ```julia
 accuracy = (:species, :predicted_species) => isequal => "accuracy"
