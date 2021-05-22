@@ -69,8 +69,9 @@ either rename and reorder *unique values* of a categorical column on the fly or 
 signal that a numerical column should be treated as categorical.
 
 ```@docs
-AlgebraOfGraphics.renamer
-AlgebraOfGraphics.nonnumeric
+renamer
+sorter
+nonnumeric
 ```
 
 ### Examples
@@ -78,6 +79,8 @@ AlgebraOfGraphics.nonnumeric
 ```julia
 # column `train` has two unique values, `true` and `false`
 :train => renamer(true => "training", false => "testing") => "Dataset"
+# column `price` has three unique values, `"low"`, `"medium"`, and `"high"`
+:price => sorter("low", "medium", "high")
 # column `age` is expressed in integers and we want to treat it as categorical
 :age => nonnumeric
 ```

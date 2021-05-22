@@ -11,6 +11,12 @@ struct Renamer{U, L}
     labels::L
 end
 
+function (r::Renamer)(x)
+    i::UInt32 = findfirst(isequal(x), r.uniquevalues)
+    label = r.labels[i]
+    return Sorted(i, label)
+end
+
 """
     renamer(ps::Pair...)
 
@@ -19,16 +25,21 @@ The keys of all pairs should be all the unique values of the categorical variabl
 the values should be the corresponding labels. The order of `ps` is respected in
 the legend.
 """
-function renamer(p::Pair, ps::Pair...)
-    pairs = (p, ps...)
-    k, v = map(first, pairs), map(last, pairs)
+function renamer(ps::Pair...)
+    k, v = map(first, ps), map(last, ps)
     return Renamer(k, v)
 end
 
-function (r::Renamer)(x)
-    i::UInt32 = findfirst(isequal(x), r.uniquevalues)
-    label = r.labels[i]
-    return Sorted(i, label)
+"""
+    sorter(ks...)
+
+Utility to reorder a categorical variable, as in `sorter("low", "medium", "high")`.
+`ks` should include all the unique values of the categorical variable.
+The order of `ks` is respected in the legend.
+"""
+function sorter(ks...)
+    vs = map(string, ks)
+    return Renamer(ks, vs)
 end
 
 struct NonNumeric{T}
