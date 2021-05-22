@@ -104,3 +104,28 @@ end
     @test entries[6].positional[2] == df.z[df.c .== "c"]
     @test entries[6].named[:markersize] == df.w[df.c .== "c"]
 end
+
+@testset "helpers" begin
+    r = renamer("a" => "A", "b" => "B", "c" => "C")
+    @test r("a") == AlgebraOfGraphics.Sorted(1, "A")
+    @test r("b") == AlgebraOfGraphics.Sorted(2, "B")
+    @test r("c") == AlgebraOfGraphics.Sorted(3, "C")
+    @test_throws KeyError r("d")
+    @test string(r("a")) == "A"
+    @test string(r("b")) == "B"
+    @test string(r("c")) == "C"
+    @test r("a") < r("b") < r("c")
+
+    s = sorter("b", "c", "a")
+    @test s("a") == AlgebraOfGraphics.Sorted(3, "a")
+    @test s("b") == AlgebraOfGraphics.Sorted(1, "b")
+    @test s("c") == AlgebraOfGraphics.Sorted(2, "c")
+    @test_throws KeyError s("d")
+    @test string(s("a")) == "a"
+    @test string(s("b")) == "b"
+    @test string(s("c")) == "c"
+    @test s("b") < s("c") < s("a")
+
+    @test string(nonnumeric(1)) == "1"
+    @test isless(nonnumeric(1), nonnumeric(2))
+end

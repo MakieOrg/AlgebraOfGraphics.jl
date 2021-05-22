@@ -2,6 +2,7 @@ struct Sorted{T}
     idx::UInt32
     value::T
 end
+Sorted(idx::Integer, value) = Sorted(convert(UInt32, idx), value)
 
 Base.print(io::IO, s::Sorted) = print(io, s.value)
 Base.isless(s1::Sorted, s2::Sorted) = isless((s1.idx, s1.value), (s2.idx, s2.value))
@@ -12,9 +13,14 @@ struct Renamer{U, L}
 end
 
 function (r::Renamer)(x)
-    i::UInt32 = findfirst(isequal(x), r.uniquevalues)
-    label = r.labels[i]
-    return Sorted(i, label)
+    for i in keys(r.uniquevalues)
+        cand = @inbounds r.uniquevalues[i]
+        if isequal(cand, x)
+            label = r.labels[i]
+            return Sorted(i, label)
+        end
+    end
+    throw(KeyError(x))
 end
 
 """
