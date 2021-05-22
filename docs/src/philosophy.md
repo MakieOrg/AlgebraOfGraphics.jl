@@ -11,15 +11,15 @@ For instance, we could ask whether a discrete variable `:x` affects the distribu
 a continuous variable `:y`.
 We would then like to generate a visualization that answers this question.
 
-In imperative programming, this would be implemented as follows:
+In imperative programming, this would be implemented via the following steps.
 
-1. Pick the dataset
-2. Divide the dataset into subgroups according to the values of `:x`
-3. Compute the density of `:y` on each subgroup
-4. Choose a plot attribute to distinguish subgroups, for instance `color`
-5. Select as many distinguishable colors as there are unique values of `:x`
-6. Plot all the density curves on top of each other
-7. Create a legend, describing how unique values of `:x` are associated to colors 
+1. Pick the dataset.
+2. Divide the dataset into subgroups according to the values of `:x`.
+3. Compute the density of `:y` on each subgroup.
+4. Choose a plot attribute to distinguish subgroups, for instance `color`.
+5. Select as many distinguishable colors as there are unique values of `:x`.
+6. Plot all the density curves on top of each other.
+7. Create a legend, describing how unique values of `:x` are associated to colors.
 
 While the above procedure is certainly feasible, it can introduce a cognitive
 overhead, especially when more variables and attributes are involved.
@@ -60,7 +60,7 @@ Different layers of the same plot will share some but not all information,
 and the user should be able to distinguish settings that are private to a layer
 from those that are shared across layers.
 
-We achieve this goal using the distributive properties of addition an multiplication.
+We achieve this goal using the distributive properties of addition and multiplication.
 This is best explained by example. Let us assume that we wish to visually
 inspect whether a discrete variable `:x` affects the joint distribution of two
 continuous variables, `:y` and `:z`.
