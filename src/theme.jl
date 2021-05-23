@@ -49,7 +49,7 @@ function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
 
     # setting marker here is a temporary hack
     # it should either respect `marker = :circle` globally
-    # or `:circle` and `Circle()` should have the same size
+    # or `:circle` and `Circle` should have the same size
     BoxPlot = (mediancolor=:white, outliermarker=:circle)
     Scatter = (marker=:circle,)
     Violin = (mediancolor=:white,)
