@@ -2,17 +2,22 @@
 # Wong, Bang. "Points of view: Color blindness." (2011): 441.
 # https://www.nature.com/articles/nmeth.1618?WT.ec_id=NMETH-201106
 
+function wongcolors()
+    return [
+        RGB(0/255, 114/255, 178/255), # blue
+        RGB(230/255, 159/255, 0/255), # orange
+        RGB(0/255, 158/255, 115/255), # green
+        RGB(204/255, 121/255, 167/255), # reddish purple
+        RGB(86/255, 180/255, 233/255), # sky blue
+        RGB(213/255, 94/255, 0/255), # vermillion
+        RGB(240/255, 228/255, 66/255), # yellow
+    ]
+end
+
 function default_palettes()
     return (
-        color=[
-            RGB(0/255, 114/255, 178/255), # blue
-            RGB(230/255, 159/255, 0/255), # orange
-            RGB(0/255, 158/255, 115/255), # green
-            RGB(204/255, 121/255, 167/255), # reddish purple
-            RGB(86/255, 180/255, 233/255), # sky blue
-            RGB(213/255, 94/255, 0/255), # vermillion
-            RGB(240/255, 228/255, 66/255), # yellow
-        ],
+        color=wongcolors(),
+        patchcolor=wongcolors(),
         marker=[:circle, :utriangle, :cross, :rect, :diamond, :dtriangle, :pentagon, :xcross],
         linestyle=[:solid, :dash, :dot, :dashdot, :dashdotdot],
         side=[:left, :right],
@@ -26,15 +31,8 @@ end
 
 function default_styles()
     return (
-        color=:gray25,
-        strokecolor=RGBA(0, 0, 0, 0),
-        outlierstrokecolor=RGBA(0, 0, 0, 0),
-        mediancolor=:white,
         marker=:circle,
-        markersize=9,
-        linewidth=1.5,
-        medianlinewidth=1.5,
-        colormap=:batlow,
+        cycle=nothing,
     )
 end
 
@@ -46,6 +44,17 @@ firasans(weight) = joinpath(font_folder, "FiraSans-$(weight).ttf")
 opensans(weight) = joinpath(font_folder, "OpenSans-$(weight).ttf")
 
 function aog_theme()
+    colormap=:batlow
+    linecolor=:gray25
+    markercolor=:gray25
+    patchcolor=:gray25
+
+    palettes=default_palettes()
+
+    BoxPlot=(mediancolor=:white,)
+    Violin=(mediancolor=:white,)
+
+
     Axis = (
         xgridvisible=false,
         ygridvisible=false,
@@ -94,7 +103,20 @@ function aog_theme()
         ticklabelfont=firasans("Light"),
         labelfont=firasans("Medium"),
     )
-    return (; Axis, Axis3, Legend, Colorbar)
+
+    return (;
+        colormap,
+        linecolor,
+        markercolor,
+        patchcolor,
+        palettes,
+        BoxPlot,
+        Violin,
+        Axis,
+        Axis3,
+        Legend,
+        Colorbar,
+    )
 end
 
 function set_aog_theme!()

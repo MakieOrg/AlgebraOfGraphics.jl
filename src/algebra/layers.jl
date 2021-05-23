@@ -72,7 +72,8 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     uv = mapreduce(uniquevalues, mergewith!(mergesorted), entries)
     es = mapreduce(extremas, mergewith!(extend_extrema), entries)
  
-    palettes = merge(default_palettes(), palettes)
+    theme_palettes = Makie.current_default_theme()[:palettes]
+    palettes = merge(map(to_value, NamedTuple(theme_palettes)), palettes)
     scales = default_scales(merge(uv, es), palettes)
 
     axs = compute_grid_positions(scales)
