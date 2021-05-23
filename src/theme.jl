@@ -34,7 +34,10 @@ opensans(weight) = joinpath(font_folder, "OpenSans-$(weight).ttf")
 # Crameri, Fabio, Grace E. Shephard, and Philip J. Heron. "The misuse of colour in science communication." Nature communications 11.1 (2020): 1-10.
 # https://www.nature.com/articles/s41467-020-19160-7
 
-function aog_theme()
+function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
+    mediumfont = first(fonts)
+    lightfont = last(fonts)
+
     marker = :circle
 
     colormap = :batlow
@@ -60,11 +63,11 @@ function aog_theme()
         leftspinecolor=:darkgray,
         xtickcolor=:darkgray,
         ytickcolor=:darkgray,
-        xticklabelfont=firasans("Light"),
-        yticklabelfont=firasans("Light"),
-        xlabelfont=firasans("Medium"),
-        ylabelfont=firasans("Medium"),
-        titlefont=firasans("Medium"),
+        xticklabelfont=lightfont,
+        yticklabelfont=lightfont,
+        xlabelfont=mediumfont,
+        ylabelfont=mediumfont,
+        titlefont=mediumfont,
     )
     Axis3 = (
         protrusions=55, # to include label on z axis, should be fixed in Makie
@@ -77,27 +80,27 @@ function aog_theme()
         xtickcolor=:darkgray,
         ytickcolor=:darkgray,
         ztickcolor=:darkgray,
-        xticklabelfont=firasans("Light"),
-        yticklabelfont=firasans("Light"),
-        zticklabelfont=firasans("Light"),
-        xlabelfont=firasans("Medium"),
-        ylabelfont=firasans("Medium"),
-        zlabelfont=firasans("Medium"),
-        titlefont=firasans("Medium"),
+        xticklabelfont=lightfont,
+        yticklabelfont=lightfont,
+        zticklabelfont=lightfont,
+        xlabelfont=mediumfont,
+        ylabelfont=mediumfont,
+        zlabelfont=mediumfont,
+        titlefont=mediumfont,
     )
     Legend = (
         framevisible=false,
         gridshalign=:left,
         padding=(0f0, 0f0, 0f0, 0f0),
-        labelfont=firasans("Light"),
-        titlefont=firasans("Medium"),
+        labelfont=lightfont,
+        titlefont=mediumfont,
     )
     Colorbar = (
         colormap=:batlow,
         flip_vertical_label=true,
         spinewidth=0,
-        ticklabelfont=firasans("Light"),
-        labelfont=firasans("Medium"),
+        ticklabelfont=lightfont,
+        labelfont=mediumfont,
     )
 
     return (;
@@ -117,7 +120,7 @@ function aog_theme()
     )
 end
 
-function set_aog_theme!()
-    theme = aog_theme()
+function set_aog_theme!(; kwargs...)
+    theme = aog_theme(; kwargs...)
     return set_theme!(; theme...)
 end
