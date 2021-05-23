@@ -25,34 +25,27 @@ function default_palettes()
     )
 end
 
-# Batlow colormap
-# Crameri, Fabio, Grace E. Shephard, and Philip J. Heron. "The misuse of colour in science communication." Nature communications 11.1 (2020): 1-10.
-# https://www.nature.com/articles/s41467-020-19160-7
-
-function default_styles()
-    return (
-        marker=:circle,
-        cycle=nothing,
-    )
-end
-
-# axis defaults
-
 const font_folder = joinpath(dirname(@__DIR__), "assets", "fonts")
 
 firasans(weight) = joinpath(font_folder, "FiraSans-$(weight).ttf")
 opensans(weight) = joinpath(font_folder, "OpenSans-$(weight).ttf")
 
+# Batlow colormap
+# Crameri, Fabio, Grace E. Shephard, and Philip J. Heron. "The misuse of colour in science communication." Nature communications 11.1 (2020): 1-10.
+# https://www.nature.com/articles/s41467-020-19160-7
+
 function aog_theme()
-    colormap=:batlow
-    linecolor=:gray25
-    markercolor=:gray25
-    patchcolor=:gray25
+    marker = :circle
 
-    palettes=default_palettes()
+    colormap = :batlow
+    linecolor = :gray25
+    markercolor = :gray25
+    patchcolor = :gray25
 
-    BoxPlot=(mediancolor=:white,)
-    Violin=(mediancolor=:white,)
+    palettes = default_palettes()
+
+    BoxPlot = (mediancolor=:white,)
+    Violin = (mediancolor=:white,)
 
 
     Axis = (
@@ -105,6 +98,7 @@ function aog_theme()
     )
 
     return (;
+        marker,
         colormap,
         linecolor,
         markercolor,
