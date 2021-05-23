@@ -7,6 +7,15 @@
 #
 # [^1]: Gorman KB, Williams TD, Fraser WR (2014) Ecological Sexual Dimorphism and Environmental Variability within a Community of Antarctic Penguins (Genus Pygoscelis). PLoS ONE 9(3): e90081. [DOI](https://doi.org/10.1371/journal.pone.0090081)
 
+# To follow along this tutorial, you will need to install a few packages.
+# All the required packages can be installed with the following command.
+#
+# ```julia
+# julia> import Pkg; Pkg.add(["AlgebraOfGraphics", "CairoMakie", "DataFrames", "LIBSVM", "PalmerPenguins"])
+# ```
+#
+# After the above command completes, we are ready to go.
+
 using PalmerPenguins, DataFrames
 
 penguins = dropmissing(DataFrame(PalmerPenguins.load()))
@@ -14,17 +23,33 @@ first(penguins, 6)
 
 # ## Frequency plots
 #
-# Let us start by getting a rough idea of how the data is distributed
+# Let us start by getting a rough idea of how the data is distributed.
+#
+# !!! note
+#     Due to julia's compilation model, the first plot may take a while to appear.
 
 using AlgebraOfGraphics, CairoMakie
 set_aog_theme!()
 
 axis = (width = 225, height = 225)
 penguin_frequency = data(penguins) * frequency() * mapping(:species)
-entry = AlgebraOfGraphics.process(penguin_frequency * mapping(color = :island))
 
 draw(penguin_frequency; axis)
 
+# ### Small intermezzo: saving the plot
+#
+# If you are working in an interactive enviroment with inline plotting support,
+# such VSCode or Pluto.jl, the above should have displayed a bar plot.
+# If you are working directly in the console, you can simply save the plot and
+# inspect it in the file explorer.
+#
+# ```julia
+# fg = draw(penguin_frequency; axis)
+# save("figure.png", fg, px_per_unit = 3) # save high-resolution png
+# ```
+#
+# ### Styling by categorical variables
+#
 # Next, let us see whether the distribution is the same across islands.
 
 plt = penguin_frequency * mapping(color = :island)
