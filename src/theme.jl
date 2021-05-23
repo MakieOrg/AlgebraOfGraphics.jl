@@ -44,9 +44,12 @@ function aog_theme()
 
     palettes = default_palettes()
 
-    BoxPlot = (mediancolor=:white,)
+    # setting marker here is a temporary hack
+    # it should either respect `marker = :circle` globally
+    # or `:circle` and `Circle()` should have the same size
+    BoxPlot = (mediancolor=:white, outliermarker=:circle)
+    Scatter = (marker=:circle,)
     Violin = (mediancolor=:white,)
-
 
     Axis = (
         xgridvisible=false,
@@ -105,6 +108,7 @@ function aog_theme()
         patchcolor,
         palettes,
         BoxPlot,
+        Scatter,
         Violin,
         Axis,
         Axis3,
