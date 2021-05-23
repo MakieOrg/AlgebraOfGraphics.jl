@@ -154,5 +154,5 @@ Second, using the [Wide data](@ref) syntax, users can compare many different
 columns in the same visualization, without having to first reshape the dataset
 to a long format.
 Finally, tabular datasets are not a requirement: users may also work directly
-with [Pre-grouped data](@ref), which is not organized in a table,
+with [Pre-grouped data](@ref), which are not organized as a table,
 but rather as a collection of (possibly multi-dimensional) arrays.
