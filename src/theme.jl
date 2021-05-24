@@ -45,7 +45,7 @@ function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
     markercolor = :gray25
     patchcolor = :gray25
 
-    palettes = default_palettes()
+    palette = default_palettes()
 
     # setting marker here is a temporary hack
     # it should either respect `marker = :circle` globally
@@ -109,7 +109,7 @@ function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
         linecolor,
         markercolor,
         patchcolor,
-        palettes,
+        palette,
         BoxPlot,
         Scatter,
         Violin,
