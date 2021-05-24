@@ -14,17 +14,6 @@ function wongcolors()
     ]
 end
 
-function default_palettes()
-    return (
-        color=wongcolors(),
-        patchcolor=wongcolors(),
-        marker=[:circle, :utriangle, :cross, :rect, :diamond, :dtriangle, :pentagon, :xcross],
-        linestyle=[:solid, :dash, :dot, :dashdot, :dashdotdot],
-        side=[:left, :right],
-        layout=wrap,
-    )
-end
-
 const font_folder = joinpath(dirname(@__DIR__), "assets", "fonts")
 
 firasans(weight) = joinpath(font_folder, "FiraSans-$(weight).ttf")
@@ -45,7 +34,13 @@ function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
     markercolor = :gray25
     patchcolor = :gray25
 
-    palette = default_palettes()
+    palette = (
+        color=wongcolors(),
+        patchcolor=wongcolors(),
+        marker=[:circle, :utriangle, :cross, :rect, :diamond, :dtriangle, :pentagon, :xcross],
+        linestyle=[:solid, :dash, :dot, :dashdot, :dashdotdot],
+        side=[:left, :right],
+    )
 
     # setting marker here is a temporary hack
     # it should either respect `marker = :circle` globally
