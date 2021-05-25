@@ -91,7 +91,6 @@ function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
         titlefont=mediumfont,
     )
     Colorbar = (
-        colormap=:batlow,
         flip_vertical_label=true,
         spinewidth=0,
         ticklabelfont=lightfont,

@@ -28,7 +28,7 @@ function _Colorbar_(fg::FigureGrid)
     labeledcolorbar = getlabeledcolorbar(grid)
     isnothing(labeledcolorbar) && return
     label, colorscale = labeledcolorbar
-    colormap = current_default_theme().Colorbar.colormap[]
+    colormap = current_default_theme().colormap[]
     for entry in entries(grid)
         colormap = to_value(get(entry.attributes, :colormap, colormap))
     end
