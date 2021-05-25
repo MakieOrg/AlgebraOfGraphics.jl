@@ -49,8 +49,10 @@ jobs:
           version: '1'
       - run: |
           julia --project=docs -e '
-            using Pkg; Pkg.develop(PackageSpec(path=pwd()));
+            using Pkg;
+            Pkg.add(url="https://github.com/JuliaPlots/Makie.jl", rev="master");
             Pkg.add(url="https://github.com/JuliaDocs/Documenter.jl", rev="master");
+            Pkg.develop(PackageSpec(path=pwd()));
             Pkg.instantiate()'
       - run: |
           julia --project=docs -e '
