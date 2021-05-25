@@ -98,11 +98,8 @@ function Makie.plot!(ae::AxisEntries)
             pop!(attributes, sym, nothing)
         end
 
-        # Implement defaults
-        for (key, val) in pairs(default_styles())
-            key == :color && has_zcolor(entry) && continue # do not overwrite contour color
-            get!(attributes, key, val)
-        end
+        # Avoid automated cycling
+        get!(attributes, :cycle, nothing)
 
         # Set dodging information
         dodge = get(scales, :dodge, nothing)

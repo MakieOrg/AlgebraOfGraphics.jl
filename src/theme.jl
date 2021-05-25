@@ -2,50 +2,53 @@
 # Wong, Bang. "Points of view: Color blindness." (2011): 441.
 # https://www.nature.com/articles/nmeth.1618?WT.ec_id=NMETH-201106
 
-function default_palettes()
-    return (
-        color=[
-            RGB(0/255, 114/255, 178/255), # blue
-            RGB(230/255, 159/255, 0/255), # orange
-            RGB(0/255, 158/255, 115/255), # green
-            RGB(204/255, 121/255, 167/255), # reddish purple
-            RGB(86/255, 180/255, 233/255), # sky blue
-            RGB(213/255, 94/255, 0/255), # vermillion
-            RGB(240/255, 228/255, 66/255), # yellow
-        ],
-        marker=[:circle, :utriangle, :cross, :rect, :diamond, :dtriangle, :pentagon, :xcross],
-        linestyle=[:solid, :dash, :dot, :dashdot, :dashdotdot],
-        side=[:left, :right],
-        layout=wrap,
-    )
+function wongcolors()
+    return [
+        RGB(0/255, 114/255, 178/255), # blue
+        RGB(230/255, 159/255, 0/255), # orange
+        RGB(0/255, 158/255, 115/255), # green
+        RGB(204/255, 121/255, 167/255), # reddish purple
+        RGB(86/255, 180/255, 233/255), # sky blue
+        RGB(213/255, 94/255, 0/255), # vermillion
+        RGB(240/255, 228/255, 66/255), # yellow
+    ]
 end
-
-# Batlow colormap
-# Crameri, Fabio, Grace E. Shephard, and Philip J. Heron. "The misuse of colour in science communication." Nature communications 11.1 (2020): 1-10.
-# https://www.nature.com/articles/s41467-020-19160-7
-
-function default_styles()
-    return (
-        color=:gray25,
-        strokecolor=RGBA(0, 0, 0, 0),
-        outlierstrokecolor=RGBA(0, 0, 0, 0),
-        mediancolor=:white,
-        marker=:circle,
-        markersize=9,
-        linewidth=1.5,
-        medianlinewidth=1.5,
-        colormap=:batlow,
-    )
-end
-
-# axis defaults
 
 const font_folder = joinpath(dirname(@__DIR__), "assets", "fonts")
 
 firasans(weight) = joinpath(font_folder, "FiraSans-$(weight).ttf")
 opensans(weight) = joinpath(font_folder, "OpenSans-$(weight).ttf")
 
-function aog_theme()
+# Batlow colormap
+# Crameri, Fabio, Grace E. Shephard, and Philip J. Heron. "The misuse of colour in science communication." Nature communications 11.1 (2020): 1-10.
+# https://www.nature.com/articles/s41467-020-19160-7
+
+function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
+    mediumfont = first(fonts)
+    lightfont = last(fonts)
+
+    marker = :circle
+
+    colormap = :batlow
+    linecolor = :gray25
+    markercolor = :gray25
+    patchcolor = :gray25
+
+    palette = (
+        color=wongcolors(),
+        patchcolor=wongcolors(),
+        marker=[:circle, :utriangle, :cross, :rect, :diamond, :dtriangle, :pentagon, :xcross],
+        linestyle=[:solid, :dash, :dot, :dashdot, :dashdotdot],
+        side=[:left, :right],
+    )
+
+    # setting marker here is a temporary hack
+    # it should either respect `marker = :circle` globally
+    # or `:circle` and `Circle` should have the same size
+    BoxPlot = (mediancolor=:white, marker=:circle)
+    Scatter = (marker=:circle,)
+    Violin = (mediancolor=:white,)
+
     Axis = (
         xgridvisible=false,
         ygridvisible=false,
@@ -55,11 +58,11 @@ function aog_theme()
         leftspinecolor=:darkgray,
         xtickcolor=:darkgray,
         ytickcolor=:darkgray,
-        xticklabelfont=firasans("Light"),
-        yticklabelfont=firasans("Light"),
-        xlabelfont=firasans("Medium"),
-        ylabelfont=firasans("Medium"),
-        titlefont=firasans("Medium"),
+        xticklabelfont=lightfont,
+        yticklabelfont=lightfont,
+        xlabelfont=mediumfont,
+        ylabelfont=mediumfont,
+        titlefont=mediumfont,
     )
     Axis3 = (
         protrusions=55, # to include label on z axis, should be fixed in Makie
@@ -72,32 +75,47 @@ function aog_theme()
         xtickcolor=:darkgray,
         ytickcolor=:darkgray,
         ztickcolor=:darkgray,
-        xticklabelfont=firasans("Light"),
-        yticklabelfont=firasans("Light"),
-        zticklabelfont=firasans("Light"),
-        xlabelfont=firasans("Medium"),
-        ylabelfont=firasans("Medium"),
-        zlabelfont=firasans("Medium"),
-        titlefont=firasans("Medium"),
+        xticklabelfont=lightfont,
+        yticklabelfont=lightfont,
+        zticklabelfont=lightfont,
+        xlabelfont=mediumfont,
+        ylabelfont=mediumfont,
+        zlabelfont=mediumfont,
+        titlefont=mediumfont,
     )
     Legend = (
         framevisible=false,
         gridshalign=:left,
         padding=(0f0, 0f0, 0f0, 0f0),
-        labelfont=firasans("Light"),
-        titlefont=firasans("Medium"),
+        labelfont=lightfont,
+        titlefont=mediumfont,
     )
     Colorbar = (
         colormap=:batlow,
         flip_vertical_label=true,
         spinewidth=0,
-        ticklabelfont=firasans("Light"),
-        labelfont=firasans("Medium"),
+        ticklabelfont=lightfont,
+        labelfont=mediumfont,
     )
-    return (; Axis, Axis3, Legend, Colorbar)
+
+    return (;
+        marker,
+        colormap,
+        linecolor,
+        markercolor,
+        patchcolor,
+        palette,
+        BoxPlot,
+        Scatter,
+        Violin,
+        Axis,
+        Axis3,
+        Legend,
+        Colorbar,
+    )
 end
 
-function set_aog_theme!()
-    theme = aog_theme()
+function set_aog_theme!(; kwargs...)
+    theme = aog_theme(; kwargs...)
     return set_theme!(; theme...)
 end
