@@ -115,6 +115,8 @@ end
     @test string(r("b")) == "B"
     @test string(r("c")) == "C"
     @test r("a") < r("b") < r("c")
+    @test r("a") == r("a")
+    @test r("a") != r("b")
 
     s = sorter("b", "c", "a")
     @test s("a") == AlgebraOfGraphics.Sorted(3, "a")
@@ -125,6 +127,16 @@ end
     @test string(s("b")) == "b"
     @test string(s("c")) == "c"
     @test s("b") < s("c") < s("a")
+    @test s("a") == s("a")
+    @test s("a") != s("b")
+
+    a = AlgebraOfGraphics.Sorted(1, [1, 2])
+    b = AlgebraOfGraphics.Sorted(1, [1, 2])
+    c = AlgebraOfGraphics.Sorted(1, [1, 3])
+    @test a == b
+    @test hash(a) == hash(b)
+    @test a != c
+    @test hash(a) != hash(c)
 
     @test string(nonnumeric(1)) == "1"
     @test isless(nonnumeric(1), nonnumeric(2))

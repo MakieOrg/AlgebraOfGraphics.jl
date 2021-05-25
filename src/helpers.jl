@@ -4,6 +4,9 @@ struct Sorted{T}
 end
 Sorted(idx::Integer, value) = Sorted(convert(UInt32, idx), value)
 
+Base.hash(s::Sorted, h::UInt) = hash(s.value, hash(s.idx, hash(:Sorted, h)))
+Base.:(==)(s1::Sorted, s2::Sorted) = isequal(s1.idx, s2.idx) && isequal(s1.value, s2.value)
+
 Base.print(io::IO, s::Sorted) = print(io, s.value)
 Base.isless(s1::Sorted, s2::Sorted) = isless((s1.idx, s1.value), (s2.idx, s2.value))
 
