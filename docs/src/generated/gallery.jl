@@ -258,7 +258,7 @@ y = cumsum(randn(length(x)))
 z = cumsum(randn(length(x)))
 df = (; x, y, z)
 plt = data(df) *
-    mapping(:x, [:y, :z] .=> "value", color=dims(1) => renamer(labels)=>"series ") *
+    mapping(:x, [:y, :z] .=> "value", color=dims(1) => renamer(labels) =>"series ") *
     visual(Lines)
 draw(plt)
 
