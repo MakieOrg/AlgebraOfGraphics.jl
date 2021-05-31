@@ -15,6 +15,8 @@ struct Renamer{U, L}
     labels::L
 end
 
+(r::Renamer{Nothing})(x) = r.labels[x]
+
 function (r::Renamer)(x)
     for i in keys(r.uniquevalues)
         cand = @inbounds r.uniquevalues[i]
@@ -26,16 +28,49 @@ function (r::Renamer)(x)
     throw(KeyError(x))
 end
 
-"""
-    renamer(ps::Pair...)
+renamer(args::Pair...) = renamer(args)
 
-Utility to rename a categorical variable, as in `renamer(value1 => label1, value2 => label2)`.
-The keys of all pairs should be all the unique values of the categorical variable and
-the values should be the corresponding labels. The order of `ps` is respected in
-the legend.
 """
-function renamer(ps::Pair...)
-    k, v = map(first, ps), map(last, ps)
+    renamer(arr::Union{AbstractArray, Tuple})
+
+Utility to rename a categorical variable, as in `renamer([value1 => label1, value2 => label2])`.
+The keys of all pairs should be all the unique values of the categorical variable and
+the values should be the corresponding labels. The order of `arr` is respected in
+the legend.
+
+# Examples
+```jldoctest
+julia> r = renamer(["class 1" => "Class One", "class 2" => "Class Two"])
+AlgebraOfGraphics.Renamer{Vector{String}, Vector{String}}(["class 1", "class 2"], ["Class One", "Class Two"])
+
+julia> println(r("class 1"))
+Class One
+```
+Alternatively, a sequence of pair arguments may be passed.
+```jldoctest
+julia> r = renamer("class 1" => "Class One", "class 2" => "Class Two")
+AlgebraOfGraphics.Renamer{Tuple{String, String}, Tuple{String, String}}(("class 1", "class 2"), ("Class One", "Class Two"))
+
+julia> println(r("class 1"))
+Class One
+```
+
+If `arr` does not contain `Pair`s, elements of `arr` are assumed to be labels, and the
+unique values of the categorical variable are taken to be the indices of the array.
+This is particularly useful for `dims` mappings.
+
+# Examples
+```jldoctest
+julia> r = renamer(["Class One", "Class Two"])
+AlgebraOfGraphics.Renamer{Nothing, Vector{String}}(nothing, ["Class One", "Class Two"])
+
+julia> println(r(2))
+Class Two
+```
+"""
+function renamer(arr::ArrayLike)
+    ispairs = all(x -> isa(x, Pair), arr)
+    k, v = ispairs ? (map(first, arr), map(last, arr)) : (nothing, arr)
     return Renamer(k, v)
 end
 
