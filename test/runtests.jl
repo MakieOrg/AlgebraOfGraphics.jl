@@ -29,7 +29,7 @@ end
 
 @testset "process_mappings" begin
     df = (x=rand(1000), y=rand(1000), z=rand(1000), c=rand(["a", "b", "c"], 1000))
-    d = mapping(:x => exp, [:y, :z], color=:c, marker = dims(1) => t -> ["a", "b"][t])
+    d = mapping(:x => exp, [:y, :z], color=:c, marker = dims(1) => renamer(["a", "b"]))
     layer = data(df) * d
     entry = AlgebraOfGraphics.process_mappings(layer)
     @test entry.positional[1] == fill(map(exp, df.x))

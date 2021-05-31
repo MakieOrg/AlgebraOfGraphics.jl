@@ -217,7 +217,7 @@ labels = ["Trace 1", "Trace 2", "Trace 3"]
 plt = data(df) *
     density() *
     mapping([:a, :b, :c] .=> "some label") *
-    mapping(color=dims(1) => c -> labels[c])
+    mapping(color=dims(1) => renamer(labels))
 draw(plt)
 
 #
@@ -225,7 +225,7 @@ draw(plt)
 df = (a=rand(100), b=rand(100), c=rand(100), d=rand(100))
 labels = ["Trace 1", "Trace 2", "Trace 3"]
 layers = linear() + visual(Scatter)
-plt = data(df) * layers * mapping(1, 2:4 .=> "value", color=dims(1) => c -> labels[c])
+plt = data(df) * layers * mapping(1, 2:4 .=> "value", color=dims(1) => renamer(labels))
 draw(plt)
 
 # The wide format is combined with broadcast semantics.
@@ -247,7 +247,7 @@ z = cumsum(randn(length(x)))
 df = (; x, y, z)
 labels = ["series 1", "series 2", "series 3", "series 4", "series 5"]
 plt = data(df) *
-    mapping(:x, [:y, :z] .=> "value", color=dims(1) => (c -> labels[c]) => "series ") *
+    mapping(:x, [:y, :z] .=> "value", color=dims(1) => renamer(labels) => "series ") *
     visual(Lines)
 draw(plt)
 
@@ -258,7 +258,7 @@ y = cumsum(randn(length(x)))
 z = cumsum(randn(length(x)))
 df = (; x, y, z)
 plt = data(df) *
-    mapping(:x, [:y, :z] .=> "value", color=dims(1) => (c -> labels[c])=>"series ") *
+    mapping(:x, [:y, :z] .=> "value", color=dims(1) => renamer(labels) =>"series ") *
     visual(Lines)
 draw(plt)
 
@@ -323,7 +323,7 @@ draw(m)
 
 #
 
-m = mapping(x, [y z], color=dims(1) => c -> ["a", "b", "c"][c])
+m = mapping(x, [y z], color=dims(1) => renamer(["a", "b", "c"]))
 draw(m)
 
 #
