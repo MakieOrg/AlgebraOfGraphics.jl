@@ -17,7 +17,14 @@ function shape(x::Union{Entry, Layer})
     return Broadcast.combine_axes(arrays...)
 end
 
-assert_equal(a, b) = (@assert(isequal(a, b)); a)
+function assert_equal(a, b)
+    if !isequal(a, b)
+        msg = "$a and $b must be equal"
+        throw(ArgumentError(msg))
+    end
+    return a
+end
+
 getuniquevalue(v) = reduce(assert_equal, v)
 
 haszerodims(::AbstractArray) = false

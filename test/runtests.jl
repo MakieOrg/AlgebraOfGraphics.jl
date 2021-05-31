@@ -1,4 +1,4 @@
-using AlgebraOfGraphics, Test
+using AlgebraOfGraphics, Makie, Test
 
 @testset "utils" begin
     v1 = [1, 2, 7, 11]
@@ -140,4 +140,13 @@ end
 
     @test string(nonnumeric(1)) == "1"
     @test isless(nonnumeric(1), nonnumeric(2))
+end
+
+@testset "legend_merging" begin
+    mwe_data = (; t = 1:20, y1 = ones(20), y2 = rand(20))
+    mwe_names = ["f_n", "f_d"]
+    plt = data(mwe_data) *
+        mapping("t", ["y1", "y2"] .=> "y"; color = dims(1) => (i -> mwe_names[i]), marker=dims(1)) *
+        (visual(Lines) + visual(Scatter))
+    @test_throws ArgumentError draw(plt)
 end
