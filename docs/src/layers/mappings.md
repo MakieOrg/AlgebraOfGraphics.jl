@@ -23,14 +23,14 @@ We can apply an element-wise transformation and rename the column on the fly as
 follows.
 
 ```julia
-data(df) * mapping(:bill_length_mm => (t -> t + 10) => "bill length (cm)")
+data(df) * mapping(:bill_length_mm => (t -> t / 10) => "bill length (cm)")
 ```
 
 A possible alternative, if `df` is a `DataFrame`, would be to store a renamed,
 modified column directly in `df`, which can be achieved in the following way: 
 
 ```julia
-df.var"bill length (cm)" = map(t -> t + 10, df.bill_length_mm)
+df.var"bill length (cm)" = map(t -> t / 10, df.bill_length_mm)
 data(df) * mapping("bill length (cm)") # strings are also accepted for column names
 ```
 
