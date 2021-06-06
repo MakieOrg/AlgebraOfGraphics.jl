@@ -204,7 +204,7 @@ draw(plt, axis=(aspect=1,))
 
 #
 
-draw(plt, axis=(aspect=1, xticks=0:0.1:1, yticks=0:0.1:1))
+draw(plt, axis=(aspect=1, xticks=0:0.1:1, yticks=0:0.1:1, ylabel="custom label"))
 
 # ### Figure tweaking
 

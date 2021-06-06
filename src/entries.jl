@@ -76,7 +76,7 @@ mapkeys(f, tup::Tuple) = ntuple(f, length(tup))
 mapkeys(f, ::NamedTuple{names}) where {names} = NamedTuple{names}(map(f, names))
 
 function Makie.plot!(ae::AxisEntries)
-    axis, entries, labels, scales = ae.axis, ae.entries, ae.labels, ae.scales
+    axis, entries, scales = ae.axis, ae.entries, ae.scales
     i, N = 1, length(entries)
     while i ≤ N
         j = i + 1
@@ -113,16 +113,7 @@ function Makie.plot!(ae::AxisEntries)
         plottype = Makie.plottype(entry.plottype, positional...)
         plot!(plottype, axis, positional...; attributes...)
     end
-    # TODO: support log colorscale
-    ndims = isaxis2d(ae) ? 2 : 3
-    for (i, var) in zip(1:ndims, (:x, :y, :z))
-        label, scale = get(labels, i, nothing), get(scales, i, nothing)
-        any(isnothing, (label, scale)) && continue
-        axislabel, axisticks, axisscale = map(sym -> getproperty(axis, Symbol(var, sym)), (:label, :ticks, :scale))
-        axisticks[] === automatic && (axisticks[] = ticks(scale))
-        axislabel[] = string(label)
-    end
-    return axis
+    return ae
 end
 
 entries(grid::AbstractMatrix{AxisEntries}) = Iterators.flatten(ae.entries for ae in grid)

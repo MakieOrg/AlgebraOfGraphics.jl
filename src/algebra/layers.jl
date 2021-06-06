@@ -112,6 +112,20 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         end
     end
 
+    # Axis labels and ticks
+    for ae in axes_grid
+        # TODO: support log colorscale
+        ndims = isaxis2d(ae) ? 2 : 3
+        for (i, var) in zip(1:ndims, (:x, :y, :z))
+            label, scale = get(ae.labels, i, nothing), get(ae.scales, i, nothing)
+            any(isnothing, (label, scale)) && continue
+            for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
+                k = Symbol(var, k′)
+                k in keys(axis) || (getproperty(Axis(ae), k)[] = v)
+            end
+        end
+    end
+
     return axes_grid
 
 end
