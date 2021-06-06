@@ -131,14 +131,14 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
 end
 
 function Makie.plot!(fig, s::OneOrMoreLayers;
-                                axis=NamedTuple(), palettes=NamedTuple())
+                     axis=NamedTuple(), palettes=NamedTuple())
     grid = compute_axes_grid(fig, s; axis, palettes)
     foreach(plot!, grid)
     return grid
 end
 
 function Makie.plot(s::OneOrMoreLayers;
-                               axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
+                    axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
     fig = Figure(; figure...)
     grid = plot!(fig, s; axis, palettes)
     return FigureGrid(fig, grid)
