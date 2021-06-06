@@ -118,9 +118,9 @@ function Makie.plot!(ae::AxisEntries)
     for (i, var) in zip(1:ndims, (:x, :y, :z))
         label, scale = get(labels, i, nothing), get(scales, i, nothing)
         any(isnothing, (label, scale)) && continue
-        axislabel, axisticks, axisscale = Symbol.(var, (:label, :ticks, :scale))
-        getproperty(axis, axisticks)[] = ticks(scale)
-        getproperty(axis, axislabel)[] = string(label)
+        axislabel, axisticks, axisscale = map(sym -> getproperty(axis, Symbol(var, sym)), (:label, :ticks, :scale))
+        axisticks[] === automatic && (axisticks[] = ticks(scale))
+        axislabel[] = string(label)
     end
     return axis
 end
