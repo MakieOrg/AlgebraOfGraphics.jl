@@ -112,19 +112,33 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         end
     end
 
+    # Axis labels and ticks
+    for ae in axes_grid
+        # TODO: support log colorscale
+        ndims = isaxis2d(ae) ? 2 : 3
+        for (i, var) in zip(1:ndims, (:x, :y, :z))
+            label, scale = get(ae.labels, i, nothing), get(ae.scales, i, nothing)
+            any(isnothing, (label, scale)) && continue
+            for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
+                k = Symbol(var, k′)
+                k in keys(axis) || (getproperty(Axis(ae), k)[] = v)
+            end
+        end
+    end
+
     return axes_grid
 
 end
 
 function Makie.plot!(fig, s::OneOrMoreLayers;
-                                axis=NamedTuple(), palettes=NamedTuple())
+                     axis=NamedTuple(), palettes=NamedTuple())
     grid = compute_axes_grid(fig, s; axis, palettes)
     foreach(plot!, grid)
     return grid
 end
 
 function Makie.plot(s::OneOrMoreLayers;
-                               axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
+                    axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
     fig = Figure(; figure...)
     grid = plot!(fig, s; axis, palettes)
     return FigureGrid(fig, grid)

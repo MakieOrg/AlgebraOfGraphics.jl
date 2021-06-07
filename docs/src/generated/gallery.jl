@@ -202,6 +202,10 @@ layers = linear() + mapping(color=:z)
 plt = data(df) * layers * mapping(:x, :y)
 draw(plt, axis=(aspect=1,))
 
+#
+
+draw(plt, axis=(aspect=1, xticks=0:0.1:1, yticks=0:0.1:1, ylabel="custom label"))
+
 # ### Figure tweaking
 
 df = (x=rand(100), y=rand(100), z=rand(100), c=rand(["a", "b"], 100))
