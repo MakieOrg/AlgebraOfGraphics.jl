@@ -39,13 +39,13 @@ using AlgebraOfGraphics
 using AlgebraOfGraphics: density
 df = (x = exp.(randn(1000)),)
 kde1 = data(df) * mapping(:x) * density()
-draw(kde1, axis=(xscale=log,))
+draw(kde1, axis=(width=225, height=225, xscale=log,))
 ```
 
 ```@example logscaledensity
 df = (x = exp.(randn(1000)),)
 kde2 = data(df) * mapping(:x => log => "log(x)") * density()
-draw(kde2)
+draw(kde2, axis=(width=225, height=225))
 ```
 
 The two plots look different. The first represent the pdf of `x` in a log scale,
@@ -65,13 +65,13 @@ The same reasoning applies to histograms:
 using AlgebraOfGraphics
 df = (x = exp.(rand(1000)),)
 hist1 = data(df) * mapping(:x) * histogram()
-draw(hist1, axis=(xscale=log,))
+draw(hist1, axis=(width=225, height=225, xscale=log))
 ```
 
 ```@example logscalehist
 df = (x = exp.(rand(1000)),)
 hist2 = data(df) * mapping(:x => log => "log(x)") * histogram()
-draw(hist2)
+draw(hist2, axis=(width=225, height=225))
 ```
 
-Again, the data transformation approach is preferable as one obtains uniform bins.
+The data transformation approach is preferable as it produces uniform bins.
