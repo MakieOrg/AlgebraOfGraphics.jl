@@ -20,7 +20,7 @@ function (l::SmoothAnalysis)(le::Entry)
 end
 
 """
-    smooth(span=0.75, degreee=2)
+    smooth(span=0.75, degree=2)
 
 Fit a loess model. `span` is the degree of smoothing, typically in `[0,1]`.
 Smaller values result in smaller local context in fitting.
