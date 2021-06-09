@@ -37,8 +37,9 @@ function (d::DensityAnalysis)(le::Entry)
 end
 
 """
-    density(; extrema, npoints, kernel, bandwidth)
+    density(; datalimits, npoints, kernel, bandwidth)
 
 Fit a kernel density estimation of `data`.
+For example, use `datalimits=((0.0, 60.0), )` to calculate the density from 0 to 60 on the x-axis.
 """
 density(; kwargs...) = Layer((DensityAnalysis(; kwargs...),))
