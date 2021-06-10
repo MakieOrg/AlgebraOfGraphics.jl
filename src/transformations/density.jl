@@ -40,6 +40,8 @@ end
     density(; datalimits, npoints, kernel, bandwidth)
 
 Fit a kernel density estimation of `data`.
-For example, use `datalimits=((0.0, 60.0), )` to calculate the density from 0 to 60 on the x-axis.
+Here, `datalimits` specifies the range for which the density should be calculated, `npoints`
+is the number of points used by Makie to draw the line and `kernel` and `bandwidth` are
+forwarded to `KernelDensity.kde`.
 """
 density(; kwargs...) = Layer((DensityAnalysis(; kwargs...),))
