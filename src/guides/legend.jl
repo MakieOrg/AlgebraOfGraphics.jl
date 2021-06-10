@@ -108,8 +108,9 @@ function _Legend_(fg::FigureGrid)
     return elements_list, labels_list, nonemptytitles
 end
 
-#Notes
+# Notes
 
+# TODO: support drawing legends in custom positions
 # TODO: correctly handle composite plot types (now fall back to poly)
 # TODO: make legend updateable?
 # TODO: allow custom attributes in legend elements?
