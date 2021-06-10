@@ -34,7 +34,10 @@ data(df) * mapping(:x, :y, layout=:z) * histogram(bins=15) |> draw
 # ```
 
 df = (x=randn(5000), y=randn(5000), z=rand(["a", "b", "c", "d"], 5000))
-data(df) * mapping(:x, layout=:z) * AlgebraOfGraphics.density() |> draw
+datalimits = ((-2.5, 2.5),)
+xz = data(df) * mapping(:x, layout=:z) * AlgebraOfGraphics.density(; datalimits)
+axis = (; ylabel="")
+draw(xz; axis)
 
 #
 
