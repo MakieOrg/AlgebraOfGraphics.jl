@@ -111,6 +111,5 @@ end
 #Notes
 
 # TODO: correctly handle composite plot types (now fall back to poly)
-# TODO: check that all scales for the same label agree on the data
 # TODO: make legend updateable?
 # TODO: allow custom attributes in legend elements?
