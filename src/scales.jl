@@ -110,8 +110,9 @@ function iscontinuous(u)
     return !haszerodims(v) && eltype(v) <: Union{Number, Date, DateTime}
 end
 
+isgeometry(::AbstractArray{<:Point}) = true
 isgeometry(::AbstractArray{<:AbstractGeometry}) = true
-isgeometry(::AbstractArray{T}) where {T} = eltype(T) <: AbstractGeometry
+isgeometry(::AbstractArray{T}) where {T} = eltype(T) <: Union{Point, AbstractGeometry}
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 
