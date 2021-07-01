@@ -191,6 +191,17 @@ plt = data(df) *
     visual(Arrows, arrowsize=10, lengthscale=0.3)
 draw(plt; palettes=(arrowcolor=colors, arrowhead=heads))
 
+# To associate specific attribute values to specific data values, use pairs.
+# Missing keys will cycle over values that are not pairs.
+
+x = rand(100)
+y = rand(100)
+z = rand(["a", "b", "c", "d"], 100)
+df = (; x, y, z)
+plt = data(df) * mapping(:x, :y, color=:z)
+colors = ["a" => colorant"#E24A33", "c" => colorant"#348ABD", colorant"#988ED5", colorant"#777777"]
+draw(plt; palettes=(color=colors,))
+
 # ## Axis and figure keywords
 #
 # ### Axis tweaking
