@@ -1,6 +1,14 @@
-apply_palette(p::AbstractVector, uv) = [cycle(p, idx) for idx in eachindex(uv)]
+increment!(idx::Ref) = (idx[] += 1; idx[])
+
+function apply_palette(p::AbstractVector, uv)
+    values = filter(x -> !isa(x, Pair), p)
+    pairs = Dict(filter(x -> isa(x, Pair), p))
+    idx = Ref(0)
+    return [get(() -> cycle(values, increment!(idx)), pairs, v) for v in uv]
+end
+
 apply_palette(::Automatic, uv) = eachindex(uv)
-apply_palette(p, uv) = map(p, eachindex(uv))
+apply_palette(p, uv) = map(p, eachindex(uv)) # FIXME: maybe apply to values instead?
 
 # TODO: add more customizations?
 struct Wrap end
