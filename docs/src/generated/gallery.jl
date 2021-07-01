@@ -192,7 +192,7 @@ plt = data(df) *
 draw(plt; palettes=(arrowcolor=colors, arrowhead=heads))
 
 # To associate specific attribute values to specific data values, use pairs.
-# Missing keys will cycle over non pair values.
+# Missing keys will cycle over values that are not pairs.
 
 x = rand(100)
 y = rand(100)
