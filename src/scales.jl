@@ -25,6 +25,7 @@ struct ContinuousScale{T, F}
     extrema::Tuple{T, T}
 end
 
+rescale(values, c::ContinuousScale) = values # generic fallback for geometry types
 rescale(values::AbstractArray{<:Number}, c::ContinuousScale) = values # Is this ideal?
 function rescale(values::AbstractArray{<:Union{Date, DateTime}}, c::ContinuousScale)
     @assert c.f === identity
