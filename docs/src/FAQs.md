@@ -78,3 +78,44 @@ draw(hist2, axis=(width=225, height=225))
 
 The data transformation approach is preferable as it produces uniform bins, which
 are easier to interpret.
+
+## How to combine `AlgebraOfGraphics` with plain `Makie` plots?
+
+Since `AlgebraOfGraphics` is built upon the `Makie` ecosystem we can easily
+combine plots from both packages. Two approaches can be taken. Firstly, by
+using `draw!` you can pass a `Figure` or `FigurePosition` created by `Makie` to
+be used by `AlgebraOfGraphics`, e.g.
+
+```@example combined-1
+using AlgebraOfGraphics, CairoMakie #hide
+
+f, a, p = lines(0..2pi, sin; figure = (resolution = (600, 400),))
+
+df = (x = exp.(rand(1000)),)
+hist1 = data(df) * mapping(:x => log => "log(x)") * histogram()
+draw!(f[1, 2], hist1)
+
+f #hide
+```
+
+Alternatively, we can create the `AlgebraOfGraphics` figure first and then
+add in additional plain `Makie` axes alongside the result by accessing the
+`.figure` field of `fg`, e.g.
+
+```@example combined-2
+using AlgebraOfGraphics, CairoMakie #hide
+
+df = (x = exp.(rand(1000)),)
+hist2 = data(df) * mapping(:x => log => "log(x)") * histogram()
+fg = draw(hist2; figure = (resolution = (600, 400),))
+
+lines(fg.figure[1, 2], 0..2pi, cos)
+
+fg #hide
+```
+
+!!! note
+
+    When setting the `width` and `height` dimensions of each axis manually you
+    will need to call `AlgebraOfGraphics.resizetocontent!(fg)` before
+    displaying the figure such that each axis is sized correctly.
