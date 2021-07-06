@@ -26,8 +26,8 @@ struct ContinuousScale{T, F}
 end
 
 rescale(values, c::ContinuousScale) = values # generic fallback for geometry types
-rescale(values, c::CategoricalScale) = values # generic fallback for geometry types
 rescale(values::AbstractArray{<:Number}, c::ContinuousScale) = values # Is this ideal?
+rescale(values::AbstractArray{<:Number}, c::CategoricalScale) = values # Do not apply categorical scales to continuous data
 function rescale(values::AbstractArray{<:Union{Date, DateTime}}, c::ContinuousScale)
     @assert c.f === identity
     min, max = c.extrema
