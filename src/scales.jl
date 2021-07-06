@@ -30,10 +30,17 @@ plotvalues(c::CategoricalScale) = apply_palette(c.palette, c.data)
 
 rescale(values, ::Nothing) = values
 
+# recentering hack to avoid Float32 conversion errors on recent dates
+# TODO: remove once Makie supports dates
+const time_offset = let startingdate = Date(2020, 01, 01)
+    ms:: Millisecond = DateTime(startingdate)
+    ms / Millisecond(1)
+end
+
 function rescale(values::AbstractArray{T}, ::Nothing) where T<:Union{Date, DateTime}
     return map(values) do val
         ms::Millisecond = DateTime(val)
-        return (ms/Millisecond(1)) / 1000 # express in seconds to avoid Float32 issues
+        return ms / Millisecond(1) - time_offset
     end
 end
 
@@ -82,13 +89,13 @@ function ticks(scale::CategoricalScale)
     return (axes(u, 1), u)
 end
 
-ticks(::Any) = automatic
+ticks((min, max)::NTuple{2, Any}) = automatic
 
 function ticks((min, max)::NTuple{2, T}) where T<:Union{Date, DateTime}
     min_ms::Millisecond, max_ms::Millisecond = DateTime(min), DateTime(max)
-    min_pure, max_pure = min_ms/Millisecond(1), max_ms/Millisecond(1)
+    min_pure, max_pure = min_ms / Millisecond(1), max_ms / Millisecond(1)
     dates, labels = optimize_datetime_ticks(min_pure, max_pure)
-    return (dates / 1000, labels) # express in seconds to avoid Float32 issues
+    return (dates .- time_offset, labels)
 end
 
 ## Scale helpers

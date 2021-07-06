@@ -44,17 +44,6 @@ function categoricalscales(e::Entry, palettes)
     return cs
 end
 
-function extremas(e::Entry)
-    es = Dict{KeyType, Any}()
-    for tup in (e.positional, e.named)
-        for (key, val) in pairs(tup)
-            all(iscontinuous, val) || continue
-            es[key] = mapreduce(Makie.extrema_nan, extend_extrema, val)
-        end
-    end
-    return es
-end
-
 function compute_grid_positions(scales, primary=(;))
     return map((:row, :col), (first, last)) do sym, f
         scale = get(scales, sym, nothing)
@@ -124,8 +113,8 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             scale = get(scales, i) do
                 return compute_extrema(AlgebraOfGraphics.entries(axes_grid), i)
             end
-            label = scale isa CategoricalScale ? scale.label : compute_label(ae.entries, i)
-            # FIXME: turn off automated labeling for geometries?
+            isnothing(scale) && continue
+            label = compute_label(ae.entries, i)
             for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
                 k = Symbol(var, k′)
                 k in keys(axis) || (getproperty(Axis(ae), k)[] = v)
