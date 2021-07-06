@@ -37,7 +37,17 @@ end
 
 Base.length(c::CategoricalScale) = length(c.data)
 
-mergelabels(label1, label2) = isequal(label1, label2) ? label1 : ""
+function mergelabels(label1, label2)
+    return if isequal(label1, label2)
+        label1
+    elseif label1 == ""
+        label2
+    elseif label2 == ""
+        label1
+    else
+        ""
+    end
+end
 
 function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     data = mergesorted(c1.data, c2.data)

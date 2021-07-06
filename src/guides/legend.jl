@@ -16,23 +16,30 @@ function has_zcolor(entry::Entry)
         !haskey(entry.attributes, :color)
 end
 
-function getlabeledcolorbar(grid)
-    scales, labels = first(grid).scales, first(grid).labels
-    key = any(has_zcolor, entries(grid)) ? 3 : :color
-    label, scale = get(labels, key, nothing), get(scales, key, nothing)
-    return scale isa ContinuousScale ? (label, scale) : nothing
+function getlabeledcolorrange(grid)
+    zcolor = any(has_zcolor, entries(grid))
+    colorrange = (Inf, -Inf)
+    label = ""
+    for entry in entries(grid)
+        key = zcolor ? 3 : :color
+        col = get(entry, key, nothing)
+        if !isnothing(col)
+            colorrange = mapreduce(Makie.extrema_nan, extend_extrema, col, init=colorrange)
+        end
+        label = mergelabels(label, get(entry.labels, key, ""))
+    end
+    return colorrange == (Inf, -Inf) ? nothing : (label, colorrange)
 end
 
 function _Colorbar_(fg::FigureGrid)
     grid = fg.grid
-    labeledcolorbar = nothing #getlabeledcolorbar(grid)
-    isnothing(labeledcolorbar) && return
-    label, colorscale = labeledcolorbar
+    labeledcolorrange = getlabeledcolorrange(grid)
+    isnothing(labeledcolorrange) && return
+    label, limits = labeledcolorrange
     colormap = current_default_theme().colormap[]
     for entry in entries(grid)
         colormap = to_value(get(entry.attributes, :colormap, colormap))
     end
-    limits = colorscale.extrema
     return (; label, limits, colormap)
 end
 

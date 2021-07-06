@@ -9,6 +9,14 @@ Base.@kwdef struct Entry
     attributes::Dict{Symbol, Any}=Dict{Symbol, Any}()
 end
 
+function Base.get(e::Entry, key::Int, default)
+    return key in keys(e.positional) ? e.positional[key] : default
+end
+
+function Base.get(e::Entry, key::Symbol, default)
+    return get(e.named, key, default)
+end
+
 function Entry(e::Entry; kwargs...)
     nt = (; e.plottype, e.primary, e.positional, e.named, e.labels, e.attributes)
     return Entry(; merge(nt, values(kwargs))...)

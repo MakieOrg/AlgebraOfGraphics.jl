@@ -109,10 +109,9 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     end
 
     # Link colors
-    labeledcolorbar = nothing #getlabeledcolorbar(axes_grid)
-    if !isnothing(labeledcolorbar)
-        _, colorbar = labeledcolorbar
-        colorrange = colorbar.extrema
+    labeledcolorrange = getlabeledcolorrange(axes_grid)
+    if !isnothing(labeledcolorrange)
+        _, colorrange = labeledcolorrange
         for entry in AlgebraOfGraphics.entries(axes_grid)
             entry.attributes[:colorrange] = colorrange
         end
