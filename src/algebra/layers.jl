@@ -24,17 +24,24 @@ end
 
 uniquevalues(v::ArrayLike) = collect(uniquesorted(vec(v)))
 
-function uniquevalues(e::Entry)
-    uv = Dict{KeyType, Any}()
+unwraplabel(label::AbstractString) = label
+unwraplabel(label::ArrayLike) = only(label)
+
+function categoricalscales(e::Entry, palettes)
+    cs = Dict{KeyType, Any}()
     for (key, val) in pairs(e.primary)
-        uv[key] = uniquevalues(val)
+        palette = key in propertynames(palettes) ? palettes[key] : automatic
+        label = unwraplabel(get(e.labels, key, ""))
+        cs[key] = CategoricalScale(uniquevalues(val), palette, label)
     end
     for (key, val) in pairs(e.positional)
         all(iscontinuous, val) && continue
         all(isgeometry, val) && continue
-        uv[key] = mapreduce(uniquevalues, mergesorted, val)
+        palette = key in propertynames(palettes) ? palettes[key] : automatic
+        label = unwraplabel(get(e.labels, key, ""))
+        cs[key] = CategoricalScale(mapreduce(uniquevalues, mergesorted, val), palette, label)
     end
-    return uv
+    return cs
 end
 
 function extremas(e::Entry)
@@ -69,12 +76,12 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     layers::Layers = s
     entries = map(process, layers)
     
-    uv = mapreduce(uniquevalues, mergewith!(mergesorted), entries)
-    es = mapreduce(extremas, mergewith!(extend_extrema), entries)
-
     theme_palettes = NamedTuple(Makie.current_default_theme()[:palette])
     palettes = merge((layout=wrap,), map(to_value, theme_palettes), palettes)
-    scales = default_scales(merge(es, uv), palettes)
+
+    scales = mapreduce(mergewith!(mergescales), entries) do entry
+        return categoricalscales(entry, palettes)
+    end
 
     axs = compute_grid_positions(scales)
 
@@ -82,7 +89,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         type = get(axis, :type, Axis)
         options = Base.structdiff(axis, (; type))
         ax = type(fig[Tuple(c)...]; options...)
-        return AxisEntries(ax, Entry[], scales, Dict{KeyType, Any}())
+        return AxisEntries(ax, Entry[], scales)
     end
 
     for e in entries
@@ -97,13 +104,13 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             for i in rows, j in cols
                 ae = axes_grid[i, j]
                 push!(ae.entries, entry)
-                merge!((a, b) -> isequal(a, b) ? a : "", ae.labels, labels)
+                # merge!((a, b) -> isequal(a, b) ? a : "", ae.labels, labels)
             end
         end
     end
 
     # Link colors
-    labeledcolorbar = getlabeledcolorbar(axes_grid)
+    labeledcolorbar = nothing #getlabeledcolorbar(axes_grid)
     if !isnothing(labeledcolorbar)
         _, colorbar = labeledcolorbar
         colorrange = colorbar.extrema
@@ -116,14 +123,14 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     for ae in axes_grid
         # TODO: support log colorscale
         ndims = isaxis2d(ae) ? 2 : 3
-        for (i, var) in zip(1:ndims, (:x, :y, :z))
-            label, scale = get(ae.labels, i, nothing), get(ae.scales, i, nothing)
-            any(isnothing, (label, scale)) && continue
-            for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
-                k = Symbol(var, k′)
-                k in keys(axis) || (getproperty(Axis(ae), k)[] = v)
-            end
-        end
+        # for (i, var) in zip(1:ndims, (:x, :y, :z))
+        #     label, scale = get(ae.labels, i, nothing), get(ae.scales, i, nothing)
+        #     any(isnothing, (label, scale)) && continue
+        #     for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
+        #         k = Symbol(var, k′)
+        #         k in keys(axis) || (getproperty(Axis(ae), k)[] = v)
+        #     end
+        # end
     end
 
     return axes_grid

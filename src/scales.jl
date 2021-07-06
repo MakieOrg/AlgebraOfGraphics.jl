@@ -20,56 +20,29 @@ function apply_palette(::Wrap, uv)
     return [fldmod1(idx, ncols) for idx in eachindex(uv)]
 end
 
-struct ContinuousScale{T, F}
-    f::F
-    extrema::Tuple{T, T}
-end
-
-rescale(values, c::ContinuousScale) = values # generic fallback for geometry types
-rescale(values::AbstractArray{<:Number}, c::ContinuousScale) = values # Is this ideal?
-function rescale(values::AbstractArray{<:Union{Date, DateTime}}, c::ContinuousScale)
-    @assert c.f === identity
-    min, max = c.extrema
-    return @. convert(Millisecond, DateTime(values) - DateTime(min)) / Millisecond(1)
-end
-
 struct CategoricalScale{S, T}
     data::S
-    plot::T
+    palette::T
+    label::String
 end
-
-function rescale(values, c::CategoricalScale)
-    idxs = indexin(values, c.data)
-    return c.plot[idxs]
-end
-
-rescale(values::AbstractArray{<:Number}, c::CategoricalScale) = values # Do not apply categorical scales to continuous data
-
-Base.length(c::CategoricalScale) = length(c.data)
 
 rescale(values, ::Nothing) = values
 
-default_scale(::Nothing, palette) = nothing
-
-function default_scale(summary::Tuple, palette)
-    f = palette isa Function ? palette : identity
-    return ContinuousScale(f, summary)
+function rescale(values, c::CategoricalScale)
+    plotvalues = apply_palette(c.palette, c.data)
+    idxs = indexin(values, c.data)
+    return plotvalues[idxs]
 end
 
-function default_scale(summary::AbstractVector, palette)
-    plot = apply_palette(palette, summary)
-    return CategoricalScale(summary, plot)
-end
+Base.length(c::CategoricalScale) = length(c.data)
 
-# Logic to infer good scales
-function default_scales(summaries, palettes)
-    defaults = Dict{KeyType, Any}()
-    for (key, val) in pairs(summaries)
-        # ensure `palette === automatic` for integer keys
-        palette = key in propertynames(palettes) ? palettes[key] : automatic
-        defaults[key] = default_scale(val, palette)
-    end
-    return defaults
+mergelabels(label1, label2) = isequal(label1, label2) ? label1 : ""
+
+function mergescales(c1::CategoricalScale, c2::CategoricalScale)
+    data = mergesorted(c1.data, c2.data)
+    palette = assert_equal(c1.palette, c2.palette)
+    label = mergelabels(c1.label, c2.label)
+    return CategoricalScale(data, palette, label)
 end
 
 # Logic to create ticks from a scale
@@ -79,18 +52,7 @@ function ticks(scale::CategoricalScale)
     return (axes(u, 1), u)
 end
 
-function ticks(scale::ContinuousScale)
-    return continuousticks(scale.extrema...)
-end
-
-continuousticks(min, max) = automatic
-
-function continuousticks(min::T, max::T) where T<:Union{Date, DateTime}
-    min_ms::Millisecond, max_ms::Millisecond = DateTime(min), DateTime(max)
-    min_pure, max_pure = min_ms/Millisecond(1), max_ms/Millisecond(1)
-    dates, labels = optimize_datetime_ticks(min_pure, max_pure)
-    return (dates .-  min_pure, labels)
-end
+ticks(::Any) = automatic
 
 ## Scale helpers
 

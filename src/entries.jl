@@ -27,18 +27,15 @@ function Base.map(f, e::Entry)
 end
 
 """
-    AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, labels, scales)
+    AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, scales)
 
 Define all ingredients to make plots on an axis.
-Each scale can be either a `CategoricalScale` (for discrete collections), such as
-`CategoricalScale(["a", "b"], ["red", "blue"])`, or a function,
-such as `log10`. Other scales may be supported in the future.
+Each scale should be a `CategoricalScale`.
 """
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
     scales::Dict{KeyType, Any}
-    labels::Dict{KeyType, Any}
 end
 
 Makie.Axis(ae::AxisEntries) = ae.axis

@@ -25,7 +25,7 @@ end
 
 function _Colorbar_(fg::FigureGrid)
     grid = fg.grid
-    labeledcolorbar = getlabeledcolorbar(grid)
+    labeledcolorbar = nothing #getlabeledcolorbar(grid)
     isnothing(labeledcolorbar) && return
     label, colorscale = labeledcolorbar
     colormap = current_default_theme().colormap[]
@@ -67,30 +67,26 @@ function _Legend_(fg::FigureGrid)
 
     # assume all subplots have same scales, to be changed to support free scales
     scales = filter(hassymbolkey, first(grid).scales)
-    labels = filter(hassymbolkey, first(grid).labels)
 
     # remove keywords that don't support legends
     for key in [:row, :col, :layout, :stack, :dodge, :group]
-        pop!(labels, key, nothing)
-    end
-    for (key, val) in scales
-        val isa ContinuousScale && pop!(labels, key, nothing)
+        pop!(scales, key, nothing)
     end
 
     # if no legend-worthy keyword remains return nothing
-    isempty(labels) && return nothing
+    isempty(scales) && return nothing
 
-    titles = unique!(collect(String, values(labels)))
+    titles = unique!(collect(String, (scale.label for scale in values(scales))))
     # empty strings create difficulties with the layout
     nonemptytitles = map(t -> isempty(t) ? " " : t, titles)
 
     plottypes, attributes = plottypes_attributes(entries(grid))
 
-    labels_list = Vector{String}[]
+    labels = Vector{String}[]
     elements_list = Vector{Vector{LegendElement}}[]
 
     for title in titles
-        label_attrs = [key for (key, val) in labels if val == title]
+        label_attrs = [key for (key, val) in scales if val.label == title]
         uniquevalues = mapreduce(k -> scales[k].data, assert_equal, label_attrs)
         elements = map(eachindex(uniquevalues)) do idx
             local elements = LegendElement[]
@@ -102,10 +98,10 @@ function _Legend_(fg::FigureGrid)
             end
             return elements
         end
-        push!(labels_list, map(string, uniquevalues))
+        push!(labels, map(string, uniquevalues))
         push!(elements_list, elements)
     end
-    return elements_list, labels_list, nonemptytitles
+    return elements_list, labels, nonemptytitles
 end
 
 # Notes
