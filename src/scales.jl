@@ -26,6 +26,7 @@ struct CategoricalScale{S, T}
     label::String
 end
 
+datavalues(c::CategoricalScale) = c.data
 plotvalues(c::CategoricalScale) = apply_palette(c.palette, c.data)
 
 rescale(values, ::Nothing) = values
@@ -48,11 +49,11 @@ end
 rescale(values::AbstractArray{<:Number}, ::CategoricalScale) = values
 
 function rescale(values, c::CategoricalScale)
-    idxs = indexin(values, c.data)
+    idxs = indexin(values, datavalues(c))
     return plotvalues(c)[idxs]
 end
 
-Base.length(c::CategoricalScale) = length(c.data)
+Base.length(c::CategoricalScale) = length(datavalues(c))
 
 function mergelabels(label1, label2)
     return if isequal(label1, label2)
@@ -85,7 +86,7 @@ end
 # Logic to create ticks from a scale
 # Should take current tick to incorporate information
 function ticks(scale::CategoricalScale)
-    u = map(string, scale.data)
+    u = map(string, datavalues(scale))
     return (axes(u, 1), u)
 end
 

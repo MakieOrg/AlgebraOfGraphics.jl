@@ -87,7 +87,7 @@ function _Legend_(fg::FigureGrid)
 
     for title in titles
         label_attrs = [key for (key, val) in scales if val.label == title]
-        uniquevalues = mapreduce(k -> scales[k].data, assert_equal, label_attrs)
+        uniquevalues = mapreduce(k -> datavalues(scales[k]), assert_equal, label_attrs)
         elements = map(eachindex(uniquevalues)) do idx
             local elements = LegendElement[]
             for (P, attrs) in zip(plottypes, attributes)
