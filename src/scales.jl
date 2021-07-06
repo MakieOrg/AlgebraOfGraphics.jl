@@ -52,6 +52,15 @@ function mergelabels(label1, label2)
     end
 end
 
+function compute_label(entries, key)
+    label = ""
+    for entry in entries
+        col = get(entry, key, nothing)
+        label = mergelabels(label, get(entry.labels, key, ""))
+    end
+    return label
+end
+
 function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     data = mergesorted(c1.data, c2.data)
     palette = assert_equal(c1.palette, c2.palette)
@@ -93,6 +102,18 @@ isgeometry(::AbstractArray{<:AbstractGeometry}) = true
 isgeometry(::AbstractArray{T}) where {T} = eltype(T) <: Union{Point, AbstractGeometry}
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
+extend_extrema(::Nothing, (l2, u2)) = (l2, u2)
+
+function compute_extrema(entries, key)
+    acc = nothing
+    for entry in entries
+        col = get(entry, key, nothing)
+        if !isnothing(col)
+            acc = mapreduce(Makie.extrema_nan, extend_extrema, col, init=acc)
+        end
+    end
+    return acc
+end
 
 push_different!(v, val) = !isempty(v) && isequal(last(v), val) || push!(v, val)
 

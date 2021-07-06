@@ -18,17 +18,10 @@ end
 
 function getlabeledcolorrange(grid)
     zcolor = any(has_zcolor, entries(grid))
-    colorrange = (Inf, -Inf)
-    label = ""
-    for entry in entries(grid)
-        key = zcolor ? 3 : :color
-        col = get(entry, key, nothing)
-        if !isnothing(col)
-            colorrange = mapreduce(Makie.extrema_nan, extend_extrema, col, init=colorrange)
-        end
-        label = mergelabels(label, get(entry.labels, key, ""))
-    end
-    return colorrange == (Inf, -Inf) ? nothing : (label, colorrange)
+    key = zcolor ? 3 : :color
+    colorrange = compute_extrema(entries(grid), key)
+    label = compute_label(entries(grid), key)
+    return isnothing(colorrange) ? nothing : (label, colorrange)
 end
 
 function _Colorbar_(fg::FigureGrid)

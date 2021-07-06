@@ -121,12 +121,8 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         ndims = isaxis2d(ae) ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
             scale = get(scales, i, nothing)
-            label = if isnothing(scale)
-                mapreduce(entry -> get(entry.labels, i, ""), mergelabels, ae.entries, init="")
-            else
-                scale.label
-            end
-            # any(isnothing, (label, scale)) && continue
+            label = isnothing(scale) ? compute_label(ae.entries, i) : scale.label
+            # FIXME: turn off automated labeling for geometries?
             for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
                 k = Symbol(var, k′)
                 k in keys(axis) || (getproperty(Axis(ae), k)[] = v)
