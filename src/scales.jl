@@ -27,7 +27,6 @@ end
 
 rescale(values, c::ContinuousScale) = values # generic fallback for geometry types
 rescale(values::AbstractArray{<:Number}, c::ContinuousScale) = values # Is this ideal?
-rescale(values::AbstractArray{<:Number}, c::CategoricalScale) = values # Do not apply categorical scales to continuous data
 function rescale(values::AbstractArray{<:Union{Date, DateTime}}, c::ContinuousScale)
     @assert c.f === identity
     min, max = c.extrema
@@ -43,6 +42,8 @@ function rescale(values, c::CategoricalScale)
     idxs = indexin(values, c.data)
     return c.plot[idxs]
 end
+
+rescale(values::AbstractArray{<:Number}, c::CategoricalScale) = values # Do not apply categorical scales to continuous data
 
 Base.length(c::CategoricalScale) = length(c.data)
 
