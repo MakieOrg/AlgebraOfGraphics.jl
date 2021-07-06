@@ -30,6 +30,13 @@ plotvalues(c::CategoricalScale) = apply_palette(c.palette, c.data)
 
 rescale(values, ::Nothing) = values
 
+function rescale(values::AbstractArray{T}, ::Nothing) where T<:Union{Date, DateTime}
+    return map(values) do val
+        ms::Millisecond = DateTime(val)
+        return (ms/Millisecond(1)) / 1000 # express in seconds to avoid Float32 issues
+    end
+end
+
 # Do not rescale continuous data with categorical scale
 rescale(values::AbstractArray{<:Number}, ::CategoricalScale) = values
 
@@ -77,6 +84,13 @@ end
 
 ticks(::Any) = automatic
 
+function ticks((min, max)::NTuple{2, T}) where T<:Union{Date, DateTime}
+    min_ms::Millisecond, max_ms::Millisecond = DateTime(min), DateTime(max)
+    min_pure, max_pure = min_ms/Millisecond(1), max_ms/Millisecond(1)
+    dates, labels = optimize_datetime_ticks(min_pure, max_pure)
+    return (dates / 1000, labels) # express in seconds to avoid Float32 issues
+end
+
 ## Scale helpers
 
 const ArrayLike = Union{AbstractArray, Tuple}
@@ -108,8 +122,8 @@ function compute_extrema(entries, key)
     acc = nothing
     for entry in entries
         col = get(entry, key, nothing)
-        if !isnothing(col)
-            acc = mapreduce(Makie.extrema_nan, extend_extrema, col, init=acc)
+        if !isnothing(col) && !isgeometry(col)
+            acc = extend_extrema(acc, Makie.extrema_nan(col))
         end
     end
     return acc

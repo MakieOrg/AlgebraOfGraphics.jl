@@ -116,12 +116,15 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             entry.attributes[:colorrange] = colorrange
         end
     end
+
     # Axis labels and ticks
     for ae in axes_grid
         ndims = isaxis2d(ae) ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
-            scale = get(scales, i, nothing)
-            label = isnothing(scale) ? compute_label(ae.entries, i) : scale.label
+            scale = get(scales, i) do
+                return compute_extrema(AlgebraOfGraphics.entries(axes_grid), i)
+            end
+            label = scale isa CategoricalScale ? scale.label : compute_label(ae.entries, i)
             # FIXME: turn off automated labeling for geometries?
             for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
                 k = Symbol(var, k′)
