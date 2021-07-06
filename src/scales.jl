@@ -26,12 +26,13 @@ struct CategoricalScale{S, T}
     label::String
 end
 
+plotvalues(c::CategoricalScale) = apply_palette(c.palette, c.data)
+
 rescale(values, ::Nothing) = values
 
 function rescale(values, c::CategoricalScale)
-    plotvalues = apply_palette(c.palette, c.data)
     idxs = indexin(values, c.data)
-    return plotvalues[idxs]
+    return plotvalues(c)[idxs]
 end
 
 Base.length(c::CategoricalScale) = length(c.data)

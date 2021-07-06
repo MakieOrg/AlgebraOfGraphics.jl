@@ -93,7 +93,7 @@ function _Legend_(fg::FigureGrid)
             for (P, attrs) in zip(plottypes, attributes)
                 shared_attrs = attrs ∩ label_attrs
                 isempty(shared_attrs) && continue
-                options = [attr => scales[attr].plot[idx] for attr in shared_attrs]
+                options = [attr => plotvalues(scales[attr])[idx] for attr in shared_attrs]
                 append!(elements, legend_elements(P; options...))
             end
             return elements
