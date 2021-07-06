@@ -60,10 +60,10 @@ function compute_grid_positions(scales, primary=(;))
         scale = get(scales, sym, nothing)
         lscale = get(scales, :layout, nothing)
         return if !isnothing(scale)
-            rg = Base.OneTo(maximum(scale.plot))
+            rg = Base.OneTo(maximum(plotvalues(scale)))
             haskey(primary, sym) ? rescale(fill(primary[sym]), scale) : rg
         elseif !isnothing(lscale)
-            rg = Base.OneTo(maximum(f, lscale.plot))
+            rg = Base.OneTo(maximum(f, plotvalues(lscale)))
             haskey(primary, :layout) ? map(f, rescale(fill(primary[:layout]), lscale)) : rg
         else
             Base.OneTo(1)
@@ -120,18 +120,18 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     end
 
     # Axis labels and ticks
-    for ae in axes_grid
-        # TODO: support log colorscale
-        ndims = isaxis2d(ae) ? 2 : 3
-        # for (i, var) in zip(1:ndims, (:x, :y, :z))
-        #     label, scale = get(ae.labels, i, nothing), get(ae.scales, i, nothing)
-        #     any(isnothing, (label, scale)) && continue
-        #     for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
-        #         k = Symbol(var, k′)
-        #         k in keys(axis) || (getproperty(Axis(ae), k)[] = v)
-        #     end
-        # end
-    end
+    # for ae in axes_grid
+    #     # TODO: support log colorscale
+    #     ndims = isaxis2d(ae) ? 2 : 3
+    #     for (i, var) in zip(1:ndims, (:x, :y, :z))
+    #         label, scale = get(ae.labels, i, nothing), get(ae.scales, i, nothing)
+    #         any(isnothing, (label, scale)) && continue
+    #         for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
+    #             k = Symbol(var, k′)
+    #             k in keys(axis) || (getproperty(Axis(ae), k)[] = v)
+    #         end
+    #     end
+    # end
 
     return axes_grid
 

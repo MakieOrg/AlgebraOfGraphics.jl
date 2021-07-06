@@ -52,7 +52,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
         for ae in aes
             Axis(ae).ylabelvisible[] = false
         end
-        row_dict = Dict(zip(row_scale.plot, row_scale.data))
+        row_dict = Dict(zip(plotvalues(row_scale), row_scale.data))
         facetlabelpadding = lift(titlegap) do gap
             return (gap, 0f0, 0f0, 0f0)
         end
@@ -84,7 +84,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
         for ae in aes
             Axis(ae).xlabelvisible[] = false
         end
-        col_dict = Dict(zip(col_scale.plot, col_scale.data))
+        col_dict = Dict(zip(plotvalues(col_scale), col_scale.data))
         labelpadding = lift(titlegap) do gap
             return (0f0, 0f0, gap, 0f0)
         end

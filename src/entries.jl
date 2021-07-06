@@ -100,7 +100,7 @@ function Makie.plot!(ae::AxisEntries)
 
         # Set dodging information
         dodge = get(scales, :dodge, nothing)
-        isa(dodge, CategoricalScale) && (attributes[:n_dodge] = maximum(dodge.plot))
+        isa(dodge, CategoricalScale) && (attributes[:n_dodge] = maximum(plotvalues(dodge)))
 
         # Implement alpha transparency
         alpha = pop!(attributes, :alpha, nothing)
