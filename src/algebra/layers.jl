@@ -24,21 +24,21 @@ end
 
 uniquevalues(v::ArrayLike) = collect(uniquesorted(vec(v)))
 
-unwraplabel(label::AbstractString) = label
-unwraplabel(label::ArrayLike) = only(label)
+to_label(label::AbstractString) = label
+to_label(labels::ArrayLike) = reduce(mergelabels, labels)
 
 function categoricalscales(e::Entry, palettes)
     cs = Dict{KeyType, Any}()
     for (key, val) in pairs(e.primary)
-        palette = key in propertynames(palettes) ? palettes[key] : automatic
-        label = unwraplabel(get(e.labels, key, ""))
+        palette = get(palettes, key, automatic)
+        label = to_label(get(e.labels, key, ""))
         cs[key] = CategoricalScale(uniquevalues(val), palette, label)
     end
     for (key, val) in pairs(e.positional)
         all(iscontinuous, val) && continue
         all(isgeometry, val) && continue
-        palette = key in propertynames(palettes) ? palettes[key] : automatic
-        label = unwraplabel(get(e.labels, key, ""))
+        palette = automatic
+        label = to_label(get(e.labels, key, ""))
         cs[key] = CategoricalScale(mapreduce(uniquevalues, mergesorted, val), palette, label)
     end
     return cs
