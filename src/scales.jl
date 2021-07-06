@@ -30,6 +30,9 @@ plotvalues(c::CategoricalScale) = apply_palette(c.palette, c.data)
 
 rescale(values, ::Nothing) = values
 
+# Do not rescale continuous data with categorical scale
+rescale(values::AbstractArray{<:Number}, ::CategoricalScale) = values
+
 function rescale(values, c::CategoricalScale)
     idxs = indexin(values, c.data)
     return plotvalues(c)[idxs]

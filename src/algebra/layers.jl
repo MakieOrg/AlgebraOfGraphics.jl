@@ -122,7 +122,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         for (i, var) in zip(1:ndims, (:x, :y, :z))
             scale = get(scales, i, nothing)
             label = if isnothing(scale)
-                mapreduce(entry -> get(entry.labels, i, ""), mergelabels, ae.entries)
+                mapreduce(entry -> get(entry.labels, i, ""), mergelabels, ae.entries, init="")
             else
                 scale.label
             end
