@@ -19,8 +19,11 @@ end
 function getlabeledcolorrange(grid)
     zcolor = any(has_zcolor, entries(grid))
     key = zcolor ? 3 : :color
-    colorrange = compute_extrema(entries(grid), key)
-    label = compute_label(entries(grid), key)
+    continuous_color_entries = Iterators.filter(entries(grid)) do entry
+        return get(entry, key, nothing) isa AbstractArray{<:Number}
+    end
+    colorrange = compute_extrema(continuous_color_entries, key)
+    label = compute_label(continuous_color_entries, key)
     return isnothing(colorrange) ? nothing : (label, colorrange)
 end
 

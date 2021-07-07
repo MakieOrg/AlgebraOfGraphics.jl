@@ -362,4 +362,20 @@ plt = data(df) * layers * mapping(:x, :y, color = :grp)
 
 draw(plt)
 
+# ## Multiple color scales
+#
+# Normally, a unique scale is associated to each given attribute. Color is an important
+# exception: continuous and discrete can coexist in the same plot. This should be used
+# sparingly, as it can make the plot harder to interpret.
+
+x = range(-π, π, length=100)
+y = sin.(x)
+ŷ = y .+ randn.() .* 0.1
+z = cos.(x)
+c=rand(["a", "b"], 100)
+df = (; x, y, ŷ, z, c)
+layers = mapping(:y, color=:z) * visual(Lines) + mapping(:ŷ, color=:c)
+plt = data(df) * mapping(:x) * layers
+draw(plt)
+
 #
