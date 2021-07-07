@@ -71,6 +71,8 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     scales = mapreduce(mergewith!(mergescales), entries) do entry
         return categoricalscales(entry, palettes)
     end
+    # fit scales (compute plot values using all data values)
+    map!(fitscale, values(scales))
 
     axs = compute_grid_positions(scales)
 
@@ -122,7 +124,6 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         end
     end
     return axes_grid
-
 end
 
 function Makie.plot!(fig, s::OneOrMoreLayers;

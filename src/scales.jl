@@ -20,14 +20,18 @@ function apply_palette(::Wrap, uv)
     return [fldmod1(idx, ncols) for idx in eachindex(uv)]
 end
 
-struct CategoricalScale{S, T}
+struct CategoricalScale{S, T, U}
     data::S
-    palette::T
+    plot::T
+    palette::U
     label::String
 end
+CategoricalScale(data, palette, label) = CategoricalScale(data, nothing, palette, label)
+
+fitscale(c::CategoricalScale) = CategoricalScale(c.data, apply_palette(c.palette, c.data), c.palette, c.label)
 
 datavalues(c::CategoricalScale) = c.data
-plotvalues(c::CategoricalScale) = apply_palette(c.palette, c.data)
+plotvalues(c::CategoricalScale) = c.plot
 
 rescale(values, ::Nothing) = values
 

@@ -11,11 +11,12 @@
 # - scales.
 
 using AlgebraOfGraphics, CairoMakie
-using AlgebraOfGraphics: CategoricalScale
+using AlgebraOfGraphics: CategoricalScale, fitscale
 resolution = (600, 600)
 fig = Figure(; resolution)
 N = 11
 rg = range(1, 2, length=N)
+markerpalette = [:circle, :utriangle, :dtriangle, :rect]
 ae = AxisEntries(
     Axis(fig[1, 1]),
     [
@@ -33,7 +34,7 @@ ae = AxisEntries(
         ),
     ],
     Dict(
-        :marker => CategoricalScale(["a", "b", "c"], [:circle, :utriangle, :dtriangle], "class"),
+        :marker => fitscale(CategoricalScale(["a", "b", "c"], markerpalette, "class")),
     ), # scales
 )
 plot!(ae)
