@@ -5,18 +5,18 @@
 # ## The `AxisEntries` type
 #
 # An `AxisEntries` object is
-# made of four components:
+# made of three components:
 # - axis,
 # - entries,
-# - scales,
-# - labels.
+# - scales.
 
 using AlgebraOfGraphics, CairoMakie
-using AlgebraOfGraphics: CategoricalScale, ContinuousScale
+using AlgebraOfGraphics: CategoricalScale, fitscale
 resolution = (600, 600)
 fig = Figure(; resolution)
 N = 11
 rg = range(1, 2, length=N)
+markerpalette = [:circle, :utriangle, :dtriangle, :rect]
 ae = AxisEntries(
     Axis(fig[1, 1]),
     [
@@ -34,17 +34,8 @@ ae = AxisEntries(
         ),
     ],
     Dict(
-        1 => ContinuousScale(identity, (0, 4)),
-        2 => ContinuousScale(identity, (0, 4)),
-        :color => ContinuousScale(identity, (1, N)),
-        :marker => CategoricalScale(["a", "b", "c"], [:circle, :utriangle, :dtriangle]),
+        :marker => fitscale(CategoricalScale(["a", "b", "c"], markerpalette, "class")),
     ), # scales
-    Dict(
-        1 => "x",
-        2 => "y",
-        :color => "identity",
-        :marker => "function"
-    ), # labels
 )
 plot!(ae)
 fig

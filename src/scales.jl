@@ -20,74 +20,97 @@ function apply_palette(::Wrap, uv)
     return [fldmod1(idx, ncols) for idx in eachindex(uv)]
 end
 
-struct ContinuousScale{T, F}
-    f::F
-    extrema::Tuple{T, T}
-end
-
-rescale(values, c::ContinuousScale) = values # generic fallback for geometry types
-rescale(values::AbstractArray{<:Number}, c::ContinuousScale) = values # Is this ideal?
-function rescale(values::AbstractArray{<:Union{Date, DateTime}}, c::ContinuousScale)
-    @assert c.f === identity
-    min, max = c.extrema
-    return @. convert(Millisecond, DateTime(values) - DateTime(min)) / Millisecond(1)
-end
-
-struct CategoricalScale{S, T}
+struct CategoricalScale{S, T, U}
     data::S
     plot::T
+    palette::U
+    label::Union{String, Nothing}
+end
+function CategoricalScale(data, palette, label::Union{String, Nothing})
+    return CategoricalScale(data, nothing, palette, label)
 end
 
-function rescale(values, c::CategoricalScale)
-    idxs = indexin(values, c.data)
-    return c.plot[idxs]
+# Final processing step of a categorical scale
+function fitscale(c::CategoricalScale)
+    data = c.data
+    palette = c.palette
+    plot = apply_palette(c.palette, c.data)
+    label = something(c.label, "")
+    return CategoricalScale(data, plot, palette, label)
 end
 
-Base.length(c::CategoricalScale) = length(c.data)
+datavalues(c::CategoricalScale) = c.data
+plotvalues(c::CategoricalScale) = c.plot
 
 rescale(values, ::Nothing) = values
 
-default_scale(::Nothing, palette) = nothing
-
-function default_scale(summary::Tuple, palette)
-    f = palette isa Function ? palette : identity
-    return ContinuousScale(f, summary)
+# recentering hack to avoid Float32 conversion errors on recent dates
+# TODO: remove once Makie supports dates
+const time_offset = let startingdate = Date(2020, 01, 01)
+    ms:: Millisecond = DateTime(startingdate)
+    ms / Millisecond(1)
 end
 
-function default_scale(summary::AbstractVector, palette)
-    plot = apply_palette(palette, summary)
-    return CategoricalScale(summary, plot)
-end
-
-# Logic to infer good scales
-function default_scales(summaries, palettes)
-    defaults = Dict{KeyType, Any}()
-    for (key, val) in pairs(summaries)
-        # ensure `palette === automatic` for integer keys
-        palette = key in propertynames(palettes) ? palettes[key] : automatic
-        defaults[key] = default_scale(val, palette)
+function rescale(values::AbstractArray{T}, ::Nothing) where T<:Union{Date, DateTime}
+    return map(values) do val
+        ms::Millisecond = DateTime(val)
+        return ms / Millisecond(1) - time_offset
     end
-    return defaults
+end
+
+# Do not rescale continuous data with categorical scale
+rescale(values::AbstractArray{<:Number}, ::CategoricalScale) = values
+
+function rescale(values, c::CategoricalScale)
+    idxs = indexin(values, datavalues(c))
+    return plotvalues(c)[idxs]
+end
+
+Base.length(c::CategoricalScale) = length(datavalues(c))
+
+function mergelabels(label1, label2)
+    return if isnothing(label1)
+        nothing
+    elseif isequal(label1, label2)
+        label1
+    elseif isempty(label1)
+        label2
+    elseif isempty(label2)
+        label1
+    else
+        nothing # no reasonable label found
+    end
+end
+
+function compute_label(entries, key)
+    label = ""
+    for entry in entries
+        label = mergelabels(label, get(entry.labels, key, ""))
+    end
+    return something(label, "")
+end
+
+function mergescales(c1::CategoricalScale, c2::CategoricalScale)
+    data = mergesorted(c1.data, c2.data)
+    palette = assert_equal(c1.palette, c2.palette)
+    label = mergelabels(c1.label, c2.label)
+    return CategoricalScale(data, palette, label)
 end
 
 # Logic to create ticks from a scale
 # Should take current tick to incorporate information
 function ticks(scale::CategoricalScale)
-    u = map(string, scale.data)
+    u = map(string, datavalues(scale))
     return (axes(u, 1), u)
 end
 
-function ticks(scale::ContinuousScale)
-    return continuousticks(scale.extrema...)
-end
+ticks((min, max)::NTuple{2, Any}) = automatic
 
-continuousticks(min, max) = automatic
-
-function continuousticks(min::T, max::T) where T<:Union{Date, DateTime}
+function ticks((min, max)::NTuple{2, T}) where T<:Union{Date, DateTime}
     min_ms::Millisecond, max_ms::Millisecond = DateTime(min), DateTime(max)
-    min_pure, max_pure = min_ms/Millisecond(1), max_ms/Millisecond(1)
+    min_pure, max_pure = min_ms / Millisecond(1), max_ms / Millisecond(1)
     dates, labels = optimize_datetime_ticks(min_pure, max_pure)
-    return (dates .-  min_pure, labels)
+    return (dates .- time_offset, labels)
 end
 
 ## Scale helpers
@@ -115,8 +138,20 @@ isgeometry(::AbstractArray{<:AbstractGeometry}) = true
 isgeometry(::AbstractArray{T}) where {T} = eltype(T) <: Union{Point, AbstractGeometry}
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
+extend_extrema(::Nothing, (l2, u2)) = (l2, u2)
 
-push_different!(v, val) = !isempty(v) && isequal(last(v), val) || push!(v, val) 
+function compute_extrema(entries, key)
+    acc = nothing
+    for entry in entries
+        col = get(entry, key, nothing)
+        if !isnothing(col) && !isgeometry(col)
+            acc = extend_extrema(acc, Makie.extrema_nan(col))
+        end
+    end
+    return acc
+end
+
+push_different!(v, val) = !isempty(v) && isequal(last(v), val) || push!(v, val)
 
 function mergesorted(v1, v2)
     issorted(v1) && issorted(v2) || throw(ArgumentError("arguments must be sorted"))

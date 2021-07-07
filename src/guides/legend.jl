@@ -16,23 +16,26 @@ function has_zcolor(entry::Entry)
         !haskey(entry.attributes, :color)
 end
 
-function getlabeledcolorbar(grid)
-    scales, labels = first(grid).scales, first(grid).labels
-    key = any(has_zcolor, entries(grid)) ? 3 : :color
-    label, scale = get(labels, key, nothing), get(scales, key, nothing)
-    return scale isa ContinuousScale ? (label, scale) : nothing
+function getlabeledcolorrange(grid)
+    zcolor = any(has_zcolor, entries(grid))
+    key = zcolor ? 3 : :color
+    continuous_color_entries = Iterators.filter(entries(grid)) do entry
+        return get(entry, key, nothing) isa AbstractArray{<:Number}
+    end
+    colorrange = compute_extrema(continuous_color_entries, key)
+    label = compute_label(continuous_color_entries, key)
+    return isnothing(colorrange) ? nothing : (label, colorrange)
 end
 
 function _Colorbar_(fg::FigureGrid)
     grid = fg.grid
-    labeledcolorbar = getlabeledcolorbar(grid)
-    isnothing(labeledcolorbar) && return
-    label, colorscale = labeledcolorbar
+    labeledcolorrange = getlabeledcolorrange(grid)
+    isnothing(labeledcolorrange) && return
+    label, limits = labeledcolorrange
     colormap = current_default_theme().colormap[]
     for entry in entries(grid)
         colormap = to_value(get(entry.attributes, :colormap, colormap))
     end
-    limits = colorscale.extrema
     return (; label, limits, colormap)
 end
 
@@ -67,45 +70,41 @@ function _Legend_(fg::FigureGrid)
 
     # assume all subplots have same scales, to be changed to support free scales
     scales = filter(hassymbolkey, first(grid).scales)
-    labels = filter(hassymbolkey, first(grid).labels)
 
     # remove keywords that don't support legends
     for key in [:row, :col, :layout, :stack, :dodge, :group]
-        pop!(labels, key, nothing)
-    end
-    for (key, val) in scales
-        val isa ContinuousScale && pop!(labels, key, nothing)
+        pop!(scales, key, nothing)
     end
 
     # if no legend-worthy keyword remains return nothing
-    isempty(labels) && return nothing
+    isempty(scales) && return nothing
 
-    titles = unique!(collect(String, values(labels)))
+    titles = unique!(collect(String, (scale.label for scale in values(scales))))
     # empty strings create difficulties with the layout
     nonemptytitles = map(t -> isempty(t) ? " " : t, titles)
 
     plottypes, attributes = plottypes_attributes(entries(grid))
 
-    labels_list = Vector{String}[]
+    labels = Vector{String}[]
     elements_list = Vector{Vector{LegendElement}}[]
 
     for title in titles
-        label_attrs = [key for (key, val) in labels if val == title]
-        uniquevalues = mapreduce(k -> scales[k].data, assert_equal, label_attrs)
+        label_attrs = [key for (key, val) in scales if val.label == title]
+        uniquevalues = mapreduce(k -> datavalues(scales[k]), assert_equal, label_attrs)
         elements = map(eachindex(uniquevalues)) do idx
             local elements = LegendElement[]
             for (P, attrs) in zip(plottypes, attributes)
                 shared_attrs = attrs ∩ label_attrs
                 isempty(shared_attrs) && continue
-                options = [attr => scales[attr].plot[idx] for attr in shared_attrs]
+                options = [attr => plotvalues(scales[attr])[idx] for attr in shared_attrs]
                 append!(elements, legend_elements(P; options...))
             end
             return elements
         end
-        push!(labels_list, map(string, uniquevalues))
+        push!(labels, map(string, uniquevalues))
         push!(elements_list, elements)
     end
-    return elements_list, labels_list, nonemptytitles
+    return elements_list, labels, nonemptytitles
 end
 
 # Notes

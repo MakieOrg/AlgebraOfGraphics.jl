@@ -202,6 +202,22 @@ plt = data(df) * mapping(:x, :y, color=:z)
 colors = ["a" => colorant"#E24A33", "c" => colorant"#348ABD", colorant"#988ED5", colorant"#777777"]
 draw(plt; palettes=(color=colors,))
 
+# ## Multiple color scales
+#
+# Normally, a unique scale is associated to each given attribute. Color is an important
+# exception: continuous and discrete color scales can coexist in the same plot.
+# This should be used sparingly, as it can make the plot harder to interpret.
+
+x = range(-π, π, length=100)
+y = sin.(x)
+ŷ = y .+ randn.() .* 0.1
+z = cos.(x)
+c = rand(["a", "b"], 100)
+df = (; x, y, ŷ, z, c)
+layers = mapping(:y, color=:z) * visual(Lines) + mapping(:ŷ => "y", color=:c)
+plt = data(df) * mapping(:x) * layers
+draw(plt)
+
 # ## Axis and figure keywords
 #
 # ### Axis tweaking

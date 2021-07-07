@@ -9,6 +9,14 @@ Base.@kwdef struct Entry
     attributes::Dict{Symbol, Any}=Dict{Symbol, Any}()
 end
 
+function Base.get(e::Entry, key::Int, default)
+    return key in keys(e.positional) ? e.positional[key] : default
+end
+
+function Base.get(e::Entry, key::Symbol, default)
+    return get(e.named, key, default)
+end
+
 function Entry(e::Entry; kwargs...)
     nt = (; e.plottype, e.primary, e.positional, e.named, e.labels, e.attributes)
     return Entry(; merge(nt, values(kwargs))...)
@@ -27,18 +35,15 @@ function Base.map(f, e::Entry)
 end
 
 """
-    AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, labels, scales)
+    AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, scales)
 
 Define all ingredients to make plots on an axis.
-Each scale can be either a `CategoricalScale` (for discrete collections), such as
-`CategoricalScale(["a", "b"], ["red", "blue"])`, or a function,
-such as `log10`. Other scales may be supported in the future.
+Each scale should be a `CategoricalScale`.
 """
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
     scales::Dict{KeyType, Any}
-    labels::Dict{KeyType, Any}
 end
 
 Makie.Axis(ae::AxisEntries) = ae.axis
@@ -103,7 +108,7 @@ function Makie.plot!(ae::AxisEntries)
 
         # Set dodging information
         dodge = get(scales, :dodge, nothing)
-        isa(dodge, CategoricalScale) && (attributes[:n_dodge] = maximum(dodge.plot))
+        isa(dodge, CategoricalScale) && (attributes[:n_dodge] = maximum(plotvalues(dodge)))
 
         # Implement alpha transparency
         alpha = pop!(attributes, :alpha, nothing)

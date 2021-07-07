@@ -24,28 +24,24 @@ end
 
 uniquevalues(v::ArrayLike) = collect(uniquesorted(vec(v)))
 
-function uniquevalues(e::Entry)
-    uv = Dict{KeyType, Any}()
+to_label(label::AbstractString) = label
+to_label(labels::ArrayLike) = reduce(mergelabels, labels)
+
+function categoricalscales(e::Entry, palettes)
+    cs = Dict{KeyType, Any}()
     for (key, val) in pairs(e.primary)
-        uv[key] = uniquevalues(val)
+        palette = get(palettes, key, automatic)
+        label = to_label(get(e.labels, key, ""))
+        cs[key] = CategoricalScale(uniquevalues(val), palette, label)
     end
     for (key, val) in pairs(e.positional)
         all(iscontinuous, val) && continue
         all(isgeometry, val) && continue
-        uv[key] = mapreduce(uniquevalues, mergesorted, val)
+        palette = automatic
+        label = to_label(get(e.labels, key, ""))
+        cs[key] = CategoricalScale(mapreduce(uniquevalues, mergesorted, val), palette, label)
     end
-    return uv
-end
-
-function extremas(e::Entry)
-    es = Dict{KeyType, Any}()
-    for tup in (e.positional, e.named)
-        for (key, val) in pairs(tup)
-            all(iscontinuous, val) || continue
-            es[key] = mapreduce(Makie.extrema_nan, extend_extrema, val)
-        end
-    end
-    return es
+    return cs
 end
 
 function compute_grid_positions(scales, primary=(;))
@@ -53,10 +49,10 @@ function compute_grid_positions(scales, primary=(;))
         scale = get(scales, sym, nothing)
         lscale = get(scales, :layout, nothing)
         return if !isnothing(scale)
-            rg = Base.OneTo(maximum(scale.plot))
+            rg = Base.OneTo(maximum(plotvalues(scale)))
             haskey(primary, sym) ? rescale(fill(primary[sym]), scale) : rg
         elseif !isnothing(lscale)
-            rg = Base.OneTo(maximum(f, lscale.plot))
+            rg = Base.OneTo(maximum(f, plotvalues(lscale)))
             haskey(primary, :layout) ? map(f, rescale(fill(primary[:layout]), lscale)) : rg
         else
             Base.OneTo(1)
@@ -69,12 +65,14 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     layers::Layers = s
     entries = map(process, layers)
     
-    uv = mapreduce(uniquevalues, mergewith!(mergesorted), entries)
-    es = mapreduce(extremas, mergewith!(extend_extrema), entries)
- 
     theme_palettes = NamedTuple(Makie.current_default_theme()[:palette])
     palettes = merge((layout=wrap,), map(to_value, theme_palettes), palettes)
-    scales = default_scales(merge(uv, es), palettes)
+
+    scales = mapreduce(mergewith!(mergescales), entries) do entry
+        return categoricalscales(entry, palettes)
+    end
+    # fit scales (compute plot values using all data values)
+    map!(fitscale, values(scales))
 
     axs = compute_grid_positions(scales)
 
@@ -82,7 +80,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         type = get(axis, :type, Axis)
         options = Base.structdiff(axis, (; type))
         ax = type(fig[Tuple(c)...]; options...)
-        return AxisEntries(ax, Entry[], scales, Dict{KeyType, Any}())
+        return AxisEntries(ax, Entry[], scales)
     end
 
     for e in entries
@@ -91,22 +89,20 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
                 return map(v -> getnewindex(v, c), tup)
             end
             rows, cols = compute_grid_positions(scales, primary)
-            entry = Entry(e; primary, positional, named)
             labels = copy(e.labels)
             map!(l -> getnewindex(l, c), values(labels))
+            entry = Entry(e; primary, positional, named, labels)
             for i in rows, j in cols
                 ae = axes_grid[i, j]
                 push!(ae.entries, entry)
-                merge!((a, b) -> isequal(a, b) ? a : "", ae.labels, labels)
             end
         end
     end
 
     # Link colors
-    labeledcolorbar = getlabeledcolorbar(axes_grid)
-    if !isnothing(labeledcolorbar)
-        _, colorbar = labeledcolorbar
-        colorrange = colorbar.extrema
+    labeledcolorrange = getlabeledcolorrange(axes_grid)
+    if !isnothing(labeledcolorrange)
+        _, colorrange = labeledcolorrange
         for entry in AlgebraOfGraphics.entries(axes_grid)
             entry.attributes[:colorrange] = colorrange
         end
@@ -114,20 +110,20 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
 
     # Axis labels and ticks
     for ae in axes_grid
-        # TODO: support log colorscale
         ndims = isaxis2d(ae) ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
-            label, scale = get(ae.labels, i, nothing), get(ae.scales, i, nothing)
-            any(isnothing, (label, scale)) && continue
+            scale = get(scales, i) do
+                return compute_extrema(AlgebraOfGraphics.entries(axes_grid), i)
+            end
+            isnothing(scale) && continue
+            label = compute_label(ae.entries, i)
             for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
                 k = Symbol(var, k′)
                 k in keys(axis) || (getproperty(Axis(ae), k)[] = v)
             end
         end
     end
-
     return axes_grid
-
 end
 
 function Makie.plot!(fig, s::OneOrMoreLayers;
