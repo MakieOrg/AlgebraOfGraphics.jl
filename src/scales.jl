@@ -73,9 +73,9 @@ function mergelabels(label1, label2)
         nothing
     elseif isequal(label1, label2)
         label1
-    elseif label1 == ""
+    elseif isempty(label1)
         label2
-    elseif label2 == ""
+    elseif isempty(label2)
         label1
     else
         nothing # no reasonable label found
