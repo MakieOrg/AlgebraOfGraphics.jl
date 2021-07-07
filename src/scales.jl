@@ -24,11 +24,20 @@ struct CategoricalScale{S, T, U}
     data::S
     plot::T
     palette::U
-    label::String
+    label::Union{String, Nothing}
 end
-CategoricalScale(data, palette, label) = CategoricalScale(data, nothing, palette, label)
+function CategoricalScale(data, palette, label::Union{String, Nothing})
+    return CategoricalScale(data, nothing, palette, label)
+end
 
-fitscale(c::CategoricalScale) = CategoricalScale(c.data, apply_palette(c.palette, c.data), c.palette, c.label)
+# Final processing step of a categorical scale
+function fitscale(c::CategoricalScale)
+    data = c.data
+    palette = c.palette
+    plot = apply_palette(c.palette, c.data)
+    label = something(c.label, "")
+    return CategoricalScale(data, plot, palette, label)
+end
 
 datavalues(c::CategoricalScale) = c.data
 plotvalues(c::CategoricalScale) = c.plot
@@ -60,24 +69,25 @@ end
 Base.length(c::CategoricalScale) = length(datavalues(c))
 
 function mergelabels(label1, label2)
-    return if isequal(label1, label2)
+    return if isnothing(label1)
+        nothing
+    elseif isequal(label1, label2)
         label1
     elseif label1 == ""
         label2
     elseif label2 == ""
         label1
     else
-        ""
+        nothing # no reasonable label found
     end
 end
 
 function compute_label(entries, key)
     label = ""
     for entry in entries
-        col = get(entry, key, nothing)
         label = mergelabels(label, get(entry.labels, key, ""))
     end
-    return label
+    return something(label, "")
 end
 
 function mergescales(c1::CategoricalScale, c2::CategoricalScale)

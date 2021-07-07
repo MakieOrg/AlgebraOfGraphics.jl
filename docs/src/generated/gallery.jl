@@ -372,9 +372,9 @@ x = range(-π, π, length=100)
 y = sin.(x)
 ŷ = y .+ randn.() .* 0.1
 z = cos.(x)
-c=rand(["a", "b"], 100)
+c = rand(["a", "b"], 100)
 df = (; x, y, ŷ, z, c)
-layers = mapping(:y, color=:z) * visual(Lines) + mapping(:ŷ, color=:c)
+layers = mapping(:y, color=:z) * visual(Lines) + mapping(:ŷ => "y", color=:c)
 plt = data(df) * mapping(:x) * layers
 draw(plt)
 
