@@ -77,9 +77,9 @@ version = "0.4.0"
 
 [[ColorSchemes]]
 deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random", "StaticArrays"]
-git-tree-sha1 = "c8fd01e4b736013bc61b704871d20503b33ea402"
+git-tree-sha1 = "ed268efe58512df8c7e224d2e170afd76dd6a417"
 uuid = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
-version = "3.12.1"
+version = "3.13.0"
 
 [[ColorTypes]]
 deps = ["FixedPointNumbers", "Random"]
@@ -123,9 +123,9 @@ version = "1.7.0"
 
 [[DataFrames]]
 deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
-git-tree-sha1 = "66ee4fe515a9294a8836ef18eea7239c6ac3db5e"
+git-tree-sha1 = "1dadfca11c0e08e03ab15b63aaeda55266754bad"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "1.1.1"
+version = "1.2.0"
 
 [[DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -168,15 +168,9 @@ uuid = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
 version = "0.4.0"
 
 [[ExprTools]]
-git-tree-sha1 = "10407a39b87f29d47ebaca8edbc75d7c302ff93e"
+git-tree-sha1 = "b7e3d17636b348f005f11040025ae8c6f645fe92"
 uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
-version = "0.1.3"
-
-[[EzXML]]
-deps = ["BinaryProvider", "Libdl", "Printf"]
-git-tree-sha1 = "ed53ce1ddb862193b2bd3851dfa108513aab2d5c"
-uuid = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
-version = "1.0.0"
+version = "0.1.6"
 
 [[FFMPEG]]
 deps = ["BinaryProvider", "Libdl"]
@@ -249,9 +243,9 @@ version = "1.1.0"
 
 [[GridLayoutBase]]
 deps = ["GeometryBasics", "InteractiveUtils", "Match", "Observables"]
-git-tree-sha1 = "05565be014da070422fc422463ced65fbcf13311"
+git-tree-sha1 = "97b481deb387775da2ca751cc542610750bcdfc3"
 uuid = "3955a311-db13-416c-9275-1d80ed98e5e9"
-version = "0.5.5"
+version = "0.5.6"
 
 [[Grisu]]
 git-tree-sha1 = "53bb909d1151e57e2484c3d1b53e19552b887fb2"
@@ -386,9 +380,9 @@ version = "0.3.3"
 
 [[OffsetArrays]]
 deps = ["Adapt"]
-git-tree-sha1 = "e436bb81d2ce4f01fb02374c4410e5a9229c85f9"
+git-tree-sha1 = "2bf78c5fd7fa56d2bbf1efbadd45c1b8789e6f57"
 uuid = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
-version = "1.10.0"
+version = "1.10.2"
 
 [[OrderedCollections]]
 git-tree-sha1 = "85f8e6578bf1f9ee0d11e7bb1b1456435479d47c"
@@ -447,9 +441,9 @@ uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [[RData]]
 deps = ["CategoricalArrays", "CodecZlib", "DataFrames", "Dates", "FileIO", "Requires", "TimeZones", "Unicode"]
-git-tree-sha1 = "bf3ecbce49e8211c5ee261522e843fdcfed61ed4"
+git-tree-sha1 = "19e47a495dfb7240eb44dc6971d660f7e4244a72"
 uuid = "df47a6cb-8c03-5eed-afd8-b6050d6c41da"
-version = "0.8.2"
+version = "0.8.3"
 
 [[RDatasets]]
 deps = ["CSV", "CodecZlib", "DataFrames", "FileIO", "Printf", "RData", "Reexport"]
@@ -515,9 +509,9 @@ uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
 [[SortingAlgorithms]]
 deps = ["DataStructures"]
-git-tree-sha1 = "2ec1962eba973f383239da22e75218565c390a96"
+git-tree-sha1 = "b3363d7460f7d098ca0912c69b082f75625d7508"
 uuid = "a2af1166-a08f-5f64-846c-94a0d3cef48c"
-version = "1.0.0"
+version = "1.0.1"
 
 [[SparseArrays]]
 deps = ["LinearAlgebra", "Random"]
@@ -591,10 +585,10 @@ deps = ["Distributed", "InteractiveUtils", "Logging", "Random"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [[TimeZones]]
-deps = ["Dates", "EzXML", "LazyArtifacts", "Mocking", "Pkg", "Printf", "RecipesBase", "Serialization", "Unicode"]
-git-tree-sha1 = "960099aed321e05ac649c90d583d59c9309faee1"
+deps = ["Dates", "Future", "LazyArtifacts", "Mocking", "Pkg", "Printf", "RecipesBase", "Serialization", "Unicode"]
+git-tree-sha1 = "81753f400872e5074768c9a77d4c44e70d409ef0"
 uuid = "f269a46b-ccf7-5d73-abea-4c690281aa53"
-version = "1.5.5"
+version = "1.5.6"
 
 [[TranscodingStreams]]
 deps = ["Random", "Test"]
