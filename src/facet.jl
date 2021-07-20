@@ -5,7 +5,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries})
     isnothing(scale) && return
     linkaxes!(aes...)
     for ae in aes
-        ax = Axis(ae)
+        ax = ae.axis
         entries = ae.entries
         vs = Iterators.filter(
             !isnothing,
@@ -34,7 +34,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
 
     nonempty_aes = filter(ae -> !isempty(ae.entries), aes)
 
-    ax = Axis(first(nonempty_aes))
+    ax = first(nonempty_aes).axis
     titlegap = ax.titlegap
     titlecolor = ax.titlecolor
     titlefont = ax.titlefont
@@ -45,12 +45,12 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
         textsize=titlesize,
     )
 
-    consistent_xlabels = all(ae -> Axis(ae).xlabel[] == ax.xlabel[], nonempty_aes)
-    consistent_ylabels = all(ae -> Axis(ae).ylabel[] == ax.ylabel[], nonempty_aes)
+    consistent_xlabels = all(ae -> ae.axis.xlabel[] == ax.xlabel[], nonempty_aes)
+    consistent_ylabels = all(ae -> ae.axis.ylabel[] == ax.ylabel[], nonempty_aes)
 
     if !isnothing(row_scale) && consistent_ylabels
         for ae in aes
-            Axis(ae).ylabelvisible[] = false
+            ae.axis.ylabelvisible[] = false
         end
         row_dict = Dict(zip(plotvalues(row_scale), datavalues(row_scale)))
         facetlabelpadding = lift(titlegap) do gap
@@ -63,7 +63,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
         end
         protrusion = lift(
             (xs...) -> maximum(x -> x.left, xs),
-            (MakieLayout.protrusionsobservable(Axis(ae)) for ae in aes[:, 1])...
+            (MakieLayout.protrusionsobservable(ae.axis) for ae in aes[:, 1])...
         )
         # TODO: here and below, set in such a way that one can change padding after the fact?
         ylabelpadding = lift(protrusion, ax.ylabelpadding) do val, p
@@ -82,7 +82,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
     end
     if !isnothing(col_scale) && consistent_xlabels
         for ae in aes
-            Axis(ae).xlabelvisible[] = false
+            ae.axis.xlabelvisible[] = false
         end
         col_dict = Dict(zip(plotvalues(col_scale), datavalues(col_scale)))
         labelpadding = lift(titlegap) do gap
@@ -94,7 +94,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
         end
         protrusion = lift(
             (xs...) -> maximum(x -> x.bottom, xs),
-            (MakieLayout.protrusionsobservable(Axis(ae)) for ae in aes[M, :])...
+            (MakieLayout.protrusionsobservable(ae.axis) for ae in aes[M, :])...
         )
         xlabelpadding = lift(protrusion, ax.xlabelpadding) do val, p
             return (0f0, 0f0, 0f0, val + p)
@@ -128,18 +128,18 @@ end
 
 isaxis2d(::Axis) = true
 isaxis2d(::Any) = false
-isaxis2d(ae::AxisEntries) = isaxis2d(Axis(ae))
+isaxis2d(ae::AxisEntries) = isaxis2d(ae.axis)
 
 for sym in [:hidexdecorations!, :hideydecorations!, :hidedecorations!]
     @eval function $sym(ae::AxisEntries; kwargs...)
-        axis = Axis(ae)
+        axis = ae.axis
         isaxis2d(axis) && $sym(axis; kwargs...)
     end
 end
 
 for sym in [:linkxaxes!, :linkyaxes!, :linkaxes!]
     @eval function $sym(ae::AxisEntries, aes::AxisEntries...)
-        axs = filter(isaxis2d, map(Axis, (ae, aes...)))
+        axs = filter(isaxis2d, map(ae->ae.axis, (ae, aes...)))
         isempty(axs) || $sym(axs...)
     end
 end
@@ -153,7 +153,7 @@ end
 function deleteemptyaxes!(aes::Matrix{AxisEntries})
     for ae in aes
         if isempty(ae.entries)
-            delete!(Axis(ae))
+            delete!(ae.axis)
         end
     end
 end
