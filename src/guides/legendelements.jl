@@ -2,7 +2,7 @@ from_default_theme(attr) = Makie.current_default_theme()[attr]
 
 function legend_elements(::Type{Scatter};
                          marker=from_default_theme(:marker),
-                         markerpoints=[Point2f0(0.5, 0.5)],
+                         markerpoints=[Point2f(0.5, 0.5)],
                          color=from_default_theme(:markercolor),
                          kwargs...)
     return [MarkerElement(; marker, markerpoints, markercolor=color, kwargs...)]
