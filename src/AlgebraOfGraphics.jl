@@ -24,6 +24,7 @@ using DataAPI: refarray
 
 import GLM, Loess
 import FileIO
+import RelocatableFolders
 
 export hideinnerdecorations!, deleteemptyaxes!
 export Entry, AxisEntries
