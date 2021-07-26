@@ -14,7 +14,7 @@ function wongcolors()
     ]
 end
 
-const font_folder = joinpath(dirname(@__DIR__), "assets", "fonts")
+const font_folder = RelocatableFolders.@path joinpath(dirname(@__DIR__), "assets", "fonts")
 
 firasans(weight) = joinpath(font_folder, "FiraSans-$(weight).ttf")
 opensans(weight) = joinpath(font_folder, "OpenSans-$(weight).ttf")
