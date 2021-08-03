@@ -123,32 +123,25 @@ function cycle(v::AbstractVector, i::Int)
     return v[first(ax) + mod(i - first(ax), length(ax))]
 end
 
-"""
-    iscontinuous(v)
+struct Categorical end
+struct Continuous end
+struct Geometrical end
 
-Determine whether `v` should be treated as a continuous array.
 """
-function iscontinuous(u)
+    variabletype(u)
+
+Determine whether `u` should be treated as a continuous, geometrical, or categorical array.
+"""
+function variabletype(u)
     v = Broadcast.broadcastable(u)
-    return !haszerodims(v) && eltype(v) <: Union{Number, Date, DateTime} && !(eltype(v) <: Bool)
+    T = eltype(v)
+    if !haszerodims(v)
+        T <: Union{Number, Date, DateTime} && !(T <: Bool) && return Continuous()
+        T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return Geometrical()
+        T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return Geometrical()
+    end
+    return Categorical()
 end
-
-"""
-    isgeometry(v)
-
-Determine whether `v` should be treated as an array of geometries (e.g., points or polygons).
-"""
-isgeometry(::AbstractArray{<:Makie.StaticVector}) = true
-isgeometry(::AbstractArray{<:Point}) = true
-isgeometry(::AbstractArray{<:AbstractGeometry}) = true
-isgeometry(::AbstractArray{T}) where {T} = eltype(T) <: Union{Point, AbstractGeometry}
-
-"""
-    isprimary(v)
-
-Determine whether `v` should be treated as a primary array (group data according to its unique values).
-"""
-isprimary(x) = !iscontinuous(x) && !isgeometry(x)
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 extend_extrema(::Nothing, (l2, u2)) = (l2, u2)
@@ -157,7 +150,7 @@ function compute_extrema(entries, key)
     acc = nothing
     for entry in entries
         col = get(entry, key, nothing)
-        if !isnothing(col) && !isgeometry(col)
+        if variabletype(col) === Continuous()
             acc = extend_extrema(acc, Makie.extrema_nan(col))
         end
     end

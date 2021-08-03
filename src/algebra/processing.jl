@@ -62,8 +62,10 @@ function group(entry::Entry)
     return Entry(entry; primary, positional, named, labels)
 end
 
+hascategoricalentry(u) = any(el -> variabletype(el) === Categorical(), u)
+
 function separate(nt::NamedTuple)
-    primary_keys = filter(key -> any(isprimary, nt[key]), keys(nt))
+    primary_keys = filter(key -> hascategoricalentry(nt[key]), keys(nt))
     primary = NamedTuple{primary_keys}(nt)
     return primary, Base.structdiff(nt, primary)
 end
@@ -80,7 +82,7 @@ function getlabeledarray(layer::Layer, s)
         arr = map(fill∘f, CartesianIndices(sz))
     elseif isnothing(data)
         vs, (f, label) = select(data, s)
-        isprim = any(v -> any(isprimary, v), vs)
+        isprim = any(hascategoricalentry, vs)
         arr = isprim ? map(fill∘f, vs...) : map(x -> map(f, x...), zip(vs...)) 
     else
         selector = s isa AbstractArray ? s : fill(s)
