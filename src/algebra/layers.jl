@@ -81,11 +81,11 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         ax = type(fig[Tuple(c)...]; options...)
         return AxisEntries(ax, Entry[], scales)
     end
-    function create_axis(f::Axis, c)
+    function create_axis(ax::Axis, c)
         if !isempty(axis)
             @warn("Axis got passed, but also axis attributes. Ignoring axis attributes: $(axis)")
         end
-        return AxisEntries(fig, Entry[], scales)
+        return AxisEntries(ax, Entry[], scales)
     end
     axs = compute_grid_positions(scales)
     sizes = map(length, axs)
