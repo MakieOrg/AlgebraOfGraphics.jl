@@ -35,8 +35,7 @@ function categoricalscales(e::Entry, palettes)
         cs[key] = CategoricalScale(uniquevalues(val), palette, label)
     end
     for (key, val) in pairs(e.positional)
-        all(iscontinuous, val) && continue
-        all(isgeometry, val) && continue
+        hascategoricalentry(val) || continue
         palette = automatic
         label = to_label(get(e.labels, key, ""))
         cs[key] = CategoricalScale(mapreduce(uniquevalues, mergesorted, val), palette, label)

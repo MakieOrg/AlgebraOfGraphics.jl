@@ -123,20 +123,31 @@ function cycle(v::AbstractVector, i::Int)
     return v[first(ax) + mod(i - first(ax), length(ax))]
 end
 
-"""
-    iscontinuous(v)
+struct Categorical end
+struct Continuous end
+struct Geometrical end
 
-Determine whether `v` should be treated as a continuous or categorical vector.
 """
-function iscontinuous(u)
-    v = Broadcast.broadcastable(u)
-    return !haszerodims(v) && eltype(v) <: Union{Number, Date, DateTime} && !(eltype(v) <: Bool)
+    scientific_eltype(v)
+
+Determine whether `v` should be treated as a continuous, geometrical, or categorical array.
+"""
+scientific_eltype(v::ArrayLike) = scientific_type(eltype(v))
+
+scientific_eltype(v) = Categorical()
+
+"""
+    scientific_type(T::Type)
+
+Determine whether `T` represents a continuous, geometrical, or categorical variable.
+"""
+function scientific_type(::Type{T}) where T
+    T <: Bool && return Categorical()
+    T <: Union{Number, Date, DateTime} && return Continuous()
+    T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return Geometrical()
+    T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return Geometrical()
+    return Categorical()
 end
-
-isgeometry(::AbstractArray{<:Makie.StaticVector}) = true
-isgeometry(::AbstractArray{<:Point}) = true
-isgeometry(::AbstractArray{<:AbstractGeometry}) = true
-isgeometry(::AbstractArray{T}) where {T} = eltype(T) <: Union{Point, AbstractGeometry}
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 extend_extrema(::Nothing, (l2, u2)) = (l2, u2)
@@ -145,7 +156,7 @@ function compute_extrema(entries, key)
     acc = nothing
     for entry in entries
         col = get(entry, key, nothing)
-        if !isnothing(col) && !isgeometry(col)
+        if scientific_eltype(col) === Continuous()
             acc = extend_extrema(acc, Makie.extrema_nan(col))
         end
     end

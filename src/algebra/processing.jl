@@ -62,10 +62,12 @@ function group(entry::Entry)
     return Entry(entry; primary, positional, named, labels)
 end
 
+hascategoricalentry(u) = any(el -> scientific_eltype(el) === Categorical(), u)
+
 function separate(nt::NamedTuple)
-    continuous_keys = filter(key -> all(x-> iscontinuous(x) || isgeometry(x), nt[key]), keys(nt))
-    continuous = NamedTuple{continuous_keys}(nt)
-    return Base.structdiff(nt, continuous), continuous
+    primary_keys = filter(key -> hascategoricalentry(nt[key]), keys(nt))
+    primary = NamedTuple{primary_keys}(nt)
+    return primary, Base.structdiff(nt, primary)
 end
 
 function getlabeledarray(layer::Layer, s)
@@ -80,8 +82,8 @@ function getlabeledarray(layer::Layer, s)
         arr = map(fill∘f, CartesianIndices(sz))
     elseif isnothing(data)
         vs, (f, label) = select(data, s)
-        iscont = all(v -> all(iscontinuous, v), vs)
-        arr = iscont ? map(x -> map(f, x...), zip(vs...)) : map(fill∘f, vs...)
+        isprim = any(hascategoricalentry, vs)
+        arr = isprim ? map(fill∘f, vs...) : map(x -> map(f, x...), zip(vs...)) 
     else
         selector = s isa AbstractArray ? s : fill(s)
         labeled_arr = map(selector) do s
