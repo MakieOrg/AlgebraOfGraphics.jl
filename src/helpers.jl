@@ -1,3 +1,8 @@
+# helper types and functions for rescaling
+
+const ArrayLike = Union{AbstractArray, Tuple}
+const StringLike = Union{AbstractString, Symbol}
+
 struct Sorted{T}
     idx::UInt32
     value::T
@@ -99,3 +104,17 @@ nonnumeric(x) = NonNumeric(x)
 
 Base.print(io::IO, n::NonNumeric) = print(io, n.x)
 Base.isless(n1::NonNumeric, n2::NonNumeric) = isless(n1.x, n2.x)
+
+struct Verbatim{T}
+    x::T
+end
+
+"""
+    verbatim(x)
+
+Signal that `x` should not be rescaled, but used in the plot as is.
+"""
+verbatim(x) = Verbatim(x)
+
+Base.getindex(v::Verbatim) = v[]
+Base.print(io::IO, v::Verbatim) = print(io, v.x)

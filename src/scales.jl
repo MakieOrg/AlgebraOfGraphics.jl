@@ -51,17 +51,18 @@ const time_offset = let startingdate = Date(2020, 01, 01)
     ms / Millisecond(1)
 end
 
-function rescale(values::AbstractArray{T}, ::Nothing) where T<:Union{Date, DateTime}
+function rescale(values::AbstractArray{<:Union{Date, DateTime}}, ::Nothing)
     return map(values) do val
         ms::Millisecond = DateTime(val)
         return ms / Millisecond(1) - time_offset
     end
 end
 
-# Do not rescale continuous data with categorical scale
-rescale(values::AbstractArray{<:Number}, ::CategoricalScale) = values
+rescale(values::AbstractArray{<:Verbatim}, ::Nothing) = map(getindex, values)
 
 function rescale(values, c::CategoricalScale)
+    # Do not rescale continuous data with categorical scale
+    scientific_eltype(values) === categorical || return values
     idxs = indexin(values, datavalues(c))
     return plotvalues(c)[idxs]
 end
@@ -113,11 +114,6 @@ function ticks((min, max)::NTuple{2, T}) where T<:Union{Date, DateTime}
     return (dates .- time_offset, labels)
 end
 
-## Scale helpers
-
-const ArrayLike = Union{AbstractArray, Tuple}
-const StringLike = Union{AbstractString, Symbol}
-
 function cycle(v::AbstractVector, i::Int)
     ax = axes(v, 1)
     return v[first(ax) + mod(i - first(ax), length(ax))]
@@ -133,6 +129,7 @@ Determine whether `T` represents a continuous, geometrical, or categorical varia
 function scientific_type(::Type{T}) where T
     T <: Bool && return categorical
     T <: Union{Number, Date, DateTime} && return continuous
+    T <: Verbatim && return geometrical
     T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return geometrical
     T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return geometrical
     return categorical
