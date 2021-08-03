@@ -126,17 +126,29 @@ end
 """
     iscontinuous(v)
 
-Determine whether `v` should be treated as a continuous or categorical vector.
+Determine whether `v` should be treated as a continuous array.
 """
 function iscontinuous(u)
     v = Broadcast.broadcastable(u)
     return !haszerodims(v) && eltype(v) <: Union{Number, Date, DateTime} && !(eltype(v) <: Bool)
 end
 
+"""
+    isgeometry(v)
+
+Determine whether `v` should be treated as an array of geometries (e.g., points or polygons).
+"""
 isgeometry(::AbstractArray{<:Makie.StaticVector}) = true
 isgeometry(::AbstractArray{<:Point}) = true
 isgeometry(::AbstractArray{<:AbstractGeometry}) = true
 isgeometry(::AbstractArray{T}) where {T} = eltype(T) <: Union{Point, AbstractGeometry}
+
+"""
+    isprimary(v)
+
+Determine whether `v` should be treated as a primary array (group data according to its unique values).
+"""
+isprimary(x) = !iscontinuous(x) && !isgeometry(x)
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 extend_extrema(::Nothing, (l2, u2)) = (l2, u2)
