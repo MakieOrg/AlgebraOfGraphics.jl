@@ -218,7 +218,7 @@ layers = mapping(:y, color=:z) * visual(Lines) + mapping(:ŷ => "y", color=:c)
 plt = data(df) * mapping(:x) * layers
 draw(plt)
 
-# ## Prescaled data
+# ## Pre-scaled data
 
 x = rand(100)
 y = rand(100)
