@@ -123,9 +123,20 @@ function cycle(v::AbstractVector, i::Int)
     return v[first(ax) + mod(i - first(ax), length(ax))]
 end
 
-struct Categorical end
-struct Continuous end
-struct Geometrical end
+@enum ScientificType categorical continuous geometrical
+
+"""
+    scientific_type(T::Type)
+
+Determine whether `T` represents a continuous, geometrical, or categorical variable.
+"""
+function scientific_type(::Type{T}) where T
+    T <: Bool && return categorical
+    T <: Union{Number, Date, DateTime} && return continuous
+    T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return geometrical
+    T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return geometrical
+    return categorical
+end
 
 """
     scientific_eltype(v)
@@ -134,20 +145,9 @@ Determine whether `v` should be treated as a continuous, geometrical, or categor
 """
 scientific_eltype(v::ArrayLike) = scientific_type(eltype(v))
 
-scientific_eltype(v) = Categorical()
+scientific_eltype(v) = categorical
 
-"""
-    scientific_type(T::Type)
-
-Determine whether `T` represents a continuous, geometrical, or categorical variable.
-"""
-function scientific_type(::Type{T}) where T
-    T <: Bool && return Categorical()
-    T <: Union{Number, Date, DateTime} && return Continuous()
-    T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return Geometrical()
-    T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return Geometrical()
-    return Categorical()
-end
+hascategoricalentry(u) = any(el -> scientific_eltype(el) === categorical, u)
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 extend_extrema(::Nothing, (l2, u2)) = (l2, u2)
@@ -156,7 +156,7 @@ function compute_extrema(entries, key)
     acc = nothing
     for entry in entries
         col = get(entry, key, nothing)
-        if scientific_eltype(col) === Continuous()
+        if scientific_eltype(col) === continuous
             acc = extend_extrema(acc, Makie.extrema_nan(col))
         end
     end
