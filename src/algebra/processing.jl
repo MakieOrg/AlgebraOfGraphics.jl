@@ -62,7 +62,7 @@ function group(entry::Entry)
     return Entry(entry; primary, positional, named, labels)
 end
 
-hascategoricalentry(u) = any(el -> variabletype(el) === Categorical(), u)
+hascategoricalentry(u) = any(el -> scientific_eltype(el) === Categorical(), u)
 
 function separate(nt::NamedTuple)
     primary_keys = filter(key -> hascategoricalentry(nt[key]), keys(nt))

@@ -128,18 +128,24 @@ struct Continuous end
 struct Geometrical end
 
 """
-    variabletype(u)
+    scientific_eltype(v)
 
-Determine whether `u` should be treated as a continuous, geometrical, or categorical array.
+Determine whether `v` should be treated as a continuous, geometrical, or categorical array.
 """
-function variabletype(u)
-    v = Broadcast.broadcastable(u)
-    T = eltype(v)
-    if !haszerodims(v)
-        T <: Union{Number, Date, DateTime} && !(T <: Bool) && return Continuous()
-        T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return Geometrical()
-        T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return Geometrical()
-    end
+scientific_eltype(v::ArrayLike) = scientific_type(eltype(v))
+
+scientific_eltype(v) = Categorical()
+
+"""
+    scientific_type(T::Type)
+
+Determine whether `T` represents a continuous, geometrical, or categorical variable.
+"""
+function scientific_type(::Type{T}) where T
+    T <: Bool && return Categorical()
+    T <: Union{Number, Date, DateTime} && return Continuous()
+    T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return Geometrical()
+    T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return Geometrical()
     return Categorical()
 end
 
@@ -150,7 +156,7 @@ function compute_extrema(entries, key)
     acc = nothing
     for entry in entries
         col = get(entry, key, nothing)
-        if variabletype(col) === Continuous()
+        if scientific_eltype(col) === Continuous()
             acc = extend_extrema(acc, Makie.extrema_nan(col))
         end
     end
