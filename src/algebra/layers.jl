@@ -88,7 +88,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         return AxisEntries(fig, Entry[], scales)
     end
     axs = compute_grid_positions(scales)
-    sizes = length.(axs)
+    sizes = map(length, axs)
 
     if sizes !== (1, 1) && fig isa Axis
         error("You can only pass an Axis to draw!, if the calculated layout only contains one element. Elements: $(sizes)")
