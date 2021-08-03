@@ -116,5 +116,5 @@ Signal that `x` should not be rescaled, but used in the plot as is.
 """
 verbatim(x) = Verbatim(x)
 
-Base.getindex(v::Verbatim) = v[]
+Base.getindex(v::Verbatim) = v.x
 Base.print(io::IO, v::Verbatim) = print(io, v.x)

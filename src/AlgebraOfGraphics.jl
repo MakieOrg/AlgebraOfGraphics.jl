@@ -28,7 +28,7 @@ import RelocatableFolders
 
 export hideinnerdecorations!, deleteemptyaxes!
 export Entry, AxisEntries
-export renamer, sorter, nonnumeric
+export renamer, sorter, nonnumeric, verbatim
 export density, histogram, linear, smooth, expectation, frequency
 export visual, data, geodata, dims, mapping
 export draw, draw!
