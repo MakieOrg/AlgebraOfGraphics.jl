@@ -63,7 +63,7 @@ function group(entry::Entry)
 end
 
 function separate(nt::NamedTuple)
-    continuous_keys = filter(key -> all(iscontinuous, nt[key]), keys(nt))
+    continuous_keys = filter(key -> all(x-> iscontinuous(x) || isgeometry(x), nt[key]), keys(nt))
     continuous = NamedTuple{continuous_keys}(nt)
     return Base.structdiff(nt, continuous), continuous
 end
@@ -96,7 +96,7 @@ end
 function process_mappings(layer::Layer)
     labels = Dict{KeyType, Any}()
     positional, named′ = map((layer.positional, layer.named)) do tup
-        return mapkeys(tup) do key            
+        return mapkeys(tup) do key
             label, arr = getlabeledarray(layer, tup[key])
             labels[key] = label
             return arr

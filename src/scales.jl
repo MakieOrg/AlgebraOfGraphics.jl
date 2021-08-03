@@ -130,9 +130,10 @@ Determine whether `v` should be treated as a continuous or categorical vector.
 """
 function iscontinuous(u)
     v = Broadcast.broadcastable(u)
-    return !haszerodims(v) && eltype(v) <: Union{Number, Date, DateTime, Makie.StaticVector} && !(eltype(v) <: Bool)
+    return !haszerodims(v) && eltype(v) <: Union{Number, Date, DateTime} && !(eltype(v) <: Bool)
 end
 
+isgeometry(::AbstractArray{<:Makie.StaticVector}) = true
 isgeometry(::AbstractArray{<:Point}) = true
 isgeometry(::AbstractArray{<:AbstractGeometry}) = true
 isgeometry(::AbstractArray{T}) where {T} = eltype(T) <: Union{Point, AbstractGeometry}
