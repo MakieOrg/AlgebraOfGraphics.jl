@@ -1,6 +1,6 @@
 # Drawing Layers
 
-A [`AlgebraOfGraphics.Layer`] or [`AlgebraOfGraphics.Layers`] object can be plotted
+A [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object can be plotted
 using the functions [`draw`](@ref) or [`draw!`](@ref).
 
 Whereas `draw` automatically adds colorbar and legend, `draw!` does not, as it
