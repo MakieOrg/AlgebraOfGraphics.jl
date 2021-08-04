@@ -1,7 +1,7 @@
 """
     Layers(layers::Vector{Layer})
 
-Algebraic object encoding a list of [`Layer`](@ref) objects.
+Algebraic object encoding a list of [`AlgebraOfGraphics.Layer`](@ref) objects.
 `Layers` objects can be added or multiplied, yielding a novel `Layers` object.
 """
 struct Layers
@@ -162,7 +162,7 @@ end
 """
     draw(s; axis=NamedTuple(), figure=NamedTuple, palettes=NamedTuple())
 
-Draw a [`Layer`](@ref) or [`Layers`](@ref) object `s`.
+Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object `s`.
 The output can be customized by giving axis attributes to `axis`, figure attributes
 to `figure`, or custom palettes to `palettes`.
 Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@ref),
@@ -181,8 +181,8 @@ end
 """
     draw!(fig, s; axis=NamedTuple(), palettes=NamedTuple())
 
-Draw a [`Layer`](@ref) or [`Layers`](@ref) object `s` on `fig`. `fig` can be a figure,
-a position in a layout, or an axis if `s` has no facet specification.
+Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object `s` on `fig`.
+`fig` can be a figure, a position in a layout, or an axis if `s` has no facet specification.
 The output can be customized by giving axis attributes to `axis` or custom palettes
 to `palettes`.  
 """

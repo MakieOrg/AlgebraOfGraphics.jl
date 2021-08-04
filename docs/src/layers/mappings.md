@@ -66,12 +66,13 @@ a column name => function pair, or a column name => new label pair.
 
 Some helper functions are provided, which can be used within the pair syntax to
 either rename and reorder *unique values* of a categorical column on the fly or to
-signal that a numerical column should be treated as categorical.
+signal whether a numerical column should be treated as categorical.
 
 ```@docs
 renamer
 sorter
 nonnumeric
+verbatim
 ```
 
 ### Examples
