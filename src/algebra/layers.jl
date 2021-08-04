@@ -158,7 +158,8 @@ function draw(s::OneOrMoreLayers;
               axis = NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
     fg = plot(s; axis, figure, palettes)
     facet!(fg)
-    Legend(fg)
+    colorbar!(fg)
+    legend!(fg)
     resizetocontent!(fg)
     return fg
 end

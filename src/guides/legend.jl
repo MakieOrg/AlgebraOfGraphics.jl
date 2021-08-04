@@ -1,12 +1,15 @@
-function MakieLayout.Legend(fg::FigureGrid)
-    colorbar = _Colorbar_(fg)
-    legend = _Legend_(fg)
-    if !isnothing(colorbar)
-        Colorbar(fg.figure[:, end + 1]; colorbar...)
-    end
-    if !isnothing(legend)
-        Legend(fg.figure[:, end + 1], legend...)
-    end
+legend!(fg::FigureGrid) = legend!(fg.figure[:, end+1], fg)
+
+function legend!(figpos, fg)
+    legend = compute_legend(fg)
+    return isnothing(legend) ? nothing : Legend(figpos, legend...)
+end
+
+colorbar!(fg::FigureGrid) = colorbar!(fg.figure[:, end+1], fg)
+
+function colorbar!(figpos, fg)
+    colorbar = compute_colorbar(fg)
+    return isnothing(colorbar) ? nothing : Colorbar(figpos; colorbar...)
 end
 
 function has_zcolor(entry::Entry)
@@ -27,8 +30,8 @@ function getlabeledcolorrange(grid)
     return isnothing(colorrange) ? nothing : (label, colorrange)
 end
 
-_Colorbar_(fg::FigureGrid) = _Colorbar_(fg.grid)
-function _Colorbar_(grid::Matrix{AxisEntries})
+compute_colorbar(fg::FigureGrid) = compute_colorbar(fg.grid)
+function compute_colorbar(grid::Matrix{AxisEntries})
     labeledcolorrange = getlabeledcolorrange(grid)
     isnothing(labeledcolorrange) && return
     label, limits = labeledcolorrange
@@ -65,8 +68,8 @@ end
 
 hassymbolkey((k, v)::Pair) = k isa Symbol
 
-_Legend_(fg::FigureGrid) = _Legend_(fg.grid)
-function _Legend_(grid::Matrix{AxisEntries})
+compute_legend(fg::FigureGrid) = compute_legend(fg.grid)
+function compute_legend(grid::Matrix{AxisEntries})
     # assume all subplots have same scales, to be changed to support free scales
     scales = filter(hassymbolkey, first(grid).scales)
 
@@ -108,7 +111,6 @@ end
 
 # Notes
 
-# TODO: support drawing legends in custom positions
 # TODO: correctly handle composite plot types (now fall back to poly)
 # TODO: make legend updateable?
 # TODO: allow custom attributes in legend elements?

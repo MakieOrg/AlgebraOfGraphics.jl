@@ -32,7 +32,7 @@ export renamer, sorter, nonnumeric, verbatim
 export density, histogram, linear, smooth, expectation, frequency
 export visual, data, geodata, dims, mapping
 export draw, draw!
-export facet!
+export facet!, colorbar!, legend!
 export set_aog_theme!
 
 include("theme.jl")
