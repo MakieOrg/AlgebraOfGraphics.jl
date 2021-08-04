@@ -32,15 +32,19 @@ end
 
 function select(data, x::Pair{<:Any, <:Any})
     name, transformation = x
-    # consider supporting automated labeling for multiple names here
-    vs, (_, label) = select(data, name)
+    if name isa Tuple
+        vs = map(n -> only(first(select(data, n))), name)
+        label = ""
+    else
+        vs, (_, label) = select(data, name)
+    end
     return vs => transformation => label
 end
 
 function select(data, x::Pair{<:Any, <:Pair})
     name, transformation_label = x
     transformation, label = transformation_label
-    names = name isa Tuple ? name : fill(name)
-    vs = map(name -> only(first(select(data, name))), names)
+    names = name isa Tuple ? name : (name,)
+    vs = map(n -> only(first(select(data, n))), names)
     return vs => transformation => label
 end

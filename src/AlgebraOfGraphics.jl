@@ -28,7 +28,7 @@ import RelocatableFolders
 
 export hideinnerdecorations!, deleteemptyaxes!
 export Entry, AxisEntries
-export renamer, sorter, nonnumeric
+export renamer, sorter, nonnumeric, verbatim
 export density, histogram, linear, smooth, expectation, frequency
 export visual, data, geodata, dims, mapping
 export draw, draw!
@@ -36,11 +36,11 @@ export facet!
 export set_aog_theme!
 
 include("theme.jl")
+include("helpers.jl")
 include("scales.jl")
 include("entries.jl")
 include("facet.jl")
 include("geometry.jl")
-include("helpers.jl")
 include("algebra/layer.jl")
 include("algebra/layers.jl")
 include("algebra/select.jl")

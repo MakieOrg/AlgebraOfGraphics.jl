@@ -51,17 +51,18 @@ const time_offset = let startingdate = Date(2020, 01, 01)
     ms / Millisecond(1)
 end
 
-function rescale(values::AbstractArray{T}, ::Nothing) where T<:Union{Date, DateTime}
+function rescale(values::AbstractArray{<:Union{Date, DateTime}}, ::Nothing)
     return map(values) do val
         ms::Millisecond = DateTime(val)
         return ms / Millisecond(1) - time_offset
     end
 end
 
-# Do not rescale continuous data with categorical scale
-rescale(values::AbstractArray{<:Number}, ::CategoricalScale) = values
+rescale(values::AbstractArray{<:Verbatim}, ::Nothing) = map(getindex, values)
 
 function rescale(values, c::CategoricalScale)
+    # Do not rescale continuous data with categorical scale
+    scientific_eltype(values) === categorical || return values
     idxs = indexin(values, datavalues(c))
     return plotvalues(c)[idxs]
 end
@@ -113,19 +114,26 @@ function ticks((min, max)::NTuple{2, T}) where T<:Union{Date, DateTime}
     return (dates .- time_offset, labels)
 end
 
-## Scale helpers
-
-const ArrayLike = Union{AbstractArray, Tuple}
-const StringLike = Union{AbstractString, Symbol}
-
 function cycle(v::AbstractVector, i::Int)
     ax = axes(v, 1)
     return v[first(ax) + mod(i - first(ax), length(ax))]
 end
 
-struct Categorical end
-struct Continuous end
-struct Geometrical end
+@enum ScientificType categorical continuous geometrical
+
+"""
+    scientific_type(T::Type)
+
+Determine whether `T` represents a continuous, geometrical, or categorical variable.
+"""
+function scientific_type(::Type{T}) where T
+    T <: Bool && return categorical
+    T <: Union{Number, Date, DateTime} && return continuous
+    T <: Verbatim && return geometrical
+    T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return geometrical
+    T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return geometrical
+    return categorical
+end
 
 """
     scientific_eltype(v)
@@ -134,20 +142,9 @@ Determine whether `v` should be treated as a continuous, geometrical, or categor
 """
 scientific_eltype(v::ArrayLike) = scientific_type(eltype(v))
 
-scientific_eltype(v) = Categorical()
+scientific_eltype(v) = categorical
 
-"""
-    scientific_type(T::Type)
-
-Determine whether `T` represents a continuous, geometrical, or categorical variable.
-"""
-function scientific_type(::Type{T}) where T
-    T <: Bool && return Categorical()
-    T <: Union{Number, Date, DateTime} && return Continuous()
-    T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return Geometrical()
-    T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return Geometrical()
-    return Categorical()
-end
+hascategoricalentry(u) = any(el -> scientific_eltype(el) === categorical, u)
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 extend_extrema(::Nothing, (l2, u2)) = (l2, u2)
@@ -156,7 +153,7 @@ function compute_extrema(entries, key)
     acc = nothing
     for entry in entries
         col = get(entry, key, nothing)
-        if scientific_eltype(col) === Continuous()
+        if scientific_eltype(col) === continuous
             acc = extend_extrema(acc, Makie.extrema_nan(col))
         end
     end
