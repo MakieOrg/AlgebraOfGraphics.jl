@@ -1,12 +1,7 @@
 # Algebraic Operations
 
 There are two _algebraic types_ that can be added or multiplied with each other:
-`Layer` and `Layers`.
-
-```@docs
-AlgebraOfGraphics.Layer
-AlgebraOfGraphics.Layers
-```
+[`AlgebraOfGraphics.Layer`](@ref) and [`AlgebraOfGraphics.Layers`](@ref).
 
 ## Multiplication on individual layers
 
