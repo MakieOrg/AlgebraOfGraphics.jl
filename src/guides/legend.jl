@@ -1,15 +1,27 @@
-legend!(fg::FigureGrid) = legend!(fg.figure[:, end+1], fg)
+legend!(fg::FigureGrid; kwargs...) = legend!(fg.figure[:, end+1], fg; kwargs...)
 
-function legend!(figpos, fg)
-    legend = compute_legend(fg)
-    return isnothing(legend) ? nothing : Legend(figpos, legend...)
+"""
+    legend!(figpos, grid; kwargs...)
+
+Compute legend for `grid` (which should be the output of [`draw!`](@ref)) and draw it in
+position `figpos`. Attributes allowed in `kwargs` are the same as `MakieLayout.Legend`.
+"""
+function legend!(figpos, grid; kwargs...)
+    legend = compute_legend(grid)
+    return isnothing(legend) ? nothing : Legend(figpos, legend...; kwargs...)
 end
 
-colorbar!(fg::FigureGrid) = colorbar!(fg.figure[:, end+1], fg)
+colorbar!(fg::FigureGrid; kwargs...) = colorbar!(fg.figure[:, end+1], fg; kwargs...)
 
-function colorbar!(figpos, fg)
-    colorbar = compute_colorbar(fg)
-    return isnothing(colorbar) ? nothing : Colorbar(figpos; colorbar...)
+"""
+    colorbar!(figpos, grid; kwargs...)
+
+Compute colorbar for `grid` (which should be the output of [`draw!`](@ref)) and draw it in
+position `figpos`. Attributes allowed in `kwargs` are the same as `MakieLayout.Colorbar`.
+"""
+function colorbar!(figpos, grid; kwargs...)
+    colorbar = compute_colorbar(grid)
+    return isnothing(colorbar) ? nothing : Colorbar(figpos; colorbar..., kwargs...)
 end
 
 function has_zcolor(entry::Entry)
