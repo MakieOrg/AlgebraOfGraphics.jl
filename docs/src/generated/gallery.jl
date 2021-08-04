@@ -77,7 +77,7 @@ plt = data(df) * mapping(:x, :y, col=:i, row=:j)
 subfig = fig[1, 2:3]
 ag = draw!(subfig, plt)
 for ae in ag
-    Axis(ae).xticklabelrotation[] = π/2
+    ae.axis.xticklabelrotation[] = π/2
 end
 fig
 

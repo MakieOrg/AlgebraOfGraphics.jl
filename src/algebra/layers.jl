@@ -132,7 +132,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             label = compute_label(ae.entries, i)
             for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
                 k = Symbol(var, k′)
-                k in keys(axis) || (getproperty(Axis(ae), k)[] = v)
+                k in keys(axis) || (getproperty(ae.axis, k)[] = v)
             end
         end
     end

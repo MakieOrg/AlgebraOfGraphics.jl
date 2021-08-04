@@ -46,8 +46,6 @@ struct AxisEntries
     scales::Dict{KeyType, Any}
 end
 
-Makie.Axis(ae::AxisEntries) = ae.axis
-
 # Slightly complex machinery to recombine stacked barplots
 function mergeable(e1::Entry, e2::Entry)
     for e in (e1, e2)
