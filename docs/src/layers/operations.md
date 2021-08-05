@@ -1,5 +1,8 @@
 # Algebraic Operations
 
+There are two _algebraic types_ that can be added or multiplied with each other:
+[`AlgebraOfGraphics.Layer`](@ref) and [`AlgebraOfGraphics.Layers`](@ref).
+
 ## Multiplication on individual layers
 
 Each layer is composed of data, mappings, and transformations.

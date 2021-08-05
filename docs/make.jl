@@ -43,14 +43,18 @@ makedocs(;
         "Internals" => [
             "generated/entries.md",
         ],
-        "API.md",
+        "API" => [
+            "API/types.md",
+            "API/functions.md",
+            "API/recipes.md",
+        ],
         "FAQs.md",
         "philosophy.md",
     ],
-    strict = true,
+    strict=true,
 )
 
 deploydocs(;
     repo="github.com/JuliaPlots/AlgebraOfGraphics.jl",
-    push_preview = true,
+    push_preview=true,
 )

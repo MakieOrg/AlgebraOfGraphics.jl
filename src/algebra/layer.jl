@@ -1,3 +1,11 @@
+"""
+    Layer(transformations::Tuple, data, positional::Tuple, named::NamedTuple)
+
+Algebraic object encoding a single layer of a visualization. It is composed of a dataset,
+positional and named arguments, as well as transformations to be applied to those.
+`Layer` objects can be multiplied, yielding a novel `Layer` object, or added,
+yielding a [`AlgebraOfGraphics.Layers`](@ref) object.
+"""
 struct Layer
     transformations::Tuple
     data::Any

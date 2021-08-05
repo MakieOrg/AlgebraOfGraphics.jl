@@ -61,32 +61,40 @@ df = (x=rand(100), y=rand(100), l=rand(["a", "b", "c", "d", "e"], 100))
 plt = data(df) * mapping(:x, :y, layout=:l)
 draw(plt)
 
-# ### Embedding facets
-#
-# All AlgebraOfGraphics plots can be inserted in any figure position, where the rest
-# of the figure is managed by vanilla Makie.
-# For example
-
-resolution = (800, 400)
-fig = Figure(; resolution)
-ax = Axis(fig[1, 1], title="Some plot")
-
-df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
-plt = data(df) * mapping(:x, :y, col=:i, row=:j)
-
-subfig = fig[1, 2:3]
-ag = draw!(subfig, plt)
-for ae in ag
-    Axis(ae).xticklabelrotation[] = π/2
-end
-fig
-
 # ### Adding traces to only some subplots
 
 df1 = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
 df2 = (x=[0, 1], y=[0.5, 0.5], i=fill("a", 2), j=fill("e", 2))
 layers = data(df1) * visual(Scatter) + data(df2) * visual(Lines)
 draw(layers * mapping(:x, :y, col=:i, row=:j))
+
+# ## Embedding AlgebraOfGraphics plots in a Makie figure
+#
+# All AlgebraOfGraphics plots can be inserted in any figure position, where the rest
+# of the figure is managed by vanilla Makie.
+# For example
+
+resolution = (800, 600)
+fig = Figure(; resolution)
+ax = Axis(fig[1, 1], title="Some plot")
+
+df = (
+    x=rand(500),
+    y=rand(500),
+    i=rand(["a", "b", "c"], 500),
+    j=rand(["d", "e", "f"], 500),
+    k=rand(Bool, 500),
+    l=rand(Bool, 500)
+)
+plt = data(df) * mapping(:x, :y, col=:i, row=:j, color=:k, marker=:l)
+
+subfig = fig[1, 2:3]
+ag = draw!(subfig, plt)
+for ae in ag
+    ae.axis.xticklabelrotation[] = π/2
+end
+legend!(fig[end+1, 2], ag, orientation=:horizontal, tellheight=true)
+fig
 
 # ## Statistical analyses
 #
