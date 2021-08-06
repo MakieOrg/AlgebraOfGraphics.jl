@@ -26,6 +26,7 @@ struct CategoricalScale{S, T, U}
     palette::U
     label::Union{String, Nothing}
 end
+
 function CategoricalScale(data, palette, label::Union{String, Nothing})
     return CategoricalScale(data, nothing, palette, label)
 end
@@ -51,13 +52,15 @@ const time_offset = let startingdate = Date(2020, 01, 01)
     ms / Millisecond(1)
 end
 
-function rescale(values::AbstractArray{<:Union{Date, DateTime}}, ::Nothing)
-    return map(values) do val
-        ms::Millisecond = DateTime(val)
-        return ms / Millisecond(1) - time_offset
-    end
+function datetime2float(x::Union{Date, DateTime})
+    ms::Millisecond = DateTime(x)
+    return ms / Millisecond(1) - time_offset
 end
 
+datetimeticks(datetimes, labels::AbstractVector{<:AbstractString}) = map(datetime2float, datetimes), labels
+datetimeticks(f, datetimes) = datetimeticks(datetimes, map(string∘f, datetimes))
+
+rescale(values::AbstractArray{<:Union{Date, DateTime}}, ::Nothing) = map(datetime2float, values) 
 rescale(values::AbstractArray{<:Verbatim}, ::Nothing) = map(getindex, values)
 
 function rescale(values, c::CategoricalScale)
@@ -141,7 +144,6 @@ end
 Determine whether `v` should be treated as a continuous, geometrical, or categorical array.
 """
 scientific_eltype(v::ArrayLike) = scientific_type(eltype(v))
-
 scientific_eltype(v) = categorical
 
 hascategoricalentry(u) = any(el -> scientific_eltype(el) === categorical, u)
