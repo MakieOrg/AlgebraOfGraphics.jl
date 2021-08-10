@@ -52,15 +52,32 @@ const time_offset = let startingdate = Date(2020, 01, 01)
     ms / Millisecond(1)
 end
 
-function datetime2float(x::Union{Date, DateTime})
+function datetime2float(x::TimeType)
     ms::Millisecond = DateTime(x)
     return ms / Millisecond(1) - time_offset
 end
 
-datetimeticks(datetimes, labels::AbstractVector{<:AbstractString}) = map(datetime2float, datetimes), labels
-datetimeticks(f, datetimes) = datetimeticks(datetimes, map(string∘f, datetimes))
+"""
+    datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString})
 
-rescale(values::AbstractArray{<:Union{Date, DateTime}}, ::Nothing) = map(datetime2float, values) 
+Generate ticks matching `datetimes` to the corresponding `labels`.
+The result can be passed to `xticks`, `yticks`, or `zticks`.
+"""
+function datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString}) 
+    return map(datetime2float, datetimes), labels
+end
+
+"""
+    datetimeticks(f, datetimes::AbstractVector{<:TimeType})
+
+Compute ticks for the given `datetimes` using a formatting function `f`.
+The result can be passed to `xticks`, `yticks`, or `zticks`.
+"""
+function datetimeticks(f, datetimes::AbstractVector{<:TimeType})
+    return datetimeticks(datetimes, map(string∘f, datetimes))
+end
+
+rescale(values::AbstractArray{<:TimeType}, ::Nothing) = map(datetime2float, values) 
 rescale(values::AbstractArray{<:Verbatim}, ::Nothing) = map(getindex, values)
 
 function rescale(values, c::CategoricalScale)
@@ -110,7 +127,7 @@ end
 
 ticks((min, max)::NTuple{2, Any}) = automatic
 
-function ticks((min, max)::NTuple{2, T}) where T<:Union{Date, DateTime}
+function ticks((min, max)::NTuple{2, T}) where T<:TimeType
     min_ms::Millisecond, max_ms::Millisecond = DateTime(min), DateTime(max)
     min_pure, max_pure = min_ms / Millisecond(1), max_ms / Millisecond(1)
     dates, labels = optimize_datetime_ticks(min_pure, max_pure)
@@ -131,7 +148,7 @@ Determine whether `T` represents a continuous, geometrical, or categorical varia
 """
 function scientific_type(::Type{T}) where T
     T <: Bool && return categorical
-    T <: Union{Number, Date, DateTime} && return continuous
+    T <: Union{Number, TimeType} && return continuous
     T <: Verbatim && return geometrical
     T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return geometrical
     T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return geometrical

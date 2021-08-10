@@ -18,6 +18,12 @@ nonnumeric
 verbatim
 ```
 
+## Ticks helpers
+
+```@docs
+datetimeticks
+```
+
 ## Internal functions
 
 ```@docs
