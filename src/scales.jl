@@ -57,7 +57,22 @@ function datetime2float(x::Union{Date, DateTime})
     return ms / Millisecond(1) - time_offset
 end
 
+"""
+    datetimeticks(datetimes, labels::AbstractVector{<:AbstractString})
+
+Generate ticks matching `datetimes` to the corresponding `labels`.
+`datetimes` can be a vector of either `Date` or `DateTime` objects.
+The result can be passed to `xticks`, `yticks`, or `zticks`.
+"""
 datetimeticks(datetimes, labels::AbstractVector{<:AbstractString}) = map(datetime2float, datetimes), labels
+
+"""
+    datetimeticks(f, datetimes)
+
+Compute ticks for the given `datetimes` using a formatting function `f`.
+`datetimes` can be a vector of either `Date` or `DateTime` objects.
+The result can be passed to `xticks`, `yticks`, or `zticks`.
+"""
 datetimeticks(f, datetimes) = datetimeticks(datetimes, map(string∘f, datetimes))
 
 rescale(values::AbstractArray{<:Union{Date, DateTime}}, ::Nothing) = map(datetime2float, values) 
