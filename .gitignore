@@ -3,3 +3,5 @@
 test/coverage/Manifest.toml
 docs/Manifest.toml
 docs/build
+docs/src/gallery
+docs/src/democards
