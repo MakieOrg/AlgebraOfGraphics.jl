@@ -20,7 +20,6 @@ using GridLayoutBase: determinedirsize, Col, Row
 using PooledArrays: PooledArray
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, normalize, weights, AbstractWeights, sturges
-using DataAPI: refarray
 
 import GLM, Loess
 import FileIO

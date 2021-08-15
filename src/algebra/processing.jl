@@ -4,7 +4,7 @@ fast_hashed(v::AbstractVector) = isbitstype(eltype(v)) ? PooledArray(v) : v
 
 function permutation_ranges(cols)
     isempty(cols) && return nothing, [:]
-    grouping_sa = StructArray(map(refarray∘fast_hashed, cols))
+    grouping_sa = StructArray(map(fast_hashed, cols))
     gp = GroupPerm(grouping_sa)
     return sortperm(gp), collect(gp)
 end
