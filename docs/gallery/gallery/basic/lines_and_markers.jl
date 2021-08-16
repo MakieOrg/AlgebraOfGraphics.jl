@@ -1,5 +1,5 @@
 # ---
-# title: Lines and Markers
+# title: Lines and markers
 # cover: assets/lines_and_markers.png
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---

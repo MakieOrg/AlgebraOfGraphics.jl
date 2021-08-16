@@ -1,5 +1,5 @@
 # ---
-# title: Figure Tweaking
+# title: Figure tweaking
 # cover: assets/figure_tweaking.png
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---

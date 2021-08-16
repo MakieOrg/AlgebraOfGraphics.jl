@@ -1,5 +1,5 @@
 # ---
-# title: Time Series
+# title: Time series
 # cover: assets/time_series.png
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---

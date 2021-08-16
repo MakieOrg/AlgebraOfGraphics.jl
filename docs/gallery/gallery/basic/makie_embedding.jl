@@ -35,4 +35,4 @@ fig
 
 # save cover image #src
 mkpath("assets") #src
-save("assets/makie_embedding.png", fg) #src
+save("assets/makie_embedding.png", fig) #src
