@@ -1,6 +1,7 @@
 # ---
 # title: Faceting
 # cover: assets/faceting.png
+# description: Generating a grid of plots
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

@@ -1,6 +1,7 @@
 # ---
 # title: Geographic data
 # cover: assets/geographic.png
+# description: Antarctic coastline
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

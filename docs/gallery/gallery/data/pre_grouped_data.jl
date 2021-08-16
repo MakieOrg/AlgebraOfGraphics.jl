@@ -1,6 +1,7 @@
 # ---
 # title: Pre-grouped data
 # cover: assets/new_columns_on_the_fly.png
+# description: Working with arrays of arrays
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

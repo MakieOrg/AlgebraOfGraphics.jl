@@ -1,6 +1,7 @@
 # ---
-# title: Embedding AlgebraOfGraphics plots in a Makie figure
+# title: Nested layouts
 # cover: assets/makie_embedding.png
+# description: Embedding AlgebraOfGraphics plots in a Makie figure
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

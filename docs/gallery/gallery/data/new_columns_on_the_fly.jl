@@ -1,6 +1,7 @@
 # ---
 # title: New columns on the fly
 # cover: assets/new_columns_on_the_fly.png
+# description: Transforming data before generating the plot
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 
