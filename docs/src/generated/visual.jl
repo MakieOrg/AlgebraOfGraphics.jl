@@ -11,7 +11,7 @@
 using AlgebraOfGraphics, CairoMakie
 set_aog_theme!()
 
-df = (x = rand(1000), y=rand(1000))
+df = (x=randn(1000), y=randn(1000))
 plt = data(df) * mapping(:x, :y) * AlgebraOfGraphics.density(npoints=50)
 draw(plt * visual(Heatmap)) # plot as heatmap (the default)
 
