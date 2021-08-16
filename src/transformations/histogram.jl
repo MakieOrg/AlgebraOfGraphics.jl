@@ -3,12 +3,12 @@ const categoricalplottypes = [BarPlot, Heatmap, Volume]
 to_weights(v) = weights(v)
 to_weights(v::AbstractWeights) = v
 
-function compute_edges(data, extrema, bins::Tuple{Vararg{Integer}}, closed)
+function compute_edges(extrema, bins::Tuple{Vararg{Integer}}, closed)
     return map(extrema, bins) do (min, max), n
-        histrange(min, max, n, closed)
+        histrange(float(min), float(max), n, closed)
     end
 end
-compute_edges(data, extrema, bins::Tuple{Vararg{AbstractArray}}, closed) = bins
+compute_edges(extrema, bins::Tuple{Vararg{AbstractArray}}, closed) = bins
 
 function midpoints(edges::AbstractRange)
     min, s, l = minimum(edges), step(edges), length(edges)
@@ -19,7 +19,7 @@ function _histogram(data...; bins=sturges(length(data[1])), weights=automatic,
     normalization=:none, extrema, closed=:left)
 
     bins_tuple = bins isa Tuple ? bins : map(_ -> bins, data)
-    edges = compute_edges(data, extrema, bins_tuple, closed)
+    edges = compute_edges(extrema, bins_tuple, closed)
     w = weights === automatic ? () : (to_weights(weights),)
     h = fit(Histogram, data, w..., edges)
     return normalize(h, mode=normalization)
