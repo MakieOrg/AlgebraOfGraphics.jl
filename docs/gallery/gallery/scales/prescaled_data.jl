@@ -1,6 +1,7 @@
 # ---
 # title: Pre-scaled data
-# cover: assets/multiple_color_scales.png
+# cover: assets/prescaled_data.png
+# description: Pass data to the plot as is
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 
@@ -27,4 +28,4 @@ fg = draw(plt)
 
 # save cover image #src
 mkpath("assets") #src
-save("assets/multiple_color_scales.png", fg) #src
+save("assets/prescaled_data.png", fg) #src

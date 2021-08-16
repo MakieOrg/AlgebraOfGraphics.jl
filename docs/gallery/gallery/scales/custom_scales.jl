@@ -1,6 +1,7 @@
 # ---
 # title: Custom scales
 # cover: assets/custom_scales.png
+# description: Custom palettes and custom attributes
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

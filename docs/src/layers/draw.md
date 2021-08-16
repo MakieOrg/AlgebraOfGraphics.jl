@@ -8,4 +8,4 @@ would be hard to infer a good default placement that works in all scenarios.
 
 Colorbar and legend, should they be necessary, can be added separately with the
 [`colorbar!`](@ref) and [`legend!`](@ref) helper functions. See also
-[Embedding AlgebraOfGraphics plots in a Makie figure](@ref) for a complex example.
+[Nested layouts](@ref) for a complex example.

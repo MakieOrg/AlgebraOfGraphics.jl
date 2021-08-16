@@ -1,6 +1,6 @@
 # ---
 # title: Nested layouts
-# cover: assets/makie_embedding.png
+# cover: assets/nested_layouts.png
 # description: Embedding AlgebraOfGraphics plots in a Makie figure
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
@@ -36,4 +36,4 @@ fig
 
 # save cover image #src
 mkpath("assets") #src
-save("assets/makie_embedding.png", fig) #src
+save("assets/nested_layouts.png", fig) #src
