@@ -1,4 +1,4 @@
-# # Visual Transformations
+# # Visual
 
 # The function `visual` can be used to give data-independent visual information about the plot
 # (plotting function or attributes).
@@ -21,7 +21,7 @@ draw(plt * visual(colormap=:viridis)) # set a different colormap
 
 #
 
-draw(plt * visual(Contour) # plot as contour
+draw(plt * visual(Contour)) # plot as contour
 
 #
 

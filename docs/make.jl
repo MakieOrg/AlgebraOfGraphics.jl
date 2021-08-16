@@ -35,11 +35,9 @@ makedocs(;
         "Algebra of Layers" => [
             "layers/introduction.md",
             "layers/data.md",
-            "layers/mappings.md",
-            "Transformations" => [
-                "generated/visualtransformations.md",
-                "generated/datatransformations.md",
-            ],
+            "layers/mapping.md",
+            "generated/visual.md",
+            "generated/analyses.md",
             "layers/operations.md",
             "layers/draw.md",
         ],
