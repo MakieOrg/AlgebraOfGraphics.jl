@@ -1,4 +1,4 @@
 {
     "description": "Contributions for more demos are welcome.",
-    "order": ["visual", "data", "scales", "customization", "layout", "applications"]
+    "order": ["visual", "data manipulations", "analyses", "scales", "customization", "layout", "applications"]
 }

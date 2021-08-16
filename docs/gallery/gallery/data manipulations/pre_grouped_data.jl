@@ -1,6 +1,6 @@
 # ---
 # title: Pre-grouped data
-# cover: assets/new_columns_on_the_fly.png
+# cover: assets/pregrouped_data.png
 # description: Working with arrays of arrays
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
@@ -36,4 +36,4 @@ fg = draw(m * layers)
 
 # save cover image #src
 mkpath("assets") #src
-save("assets/new_columns_on_the_fly.png", fg) #src
+save("assets/pregrouped_data.png", fg) #src

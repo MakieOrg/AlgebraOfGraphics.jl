@@ -3,27 +3,26 @@
 # The function `visual` can be used to give data-independent visual information about the plot
 # (plotting function or attributes).
 
-using AlgebraOfGraphics, CairoMakie, PalmerPenguins, DataFrames
+# The available plotting functions are documetned [here](http://makie.juliaplots.org/dev/examples/plotting_functions/).
+# See the documentation of each plotting function to discover the available attributes.
+
+## Examples
+
+using AlgebraOfGraphics, CairoMakie
 set_aog_theme!()
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
-
-data(penguins) * visual(Violin) *
-    mapping(:species, :bill_depth_mm, color=:sex, dodge=:sex) |> draw
-
-#
-
-plt = data(penguins) * visual(Violin)
-plt *= mapping(:species, :bill_depth_mm, color=:sex, side=:sex, dodge=:island)
-draw(plt, axis=(limits=((0.5, 3.5), nothing),))
+df = (x = rand(1000), y=rand(1000))
+plt = data(df) * mapping(:x, :y) * AlgebraOfGraphics.density(npoints=50)
+draw(plt * visual(Heatmap)) # plot as heatmap (the default)
 
 #
 
-data(penguins) * visual(BoxPlot, show_notch=true) *
-    mapping(:species, :bill_depth_mm, color=:sex, dodge=:sex) |> draw
+draw(plt * visual(colormap=:viridis)) # set a different colormap
 
 #
 
-data(penguins) *
-    mapping(:bill_length_mm, :bill_depth_mm, col=:sex) *
-    visual(QQPlot, qqline=:fit) |> draw
+draw(plt * visual(Contour) # plot as contour
+
+#
+
+draw(plt * visual(Contour, linewidth=2)) # plot as contour with thicker lines
