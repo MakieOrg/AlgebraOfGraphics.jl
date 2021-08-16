@@ -1,12 +1,11 @@
 # ---
 # title: Regression plots
-# cover: assets/regression_plot.png
+# cover: assets/regression_plots.png
 # description: Linear and nonlinear regressions
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 
 using AlgebraOfGraphics, CairoMakie
-using AlgebraOfGraphics: density
 set_aog_theme!() #src
 
 x = rand(100)
@@ -27,4 +26,4 @@ fg = draw(layers * xy)
 
 # save cover image #src
 mkpath("assets") #src
-save("assets/regression_plot.png", fg) #src
+save("assets/regression_plots.png", fg) #src

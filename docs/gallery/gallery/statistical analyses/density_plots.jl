@@ -1,6 +1,6 @@
 # ---
-# title: Density plot
-# cover: assets/density_plot.png
+# title: Density plots
+# cover: assets/density_plots.png
 # description: Visualizing kernel density estimation of data
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
@@ -21,4 +21,4 @@ plt = data(df) * mapping(:x, color=:c) * density(bandwidth=0.5) * visual(orienta
 
 # save cover image #src
 mkpath("assets") #src
-save("assets/density_plot.png", fg) #src
+save("assets/density_plots.png", fg) #src
