@@ -1,4 +1,4 @@
-# Mappings
+# Mapping
 
 Mappings determine how the date is translated into a plot.
 Positional mappings correspond to the `x`, `y` or `z` axes of the plot,

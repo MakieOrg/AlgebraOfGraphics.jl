@@ -2,6 +2,7 @@ using AlgebraOfGraphics
 using Documenter
 using Literate, Glob
 using CairoMakie
+using DemoCards
 
 CairoMakie.activate!(type="svg")
 
@@ -14,6 +15,8 @@ foreach(fn -> Literate.markdown(fn, GENERATED), SOURCE_FILES)
 
 DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics); recursive=true)
 
+gallery, postprocess_cb, gallery_assets = makedemos("gallery")
+
 makedocs(;
     modules=[AlgebraOfGraphics],
     authors="Pietro Vertechi <pietro.vertechi@veos.digital>",
@@ -21,22 +24,20 @@ makedocs(;
     sitename="Algebra of Graphics",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        assets=["assets/favicon.ico"],
+        assets=["assets/favicon.ico", gallery_assets],
     ),
     pages=Any[
         "Home" => "index.md",
         "Getting Started" => [
             "generated/penguins.md",
-            "generated/gallery.md",
+            gallery
         ],
         "Algebra of Layers" => [
             "layers/introduction.md",
             "layers/data.md",
-            "layers/mappings.md",
-            "Transformations" => [
-                "generated/visualtransformations.md",
-                "generated/datatransformations.md",
-            ],
+            "layers/mapping.md",
+            "generated/visual.md",
+            "generated/analyses.md",
             "layers/operations.md",
             "layers/draw.md",
         ],
@@ -53,6 +54,7 @@ makedocs(;
     ],
     strict=true,
 )
+postprocess_cb() # redirect url for DemoCards generated files
 
 deploydocs(;
     repo="github.com/JuliaPlots/AlgebraOfGraphics.jl",

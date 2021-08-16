@@ -1,4 +1,4 @@
-# # Data Transformations
+# # Analyses
 #
 # ## Histogram
 #

@@ -1,15 +1,15 @@
 # Introduction
 
-Layers are the key building block of AlgebraOfGraphicss.
+Layers are the key building block of AlgebraOfGraphics.
+Each layer is the product of the following elementary objects.
 
-Each layer is composed of the following fields.
+- [Data](@ref) (encoding the dataset).
+- [Mapping](@ref) (associating variables to plot attributes).
+- [Visual](@ref) (encoding data-independent plot information).
+- [Analyses](@ref) (encoding transformations that are applied to the data before plotting).
 
-- [Data](@ref).
-- [Mappings](@ref).
-- Transformations:
-    - [Visual Transformations](@ref),
-    - [Data Transformations](@ref).
+Data, mappings, visuals and analyses can be combined together using [Algebraic Operations](@ref)
+to form one or more layers.
 
-Layers can be combined with [Algebraic Operations](@ref).
-
-Finally, [Drawing Layers](@ref) is the last step of the pipeline.
+The output of these algebraic operations can be visualized, as shown in the section
+[Drawing Layers](@ref).
