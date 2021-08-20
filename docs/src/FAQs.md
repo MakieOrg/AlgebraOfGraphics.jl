@@ -119,3 +119,21 @@ fg #hide
     When setting the `width` and `height` dimensions of each axis manually you
     will need to call `AlgebraOfGraphics.resizetocontent!(fg)` before
     displaying the figure such that each axis is sized correctly.
+
+This `.figure` field can also be used to adjust a plot using `Makie`.
+See the Makie [API reference](http://makie.juliaplots.org/stable/makielayout/reference.html)
+for more information.
+
+```@example combined-3
+using AlgebraOfGraphics, CairoMakie #hide
+
+df = (x = exp.(rand(1000)),) #hide
+hist2 = data(df) * mapping(:x => log => "log(x)") * histogram()  #hide
+fg = draw(hist2; figure = (resolution = (600, 400),))  #hide
+
+lines(fg.figure[1, 1], 0..2pi, cos) #hide
+fg.figure.content[1].xticklabelrotation = Float64(pi/6)
+fg #hide
+```
+
+See the 
