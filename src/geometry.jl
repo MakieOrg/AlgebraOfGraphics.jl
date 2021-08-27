@@ -1,4 +1,4 @@
-to_points(ring) = map(Point2f0, ring)
+to_points(ring) = map(Point2f, ring)
 
 function to_polygon(rings)
     exterior, interiors... = map(to_points, rings)
