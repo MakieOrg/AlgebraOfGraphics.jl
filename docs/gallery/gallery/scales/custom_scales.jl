@@ -38,6 +38,16 @@ z = rand(["a", "b", "c", "d"], 100)
 df = (; x, y, z)
 plt = data(df) * mapping(:x, :y, color=:z)
 colors = ["a" => colorant"#E24A33", "c" => colorant"#348ABD", colorant"#988ED5", colorant"#777777"]
+draw(plt; palettes=(color=colors,))
+
+# Categorical color gradients can also be passed to `palettes`.
+
+x = rand(100)
+y = rand(100)
+z = rand(["a", "b", "c", "d"], 100)
+df = (; x, y, z)
+plt = data(df) * mapping(:x, :y, color=:z)
+colors = cgrad(:cividis, 4, categorical=true)
 fg = draw(plt; palettes=(color=colors,))
 
 # save cover image #src

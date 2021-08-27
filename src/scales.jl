@@ -1,8 +1,10 @@
 increment!(idx::Ref) = (idx[] += 1; idx[])
 
-function apply_palette(p::AbstractVector, uv)
-    values = filter(x -> !isa(x, Pair), p)
-    pairs = Dict(filter(x -> isa(x, Pair), p))
+cycle(v::AbstractVector, i::Int) = v[mod1(i, length(v))]
+
+function apply_palette(p::Union{AbstractVector, AbstractColorList}, uv)
+    values = [x for x in p if !isa(x, Pair)]
+    pairs = Dict(x for x in p if isa(x, Pair))
     idx = Ref(0)
     return [get(() -> cycle(values, increment!(idx)), pairs, v) for v in uv]
 end
@@ -132,11 +134,6 @@ function ticks((min, max)::NTuple{2, T}) where T<:TimeType
     min_pure, max_pure = min_ms / Millisecond(1), max_ms / Millisecond(1)
     dates, labels = optimize_datetime_ticks(min_pure, max_pure)
     return (dates .- time_offset, labels)
-end
-
-function cycle(v::AbstractVector, i::Int)
-    ax = axes(v, 1)
-    return v[first(ax) + mod(i - first(ax), length(ax))]
 end
 
 @enum ScientificType categorical continuous geometrical
