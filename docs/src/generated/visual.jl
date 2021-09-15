@@ -3,7 +3,8 @@
 # The function `visual` can be used to give data-independent visual information about the plot
 # (plotting function or attributes).
 
-# The available plotting functions are documetned [here](http://makie.juliaplots.org/dev/examples/plotting_functions/).
+# The available plotting functions are documented [here](http://makie.juliaplots.org/dev/examples/plotting_functions/).
+# Capitalize the first-letter of the function to use it as an argument to `visual` (e.g. `visual(Scatter)`).
 # See the documentation of each plotting function to discover the available attributes.
 
 ## Examples
