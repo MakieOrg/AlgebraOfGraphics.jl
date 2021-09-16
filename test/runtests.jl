@@ -1,4 +1,5 @@
 using AlgebraOfGraphics, Makie, Test
+using AlgebraOfGraphics: Sorted
 
 @testset "utils" begin
     v1 = [1, 2, 7, 11]
@@ -35,7 +36,7 @@ end
     @test entry.positional[1] == fill(map(exp, df.x))
     @test entry.positional[2] == [df.y, df.z]
     @test entry.primary[:color] == fill(df.c)
-    @test entry.primary[:marker] == [fill("a"), fill("b")]
+    @test entry.primary[:marker] == [fill(Sorted(1, "a")), fill(Sorted(2, "b"))]
     @test entry.named == (;)
     @test entry.labels[1] == fill("x")
     @test entry.labels[2] ==  ["y", "z"]
@@ -107,9 +108,9 @@ end
 
 @testset "helpers" begin
     r = renamer("a" => "A", "b" => "B", "c" => "C")
-    @test r("a") == AlgebraOfGraphics.Sorted(1, "A")
-    @test r("b") == AlgebraOfGraphics.Sorted(2, "B")
-    @test r("c") == AlgebraOfGraphics.Sorted(3, "C")
+    @test r("a") == Sorted(1, "A")
+    @test r("b") == Sorted(2, "B")
+    @test r("c") == Sorted(3, "C")
     @test_throws KeyError r("d")
     @test string(r("a")) == "A"
     @test string(r("b")) == "B"
@@ -119,9 +120,9 @@ end
     @test r("a") != r("b")
 
     s = sorter("b", "c", "a")
-    @test s("a") == AlgebraOfGraphics.Sorted(3, "a")
-    @test s("b") == AlgebraOfGraphics.Sorted(1, "b")
-    @test s("c") == AlgebraOfGraphics.Sorted(2, "c")
+    @test s("a") == Sorted(3, "a")
+    @test s("b") == Sorted(1, "b")
+    @test s("c") == Sorted(2, "c")
     @test_throws KeyError s("d")
     @test string(s("a")) == "a"
     @test string(s("b")) == "b"
@@ -130,9 +131,9 @@ end
     @test s("a") == s("a")
     @test s("a") != s("b")
 
-    a = AlgebraOfGraphics.Sorted(1, [1, 2])
-    b = AlgebraOfGraphics.Sorted(1, [1, 2])
-    c = AlgebraOfGraphics.Sorted(1, [1, 3])
+    a = Sorted(1, [1, 2])
+    b = Sorted(1, [1, 2])
+    c = Sorted(1, [1, 3])
     @test a == b
     @test hash(a) == hash(b)
     @test a != c
