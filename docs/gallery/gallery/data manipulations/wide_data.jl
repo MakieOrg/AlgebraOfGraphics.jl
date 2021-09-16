@@ -20,7 +20,7 @@ draw(plt)
 #
 
 df = (a=rand(100), b=rand(100), c=rand(100), d=rand(100))
-labels = ["Trace 1", "Trace 2", "Trace 3"]
+labels = ["Trace One", "Trace Two", "Trace Three"]
 layers = linear() + visual(Scatter)
 plt = data(df) * layers * mapping(1, 2:4 .=> "value", color=dims(1) => renamer(labels))
 draw(plt)

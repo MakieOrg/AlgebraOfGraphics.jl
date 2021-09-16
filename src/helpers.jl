@@ -20,7 +20,10 @@ struct Renamer{U, L}
     labels::L
 end
 
-(r::Renamer{Nothing})(x) = r.labels[x]
+function (r::Renamer{Nothing})(x)
+    i = LinearIndices(r.labels)[x]
+    return Sorted(i, r.labels[i])
+end
 
 function (r::Renamer)(x)
     for i in keys(r.uniquevalues)
