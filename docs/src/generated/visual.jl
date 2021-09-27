@@ -4,7 +4,7 @@
 # (plotting function or attributes).
 
 # The available plotting functions are documented [here](http://makie.juliaplots.org/dev/examples/plotting_functions/).
-# Capitalize the first-letter of the function to use it as an argument to `visual` (e.g. `visual(Scatter)`).
+# Refer to plotting functions using upper CamelCase for `visual`'s first argument (e.g. `visual(Scatter), visual(BarPlot)`).
 # See the documentation of each plotting function to discover the available attributes.
 
 ## Examples
