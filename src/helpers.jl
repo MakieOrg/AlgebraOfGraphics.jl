@@ -82,14 +82,20 @@ function renamer(arr::ArrayLike)
     return Renamer(k, v)
 end
 
-"""
-    sorter(ks...)
+function sorter(ks...)
+    vs = map(string, ks)
+    return Renamer(ks, vs)
+end
 
-Utility to reorder a categorical variable, as in `sorter("low", "medium", "high")`.
+"""
+    sorter(ks)
+
+Utility to reorder a categorical variable, as in `sorter(["low", "medium", "high"])`.
+A vararg method `sorter("low", "medium", "high")` is also supported.
 `ks` should include all the unique values of the categorical variable.
 The order of `ks` is respected in the legend.
 """
-function sorter(ks...)
+function sorter(ks::ArrayLike)
     vs = map(string, ks)
     return Renamer(ks, vs)
 end

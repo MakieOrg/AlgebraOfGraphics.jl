@@ -74,9 +74,9 @@ The complete API of helper functions is available at [Mapping helpers](@ref).
 
 ```julia
 # column `train` has two unique values, `true` and `false`
-:train => renamer(true => "training", false => "testing") => "Dataset"
+:train => renamer([true => "training", false => "testing"]) => "Dataset"
 # column `price` has three unique values, `"low"`, `"medium"`, and `"high"`
-:price => sorter("low", "medium", "high")
+:price => sorter(["low", "medium", "high"])
 # column `age` is expressed in integers and we want to treat it as categorical
 :age => nonnumeric
 # column `labels` is expressed in strings and we do not want to treat it as categorical
