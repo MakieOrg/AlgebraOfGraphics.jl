@@ -29,7 +29,7 @@ struct CategoricalScale{S, T, U}
     label::Union{AbstractString, Nothing}
 end
 
-function CategoricalScale(data, palette, label::Union{String, Nothing})
+function CategoricalScale(data, palette, label::Union{AbstractString, Nothing})
     return CategoricalScale(data, nothing, palette, label)
 end
 
