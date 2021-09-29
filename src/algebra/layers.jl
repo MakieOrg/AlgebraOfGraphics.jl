@@ -136,7 +136,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             end
             isnothing(scale) && continue
             label = compute_label(ae.entries, i)
-            for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
+            for (k′, v) in pairs((label=to_string(label), ticks=ticks(scale)))
                 k = Symbol(var, k′)
                 k in keys(axis) || (getproperty(ae.axis, k)[] = v)
             end

@@ -16,7 +16,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries})
             delete!(ax)
         else
             v, _ = it
-            ax.title[] = string(v)
+            ax.title[] = to_string(v)
         end
     end
     return
@@ -57,7 +57,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
             return (gap, 0f0, 0f0, 0f0)
         end
         for m in 1:M
-            Label(fig[m, N, Right()], string(row_dict[m]);
+            Label(fig[m, N, Right()], to_string(row_dict[m]);
                 rotation=-π/2, padding=facetlabelpadding,
                 facetlabelattributes...)
         end
@@ -89,7 +89,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
             return (0f0, 0f0, gap, 0f0)
         end
         for n in 1:N
-            Label(fig[1, n, Top()], string(col_dict[n]);
+            Label(fig[1, n, Top()], to_string(col_dict[n]);
                 padding=labelpadding, facetlabelattributes...)
         end
         protrusion = lift(

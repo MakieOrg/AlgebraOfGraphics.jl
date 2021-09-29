@@ -26,7 +26,7 @@ struct CategoricalScale{S, T, U}
     data::S
     plot::T
     palette::U
-    label::Union{String, Nothing}
+    label::Union{AbstractString, Nothing}
 end
 
 function CategoricalScale(data, palette, label::Union{String, Nothing})
@@ -123,7 +123,7 @@ end
 # Logic to create ticks from a scale
 # Should take current tick to incorporate information
 function ticks(scale::CategoricalScale)
-    u = map(string, datavalues(scale))
+    u = map(to_string, datavalues(scale))
     return (axes(u, 1), u)
 end
 

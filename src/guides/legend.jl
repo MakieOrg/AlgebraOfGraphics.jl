@@ -99,7 +99,7 @@ function compute_legend(grid::Matrix{AxisEntries})
 
     plottypes, attributes = plottypes_attributes(entries(grid))
 
-    labels = Vector{String}[]
+    labels = Vector{AbstractString}[]
     elements_list = Vector{Vector{LegendElement}}[]
 
     for title in titles
@@ -115,7 +115,7 @@ function compute_legend(grid::Matrix{AxisEntries})
             end
             return elements
         end
-        push!(labels, map(string, uniquevalues))
+        push!(labels, map(to_string, uniquevalues))
         push!(elements_list, elements)
     end
     return elements_list, labels, nonemptytitles
