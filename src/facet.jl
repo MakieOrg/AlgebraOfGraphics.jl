@@ -18,11 +18,12 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; linkxaxes = true, li
 
     # span axis labels if appropriate
     nonempty_aes = get_nonempty_aes(aes)
+    is2d = isaxis2d(first(nonempty_aes))
 
-    if consistent_ylabels(nonempty_aes)
+    if is2d && consistent_ylabels(nonempty_aes)
         span_ylabel!(fig, aes)
     end
-    if consistent_xlabels(nonempty_aes)
+    if is2d && consistent_xlabels(nonempty_aes)
         span_xlabel!(fig, aes)
     end
     
@@ -41,13 +42,14 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; linkxaxes = true, li
 
     # span axis labels if appropriate
     nonempty_aes = get_nonempty_aes(aes)
-    
+    is2d = isaxis2d(first(nonempty_aes))
+
     if !isnothing(row_scale) && consistent_ylabels(nonempty_aes)
-        span_ylabel!(fig, aes)
+        is2d && span_ylabel!(fig, aes)
         row_labels!(fig, aes, row_scale)
     end
     if !isnothing(col_scale) && consistent_xlabels(nonempty_aes)
-        span_xlabel!(fig, aes)
+        is2d && span_xlabel!(fig, aes)
         col_labels!(fig, aes, col_scale)
     end
     return
@@ -122,13 +124,11 @@ end
 
 function consistent_xlabels(nonempty_aes)
     ax = first(nonempty_aes).axis
-    ax isa Axis3 && return false
     return all(ae -> ae.axis.xlabel[] == ax.xlabel[], nonempty_aes)
 end
 
 function consistent_ylabels(nonempty_aes)
     ax = first(nonempty_aes).axis
-    ax isa Axis3 && return false
     return all(ae -> ae.axis.ylabel[] == ax.ylabel[], nonempty_aes)
 end
 
