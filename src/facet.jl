@@ -122,11 +122,13 @@ end
 
 function consistent_xlabels(nonempty_aes)
     ax = first(nonempty_aes).axis
+    ax isa Axis3 && return false
     return all(ae -> ae.axis.xlabel[] == ax.xlabel[], nonempty_aes)
 end
 
 function consistent_ylabels(nonempty_aes)
     ax = first(nonempty_aes).axis
+    ax isa Axis3 && return false
     return all(ae -> ae.axis.ylabel[] == ax.ylabel[], nonempty_aes)
 end
 
