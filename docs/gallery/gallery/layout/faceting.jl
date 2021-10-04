@@ -14,11 +14,19 @@ df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", 
 plt = data(df) * mapping(:x, :y, col=:i, row=:j)
 draw(plt)
 
+# ## Facet grid unlinked axes
+
+draw(plt, facet = (; linkxaxes = false))
+
 # ## Facet wrap
 
 df = (x=rand(100), y=rand(100), l=rand(["a", "b", "c", "d", "e"], 100))
 plt = data(df) * mapping(:x, :y, layout=:l)
 draw(plt)
+
+# ## Facet wrap with unlinked axes
+
+draw(plt, facet = (; linkxaxes = false, linkyaxes = false))
 
 # ## Adding traces to only some subplots
 
