@@ -1,33 +1,49 @@
 # Apply default faceting look to a grid of `AxisEntries`
 
-function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries})
+function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
+
     scale = get(aes[1].scales, :layout, nothing)
     isnothing(scale) && return
-    linkaxes!(aes...)
+
+    # Link axes and hide decorations if appropriate
+    attr = facet_replace_defaults(aes, facet)
+    link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
+    hideinnerdecorations!(aes, attr.hidexdecorations, attr.hideydecorations)
 
     # delete empty axes
     deleteemptyaxes!(aes)
 
     # add facet labels
     panel_labels!(fig, aes, scale)
+
+    # span axis labels if appropriate
+    nonempty_aes = get_nonempty_aes(aes)
+    is2d = isaxis2d(first(nonempty_aes))
+
+    if is2d && consistent_ylabels(aes)
+        span_ylabel!(fig, aes)
+    end
+    if is2d && consistent_xlabels(aes)
+        span_xlabel!(fig, aes)
+    end
     
     return
 end
 
-# TODO: add configuration options here (esp. to determine when / how to link)
-function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
+function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     M, N = size(aes)
     row_scale, col_scale = map(sym -> get(aes[1].scales, sym, nothing), (:row, :col))
     all(isnothing, (row_scale, col_scale)) && return
 
     # Link axes and hide decorations if appropriate
-    hideinnerdecorations!(aes)
-    linkaxes!(aes...)
+    attr = facet_replace_defaults(aes, facet)
+    link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
+    hideinnerdecorations!(aes, attr.hidexdecorations, attr.hideydecorations)
 
     # span axis labels if appropriate
     nonempty_aes = get_nonempty_aes(aes)
     is2d = isaxis2d(first(nonempty_aes))
-    
+
     if !isnothing(row_scale) && consistent_ylabels(aes)
         is2d && span_ylabel!(fig, aes)
         row_labels!(fig, aes, row_scale)
@@ -37,6 +53,36 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries})
         col_labels!(fig, aes, col_scale)
     end
     return
+end
+
+# link axes
+
+function link_axes!(aes; linkxaxes, linkyaxes)
+    if linkxaxes == :all
+        linkxaxes!(aes...)
+	elseif linkxaxes == :bycol
+        link_cols!(aes)
+    end
+
+    if linkyaxes == :all
+        linkyaxes!(aes...)
+	elseif linkyaxes == :byrow
+        link_rows!(aes)
+    end
+end
+
+function link_rows!(aes)
+    M, N = size(aes)
+    for i in 1:M
+        linkyaxes!(aes[i,:]...)
+    end
+end
+
+function link_cols!(aes)
+    M, N = size(aes)
+    for i in 1:N
+        linkxaxes!(aes[:,i]...)
+    end
 end
 
 # facet labels
@@ -114,6 +160,16 @@ function consistent_ylabels(aes)
     return all(ae -> ae.axis.ylabel[] == ax.ylabel[], nonempty_aes)
 end
 
+function colwise_consistent_xlabels(aes)
+    _, N = size(aes)
+    all(consistent_xlabels(aes[:,i]) for i in 1:N)
+end
+
+function rowwise_consistent_ylabels(aes)
+    M, _ = size(aes)
+    all(consistent_ylabels(aes[i,:]) for i in 1:M)
+end
+
 # spanned axis labels
 
 function span_xlabel!(fig, aes)
@@ -178,14 +234,14 @@ empty_ae(ae) = isempty(ae.entries)
 get_nonempty_aes(aes) = filter(!empty_ae, aes)
 first_nonempty_axis(aes) = first(get_nonempty_aes(aes)).axis
 
-function facet!(fig, aes::AbstractMatrix{AxisEntries})
-    facet_wrap!(fig, aes)
-    facet_grid!(fig, aes)
+function facet!(fig, aes::AbstractMatrix{AxisEntries}; facet)
+    facet_wrap!(fig, aes; facet)
+    facet_grid!(fig, aes; facet)
     return
 end
 
-function facet!(fg::FigureGrid)
-    facet!(fg.figure, fg.grid)
+function facet!(fg::FigureGrid; facet)
+    facet!(fg.figure, fg.grid; facet)
     return fg
 end
 
@@ -209,10 +265,32 @@ for sym in [:linkxaxes!, :linkyaxes!, :linkaxes!]
     end
 end
 
-function hideinnerdecorations!(aes::Matrix{AxisEntries})
-    options = (label=true, ticks=true, minorticks=true, grid=false, minorgrid=false)
-    foreach(ae -> hidexdecorations!(ae; options...), aes[1:end-1, :])
-    foreach(ae -> hideydecorations!(ae; options...), aes[:, 2:end])
+function hideinnerdecorations!(aes, hidexdecorations, hideydecorations)
+    I, J = size(aes)
+        
+    if hideydecorations
+        hideydecorations!.(aes[:, 2:end], grid = false)
+    end
+    
+    if hidexdecorations
+        for i in 1:I, j in 1:J
+            # don't hide x decorations if axis below is empty
+            below_empty = (i < I) && empty_ae(aes[i+1,j])
+            
+            if (i < I) && !below_empty
+                hidexdecorations!(aes[i,j],
+                    grid = false,
+                    ticks = hidexdecorations,
+                    ticklabels = hidexdecorations
+                )
+            end
+
+            if (i < I) && below_empty
+                # improve appearance with empty axes
+                aes[i,j].axis.alignmode = Mixed(bottom = MakieLayout.GridLayoutBase.Protrusion(0))
+            end
+        end
+    end
 end
 
 function deleteemptyaxes!(aes::Matrix{AxisEntries})
