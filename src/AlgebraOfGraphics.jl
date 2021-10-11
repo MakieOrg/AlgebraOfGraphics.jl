@@ -56,5 +56,6 @@ include("transformations/frequency.jl")
 include("transformations/expectation.jl")
 include("guides/legendelements.jl")
 include("guides/legend.jl")
+include("guides/colorbar.jl")
 
 end
