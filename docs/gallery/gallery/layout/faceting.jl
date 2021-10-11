@@ -37,7 +37,7 @@ draw(plt)
 
 draw(plt, facet = (; linkxaxes = :all))
 
-# ## Facet grid unlinked x-axes
+# ## Facet grid with unlinked x-axes
 
 draw(plt, facet = (; linkxaxes = :none))
 
