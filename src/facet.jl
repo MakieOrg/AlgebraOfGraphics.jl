@@ -6,7 +6,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     isnothing(scale) && return
 
     # Link axes and hide decorations if appropriate
-    attr = facet_replace_defaults(aes, facet)
+    attr = clean_facet_attributes(aes, facet)
     link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
     hideinnerdecorations!(aes, attr.hidexdecorations, attr.hideydecorations)
 
@@ -36,7 +36,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     all(isnothing, (row_scale, col_scale)) && return
 
     # Link axes and hide decorations if appropriate
-    attr = facet_replace_defaults(aes, facet)
+    attr = clean_facet_attributes(aes, facet)
     link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
     hideinnerdecorations!(aes, attr.hidexdecorations, attr.hideydecorations)
 
@@ -55,18 +55,77 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     return
 end
 
+function clean_facet_attributes(aes, facet)
+    linkxaxes = get(facet, :linkxaxes, automatic)
+    linkyaxes = get(facet, :linkyaxes, automatic)
+    hidexdecorations = get(facet, :hidexdecorations, automatic)
+    hideydecorations = get(facet, :hideydecorations, automatic)
+
+    if linkxaxes ∉ [:all, :colwise, :none, true, false, automatic]
+        @warn "Replaced invalid keyword linkxaxes = $linkxaxes by automatic"
+        linkxaxes = automatic
+    end
+
+    if linkyaxes ∉ [:all, :rowwise, :none, :true, false, automatic] 
+        @warn "Replaced invalid keyword linkyaxes = $linkyaxes by automatic"
+        linkyaxes = automatic
+    end
+
+    if hidexdecorations ∉ [true, false, automatic]
+        @warn "Replaced invalid keyword hidexdecorations = $hidexdecorations by automatic"
+        hidexdecorations = automatic
+    end
+
+    if hideydecorations ∉ [true, false, automatic] 
+        @warn "Replaced invalid keyword hideydecorations = $hideydecorations by automatic"
+        hideydecorations = automatic
+    end
+
+    if linkxaxes ∈ [automatic, true]
+        if colwise_consistent_xlabels(aes)
+            linkxaxes = :colwise
+		 else
+         	linkxaxes = :none
+		 end
+    end
+
+    if linkyaxes ∈ [automatic, true]
+        if rowwise_consistent_ylabels(aes)
+            linkyaxes = :rowwise
+        else
+            linkyaxes = :none
+        end
+    end
+
+    if linkxaxes == false
+		linkxaxes = :none
+	end
+    if linkyaxes == false
+		linkyaxes = :none
+	end
+
+	if hidexdecorations === automatic
+		hidexdecorations = (linkxaxes != :none)
+	end
+	if hideydecorations === automatic
+		hideydecorations = (linkyaxes != :none)
+	end
+
+    (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
+end
+
 # link axes
 
 function link_axes!(aes; linkxaxes, linkyaxes)
     if linkxaxes == :all
         linkxaxes!(aes...)
-	elseif linkxaxes == :bycol
+	elseif linkxaxes == :colwise
         link_cols!(aes)
     end
 
     if linkyaxes == :all
         linkyaxes!(aes...)
-	elseif linkyaxes == :byrow
+	elseif linkyaxes == :rowwise
         link_rows!(aes)
     end
 end
