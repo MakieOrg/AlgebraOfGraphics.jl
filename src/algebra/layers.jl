@@ -66,6 +66,19 @@ function compute_grid_positions(scales, primary=(;))
 end
 
 function compute_axes_grid(fig, s::OneOrMoreLayers;
+    axis=NamedTuple(), palettes=NamedTuple())
+
+    axs, axes_grid = compute_axes_grid(s; axis, palettes)
+
+    sizes = map(length, axs)
+    if sizes !== (1, 1) && fig isa Axis
+        error("You can only pass an Axis to draw!, if the calculated layout only contains one element. Elements: $(sizes)")
+    end
+
+    return map(ae -> AxisEntries(ae, fig), axes_grid)
+end
+
+function compute_axes_grid(s::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
     layers::Layers = s
     entries = map(process, layers)
@@ -79,27 +92,17 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     # fit scales (compute plot values using all data values)
     map!(fitscale, values(scales))
 
-
-    function create_axis(fig, c)
+    function create_axis(c)
         type = get(axis, :type, Axis)
-        options = Base.structdiff(axis, (; type))
-        ax = type(fig[Tuple(c)...]; options...)
-        return AxisEntries(ax, Entry[], scales)
-    end
-    function create_axis(ax::Axis, c)
-        if !isempty(axis)
-            @warn("Axis got passed, but also axis attributes. Ignoring axis attributes: $(axis)")
-        end
-        return AxisEntries(ax, Entry[], scales)
+        options = Dict(; Base.structdiff(axis, (; type))...)
+        position = Tuple(c)
+
+        return _AxisEntries_(type, position, options, Entry[], scales)
     end
     axs = compute_grid_positions(scales)
-    sizes = map(length, axs)
 
-    if sizes !== (1, 1) && fig isa Axis
-        error("You can only pass an Axis to draw!, if the calculated layout only contains one element. Elements: $(sizes)")
-    end
     axes_grid = map(CartesianIndices(axs)) do c
-        return create_axis(fig, c)
+        return create_axis(c)
     end
 
     for e in entries
@@ -118,6 +121,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         end
     end
 
+    #=
     # Link colors
     labeledcolorrange = getlabeledcolorrange(axes_grid)
     if !isnothing(labeledcolorrange)
@@ -126,10 +130,11 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             entry.attributes[:colorrange] = colorrange
         end
     end
+=#
 
     # Axis labels and ticks
     for ae in axes_grid
-        ndims = isaxis2d(ae) ? 2 : 3
+        ndims = ae.type isa Axis ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
             scale = get(scales, i) do
                 return compute_extrema(AlgebraOfGraphics.entries(axes_grid), i)
@@ -138,11 +143,14 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             label = compute_label(ae.entries, i)
             for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
                 k = Symbol(var, k′)
-                k in keys(axis) || (getproperty(ae.axis, k)[] = v)
+                if k ∉ keys(axis)
+                    ae.options[k] = v
+                end
             end
         end
     end
-    return axes_grid
+
+    return axs, axes_grid
 end
 
 function Makie.plot!(fig, s::OneOrMoreLayers;
