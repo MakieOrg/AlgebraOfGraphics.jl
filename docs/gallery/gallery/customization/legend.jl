@@ -1,5 +1,5 @@
 # ---
-# title: Axis tweaking
+# title: Legend tweaking
 # cover: assets/legend_tweaking.png
 # description: Setting legend attributes
 # ---
