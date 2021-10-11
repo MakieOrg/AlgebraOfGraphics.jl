@@ -94,7 +94,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
 
     function create_axis(c)
         type = get(axis, :type, Axis)
-        options = Dict(; Base.structdiff(axis, (; type))...)
+        options = Dict(pairs(Base.structdiff(axis, (; type))))
         position = Tuple(c)
 
         return _AxisEntries_(type, position, options, Entry[], scales)
