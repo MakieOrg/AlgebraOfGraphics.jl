@@ -121,7 +121,6 @@ function compute_axes_grid(s::OneOrMoreLayers;
         end
     end
 
-    #=
     # Link colors
     labeledcolorrange = getlabeledcolorrange(axes_grid)
     if !isnothing(labeledcolorrange)
@@ -130,7 +129,6 @@ function compute_axes_grid(s::OneOrMoreLayers;
             entry.attributes[:colorrange] = colorrange
         end
     end
-=#
 
     # Axis labels and ticks
     for ae in axes_grid
