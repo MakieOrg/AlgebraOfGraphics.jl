@@ -82,7 +82,9 @@ function clean_facet_attributes(aes, facet)
     end
 
     if linkxaxes ∈ [automatic, true]
-        if colwise_consistent_xlabels(aes)
+        if consistent_xlabels(aes)
+            linkxaxes = :all
+        elseif colwise_consistent_xlabels(aes)
             linkxaxes = :colwise
 		 else
          	linkxaxes = :none
@@ -90,7 +92,9 @@ function clean_facet_attributes(aes, facet)
     end
 
     if linkyaxes ∈ [automatic, true]
-        if rowwise_consistent_ylabels(aes)
+        if consistent_ylabels(aes)
+            linkyaxes = :all
+        elseif rowwise_consistent_ylabels(aes)
             linkyaxes = :rowwise
         else
             linkyaxes = :none
