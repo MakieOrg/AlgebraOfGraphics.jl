@@ -21,7 +21,7 @@ end
 function legend_attributes(legend_attr, has_colorbar)
     legend_attr = Dict(pairs(legend_attr))
     
-	position        = pop!(legend_attr, :position, :top)
+	position        = pop!(legend_attr, :position, :right)
 	orientation     = pop!(legend_attr, :orientation, default_orientation(position))
 	titleposition   = pop!(legend_attr, :titleposition, default_titleposition(orientation))
 	nbanks          = pop!(legend_attr, :nbanks, default_nbanks(orientation, has_colorbar))
