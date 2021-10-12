@@ -33,9 +33,9 @@ plt = data(df) * mapping(:x, :y, row=:i, col=:j)
 
 draw(plt)
 
-# ## Facet grid with all x-axes linked
+# ## Facet grid with minimal axes linking needed to remove ticks
 
-draw(plt, facet = (; linkxaxes = :all))
+draw(plt, facet = (; linkxaxes = :minimal, linkyaxes = :minimal))
 
 # ## Facet grid with unlinked x-axes
 
