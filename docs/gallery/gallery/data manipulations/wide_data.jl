@@ -43,11 +43,11 @@ draw(plt)
 
 # ## Axes can be fully linked or fully unlinked
 
-draw(plt, facet = (; linkxaxes = :all))
+draw(plt, facet = (; linkxaxes = :all, linkyaxes = :all))
 
 #
 
-fg = draw(plt, facet = (; linkxaxes = :none))
+fg = draw(plt, facet = (; linkxaxes = :none, linkyaxes = :none))
 
 # save cover image #src
 mkpath("assets") #src
