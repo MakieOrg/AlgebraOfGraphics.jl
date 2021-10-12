@@ -61,12 +61,12 @@ function clean_facet_attributes(aes, facet)
     hidexdecorations = get(facet, :hidexdecorations, automatic)
     hideydecorations = get(facet, :hideydecorations, automatic)
 
-    if linkxaxes ∉ [:all, :colwise, :none, true, false, automatic]
+    if linkxaxes ∉ [:all, :colwise, :minimal, :none, true, false, automatic]
         @warn "Replaced invalid keyword linkxaxes = $linkxaxes by automatic"
         linkxaxes = automatic
     end
 
-    if linkyaxes ∉ [:all, :rowwise, :none, :true, false, automatic] 
+    if linkyaxes ∉ [:all, :rowwise, :minimal, :none, true, false, automatic] 
         @warn "Replaced invalid keyword linkyaxes = $linkyaxes by automatic"
         linkyaxes = automatic
     end
@@ -91,10 +91,26 @@ function clean_facet_attributes(aes, facet)
         end
     end
 
+    if linkxaxes == :minimal
+        if colwise_consistent_xlabels(aes)
+            linkxaxes = :colwise
+        else
+            linkxaxes = :none
+        end
+    end
+
     if linkyaxes === automatic
         if consistent_ylabels(aes)
             linkyaxes = :all
         elseif rowwise_consistent_ylabels(aes)
+            linkyaxes = :rowwise
+        else
+            linkyaxes = :none
+        end
+    end
+
+    if linkyaxes == :minimal
+        if rowwise_consistent_ylabels(aes)
             linkyaxes = :rowwise
         else
             linkyaxes = :none
