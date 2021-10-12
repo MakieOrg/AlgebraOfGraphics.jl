@@ -169,9 +169,9 @@ Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@r
 [`legend!`](@ref), and [`colorbar!`](@ref) independently.
 """
 function draw(s::OneOrMoreLayers;
-              axis = NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
+              axis = NamedTuple(), figure=NamedTuple(), palettes=NamedTuple(), facet=NamedTuple())
     fg = plot(s; axis, figure, palettes)
-    facet!(fg)
+    facet!(fg; facet)
     colorbar!(fg)
     legend!(fg)
     resizetocontent!(fg)
@@ -187,8 +187,8 @@ The output can be customized by giving axis attributes to `axis` or custom palet
 to `palettes`.  
 """
 function draw!(fig, s::OneOrMoreLayers;
-               axis=NamedTuple(), palettes=NamedTuple())
+               axis=NamedTuple(), palettes=NamedTuple(), facet=NamedTuple())
     ag = plot!(fig, s; axis, palettes)
-    facet!(fig, ag)
+    facet!(fig, ag; facet)
     return ag
 end
