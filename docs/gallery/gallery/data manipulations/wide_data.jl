@@ -27,7 +27,7 @@ draw(plt)
 
 # The wide format is combined with broadcast semantics.
 
-# ## Axes are linked by default
+# ## Axes are linked when they correspond to the same variable
 
 df = (
     sepal_length = 1 .+ rand(100), 
@@ -39,9 +39,13 @@ xvars = ["sepal_length", "sepal_width"]
 yvars = ["petal_length" "petal_width"]
 layers = linear() + visual(Scatter)
 plt = data(df) * layers * mapping(xvars, yvars, col=dims(1), row=dims(2))
-fg = draw(plt)
+draw(plt)
 
-# ## Axes can be unlinked
+# ## Axes can be fully linked or fully unlinked
+
+draw(plt, facet = (; linkxaxes = :all))
+
+#
 
 fg = draw(plt, facet = (; linkxaxes = :none))
 
