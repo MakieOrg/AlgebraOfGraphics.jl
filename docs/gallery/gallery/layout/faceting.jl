@@ -11,22 +11,22 @@ set_aog_theme!() #src
 # ## Facet grid
 
 df = let
-	N = 100
-	x0 = rand(1:10, N)
-	i = rand(["α", "β"], N)
-	j = rand(["a", "b", "c"], N)
+    N = 100
+    x0 = rand(1:10, N)
+    i = rand(["α", "β"], N)
+    j = rand(["a", "b", "c"], N)
 
-	x = map(zip(x0, j)) do (xx, jj)
-		shift = jj == "a" ? -2.9 : jj == "c" ? 2.9 : 0.0
-		xx + shift
-	end
+    x = map(zip(x0, j)) do (xx, jj)
+        shift = jj == "a" ? -2.9 : jj == "c" ? 2.9 : 0.0
+        xx + shift
+    end
 
-	y = map(zip(x0, i)) do (xx, ii)
-		shift = ii == "α" ? -3.9 : 3.9
-		xx + 2 + shift + rand()
-	end
+    y = map(zip(x0, i)) do (xx, ii)
+        shift = ii == "α" ? -3.9 : 3.9
+        xx + 2 + shift + rand()
+    end
 
-	(; x, y, i, j)
+    (; x, y, i, j)
 end
 
 plt = data(df) * mapping(:x, :y, row=:i, col=:j)

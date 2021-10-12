@@ -30,11 +30,11 @@ draw(plt)
 # ## Axes are linked by default
 
 df = (
-		sepal_length = 1 .+ rand(100), 
-		sepal_width = 2 .+ rand(100), 	
-		petal_length = 3 .+ rand(100),
-		petal_width = 4 .+ rand(100)
-	)
+    sepal_length = 1 .+ rand(100), 
+    sepal_width = 2 .+ rand(100),
+    petal_length = 3 .+ rand(100),
+    petal_width = 4 .+ rand(100)
+)
 xvars = ["sepal_length", "sepal_width"]
 yvars = ["petal_length" "petal_width"]
 layers = linear() + visual(Scatter)

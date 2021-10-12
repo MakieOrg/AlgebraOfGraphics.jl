@@ -86,9 +86,9 @@ function clean_facet_attributes(aes, facet)
             linkxaxes = :all
         elseif colwise_consistent_xlabels(aes)
             linkxaxes = :colwise
-		 else
-         	linkxaxes = :none
-		 end
+        else
+            linkxaxes = :none
+        end
     end
 
     if linkyaxes ∈ [automatic, true]
@@ -102,18 +102,18 @@ function clean_facet_attributes(aes, facet)
     end
 
     if linkxaxes == false
-		linkxaxes = :none
-	end
+        linkxaxes = :none
+    end
     if linkyaxes == false
-		linkyaxes = :none
-	end
+        linkyaxes = :none
+    end
 
-	if hidexdecorations === automatic
-		hidexdecorations = (linkxaxes != :none)
-	end
-	if hideydecorations === automatic
-		hideydecorations = (linkyaxes != :none)
-	end
+    if hidexdecorations === automatic
+        hidexdecorations = (linkxaxes != :none)
+    end
+    if hideydecorations === automatic
+        hideydecorations = (linkyaxes != :none)
+    end
 
     (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
 end
@@ -123,13 +123,13 @@ end
 function link_axes!(aes; linkxaxes, linkyaxes)
     if linkxaxes == :all
         linkxaxes!(aes...)
-	elseif linkxaxes == :colwise
+    elseif linkxaxes == :colwise
         link_cols!(aes)
     end
 
     if linkyaxes == :all
         linkyaxes!(aes...)
-	elseif linkyaxes == :rowwise
+    elseif linkyaxes == :rowwise
         link_rows!(aes)
     end
 end
@@ -206,7 +206,7 @@ function facetlabelattributes(ax)
         textsize=ax.titlesize,
     )
 
-	(; titlegap, attributes)
+    (; titlegap, attributes)
 end
 
 # consistent axis labels
