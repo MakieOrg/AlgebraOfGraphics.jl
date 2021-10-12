@@ -1,5 +1,5 @@
 function legend!(fg::FigureGrid; kwargs...)
-		
+ 
     position, attr = legend_attributes(kwargs, false)
     
     guide_pos = guides_position(fg.figure, position)
@@ -21,12 +21,12 @@ end
 function legend_attributes(legend_attr, has_colorbar)
     legend_attr = Dict(pairs(legend_attr))
     
-	position        = pop!(legend_attr, :position, :right)
-	orientation     = pop!(legend_attr, :orientation, default_orientation(position))
-	titleposition   = pop!(legend_attr, :titleposition, default_titleposition(orientation))
-	nbanks          = pop!(legend_attr, :nbanks, default_nbanks(orientation, has_colorbar))
-	tellwidth       = pop!(legend_attr, :tellwidth, position ∈ [:left, :right])
-	tellheight      = pop!(legend_attr, :tellwidth, position ∈ [:top, :bottom])
+    position        = pop!(legend_attr, :position, :right)
+    orientation     = pop!(legend_attr, :orientation, default_orientation(position))
+    titleposition   = pop!(legend_attr, :titleposition, default_titleposition(orientation))
+    nbanks          = pop!(legend_attr, :nbanks, default_nbanks(orientation, has_colorbar))
+    tellwidth       = pop!(legend_attr, :tellwidth, position ∈ [:left, :right])
+    tellheight      = pop!(legend_attr, :tellwidth, position ∈ [:top, :bottom])
 
     position, (; orientation, titleposition, nbanks, tellwidth, tellheight, legend_attr...)
 end
