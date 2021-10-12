@@ -188,8 +188,8 @@ The output can be customized by giving axis attributes to `axis` or custom palet
 to `palettes`.  
 """
 function draw!(fig, s::OneOrMoreLayers;
-               axis=NamedTuple(), palettes=NamedTuple())
+               axis=NamedTuple(), palettes=NamedTuple(), facet=NamedTuple())
     ag = plot!(fig, s; axis, palettes)
-    facet!(fig, ag)
+    facet!(fig, ag; facet)
     return ag
 end
