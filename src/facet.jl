@@ -81,7 +81,7 @@ function clean_facet_attributes(aes, facet)
         hideydecorations = automatic
     end
 
-    if linkxaxes ∈ [automatic, true]
+    if linkxaxes === automatic
         if consistent_xlabels(aes)
             linkxaxes = :all
         elseif colwise_consistent_xlabels(aes)
@@ -91,7 +91,7 @@ function clean_facet_attributes(aes, facet)
         end
     end
 
-    if linkyaxes ∈ [automatic, true]
+    if linkyaxes === automatic
         if consistent_ylabels(aes)
             linkyaxes = :all
         elseif rowwise_consistent_ylabels(aes)
@@ -101,10 +101,15 @@ function clean_facet_attributes(aes, facet)
         end
     end
 
-    if linkxaxes == false
+    if linkxaxes == true
+        linkxaxes = :all
+    elseif linkxaxes == false
         linkxaxes = :none
     end
-    if linkyaxes == false
+
+    if linkyaxes == true
+        linkyaxes = :all
+    elseif linkyaxes == false
         linkyaxes = :none
     end
 
