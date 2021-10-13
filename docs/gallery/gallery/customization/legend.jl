@@ -16,7 +16,7 @@ draw(plt)
 
 #
 
-fg = draw(plt, legend=(position = :top, framevisible = true, padding = 5))
+fg = draw(plt, legend=(position=:top, titleposition=:left, framevisible=true, padding=5))
 
 # save cover image #src
 mkpath("assets") #src
