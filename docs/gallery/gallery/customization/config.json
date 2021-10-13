@@ -1,4 +1,4 @@
 {
     "description": "Some advanced keywords to tweak the plot",
-    "order": ["axis.jl", "figure.jl", "legend.jl"]
+    "order": ["axis.jl", "figure.jl", "legend.jl", "colorbar.jl"]
 }

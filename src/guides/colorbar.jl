@@ -1,4 +1,9 @@
-colorbar!(fg::FigureGrid; kwargs...) = colorbar!(fg.figure[:, end+1], fg; kwargs...)
+function colorbar!(fg::FigureGrid; position=:right,
+                   orientation=default_orientation(position), kwargs...)
+
+    guide_pos = guides_position(fg.figure, position)
+    return colorbar!(guide_pos, fg; orientation, kwargs...)
+end
 
 """
     colorbar!(figpos, grid; kwargs...)
