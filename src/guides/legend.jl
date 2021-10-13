@@ -1,5 +1,4 @@
 function legend!(fg::FigureGrid; kwargs...)
- 
     attr = Dict(kwargs)
     position = pop!(attr, :position, :right)
     get!(attr, :orientation, default_orientation(position))
@@ -19,25 +18,6 @@ function legend!(figpos, grid; kwargs...)
     legend = compute_legend(grid)
     return isnothing(legend) ? nothing : Legend(figpos, legend...; kwargs...)
 end
-
-function legend_attributes(legend_attr, has_colorbar)
-    legend_attr = Dict(pairs(legend_attr))
-    
-    position        = pop!(legend_attr, :position, :right)
-    orientation     = pop!(legend_attr, :orientation, default_orientation(position))
-    titleposition   = pop!(legend_attr, :titleposition, default_titleposition(orientation))
-    nbanks          = pop!(legend_attr, :nbanks, default_nbanks(orientation, has_colorbar))
-    tellwidth       = pop!(legend_attr, :tellwidth, position ∈ [:left, :right])
-    tellheight      = pop!(legend_attr, :tellwidth, position ∈ [:top, :bottom])
-
-    position, (; orientation, titleposition, nbanks, tellwidth, tellheight, legend_attr...)
-end
-
-default_orientation(position) = position in [:top, :bottom] ? :horizontal : :vertical
-
-default_nbanks(orientation, has_colorbar) = has_colorbar && (orientation == :horizontal) ? 2 : 1
-
-default_titleposition(orientation) = orientation == :horizontal ? :left : :top
 
 """
     plottypes_attributes(entries)

@@ -15,3 +15,5 @@ function guides_position(fig::Figure, position)
 
     legs_pos
 end
+
+default_orientation(position) = position in [:top, :bottom] ? :horizontal : :vertical
