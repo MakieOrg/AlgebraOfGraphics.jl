@@ -1,4 +1,12 @@
-legend!(fg::FigureGrid; kwargs...) = legend!(fg.figure[:, end+1], fg; kwargs...)
+function legend!(fg::FigureGrid; kwargs...)
+    attr = Dict{Symbol,Any}(kwargs)
+    position = pop!(attr, :position, :right)
+    get!(attr, :orientation, default_orientation(position))
+
+    guide_pos = guides_position(fg.figure, position)
+
+    legend!(guide_pos, fg; attr...)
+end
 
 """
     legend!(figpos, grid; kwargs...)
@@ -10,7 +18,6 @@ function legend!(figpos, grid; kwargs...)
     legend = compute_legend(grid)
     return isnothing(legend) ? nothing : Legend(figpos, legend...; kwargs...)
 end
-
 
 """
     plottypes_attributes(entries)
