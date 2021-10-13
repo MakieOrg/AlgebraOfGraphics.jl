@@ -1,8 +1,8 @@
 function colorbar!(fg::FigureGrid; position=:right,
-                   orientation=default_orientation(position), kwargs...)
+                   vertical=default_isvertical(position), kwargs...)
 
     guide_pos = guides_position(fg.figure, position)
-    return colorbar!(guide_pos, fg; orientation, kwargs...)
+    return colorbar!(guide_pos, fg; vertical, kwargs...)
 end
 
 """

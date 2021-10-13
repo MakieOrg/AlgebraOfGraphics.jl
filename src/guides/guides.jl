@@ -17,3 +17,5 @@ function guides_position(fig::Figure, position)
 end
 
 default_orientation(position) = position in [:top, :bottom] ? :horizontal : :vertical
+
+default_isvertical(position) = default_orientation(position) == :vertical
