@@ -1,11 +1,8 @@
-function legend!(fg::FigureGrid; kwargs...)
-    attr = Dict{Symbol,Any}(kwargs)
-    position = pop!(attr, :position, :right)
-    get!(attr, :orientation, default_orientation(position))
+function legend!(fg::FigureGrid; position=:right,
+                 orientation=default_orientation(position), kwargs...)
 
     guide_pos = guides_position(fg.figure, position)
-
-    legend!(guide_pos, fg; attr...)
+    return legend!(guide_pos, fg; orientation, kwargs...)
 end
 
 """

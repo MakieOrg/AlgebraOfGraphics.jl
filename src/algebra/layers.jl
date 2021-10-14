@@ -170,10 +170,10 @@ Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@r
 """
 function draw(s::OneOrMoreLayers;
               axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple(),
-              facet=NamedTuple(), legend=NamedTuple())
+              facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple())
     fg = plot(s; axis, figure, palettes)
     facet!(fg; facet)
-    colorbar!(fg)
+    colorbar!(fg; colorbar...)
     legend!(fg; legend...)
     resizetocontent!(fg)
     return fg
