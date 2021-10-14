@@ -1,3 +1,14 @@
+# AlgebraOfGraphics.jl v0.6 Release Notes
+
+## Breaking Changes
+
+- Default axis linking behavior has changed: now only axes corresponding to the same variable are linked.
+
+## New Features
+
+- Customizable axis linking behavior.
+- Customizable legend and colorbar position and look.
+
 # AlgebraOfGraphics.jl v0.5 Release Notes
 
 ## Breaking Changes
