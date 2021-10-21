@@ -2,7 +2,7 @@
 
 ## Breaking Changes
 
-- Default axis linking behavior has changed: now only axes corresponding to the same variable are linked.
+- Default axis linking behavior has changed: now only axes corresponding to the same variable are linked. For consistency with `row`/`col`, `layout` will hide decorations of linked axes and span axis labels if appropriate.
 
 ## New Features
 
