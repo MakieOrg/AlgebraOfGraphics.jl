@@ -51,7 +51,6 @@ function compute_legend(grid::Matrix{AxisEntries})
     for key in [:row, :col, :layout, :stack, :dodge, :group]
         pop!(scales, key, nothing)
     end
-
     # if no legend-worthy keyword remains return nothing
     isempty(scales) && return nothing
 
@@ -64,6 +63,11 @@ function compute_legend(grid::Matrix{AxisEntries})
     labels = Vector{String}[]
     elements_list = Vector{Vector{LegendElement}}[]
 
+    # search in attributes if a color is given for e.g. lines/scatter
+    legend_colors = unique([entry.attributes[:color] for entry in entries(grid) if haskey(entry.attributes, :color)])
+    # if a single agreeable color is found, use that for the Legend entries
+    legend_color = length(legend_colors) == 1 ? first(legend_colors) : nothing
+
     for title in titles
         label_attrs = [key for (key, val) in scales if val.label == title]
         uniquevalues = mapreduce(k -> datavalues(scales[k]), assert_equal, label_attrs)
@@ -73,6 +77,9 @@ function compute_legend(grid::Matrix{AxisEntries})
                 shared_attrs = attrs ∩ label_attrs
                 isempty(shared_attrs) && continue
                 options = [attr => plotvalues(scales[attr])[idx] for attr in shared_attrs]
+                if !isnothing(legend_color)
+                    push!(options, :color => legend_color)
+                end
                 append!(elements, legend_elements(P; options...))
             end
             return elements
