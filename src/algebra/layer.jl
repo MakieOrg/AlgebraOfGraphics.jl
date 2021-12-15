@@ -1,13 +1,3 @@
-const SimpleDict = LittleDict{Symbol, Any, Vector{Symbol}, Vector{Any}}
-
-simpledict(pairs::Pairs...) = simpledict(pairs)
-
-function simpledict(pairs)
-    keys = collect(Symbol, Iterators.map(first, pairs))
-    values = collect(Any, Iterators.map(last, pairs))
-    return SimpleDict(keys, values)
-end
-
 """
     Layer(transformation, data, positional::AbstractVector, named::AbstractDict)
 
@@ -20,14 +10,14 @@ Base.@kwdef struct Layer
     transformation::Any=identity
     data::Any=nothing
     positional::Vector{Any}=Any[]
-    named::SimpleDict=simpledict()
+    named::SimpleDict=SimpleDict()
 end
 
 transformation(f) = Layer(transformation=f)
 
 data(df) = Layer(data=columns(df))
 
-mapping(args...; kwargs...) = Layer(positional=collect(Any, args), named=simpledict(kwargs))
+mapping(args...; kwargs...) = Layer(positional=collect(Any, args), named=SimpleDict(kwargs))
 
 ⨟(f, g) = f === identity ? g : g === identity ? f : g ∘ f
 

@@ -12,7 +12,8 @@ end
 to_nothings(v) = fill(nothing, axes(v))
 
 function (f::FrequencyAnalysis)(entry::Entry)
-    positional = (entry.positional..., map(to_nothings, first(entry.positional)))
+    positional = copy(entry.positional)
+    push!(positional, map(to_nothings, first(positional)))
     labels = copy(entry.labels)
     labels[length(positional)] = "count"
     augmented_entry = Entry(entry; positional, labels)

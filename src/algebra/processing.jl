@@ -9,8 +9,8 @@ function permutation_ranges(cols)
     return sortperm(gp), collect(gp)
 end
 
-allvariables(e::Entry) = (e.primary..., e.positional..., e.named...)
-allvariables(l::Layer) = (l.positional..., l.named...)
+allvariables(e::Entry) = vcat(values(e.primary), values(e.positional), values(e.named))
+allvariables(l::Layer) = vcat(values(l.positional), values(l.named))
 
 function shape(x::Union{Entry, Layer})
     arrays = map(var -> var isa ArrayLike ? var : fill(nothing), allvariables(x))
@@ -49,23 +49,15 @@ shiftdims(v::Tuple) = shiftdims(collect(v))
 shiftdims(v) = v
 
 function group(entry::Entry)
-    grouping = foldl(entry.primary, init=()) do acc, v
-        return haszerodims(v) ? (acc..., only(v)) : acc
-    end
+    grouping = Tuple(only(v) for v in values(entry.primary) if haszerodims(v))
     perm, rgs = permutation_ranges(grouping)
     axs = shape(entry)
-    primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
-        return map(vs -> subgroups(vs, perm, rgs, axs), tup)
+    primary, positional, named = map((entry.primary, entry.positional, entry.named)) do vars
+        return map(vs -> subgroups(vs, perm, rgs, axs), vars)
     end
     labels = copy(entry.labels)
     map!(shiftdims, values(labels))
     return Entry(entry; primary, positional, named, labels)
-end
-
-function separate(nt::NamedTuple)
-    primary_keys = filter(key -> hascategoricalentry(nt[key]), keys(nt))
-    primary = NamedTuple{primary_keys}(nt)
-    return primary, Base.structdiff(nt, primary)
 end
 
 function getlabeledarray(layer::Layer, s)
@@ -95,14 +87,14 @@ end
 
 function process_mappings(layer::Layer)
     labels = Dict{KeyType, Any}()
-    positional, named′ = map((layer.positional, layer.named)) do tup
-        return mapkeys(tup) do key
-            label, arr = getlabeledarray(layer, tup[key])
+    positional, named = map((layer.positional, layer.named)) do tup
+        return map_pairs(tup) do (key, value)
+            label, arr = getlabeledarray(layer, value)
             labels[key] = label
             return arr
         end
     end
-    primary, named = separate(named′)
+    primary = splice_if!(hascategoricalentry, named)
     return Entry(; primary, positional, named, labels)
 end
 
@@ -118,7 +110,4 @@ function to_entry(layer::Layer)
     return Entry(grouped_entry; primary)
 end
 
-function process(layer::Layer)
-    init = to_entry(layer)
-    return foldl(|>, layer.transformations; init)
-end
+process(layer::Layer) = layer.transformation(to_entry(layer))

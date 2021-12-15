@@ -2,9 +2,9 @@ const KeyType = Union{Symbol, Int}
 
 Base.@kwdef struct Entry
     plottype::PlotFunc=Any
-    primary::SimpleDict=simpledict()
+    primary::SimpleDict=SimpleDict()
     positional::Vector{Any}=Any[]
-    named::SimpleDict=simpledict()
+    named::SimpleDict=SimpleDict()
     labels::Dict{KeyType, Any}=Dict{KeyType, Any}()
     attributes::Dict{Symbol, Any}=Dict{Symbol, Any}()
 end
@@ -22,6 +22,12 @@ function Entry(e::Entry; kwargs...)
     return Entry(; merge(nt, values(kwargs))...)
 end
 
+function unnest(v::AbstractArray)
+    return map_pairs(first(v)) do (k, _)
+        return [el[k] for el in v]
+    end
+end
+
 function Base.map(f, e::Entry)
     axs = shape(e)
     outputs = map(CartesianIndices(axs)) do c
@@ -29,8 +35,8 @@ function Base.map(f, e::Entry)
         n = map(v -> getnewindex(v, c), e.named)
         return f(p, n)
     end
-    positional = components(StructArray(map(first, outputs)))
-    named = components(StructArray(map(last, outputs)))
+    positional = unnest(map(first, outputs))
+    named = unnest(map(last, outputs))
     return Entry(e; positional, named)
 end
 
@@ -75,9 +81,6 @@ function stack(short_entries::AbstractVector{Entry})
     return Entry(first(entries); primary, positional, named)
 end
 
-mapkeys(f, tup::Tuple) = ntuple(f, length(tup))
-mapkeys(f, ::NamedTuple{names}) where {names} = NamedTuple{names}(map(f, names))
-
 function Makie.plot!(ae::AxisEntries)
     axis, entries, scales = ae.axis, ae.entries, ae.scales
     i, N = 1, length(entries)
@@ -89,12 +92,14 @@ function Makie.plot!(ae::AxisEntries)
         entry, i = stack(entries[i:j-1]), j
         attributes = copy(entry.attributes)
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
-            return mapkeys(tup) do key
-                rescaled = rescale(tup[key], get(scales, key, nothing))
+            return map_pairs(tup) do (key, value)
+                rescaled = rescale(value, get(scales, key, nothing))
                 return haszerodims(rescaled) ? rescaled[] : rescaled
             end
         end
-        merge!(attributes, pairs(primary), pairs(named))
+        for dict in (primary, named), (key, value) in pairs(dict)
+            attributes[key] = value
+        end
 
         # Remove layout info
         for sym in [:col, :row, :layout]
