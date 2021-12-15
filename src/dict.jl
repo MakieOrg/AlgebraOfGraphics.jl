@@ -20,7 +20,18 @@ Base.pairs(d::BasicDict) = Iterators.map(Pair, d.keys, d.values)
 Base.keys(d::BasicDict) = d.keys
 Base.values(d::BasicDict) = d.values
 
-Base.map(f, d::BasicDict) = BasicDict(d.keys, map(f, d.values))
+function Base.map(f, d::BasicDict, ds::BasicDict...)
+    return BasicDict(d.keys, map(f, map(values, (d, ds...))...))
+end
+
+Base.length(d::BasicDict) = length(d.values)
+Base.eltype(::Type{BasicDict{K, V}}) where {K, V} = V
+
+Base.iterate(d::BasicDict) = Base.iterate(d.values)
+Base.iterate(d::BasicDict, st) = Base.iterate(d.values, st)
+
+Base.haskey(d::BasicDict, key) = key in d.keys
+
 function Base.get(d::BasicDict, key, default)
     idx = findfirst(isequal(key), d.keys)
     return isnothing(idx) ? default : d.values[idx]
@@ -29,7 +40,7 @@ end
 Base.getindex(d::BasicDict, key) = get(d, key, nothing)
 
 function set!(d::BasicDict, key, value)
-    idx = findfirst(d.keys, key)
+    idx = findfirst(isequal(key), d.keys)
     if isnothing(idx)
         push!(d.keys, key)
         push!(d.values, value)
@@ -48,14 +59,26 @@ function Base.merge(d1::BasicDict, d2::BasicDict)
     return d
 end
 
+function splice_if!(f, d::BasicDict)
+    idxs = findall(f, d.values)
+    return BasicDict(splice!(d.keys, idxs), splice!(d.values, idxs))
+end
+
+function Base.convert(::Type{BasicDict{K, V}}, d::BasicDict) where {K, V}
+    keys = convert(Vector{K}, d.keys)
+    values = convert(Vector{V}, d.values)
+    return BasicDict{K, V}(keys, values)
+end
+
+Base.convert(::Type{BasicDict{K, V}}, d::BasicDict{K, V}) where {K, V} = d
+
 ## Parameter-free version
 
 const SimpleDict = BasicDict{Symbol, Any}
 
-map_pairs(f, v::AbstractVector) = collect(Any, Iterators.map(f, pairs(v)))
-map_pairs(f, s::SimpleDict) = SimpleDict(Iterators.map(f, pairs(s)))
-
-function splice_if!(f, d::BasicDict)
-    idxs = findall(f, d.values)
-    return BasicDict(splice!(d.keys, idxs), splice!(d.values, idxs))
+# `f` takes a pair and returns a unique value
+function map_pairs(f, s)
+    ks, vs = keys(s), values(s)
+    res = collect(Any, Iterators.map(f∘Pair,  ks, vs))
+    return eltype(ks) <: Symbol ? SimpleDict(collect(Symbol, ks), res) : res
 end

@@ -79,7 +79,6 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     # fit scales (compute plot values using all data values)
     map!(fitscale, values(scales))
 
-
     function create_axis(fig, c)
         type = get(axis, :type, Axis)
         options = Base.structdiff(axis, (; type))
