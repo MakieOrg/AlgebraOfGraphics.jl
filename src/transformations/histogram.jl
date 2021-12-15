@@ -75,4 +75,4 @@ Weighted data is supported via the keyword `weights`.
     Normalizations are computed withing groups. For example, in the case of
     `normalization=:pdf`, sum of weights *within each group* will be equal to `1`.
 """
-histogram(; options...) = Layer((HistogramAnalysis(Dict{Symbol, Any}(options)),))
+histogram(; options...) = transformation(HistogramAnalysis(Dict{Symbol, Any}(options)))

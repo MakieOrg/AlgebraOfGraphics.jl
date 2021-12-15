@@ -39,4 +39,4 @@ Use `interval` to specify what type of interval the shaded band should represent
 Valid values of interval are `:confidence` delimiting the uncertainty of the predicted
 relationship, and `:prediction` delimiting estimated bounds for new data points.
 """
-linear(; kwargs...) = Layer((LinearAnalysis(; kwargs...),))
+linear(; kwargs...) = transformation(LinearAnalysis(; kwargs...))

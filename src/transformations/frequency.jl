@@ -24,4 +24,4 @@ end
 
 Compute a frequency table of the arguments.
 """
-frequency() = Layer((FrequencyAnalysis(Dict{Symbol, Any}()),))
+frequency() = transformation(FrequencyAnalysis(Dict{Symbol, Any}()))

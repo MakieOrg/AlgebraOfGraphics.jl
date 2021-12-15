@@ -17,6 +17,7 @@ import Makie.MakieLayout: hidexdecorations!,
                           linkxaxes!,
                           linkyaxes!
 using GridLayoutBase: determinedirsize, Col, Row
+using OrderedCollections: LittleDict
 using PooledArrays: PooledArray
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, normalize, weights, AbstractWeights, sturges

@@ -1,31 +1,40 @@
+const SimpleDict = LittleDict{Symbol, Any, Vector{Symbol}, Vector{Any}}
+
+simpledict(pairs::Pairs...) = simpledict(pairs)
+
+function simpledict(pairs)
+    keys = collect(Symbol, Iterators.map(first, pairs))
+    values = collect(Any, Iterators.map(last, pairs))
+    return SimpleDict(keys, values)
+end
+
 """
-    Layer(transformations::Tuple, data, positional::Tuple, named::NamedTuple)
+    Layer(transformation, data, positional::AbstractVector, named::AbstractDict)
 
 Algebraic object encoding a single layer of a visualization. It is composed of a dataset,
-positional and named arguments, as well as transformations to be applied to those.
+positional and named arguments, as well as a transformation to be applied to those.
 `Layer` objects can be multiplied, yielding a novel `Layer` object, or added,
 yielding a [`AlgebraOfGraphics.Layers`](@ref) object.
 """
-struct Layer
-    transformations::Tuple
-    data::Any
-    positional::Tuple
-    named::NamedTuple
+Base.@kwdef struct Layer
+    transformation::Any=identity
+    data::Any=nothing
+    positional::Vector{Any}=Any[]
+    named::SimpleDict=simpledict()
 end
 
-Layer(transformations::Tuple=()) = Layer(transformations, nothing, (), (;))
+transformation(f) = Layer(transformation=f)
 
-data(df) = Layer((), columns(df), (), (;))
-mapping(args...; kwargs...) = Layer((), nothing, args, values(kwargs))
+data(df) = Layer(data=columns(df))
+
+mapping(args...; kwargs...) = Layer(positional=collect(Any, args), named=simpledict(kwargs))
+
+⨟(f, g) = f === identity ? g : g === identity ? f : g ∘ f
 
 function Base.:*(l1::Layer, l2::Layer)
-    t1, t2 = l1.transformations, l2.transformations
-    d1, d2 = l1.data, l2.data
-    p1, p2 = l1.positional, l2.positional
-    n1, n2 = l1.named, l2.named
-    transformations = (t1..., t2...)
-    data = isnothing(d2) ? d1 : d2
-    positional =(p1..., p2...)
-    named = merge(n1, n2)
-    return Layer(transformations, data, positional, named)
+    transformation = l1.transformation ⨟ l2.transformation
+    data = isnothing(l2.data) ? l1.data : l2.data
+    positional = vcat(l1.positional, l2.positional)
+    named = merge(l1.named, l2.named)
+    return Layer(; transformation, data, positional, named)
 end

@@ -44,4 +44,4 @@ Here, `datalimits` specifies the range for which the density should be calculate
 is the number of points used by Makie to draw the line and `kernel` and `bandwidth` are
 forwarded to `KernelDensity.kde`.
 """
-density(; kwargs...) = Layer((DensityAnalysis(; kwargs...),))
+density(; kwargs...) = transformation(DensityAnalysis(; kwargs...))
