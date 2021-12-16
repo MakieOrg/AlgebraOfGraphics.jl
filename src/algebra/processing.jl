@@ -60,6 +60,10 @@ function group(entry::Entry)
     return Entry(entry; primary, positional, named, labels)
 end
 
+function ungroup(entry::Entry)
+
+end
+
 function getlabeledarray(layer::Layer, s)
     data, axs = layer.data, shape(layer)
     isdims = s isa DimsSelector || s isa Pair && first(s) isa DimsSelector
@@ -95,19 +99,35 @@ function process_mappings(layer::Layer)
         end
     end
     primary = splice_if!(hascategoricalentry, named)
-    return Entry(; primary, positional, named, labels)
+    e = Entry(; primary, positional, named, labels)
+    entries = Entry[]
+    for c in CartesianIndices(shape(e))
+        primary, positional, named = map((e.primary, e.positional, e.named)) do tup
+            return map(v -> getnewindex(v, c), tup)
+        end
+        push!(entries, Entry(e; primary, positional, named))
+    end
+    return Entries(entries)
 end
 
 """
-    to_entry(layer::Layer)
+    to_entries(layer::Layer)
 
-Convert `layer` to equivalent entry, excluding transformations.
+Convert `layer` to equivalent entries, excluding transformations.
 """
-function to_entry(layer::Layer)
+function to_entries(layer::Layer)
     entry = process_mappings(layer)
     grouped_entry = isnothing(layer.data) ? entry : group(entry)
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
-    return Entry(grouped_entry; primary)
+    e = Entry(grouped_entry; primary)
+    entries = Entry[]
+    for c in CartesianIndices(shape(grouped_entry))
+        primary, positional, named = map((e.primary, e.positional, e.named)) do tup
+            return map(v -> getnewindex(v, c), tup)
+        end
+        push!(entries, Entry(e; primary, positional, named))
+    end
+    return Entries(entries)
 end
 
-process(layer::Layer) = layer.transformation(to_entry(layer))
+process(layer::Layer) = layer.transformation(to_entries(layer))

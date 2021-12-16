@@ -17,28 +17,24 @@ function Base.get(e::Entry, key::Symbol, default)
     return get(e.named, key, default)
 end
 
-function Entry(e::Entry; kwargs...)
-    nt = (; e.plottype, e.primary, e.positional, e.named, e.labels, e.attributes)
-    return Entry(; merge(nt, values(kwargs))...)
+function Entry(e::Entry;
+               plottype=e.plottype,
+               primary=e.primary,
+               positional=e.positional,
+               named=e.named,
+               labels=e.labels,
+               attributes=e.attributes)
+
+    return Entry(plottype, SimpleDict(primary), collect(Any, positional), SimpleDict(named), labels, attributes)
 end
 
-function unnest(v::AbstractArray)
-    return map_pairs(first(v)) do (k, _)
-        return [el[k] for el in v]
-    end
+struct Entries
+    entries::Vector{Entry}
 end
 
-function Base.map(f, e::Entry)
-    axs = shape(e)
-    outputs = map(CartesianIndices(axs)) do c
-        p = map(v -> getnewindex(v, c), e.positional)
-        n = map(v -> getnewindex(v, c), e.named)
-        return f(p, n)
-    end
-    positional = unnest(map(first, outputs))
-    named = unnest(map(last, outputs))
-    return Entry(e; positional, named)
-end
+Entries(entries::Entries; kwargs...) = Entries([Entry(entry; kwargs...) for entry in entries.entries])
+
+Base.map(f, entries::Entries) = Entries(map(f, entries.entries))
 
 """
     AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, scales)

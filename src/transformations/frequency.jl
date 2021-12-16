@@ -11,7 +11,7 @@ end
 
 to_nothings(v) = fill(nothing, axes(v))
 
-function (f::FrequencyAnalysis)(entry::Entry)
+function (f::FrequencyAnalysis)(es::Entries)
     positional = copy(entry.positional)
     push!(positional, map(to_nothings, first(positional)))
     labels = copy(entry.labels)

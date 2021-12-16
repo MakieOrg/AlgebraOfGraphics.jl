@@ -30,17 +30,28 @@ Base.eltype(::Type{BasicDict{K, V}}) where {K, V} = V
 Base.iterate(d::BasicDict) = Base.iterate(d.values)
 Base.iterate(d::BasicDict, st) = Base.iterate(d.values, st)
 
-Base.haskey(d::BasicDict, key) = key in d.keys
+findkey(d::BasicDict, key) = findfirst(isequal(key), d.keys)
+
+Base.haskey(d::BasicDict, key) = !isnothing(findkey(d, key))
+
+function Base.get(f::Base.Callable, d::BasicDict, key)
+    idx = findkey(d, key)
+    return isnothing(idx) ? f() : d.values[idx]
+end
 
 function Base.get(d::BasicDict, key, default)
-    idx = findfirst(isequal(key), d.keys)
+    idx = findkey(d, key)
     return isnothing(idx) ? default : d.values[idx]
 end
 
-Base.getindex(d::BasicDict, key) = get(d, key, nothing)
+function Base.getindex(d::BasicDict, key)
+    return get(d, key) do
+        throw(KeyError(key))
+    end
+end
 
 function set!(d::BasicDict, key, value)
-    idx = findfirst(isequal(key), d.keys)
+    idx = findkey(d, key)
     if isnothing(idx)
         push!(d.keys, key)
         push!(d.values, value)
