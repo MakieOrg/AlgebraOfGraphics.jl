@@ -49,7 +49,7 @@ function categoricalscales(e::Entry, palettes)
     return cs
 end
 
-function compute_grid_positions(scales, primary=SimpleDict())
+function compute_grid_positions(scales, primary=NamedArguments())
     return map((:row, :col), (first, last)) do sym, f
         scale = get(scales, sym, nothing)
         lscale = get(scales, :layout, nothing)

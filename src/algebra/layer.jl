@@ -9,15 +9,15 @@ yielding a [`AlgebraOfGraphics.Layers`](@ref) object.
 Base.@kwdef struct Layer
     transformation::Any=identity
     data::Any=nothing
-    positional::Vector{Any}=Any[]
-    named::SimpleDict=SimpleDict()
+    positional::Arguments=Arguments()
+    named::NamedArguments=NamedArguments()
 end
 
 transformation(f) = Layer(transformation=f)
 
 data(df) = Layer(data=columns(df))
 
-mapping(args...; kwargs...) = Layer(positional=collect(Any, args), named=SimpleDict(kwargs))
+mapping(args...; kwargs...) = Layer(positional=collect(Any, args), named=NamedArguments(kwargs))
 
 ⨟(f, g) = f === identity ? g : g === identity ? f : g ∘ f
 

@@ -1,10 +1,8 @@
-const KeyType = Union{Symbol, Int}
-
 Base.@kwdef struct Entry
     plottype::PlotFunc=Any
-    primary::SimpleDict=SimpleDict()
-    positional::Vector{Any}=Any[]
-    named::SimpleDict=SimpleDict()
+    primary::NamedArguments=NamedArguments()
+    positional::Arguments=Arguments()
+    named::NamedArguments=NamedArguments()
     labels::Dict{KeyType, Any}=Dict{KeyType, Any}()
     attributes::Dict{Symbol, Any}=Dict{Symbol, Any}()
 end

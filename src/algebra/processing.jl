@@ -94,7 +94,7 @@ function process_mappings(layer::Layer)
             return arr
         end
     end
-    primary = splice_if!(hascategoricalentry, named)
+    primary, named = separate(hascategoricalentry, named)
     return Entry(; primary, positional, named, labels)
 end
 
