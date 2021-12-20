@@ -26,4 +26,4 @@ Fit a loess model. `span` is the degree of smoothing, typically in `[0,1]`.
 Smaller values result in smaller local context in fitting.
 `degree` is the polynomial degree used in the loess model.
 """
-smooth(; kwargs...) = Layer((SmoothAnalysis(; kwargs...),))
+smooth(; kwargs...) = transformation(SmoothAnalysis(; kwargs...))

@@ -16,4 +16,4 @@ end
 
 Compute the expected value of the last argument conditioned on the preceding ones.
 """
-expectation() = Layer((ExpectationAnalysis(Dict{Symbol, Any}()),))
+expectation() = transformation(ExpectationAnalysis(Dict{Symbol, Any}()))

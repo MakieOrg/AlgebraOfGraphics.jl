@@ -9,7 +9,7 @@ _kde(data::NTuple{1, Any}; kwargs...) = kde(data...; kwargs...)
 _kde(data::Tuple; kwargs...) = kde(data; kwargs...)
 
 applydatalimits(f::Function, d) = map(f, d)
-applydatalimits(i::Tuple, d) = i
+applydatalimits(i::Union{AbstractArray, Tuple}, _) = i
 
 function _density(data...; datalimits=extrema, npoints=200, kwargs...)
     k = _kde(data; kwargs...)
@@ -25,7 +25,7 @@ function (d::DensityAnalysis)(le::Entry)
         return map(v -> mapreduce(extrema, extend_extrema, v), le.positional)
     end
     entry = map(le) do p, n
-        return _density(p...; n..., options...), (;)
+        return _density(p...; pairs(n)..., options...), (;)
     end
     N = length(le.positional)
     labels = copy(le.labels)
@@ -44,4 +44,4 @@ Here, `datalimits` specifies the range for which the density should be calculate
 is the number of points used by Makie to draw the line and `kernel` and `bandwidth` are
 forwarded to `KernelDensity.kde`.
 """
-density(; kwargs...) = Layer((DensityAnalysis(; kwargs...),))
+density(; kwargs...) = transformation(DensityAnalysis(; kwargs...))

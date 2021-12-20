@@ -1,5 +1,5 @@
 # Investigate link with transducers, potentially had shim to support OnlineStats
-function _groupreduce(agg, summaries::Tuple, values...)
+function _groupreduce(agg, summaries::Tuple, values::Tuple)
     init, op, value = agg.init, agg.op, agg.value
     results = map(_ -> init(), CartesianIndices(map(length, summaries)))
     keys, data = front(values), last(values)
@@ -19,11 +19,12 @@ function _groupreduce(agg, summaries::Tuple, values...)
 end
 
 function groupreduce(agg, e::Entry)
-    summaries = map(front(e.positional)) do v
-        return mapreduce(collect∘uniquesorted, mergesorted, v)
-    end
-    entry = map(e) do p, _
-        positional, named = (summaries..., _groupreduce(agg, summaries, p...)), (;)
+    N = length(e.positional)
+    summaries = Any[mapreduce(collect∘uniquesorted, mergesorted, e.positional[idx]) for idx in 1:N-1]
+    entry = map(e) do p, n
+        positional = copy(summaries)
+        push!(positional, _groupreduce(agg, Tuple(summaries), Tuple(p)))
+        named = n
         return positional, named
     end
     default_plottype = categoricalplottypes[length(summaries)]

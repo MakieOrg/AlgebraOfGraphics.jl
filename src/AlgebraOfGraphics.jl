@@ -18,6 +18,7 @@ import Makie.MakieLayout: hidexdecorations!,
                           linkyaxes!
 using GridLayoutBase: determinedirsize, Col, Row
 using PooledArrays: PooledArray
+using Dictionaries: AbstractDictionary, Dictionary, insert!, empty
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, normalize, weights, AbstractWeights, sturges
 
@@ -35,6 +36,7 @@ export draw, draw!
 export facet!, colorbar!, legend!
 export set_aog_theme!
 
+include("dict.jl")
 include("theme.jl")
 include("helpers.jl")
 include("scales.jl")

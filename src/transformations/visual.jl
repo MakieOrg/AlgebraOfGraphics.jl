@@ -10,4 +10,4 @@ function (v::Visual)(e::Entry)
     return Entry(e; plottype, attributes)
 end
 
-visual(plottype=Any; kwargs...) = Layer((Visual(plottype; kwargs...),))
+visual(plottype=Any; kwargs...) = transformation(Visual(plottype; kwargs...))

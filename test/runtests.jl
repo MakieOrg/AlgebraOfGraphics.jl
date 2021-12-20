@@ -1,5 +1,7 @@
 using AlgebraOfGraphics, Makie, Test
 using AlgebraOfGraphics: Sorted
+using AlgebraOfGraphics: map_pairs, separate
+using AlgebraOfGraphics: arguments, Arguments, namedarguments, NamedArguments
 
 @testset "utils" begin
     v1 = [1, 2, 7, 11]
@@ -14,6 +16,37 @@ using AlgebraOfGraphics: Sorted
     @test AlgebraOfGraphics.extend_extrema(e1, e2) == (-5, 11)
 
     @test AlgebraOfGraphics.midpoints(1:10) == 1.5:9.5
+
+    s = arguments([1, 2])
+    t = namedarguments((a=3, b=4))
+    u = namedarguments((b=5, c=6))
+    v = arguments([])
+    w = AlgebraOfGraphics.concatenate_values(s, t, u)
+    @test w == arguments([1, 2, 3, 4, 5, 6])
+end
+
+@testset "arguments" begin
+    s = Arguments([10, 20, 30])
+    @test s == arguments([10, 20, 30])
+    t = map_pairs(s) do (k, v)
+        return "key $k and value $v"
+    end
+    @test t == ["key 1 and value 10", "key 2 and value 20", "key 3 and value 30"]
+
+    s = NamedArguments([:a, :b, :c], [10, 20, 30])
+    @test s == namedarguments((a=10, b=20, c=30))
+    t = map_pairs(s) do (k, v)
+        return "key $k and value $v"
+    end
+    @test t == NamedArguments(
+        [:a, :b, :c],    
+        ["key a and value 10", "key b and value 20", "key c and value 30"]
+    )
+
+    s = NamedArguments([:a, :b, :c], [1, 2, 3])
+    odd, even = separate(isodd, s)
+    @test odd == namedarguments((a=1, c=3))
+    @test even == namedarguments((b=2,))
 end
 
 @testset "layers" begin
@@ -21,10 +54,10 @@ end
     d = mapping(:x, :y, color=:c)
     s = visual(color=:red) + mapping(markersize=:c)
     layers = data(df) * d * s
-    @test layers[1].transformations[1] isa AlgebraOfGraphics.Visual
-    @test layers[1].transformations[1].attributes[:color] == :red
-    @test layers[1].positional == (:x, :y)
-    @test layers[1].named == (color=:c,)
+    @test layers[1].transformation isa AlgebraOfGraphics.Visual
+    @test layers[1].transformation.attributes[:color] == :red
+    @test layers[1].positional == arguments((:x, :y))
+    @test layers[1].named == namedarguments((color=:c,))
     @test layers[1].data == df
 end
 
@@ -37,7 +70,7 @@ end
     @test entry.positional[2] == [df.y, df.z]
     @test entry.primary[:color] == fill(df.c)
     @test entry.primary[:marker] == [fill(Sorted(1, "a")), fill(Sorted(2, "b"))]
-    @test entry.named == (;)
+    @test entry.named == namedarguments((;))
     @test entry.labels[1] == fill("x")
     @test entry.labels[2] ==  ["y", "z"]
     @test entry.labels[:color] == fill("c")

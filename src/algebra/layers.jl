@@ -49,7 +49,7 @@ function categoricalscales(e::Entry, palettes)
     return cs
 end
 
-function compute_grid_positions(scales, primary=(;))
+function compute_grid_positions(scales, primary=NamedArguments())
     return map((:row, :col), (first, last)) do sym, f
         scale = get(scales, sym, nothing)
         lscale = get(scales, :layout, nothing)
@@ -78,7 +78,6 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     end
     # fit scales (compute plot values using all data values)
     map!(fitscale, values(scales))
-
 
     function create_axis(fig, c)
         type = get(axis, :type, Axis)
