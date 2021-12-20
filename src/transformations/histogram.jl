@@ -16,7 +16,7 @@ function midpoints(edges::AbstractRange)
 end
 
 function _histogram(data...; bins=sturges(length(data[1])), weights=automatic,
-    normalization=:none, extrema, closed=:left)
+    normalization::Symbol=:none, extrema::Tuple, closed::Symbol=:left)
 
     bins_tuple = bins isa Tuple ? bins : map(_ -> bins, data)
     edges = compute_edges(extrema, bins_tuple, closed)
@@ -32,11 +32,11 @@ end
 function (h::HistogramAnalysis)(le::Entry)
     options = copy(h.options)
     get!(options, :extrema) do
-        return map(v -> mapreduce(extrema, extend_extrema, v), le.positional)
+        return Tuple(map(v -> mapreduce(extrema, extend_extrema, v), le.positional))
     end
 
     entry = map(le) do p, n
-        hist = _histogram(p...; n..., options...)
+        hist = _histogram(p...; pairs(n)..., options...)
         return (map(midpoints, hist.edges)..., hist.weights), (;)
     end
 
