@@ -3,6 +3,9 @@ const Arguments = Vector{Any}
 const NamedArguments = Dictionary{Symbol, Any}
 const MixedArguments = Dictionary{KeyType, Any}
 
+arguments(x) = collect(Any, x)
+namedarguments(x) = NamedArguments(keys(x), values(x))
+
 function separate(f, d::AbstractDictionary)
     d1, d2 = empty(d), empty(d)
     for (k, v) in pairs(d)
