@@ -25,7 +25,7 @@ function (d::DensityAnalysis)(le::Entry)
         return map(v -> mapreduce(extrema, extend_extrema, v), le.positional)
     end
     entry = map(le) do p, n
-        return _density(p...; n..., options...), (;)
+        return _density(p...; pairs(n)..., options...), (;)
     end
     N = length(le.positional)
     labels = copy(le.labels)
