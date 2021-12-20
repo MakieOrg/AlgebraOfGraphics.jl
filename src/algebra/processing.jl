@@ -9,8 +9,10 @@ function permutation_ranges(cols)
     return sortperm(gp), collect(gp)
 end
 
-allvariables(e::Entry) = vcat(values(e.primary), values(e.positional), values(e.named))
-allvariables(l::Layer) = vcat(values(l.positional), values(l.named))
+concatenate_values(args...) = mapreduce(values, append!, args, init=Any[])
+
+allvariables(e::Entry) = concatenate_values(e.primary, e.positional, e.named)
+allvariables(l::Layer) = concatenate_values(l.positional, l.named)
 
 function shape(x::Union{Entry, Layer})
     arrays = map(var -> var isa ArrayLike ? var : fill(nothing), allvariables(x))

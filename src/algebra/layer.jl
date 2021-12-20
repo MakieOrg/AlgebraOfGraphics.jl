@@ -1,5 +1,5 @@
 """
-    Layer(transformation, data, positional::AbstractVector, named::AbstractDict)
+    Layer(transformation, data, positional::AbstractVector, named::AbstractDictionary)
 
 Algebraic object encoding a single layer of a visualization. It is composed of a dataset,
 positional and named arguments, as well as a transformation to be applied to those.
