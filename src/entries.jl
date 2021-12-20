@@ -63,6 +63,9 @@ end
 function lengthen_primary(e::Entry)
     N = length(first(e.positional))
     primary = map(t -> fill(t, N), e.primary)
+    @assert length(primary.indices) == length(primary.values)
+    @assert length(e.named.indices) == length(e.named.values)
+    @assert length(e.primary.indices) == length(e.primary.values)
     return Entry(e; primary)
 end
 
@@ -80,20 +83,30 @@ function stack(short_entries::AbstractVector{Entry})
     return Entry(first(entries); primary, positional, named)
 end
 
-function validkwargs(nt::NamedTuple{names}) where names
-    keys = filter(names) do name
-        return !isnothing(nt[name])
-    end
-    return NamedTuple{keys}(nt)
-end
+function compute_attributes(attributes, primary, named, scales)
+    attrs = NamedArguments()
 
-function extract_attributes(; alpha=nothing, color=nothing,
-                              col=nothing, row=nothing, layout=nothing,
-                              cycle=nothing, n_dodge=nothing, 
-                              kwargs...)
-    color = isnothing(color) ? nothing : isnothing(alpha) ? color : (color, alpha)
-    nt = validkwargs((; color, n_dodge))
-    return (; nt..., kwargs..., cycle)
+    alpha, color = nothing, nothing
+    for dict in (attributes, primary, named), (k, v) in pairs(dict)
+        k in [:col, :row, :layout] && continue # ignore layout info
+        k == :alpha && (alpha = v; continue)
+        k == :color && (color = v; continue)
+        set!(attrs, k, v)
+    end
+
+    # implement alpha transparency
+    if !isnothing(color)
+        set!(attrs, :color, isnothing(alpha) ? color : (color, alpha))
+    end
+
+    # opt out of the default cycling mechanism
+    set!(attrs, :cycle, nothing)
+
+    # compute dodging information
+    dodge = get(scales, :dodge, nothing)
+    isa(dodge, CategoricalScale) && set!(attrs, :n_dodge, maximum(plotvalues(dodge)))
+
+    return attrs
 end
 
 function Makie.plot!(ae::AxisEntries)
@@ -112,40 +125,9 @@ function Makie.plot!(ae::AxisEntries)
             end
         end
 
-        attributes = foldl(merge!, (entry.attributes, primary, named), init=NamedArguments())
-        # # Set dodging information
-        dodge = get(scales, :dodge, nothing)
-        n_dodge = isa(dodge, CategoricalScale) ? maximum(plotvalues(dodge)) : nothing
-
-        # @show 1
-        # @show length(attributes.indices)
-        # @show length(attributes.values)
-        # @show attributes.indices
-
-        # # Remove layout info
-        # for sym in [:col, :row, :layout]
-        #     unset!(attributes, sym)
-        # end
-        # @show 2
-        # @show length(attributes.indices)
-        # @show length(attributes.values)
-
-        # # Avoid automated cycling
-        # set!(attributes, :cycle, nothing)
-
-
-
-        # # Implement alpha transparency
-        # alpha = get_unset!(attributes, :alpha, nothing)
-        # color = get(attributes, :color, nothing)
-        # !isnothing(color) && alpha isa Number && set!(attributes, :color, (color, alpha))
-
-        # @show 5
-        # @show length(attributes.indices)
-        # @show length(attributes.values)
+        attrs = compute_attributes(entry.attributes, primary, named, scales)
         plottype = Makie.plottype(entry.plottype, positional...)
-        @show extract_attributes(; pairs(attributes)..., n_dodge)
-        plot!(plottype, axis, positional...; extract_attributes(; pairs(attributes)..., n_dodge)...)
+        plot!(plottype, axis, positional...; pairs(attrs)...)
     end
     return ae
 end

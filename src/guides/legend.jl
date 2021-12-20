@@ -43,12 +43,14 @@ end
 compute_legend(fg::FigureGrid) = compute_legend(fg.grid)
 
 function compute_legend(grid::Matrix{AxisEntries})
-    # assume all subplots have same scales, to be changed to support free scales
-    _, scales = separate(first(grid).scales)
-
-    # remove keywords that don't support legends
-    for key in [:row, :col, :layout, :stack, :dodge, :group]
-        unset!(scales, key)
+    # gather all named scales
+    scales = NamedArguments()
+    for (k, v) in pairs(first(grid).scales)
+        # ignore positional scales
+        k isa Symbol || continue
+        # ignore keywords that don't support legends
+        k in [:row, :col, :layout, :stack, :dodge, :group] && continue
+        insert!(scales, k, v)
     end
 
     # if no legend-worthy keyword remains return nothing
