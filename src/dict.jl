@@ -7,12 +7,12 @@ const MixedArguments = Dictionary{KeyType, Any}
 arguments(x) = collect(Any, x)
 namedarguments(x) = NamedArguments(keys(x), values(x))
 
-function set(d::AbstractDictionary, pairs::Pair...)
-    tmp = empty(d)
-    for (k,v) in pairs
-        set!(tmp, k, v)
+function set(d::AbstractDictionary, ps::Pair...)
+    res = empty(d)
+    for iter in (pairs(d), ps), (k, v) in iter
+        set!(res, k, v)
     end
-    return merge(d, tmp)
+    return res
 end
 
 function separate(f, d::AbstractDictionary)

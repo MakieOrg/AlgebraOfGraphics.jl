@@ -138,9 +138,9 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             end
             isnothing(scale) && continue
             label = compute_label(ae.entries, i)
-            for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
-                k = Symbol(var, k′)
-                k in keys(axis) || (getproperty(ae.axis, k)[] = v)
+            for (k, v) in pairs((label=string(label), ticks=ticks(scale)))
+                keyword = Symbol(var, k)
+                keyword in keys(axis) || (getproperty(ae.axis, keyword)[] = v)
             end
         end
     end
