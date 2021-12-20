@@ -30,14 +30,3 @@ function map_pairs(f, s)
     res = collect(Any, Iterators.map(f∘Pair,  ks, vs))
     return eltype(ks) <: Symbol ? NamedArguments(collect(Symbol, ks), res) : res
 end
-
-# Currently `AbstractDictionary` does not support `pop!`, see https://github.com/andyferris/Dictionaries.jl/issues/81
-function get_unset!(d::AbstractDictionary, key, default)
-    haskey = Ref(true)
-    res = get(d, key) do
-        haskey[] = false
-        return default
-    end
-    haskey[] && delete!(d, key)
-    return res
-end

@@ -85,7 +85,6 @@ end
 
 function compute_attributes(attributes, primary, named, scales)
     attrs = NamedArguments()
-
     alpha, color = nothing, nothing
     for dict in (attributes, primary, named), (k, v) in pairs(dict)
         k in [:col, :row, :layout] && continue # ignore layout info
