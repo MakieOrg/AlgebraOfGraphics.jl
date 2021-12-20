@@ -7,7 +7,7 @@ SmoothAnalysis(; kwargs...) = SmoothAnalysis(NamedArguments(kwargs))
 extract_npoints(; npoints=200, kwargs...) = npoints, kwargs
 
 function (l::SmoothAnalysis)(le::Entry)
-    npoints, kwargs = extract_npoints(; pairs(h.options)...)
+    npoints, kwargs = extract_npoints(; pairs(l.options)...)
     entry = map(le) do p, _
         x, y = p
         min, max = extrema(x)
