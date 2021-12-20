@@ -23,12 +23,12 @@ function (d::DensityAnalysis)(le::Entry)
     datalimits = get(d.options, :datalimits) do
         return map(v -> mapreduce(extrema, extend_extrema, v), le.positional)
     end
-    options = merge(d.options, NamedArguments((; datalimits)))
+    options = set(d.options, :datalimits => datalimits)
     entry = map(le) do p, n
         return _density(p...; pairs(n)..., pairs(options)...), (;)
     end
     N = length(le.positional)
-    labels = merge(le.labels, MixedArguments([N+1], ["pdf"]))
+    labels = set(le.labels, N+1 => "pdf")
     plottypes = [LinesFill, Heatmap, Volume]
     default_plottype = plottypes[N]
     plottype = Makie.plottype(le.plottype, default_plottype)

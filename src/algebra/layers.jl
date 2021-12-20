@@ -121,8 +121,11 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     labeledcolorrange = getlabeledcolorrange(axes_grid)
     if !isnothing(labeledcolorrange)
         _, colorrange = labeledcolorrange
-        for entry in AlgebraOfGraphics.entries(axes_grid)
-            get!(entry.attributes, :colorrange, colorrange)
+        for ae in axes_grid
+            for (idx, entry) in enumerate(ae.entries)
+                attributes = set(entry.attributes, :colorrange => colorrange)
+                ae.entries[idx] = Entry(entry; attributes)
+            end
         end
     end
 

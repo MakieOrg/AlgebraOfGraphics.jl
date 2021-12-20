@@ -33,7 +33,7 @@ function (h::HistogramAnalysis)(le::Entry)
     extrema = get(h.options, :extrema) do
         return Tuple(map(v -> mapreduce(Base.extrema, extend_extrema, v), le.positional))
     end
-    options = merge(h.options, NamedArguments((; extrema)))
+    options = set(h.options, :extrema => extrema)
 
     entry = map(le) do p, n
         hist = _histogram(p...; pairs(n)..., pairs(options)...)
@@ -43,9 +43,9 @@ function (h::HistogramAnalysis)(le::Entry)
     N = length(le.positional)
     normalization = get(options, :normalization, :none)
     label = normalization == :none ? "count" : string(normalization)
-    labels = merge(entry.labels, MixedArguments([N+1], [label]))
+    labels = set(entry.labels, N+1 => label)
     attributes = if N == 1
-        merge(entry.attributes, MixedArguments((dodge_gap=0, x_gap=0)))
+        set(entry.attributes, :dodge_gap => 0, :x_gap => 0)
     else
         entry.attributes
     end

@@ -7,18 +7,12 @@ const MixedArguments = Dictionary{KeyType, Any}
 arguments(x) = collect(Any, x)
 namedarguments(x) = NamedArguments(keys(x), values(x))
 
-function separate(xs)
-    positional, named = Arguments(), NamedArguments()
-    for (k, v) in pairs(xs)
-        if k isa Symbol
-            set!(named, k, v)
-        elseif k isa Int
-            push!(positional, v)
-        else
-            throw(ArgumentError("Only integer or symbol keys are supported"))
-        end
+function set(d::AbstractDictionary, pairs::Pair...)
+    tmp = empty(d)
+    for (k,v) in pairs
+        set!(tmp, k, v)
     end
-    return positional, named
+    return merge(d, tmp)
 end
 
 function separate(f, d::AbstractDictionary)

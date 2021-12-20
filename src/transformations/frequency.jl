@@ -13,7 +13,7 @@ to_nothings(v) = fill(nothing, axes(v))
 
 function (f::FrequencyAnalysis)(entry::Entry)
     positional = vcat(entry.positional, Any[map(to_nothings, first(entry.positional))])
-    labels = merge(entry.labels, MixedArguments([length(positional)], ["count"]))
+    labels = set(entry.labels, length(positional) => "count")
     augmented_entry = Entry(entry; positional, labels)
     return groupreduce(Counter, augmented_entry)
 end
