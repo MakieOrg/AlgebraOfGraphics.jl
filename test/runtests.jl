@@ -50,6 +50,11 @@ end
 
     t = AlgebraOfGraphics.set(s, :d => 5, :a => 3)
     @test t == NamedArguments([:a, :b, :c, :d], [3, 2, 3, 5])
+
+    s = NamedArguments([:a, :b, :c], [1, 2, 3])
+    t = AlgebraOfGraphics.dictcopy(s)
+    @test s == t
+    @test keys(s) !== keys(t)
 end
 
 @testset "layers" begin

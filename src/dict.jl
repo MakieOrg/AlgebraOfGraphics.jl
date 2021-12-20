@@ -5,7 +5,10 @@ const NamedArguments = Dictionary{Symbol, Any}
 const MixedArguments = Dictionary{KeyType, Any}
 
 # make a copy with distinct keys
-dictcopy(d::AbstractDictionary) = merge!(empty(d), d)
+function dictcopy(d::AbstractDictionary)
+    out = similar(copy(keys(d)), eltype(d))
+    return copyto!(out, d)
+end
 
 function set(d::AbstractDictionary, ps::Pair...)
     res = dictcopy(d)
