@@ -1,3 +1,4 @@
+# TODO: use `Dictionary` also for `labels` and `attributes`?
 Base.@kwdef struct Entry
     plottype::PlotFunc=Any
     primary::NamedArguments=NamedArguments()
@@ -88,13 +89,14 @@ function Makie.plot!(ae::AxisEntries)
             j += 1
         end
         entry, i = stack(entries[i:j-1]), j
-        attributes = copy(entry.attributes)
         primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
             return map_pairs(tup) do (key, value)
                 rescaled = rescale(value, get(scales, key, nothing))
                 return haszerodims(rescaled) ? rescaled[] : rescaled
             end
         end
+
+        attributes = copy(entry.attributes)
         for dict in (primary, named), (key, value) in pairs(dict)
             attributes[key] = value
         end

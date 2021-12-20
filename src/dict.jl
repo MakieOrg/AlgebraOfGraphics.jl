@@ -1,7 +1,7 @@
 const KeyType = Union{Symbol, Int}
+
 const Arguments = Vector{Any}
 const NamedArguments = Dictionary{Symbol, Any}
-const MixedArguments = Dictionary{KeyType, Any}
 
 arguments(x) = collect(Any, x)
 namedarguments(x) = NamedArguments(keys(x), values(x))
