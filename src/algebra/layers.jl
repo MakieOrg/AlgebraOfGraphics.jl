@@ -109,7 +109,8 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
             end
             rows, cols = compute_grid_positions(scales, primary)
             labels = map(l -> getnewindex(l, c), e.labels)
-            entry = Entry(e; primary, positional, named, labels)
+            plottype, attributes = e.plottype, dictcopy(e.attributes)
+            entry = Entry(; plottype, primary, positional, named, labels, attributes)
             for i in rows, j in cols
                 ae = axes_grid[i, j]
                 push!(ae.entries, entry)
@@ -121,11 +122,10 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     labeledcolorrange = getlabeledcolorrange(axes_grid)
     if !isnothing(labeledcolorrange)
         _, colorrange = labeledcolorrange
-        for ae in axes_grid
-            for (idx, entry) in enumerate(ae.entries)
-                attributes = set(entry.attributes, :colorrange => colorrange)
-                ae.entries[idx] = Entry(entry; attributes)
-            end
+        for entry in AlgebraOfGraphics.entries(axes_grid)
+            # `attributes` were obtained via `dictcopy` above,
+            # so it is OK to edit the keys
+            set!(entry.attributes, :colorrange, colorrange)
         end
     end
 
