@@ -12,7 +12,7 @@
 
 using AlgebraOfGraphics, CairoMakie
 using AlgebraOfGraphics: CategoricalScale, fitscale
-using AlgebraOfGraphics: arguments, namedarguments
+using AlgebraOfGraphics: NamedArguments
 resolution = (600, 600)
 fig = Figure(; resolution)
 N = 11
@@ -23,18 +23,18 @@ ae = AxisEntries(
     [
         Entry(
             plottype=Scatter,
-            positional=arguments((rg, cosh.(rg))),
-            named=namedarguments((color=1:N, marker=fill("b", N)));
-            attributes=namedarguments((markersize=15,))
+            positional=Any[rg, cosh.(rg)],
+            named=NamedArguments((color=1:N, marker=fill("b", N)));
+            attributes=NamedArguments((markersize=15,))
         ),
         Entry(
             plottype=Scatter,
-            positional=arguments((rg, sinh.(rg))),
-            named=namedarguments((color=1:N, marker=fill("c", N)));
-            attributes=namedarguments((markersize=15,))
+            positional=Any[rg, sinh.(rg)],
+            named=NamedArguments((color=1:N, marker=fill("c", N)));
+            attributes=NamedArguments((markersize=15,))
         ),
     ],
-    namedarguments(
+    NamedArguments(
         (marker=fitscale(CategoricalScale(["a", "b", "c"], markerpalette, "class")),),
     ), # scales
 )

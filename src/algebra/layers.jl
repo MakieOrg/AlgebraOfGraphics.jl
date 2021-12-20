@@ -133,6 +133,7 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     for ae in axes_grid
         ndims = isaxis2d(ae) ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
+            # TODO: move this computation out of the `for` loop
             scale = get(scales, i) do
                 return compute_extrema(AlgebraOfGraphics.entries(axes_grid), i)
             end

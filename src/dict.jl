@@ -4,12 +4,12 @@ const Arguments = Vector{Any}
 const NamedArguments = Dictionary{Symbol, Any}
 const MixedArguments = Dictionary{KeyType, Any}
 
-arguments(x) = collect(Any, x)
-namedarguments(x) = NamedArguments(keys(x), values(x))
+# make a copy with distinct keys
+dictcopy(d::AbstractDictionary) = merge!(empty(d), d)
 
 function set(d::AbstractDictionary, ps::Pair...)
-    res = empty(d)
-    for iter in (pairs(d), ps), (k, v) in iter
+    res = dictcopy(d)
+    for (k, v) in ps
         set!(res, k, v)
     end
     return res
