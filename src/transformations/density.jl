@@ -9,7 +9,7 @@ _kde(data::NTuple{1, Any}; kwargs...) = kde(data...; kwargs...)
 _kde(data::Tuple; kwargs...) = kde(data; kwargs...)
 
 applydatalimits(f::Function, d) = map(f, d)
-applydatalimits(i::Union{AbstractArray, Tuple}, _) = i
+applydatalimits(limits::Union{AbstractArray, Tuple}, _) = limits
 
 function _density(data...; datalimits=extrema, npoints=200, kwargs...)
     k = _kde(data; kwargs...)

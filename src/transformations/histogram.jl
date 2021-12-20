@@ -31,9 +31,9 @@ end
 
 function (h::HistogramAnalysis)(le::Entry)
     extrema = get(h.options, :extrema) do
-        return Tuple(map(v -> mapreduce(Base.extrema, extend_extrema, v), le.positional))
+        return map(v -> mapreduce(Base.extrema, extend_extrema, v), le.positional)
     end
-    options = set(h.options, :extrema => extrema)
+    options = set(h.options, :extrema => Tuple(extrema))
 
     entry = map(le) do p, n
         hist = _histogram(p...; pairs(n)..., pairs(options)...)
