@@ -4,8 +4,8 @@ Base.@kwdef struct Entry
     primary::NamedArguments=NamedArguments()
     positional::Arguments=Arguments()
     named::NamedArguments=NamedArguments()
-    labels::Dict{KeyType, Any}=Dict{KeyType, Any}()
-    attributes::Dict{Symbol, Any}=Dict{Symbol, Any}()
+    labels::MixedArguments=MixedArguments()
+    attributes::NamedArguments=NamedArguments()
 end
 
 function Base.get(e::Entry, key::Int, default)
@@ -48,7 +48,7 @@ Each scale should be a `CategoricalScale`.
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
-    scales::Dict{KeyType, Any}
+    scales::MixedArguments
 end
 
 # Slightly complex machinery to recombine stacked barplots
@@ -80,6 +80,22 @@ function stack(short_entries::AbstractVector{Entry})
     return Entry(first(entries); primary, positional, named)
 end
 
+function validkwargs(nt::NamedTuple{names}) where names
+    keys = filter(names) do name
+        return !isnothing(nt[name])
+    end
+    return NamedTuple{keys}(nt)
+end
+
+function extract_attributes(; alpha=nothing, color=nothing,
+                              col=nothing, row=nothing, layout=nothing,
+                              cycle=nothing, n_dodge=nothing, 
+                              kwargs...)
+    color = isnothing(color) ? nothing : isnothing(alpha) ? color : (color, alpha)
+    nt = validkwargs((; color, n_dodge))
+    return (; nt..., kwargs..., cycle)
+end
+
 function Makie.plot!(ae::AxisEntries)
     axis, entries, scales = ae.axis, ae.entries, ae.scales
     i, N = 1, length(entries)
@@ -96,30 +112,40 @@ function Makie.plot!(ae::AxisEntries)
             end
         end
 
-        attributes = copy(entry.attributes)
-        for dict in (primary, named), (key, value) in pairs(dict)
-            attributes[key] = value
-        end
-
-        # Remove layout info
-        for sym in [:col, :row, :layout]
-            pop!(attributes, sym, nothing)
-        end
-
-        # Avoid automated cycling
-        get!(attributes, :cycle, nothing)
-
-        # Set dodging information
+        attributes = foldl(merge!, (entry.attributes, primary, named), init=NamedArguments())
+        # # Set dodging information
         dodge = get(scales, :dodge, nothing)
-        isa(dodge, CategoricalScale) && (attributes[:n_dodge] = maximum(plotvalues(dodge)))
+        n_dodge = isa(dodge, CategoricalScale) ? maximum(plotvalues(dodge)) : nothing
 
-        # Implement alpha transparency
-        alpha = pop!(attributes, :alpha, nothing)
-        color = get(attributes, :color, nothing)
-        !isnothing(color) && alpha isa Number && (attributes[:color] = (color, alpha))
+        # @show 1
+        # @show length(attributes.indices)
+        # @show length(attributes.values)
+        # @show attributes.indices
 
+        # # Remove layout info
+        # for sym in [:col, :row, :layout]
+        #     unset!(attributes, sym)
+        # end
+        # @show 2
+        # @show length(attributes.indices)
+        # @show length(attributes.values)
+
+        # # Avoid automated cycling
+        # set!(attributes, :cycle, nothing)
+
+
+
+        # # Implement alpha transparency
+        # alpha = get_unset!(attributes, :alpha, nothing)
+        # color = get(attributes, :color, nothing)
+        # !isnothing(color) && alpha isa Number && set!(attributes, :color, (color, alpha))
+
+        # @show 5
+        # @show length(attributes.indices)
+        # @show length(attributes.values)
         plottype = Makie.plottype(entry.plottype, positional...)
-        plot!(plottype, axis, positional...; attributes...)
+        @show extract_attributes(; pairs(attributes)..., n_dodge)
+        plot!(plottype, axis, positional...; extract_attributes(; pairs(attributes)..., n_dodge)...)
     end
     return ae
 end

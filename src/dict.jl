@@ -2,9 +2,24 @@ const KeyType = Union{Symbol, Int}
 
 const Arguments = Vector{Any}
 const NamedArguments = Dictionary{Symbol, Any}
+const MixedArguments = Dictionary{KeyType, Any}
 
 arguments(x) = collect(Any, x)
 namedarguments(x) = NamedArguments(keys(x), values(x))
+
+function separate(xs)
+    positional, named = Arguments(), NamedArguments()
+    for (k, v) in pairs(xs)
+        if k isa Symbol
+            set!(named, k, v)
+        elseif k isa Int
+            push!(positional, v)
+        else
+            throw(ArgumentError("Only integer or symbol keys are supported"))
+        end
+    end
+    return positional, named
+end
 
 function separate(f, d::AbstractDictionary)
     d1, d2 = empty(d), empty(d)
@@ -20,4 +35,15 @@ function map_pairs(f, s)
     ks, vs = keys(s), values(s)
     res = collect(Any, Iterators.map(f∘Pair,  ks, vs))
     return eltype(ks) <: Symbol ? NamedArguments(collect(Symbol, ks), res) : res
+end
+
+# Currently `AbstractDictionary` does not support `pop!`, see https://github.com/andyferris/Dictionaries.jl/issues/81
+function get_unset!(d::AbstractDictionary, key, default)
+    haskey = Ref(true)
+    res = get(d, key) do
+        haskey[] = false
+        return default
+    end
+    haskey[] && delete!(d, key)
+    return res
 end

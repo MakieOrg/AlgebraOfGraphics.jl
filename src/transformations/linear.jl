@@ -1,8 +1,8 @@
 struct LinearAnalysis
-    options::Dict{Symbol, Any}
+    options::NamedArguments
 end
 
-LinearAnalysis(; kwargs...) = LinearAnalysis(Dict{Symbol, Any}(kwargs))
+LinearAnalysis(; kwargs...) = LinearAnalysis(NamedArguments(kwargs))
 
 add_intercept_column(x::AbstractVector{T}) where {T} = [ones(T, length(x)) x]
 

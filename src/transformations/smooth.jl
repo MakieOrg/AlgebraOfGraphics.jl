@@ -1,16 +1,17 @@
 struct SmoothAnalysis
-    options::Dict{Symbol, Any}
+    options::NamedArguments
 end
 
-SmoothAnalysis(; kwargs...) = SmoothAnalysis(Dict{Symbol, Any}(kwargs))
+SmoothAnalysis(; kwargs...) = SmoothAnalysis(NamedArguments(kwargs))
+
+extract_npoints(; npoints=200, kwargs...) = npoints, kwargs
 
 function (l::SmoothAnalysis)(le::Entry)
-    options = copy(l.options)
-    npoints = pop!(options, :npoints, 200)
+    npoints, kwargs = extract_npoints(; pairs(h.options)...)
     entry = map(le) do p, _
         x, y = p
         min, max = extrema(x)
-        model = Loess.loess(Float64.(x), Float64.(y); options...)
+        model = Loess.loess(Float64.(x), Float64.(y); kwargs...)
         x̂ = collect(range(min, max, length=npoints))
         ŷ = Loess.predict(model, x̂)
         return (x̂, ŷ), (;)

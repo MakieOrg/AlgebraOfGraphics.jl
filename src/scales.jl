@@ -3,8 +3,10 @@ increment!(idx::Ref) = (idx[] += 1; idx[])
 cycle(v::AbstractVector, i::Int) = v[mod1(i, length(v))]
 
 function apply_palette(p::Union{AbstractVector, AbstractColorList}, uv)
-    values = [x for x in p if !isa(x, Pair)]
-    pairs = Dict(x for x in p if isa(x, Pair))
+    values, pairs = Any[], Dictionary()
+    for x in p
+        x isa Pair ? set!(pairs, first(x), last(x)) : push!(values, x)
+    end
     idx = Ref(0)
     return [get(() -> cycle(values, increment!(idx)), pairs, v) for v in uv]
 end

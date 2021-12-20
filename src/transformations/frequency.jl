@@ -6,16 +6,14 @@ const Counter = let
 end
 
 struct FrequencyAnalysis
-    options::Dict{Symbol, Any}
+    options::NamedArguments
 end
 
 to_nothings(v) = fill(nothing, axes(v))
 
 function (f::FrequencyAnalysis)(entry::Entry)
-    positional = copy(entry.positional)
-    push!(positional, map(to_nothings, first(positional)))
-    labels = copy(entry.labels)
-    labels[length(positional)] = "count"
+    positional = vcat(entry.positional, Any[map(to_nothings, first(entry.positional))])
+    labels = merge(entry.labels, MixedArguments([length(positional)], ["count"]))
     augmented_entry = Entry(entry; positional, labels)
     return groupreduce(Counter, augmented_entry)
 end
@@ -25,4 +23,4 @@ end
 
 Compute a frequency table of the arguments.
 """
-frequency() = transformation(FrequencyAnalysis(Dict{Symbol, Any}()))
+frequency() = transformation(FrequencyAnalysis(NamedArguments()))

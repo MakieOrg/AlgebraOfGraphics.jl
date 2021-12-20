@@ -26,27 +26,28 @@ function _histogram(data...; bins=sturges(length(data[1])), weights=automatic,
 end
 
 struct HistogramAnalysis
-    options::Dict{Symbol, Any}
+    options::NamedArguments
 end
 
 function (h::HistogramAnalysis)(le::Entry)
-    options = copy(h.options)
-    get!(options, :extrema) do
-        return Tuple(map(v -> mapreduce(extrema, extend_extrema, v), le.positional))
+    extrema = get(h.options, :extrema) do
+        return Tuple(map(v -> mapreduce(Base.extrema, extend_extrema, v), le.positional))
     end
+    options = merge(h.options, NamedArguments((; extrema)))
 
     entry = map(le) do p, n
-        hist = _histogram(p...; pairs(n)..., options...)
+        hist = _histogram(p...; pairs(n)..., pairs(options)...)
         return (map(midpoints, hist.edges)..., hist.weights), (;)
     end
 
     N = length(le.positional)
-    labels, attributes = copy(entry.labels), copy(entry.attributes)
     normalization = get(options, :normalization, :none)
-    labels[N + 1] = normalization == :none ? "count" : string(normalization)
-    if N == 1
-        attributes[:dodge_gap] = 0
-        attributes[:x_gap] = 0
+    label = normalization == :none ? "count" : string(normalization)
+    labels = merge(entry.labels, MixedArguments([N+1], [label]))
+    attributes = if N == 1
+        merge(entry.attributes, MixedArguments((dodge_gap=0, x_gap=0)))
+    else
+        entry.attributes
     end
     default_plottype = categoricalplottypes[N]
     plottype = Makie.plottype(entry.plottype, default_plottype)
@@ -75,4 +76,4 @@ Weighted data is supported via the keyword `weights`.
     Normalizations are computed withing groups. For example, in the case of
     `normalization=:pdf`, sum of weights *within each group* will be equal to `1`.
 """
-histogram(; options...) = transformation(HistogramAnalysis(Dict{Symbol, Any}(options)))
+histogram(; options...) = transformation(HistogramAnalysis(NamedArguments(options)))

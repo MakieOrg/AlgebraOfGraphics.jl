@@ -1,7 +1,7 @@
 struct DensityAnalysis
-    options::Dict{Symbol, Any}
+    options::NamedArguments
 end
-DensityAnalysis(; kwargs...) = DensityAnalysis(Dict{Symbol, Any}(kwargs))
+DensityAnalysis(; kwargs...) = DensityAnalysis(NamedArguments(kwargs))
 
 # Work around lack of length 1 tuple method
 # TODO: also add weights support here
@@ -20,16 +20,15 @@ function _density(data...; datalimits=extrema, npoints=200, kwargs...)
 end
 
 function (d::DensityAnalysis)(le::Entry)
-    options = copy(d.options)
-    get!(options, :datalimits) do
+    datalimits = get(d.options, :datalimits) do
         return map(v -> mapreduce(extrema, extend_extrema, v), le.positional)
     end
+    options = merge(d.options, NamedArguments((; datalimits)))
     entry = map(le) do p, n
-        return _density(p...; pairs(n)..., options...), (;)
+        return _density(p...; pairs(n)..., pairs(options)...), (;)
     end
     N = length(le.positional)
-    labels = copy(le.labels)
-    labels[N + 1] = "pdf"
+    labels = merge(le.labels, MixedArguments([N+1], ["pdf"]))
     plottypes = [LinesFill, Heatmap, Volume]
     default_plottype = plottypes[N]
     plottype = Makie.plottype(le.plottype, default_plottype)

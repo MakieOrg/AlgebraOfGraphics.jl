@@ -22,8 +22,7 @@ function groupreduce(agg, e::Entry)
     N = length(e.positional)
     summaries = Any[mapreduce(collect∘uniquesorted, mergesorted, e.positional[idx]) for idx in 1:N-1]
     entry = map(e) do p, n
-        positional = copy(summaries)
-        push!(positional, _groupreduce(agg, Tuple(summaries), Tuple(p)))
+        positional = vcat(summaries, Any[_groupreduce(agg, Tuple(summaries), Tuple(p))])
         named = n
         return positional, named
     end

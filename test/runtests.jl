@@ -87,8 +87,7 @@ end
         primary, positional, named = map((e.primary, e.positional, e.named)) do tup
             return map(v -> v[c], tup)
         end
-        labels = copy(e.labels)
-        map!(l -> AlgebraOfGraphics.getnewindex(l, c), values(labels))
+        labels = map(l -> AlgebraOfGraphics.getnewindex(l, c), e.labels)
         return Entry(e; primary, positional, named, labels)
     end
     @test length(entries) == 6

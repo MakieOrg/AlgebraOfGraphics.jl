@@ -6,7 +6,7 @@ const Mean = let
 end
 
 struct ExpectationAnalysis
-    options::Dict{Symbol, Any}
+    options::NamedArguments
 end
 
 (e::ExpectationAnalysis)(entry::Entry) = groupreduce(Mean, entry)
@@ -16,4 +16,4 @@ end
 
 Compute the expected value of the last argument conditioned on the preceding ones.
 """
-expectation() = transformation(ExpectationAnalysis(Dict{Symbol, Any}()))
+expectation() = transformation(ExpectationAnalysis(NamedArguments()))

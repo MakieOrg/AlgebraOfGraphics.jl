@@ -25,17 +25,17 @@ ae = AxisEntries(
             plottype=Scatter,
             positional=arguments((rg, cosh.(rg))),
             named=namedarguments((color=1:N, marker=fill("b", N)));
-            attributes=Dict(:markersize => 15)
+            attributes=namedarguments((markersize=15,))
         ),
         Entry(
             plottype=Scatter,
             positional=arguments((rg, sinh.(rg))),
             named=namedarguments((color=1:N, marker=fill("c", N)));
-            attributes=Dict(:markersize => 15)
+            attributes=namedarguments((markersize=15,))
         ),
     ],
-    Dict(
-        :marker => fitscale(CategoricalScale(["a", "b", "c"], markerpalette, "class")),
+    namedarguments(
+        (marker=fitscale(CategoricalScale(["a", "b", "c"], markerpalette, "class")),),
     ), # scales
 )
 plot!(ae)
