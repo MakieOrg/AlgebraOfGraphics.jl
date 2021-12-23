@@ -1,6 +1,6 @@
 # Mapping
 
-Mappings determine how the date is translated into a plot.
+Mappings determine how the data is translated into a plot.
 Positional mappings correspond to the `x`, `y` or `z` axes of the plot,
 whereas the keyword arguments correspond to plot attributes that can vary
 continuously or discretely, such as `color` or `markersize`.
