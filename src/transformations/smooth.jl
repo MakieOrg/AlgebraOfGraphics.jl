@@ -1,18 +1,15 @@
-struct SmoothAnalysis
-    options::NamedArguments
+Base.@kwdef struct SmoothAnalysis
+    npoints::Int=200
+    span::Float64=0.75
+    degree::Int=2
 end
 
-SmoothAnalysis(; kwargs...) = SmoothAnalysis(NamedArguments(kwargs))
-
-extract_npoints(; npoints=200, kwargs...) = npoints, kwargs
-
 function (l::SmoothAnalysis)(le::Entry)
-    npoints, kwargs = extract_npoints(; pairs(l.options)...)
     entry = map(le) do p, _
         x, y = p
         min, max = extrema(x)
-        model = Loess.loess(Float64.(x), Float64.(y); kwargs...)
-        x̂ = collect(range(min, max, length=npoints))
+        model = Loess.loess(Float64.(x), Float64.(y); l.span, l.degree)
+        x̂ = collect(range(min, max, length=l.npoints))
         ŷ = Loess.predict(model, x̂)
         return (x̂, ŷ), (;)
     end
@@ -21,10 +18,10 @@ function (l::SmoothAnalysis)(le::Entry)
 end
 
 """
-    smooth(span=0.75, degree=2)
+    smooth(; npoints=200, span=0.75, degree=2)
 
 Fit a loess model. `span` is the degree of smoothing, typically in `[0,1]`.
 Smaller values result in smaller local context in fitting.
 `degree` is the polynomial degree used in the loess model.
 """
-smooth(; kwargs...) = transformation(SmoothAnalysis(; kwargs...))
+smooth(; options...) = transformation(SmoothAnalysis(; options...))

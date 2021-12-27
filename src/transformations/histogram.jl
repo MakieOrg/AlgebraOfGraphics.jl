@@ -16,24 +16,25 @@ function midpoints(edges::AbstractRange)
 end
 
 function _histogram(data...; bins=sturges(length(data[1])), weights=automatic,
-    normalization::Symbol=:none, extrema::Tuple, closed::Symbol=:left)
+    normalization::Symbol, datalimits::Tuple, closed::Symbol)
 
     bins_tuple = bins isa Tuple ? bins : map(_ -> bins, data)
-    edges = compute_edges(extrema, bins_tuple, closed)
+    edges = compute_edges(datalimits, bins_tuple, closed)
     w = weights === automatic ? () : (to_weights(weights),)
     h = fit(Histogram, data, w..., edges)
     return normalize(h, mode=normalization)
 end
 
-struct HistogramAnalysis
-    options::NamedArguments
+Base.@kwdef struct HistogramAnalysis{D, B}
+    datalimits::D=automatic
+    bins::B=automatic
+    closed::Symbol=:left
+    normalization::Symbol=:none
 end
 
 function (h::HistogramAnalysis)(le::Entry)
-    extrema = get(h.options, :extrema) do
-        return map(v -> mapreduce(Base.extrema, extend_extrema, v), le.positional)
-    end
-    options = set(h.options, :extrema => Tuple(extrema))
+    datalimits = compute_datalimits(le.positional, h.datalimits)
+    options = valid_options((; datalimits, h.bins, h.closed, h.normalization))
 
     entry = map(le) do p, n
         hist = _histogram(p...; pairs(n)..., pairs(options)...)
@@ -41,8 +42,7 @@ function (h::HistogramAnalysis)(le::Entry)
     end
 
     N = length(le.positional)
-    normalization = get(options, :normalization, :none)
-    label = normalization == :none ? "count" : string(normalization)
+    label = h.normalization == :none ? "count" : string(h.normalization)
     labels = set(entry.labels, N+1 => label)
     attributes = if N == 1
         set(entry.attributes, :dodge_gap => 0, :x_gap => 0)
@@ -55,7 +55,7 @@ function (h::HistogramAnalysis)(le::Entry)
 end
 
 """
-    histogram(; bins=automatic, weights=automatic, normalization=:none)
+    histogram(; bins=automatic, closed=:left, datalimits=automatic, normalization=:none)
 
 Compute a histogram. `bins` can be an `Int` to create that
 number of equal-width bins over the range of `values`.
@@ -76,4 +76,4 @@ Weighted data is supported via the keyword `weights`.
     Normalizations are computed withing groups. For example, in the case of
     `normalization=:pdf`, sum of weights *within each group* will be equal to `1`.
 """
-histogram(; options...) = transformation(HistogramAnalysis(NamedArguments(options)))
+histogram(; options...) = transformation(HistogramAnalysis(; options...))

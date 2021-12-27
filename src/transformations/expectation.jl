@@ -5,15 +5,13 @@ const Mean = let
     (; init, op, value)
 end
 
-struct ExpectationAnalysis
-    options::NamedArguments
-end
+struct ExpectationAnalysis end
 
 (e::ExpectationAnalysis)(entry::Entry) = groupreduce(Mean, entry)
 
 """
-    expectation(args...)
+    expectation()
 
 Compute the expected value of the last argument conditioned on the preceding ones.
 """
-expectation() = transformation(ExpectationAnalysis(NamedArguments()))
+expectation() = transformation(ExpectationAnalysis())

@@ -5,9 +5,7 @@ const Counter = let
     (; init, op, value)
 end
 
-struct FrequencyAnalysis
-    options::NamedArguments
-end
+struct FrequencyAnalysis end
 
 to_nothings(v) = fill(nothing, axes(v))
 
@@ -23,4 +21,4 @@ end
 
 Compute a frequency table of the arguments.
 """
-frequency() = transformation(FrequencyAnalysis(NamedArguments()))
+frequency() = transformation(FrequencyAnalysis())
