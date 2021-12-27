@@ -18,10 +18,11 @@ function (l::SmoothAnalysis)(le::Entry)
 end
 
 """
-    smooth(; npoints=200, span=0.75, degree=2)
+    smooth(; span=0.75, degree=2, npoints=200)
 
 Fit a loess model. `span` is the degree of smoothing, typically in `[0,1]`.
 Smaller values result in smaller local context in fitting.
 `degree` is the polynomial degree used in the loess model.
+`npoints` is the number of points used by Makie to draw the line
 """
 smooth(; options...) = transformation(SmoothAnalysis(; options...))

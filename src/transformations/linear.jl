@@ -31,7 +31,7 @@ function (l::LinearAnalysis)(le::Entry)
 end
 
 """
-    linear(; npoints=200, interval=automatic, dropcollinear=false)
+    linear(; interval=automatic, dropcollinear=false, npoints=200)
 
 Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent.
@@ -39,5 +39,6 @@ Valid values of interval are `:confidence` delimiting the uncertainty of the pre
 relationship, and `:prediction` delimiting estimated bounds for new data points.
 By default, this analysis errors on singular (collinear) data. To avoid that,
 it is possible to set `dropcollinear=true`.
+`npoints` is the number of points used by Makie to draw the line
 """
 linear(; options...) = transformation(LinearAnalysis(; options...))

@@ -44,11 +44,11 @@ function (d::DensityAnalysis)(le::Entry)
 end
 
 """
-    density(; datalimits=automatic, npoints=200, kernel=automatic, bandwidth=automatic)
+    density(; datalimits=automatic, kernel=automatic, bandwidth=automatic, npoints=200)
 
 Fit a kernel density estimation of `data`.
-Here, `datalimits` specifies the range for which the density should be calculated, `npoints`
-is the number of points used by Makie to draw the line and `kernel` and `bandwidth` are
-forwarded to `KernelDensity.kde`.
+Here, `datalimits` specifies the range for which the density should be calculated,
+and `kernel` and `bandwidth` are forwarded to `KernelDensity.kde`.
+`npoints` is the number of points used by Makie to draw the line
 """
 density(; options...) = transformation(DensityAnalysis(; options...))
