@@ -85,15 +85,13 @@ end
 
 function compute_attributes(attributes, primary, named, scales)
     attrs = NamedArguments()
-    alpha, color = nothing, nothing
-    for dict in (attributes, primary, named), (k, v) in pairs(dict)
-        k in [:col, :row, :layout] && continue # ignore layout info
-        k == :alpha && (alpha = v; continue)
-        k == :color && (color = v; continue)
-        set!(attrs, k, v)
-    end
+    merge!(attrs, attributes)
+    merge!(attrs, primary)
+    merge!(attrs, named)
 
     # implement alpha transparency
+    alpha = get(attrs, :alpha, nothing)
+    color = get(attrs, :color, nothing)
     if !isnothing(color)
         set!(attrs, :color, isnothing(alpha) ? color : (color, alpha))
     end
@@ -105,7 +103,8 @@ function compute_attributes(attributes, primary, named, scales)
     dodge = get(scales, :dodge, nothing)
     isa(dodge, CategoricalScale) && set!(attrs, :n_dodge, maximum(plotvalues(dodge)))
 
-    return attrs
+    # remove unnecessary information
+    return unset(attrs, :col, :row, :layout, :alpha)
 end
 
 function Makie.plot!(ae::AxisEntries)

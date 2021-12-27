@@ -52,9 +52,13 @@ end
     @test t == NamedArguments([:a, :b, :c, :d], [3, 2, 3, 5])
 
     s = NamedArguments([:a, :b, :c], [1, 2, 3])
-    t = AlgebraOfGraphics.dictcopy(s)
+    t = AlgebraOfGraphics.set(s)
     @test s == t
     @test keys(s) !== keys(t)
+
+    s = NamedArguments([:a, :b, :c], [1, 2, 3])
+    t = AlgebraOfGraphics.unset(s, :a, :b)
+    @test t == NamedArguments([:c], [3])
 end
 
 @testset "layers" begin

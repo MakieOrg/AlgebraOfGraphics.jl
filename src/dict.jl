@@ -5,17 +5,18 @@ const NamedArguments = Dictionary{Symbol, Any}
 const MixedArguments = Dictionary{KeyType, Any}
 
 # make a copy with distinct keys
-function dictcopy(d::AbstractDictionary)
-    out = similar(copy(keys(d)), eltype(d))
-    return copyto!(out, d)
-end
-
 function set(d::AbstractDictionary, ps::Pair...)
-    res = dictcopy(d)
+    res = similar(copy(keys(d)), eltype(d))
+    copyto!(res, d)
     for (k, v) in ps
         set!(res, k, v)
     end
     return res
+end
+
+function unset(d::AbstractDictionary, ks...)
+    idxs = findall(!in(ks), keys(d))
+    return getindices(d, idxs)
 end
 
 function separate(f, d::AbstractDictionary)
