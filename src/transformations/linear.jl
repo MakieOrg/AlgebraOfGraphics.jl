@@ -31,11 +31,13 @@ function (l::LinearAnalysis)(le::Entry)
 end
 
 """
-    linear(; npoints=200, dropcollinear=false, interval=automatic)
+    linear(; npoints=200, interval=automatic, dropcollinear=false)
 
 Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent.
 Valid values of interval are `:confidence` delimiting the uncertainty of the predicted
 relationship, and `:prediction` delimiting estimated bounds for new data points.
+By default, this analysis errors on singular (collinear) data. To avoid that,
+it is possible to set `dropcollinear=true`.
 """
 linear(; options...) = transformation(LinearAnalysis(; options...))

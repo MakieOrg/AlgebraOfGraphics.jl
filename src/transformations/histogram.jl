@@ -55,12 +55,14 @@ function (h::HistogramAnalysis)(le::Entry)
 end
 
 """
-    histogram(; bins=automatic, closed=:left, datalimits=automatic, normalization=:none)
+    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none)
 
 Compute a histogram. `bins` can be an `Int` to create that
-number of equal-width bins over the range of `values`.
-Alternatively, it can be a sorted iterable of bin edges. The histogram
-can be normalized by setting `normalization`. Possible values are:
+number of equal-width bins over the range of `values`. In that case, the range covered
+by the `bins` is defined by `datalimits` (defaults to the extrema of the data).
+Alternatively, `bins` can be a sorted iterable of bin edges.
+`closed` determines whether the the intervals are closed to the left or to the right.
+The histogram can be normalized by setting `normalization`. Possible values are:
 *  `:pdf`: Normalize by sum of weights and bin sizes. Resulting histogram
    has norm 1 and represents a PDF.
 * `:density`: Normalize by bin sizes only. Resulting histogram represents
