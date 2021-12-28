@@ -35,6 +35,19 @@ struct AxisEntries
     scales::MixedArguments
 end
 
+function AxisEntries(ae::AxisSpecEntries, fig)
+    ax = ae.axis.type(fig[ae.axis.position...]; ae.axis.options...)
+    AxisEntries(ax, ae.entries, ae.scales)
+end
+
+function AxisEntries(ae::AxisSpecEntries, ax::Union{Axis,Axis3})
+    if !isempty(ax)
+        @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $(a.axis.options)")
+    end
+    AxisEntries(ax, ae.entries, ae.scales)
+end
+
+
 # Slightly complex machinery to recombine stacked barplots
 function mergeable(e1::Entry, e2::Entry)
     for e in (e1, e2)
@@ -112,6 +125,7 @@ function Makie.plot!(ae::AxisEntries)
 end
 
 entries(grid::AbstractMatrix{AxisEntries}) = Iterators.flatten(ae.entries for ae in grid)
+entries(grid::AbstractMatrix{_AxisEntries_}) = Iterators.flatten(ae.entries for ae in grid)
 
 struct FigureGrid
     figure::Figure

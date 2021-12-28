@@ -66,6 +66,19 @@ function compute_grid_positions(scales, primary=NamedArguments())
 end
 
 function compute_axes_grid(fig, s::OneOrMoreLayers;
+    axis=NamedTuple(), palettes=NamedTuple())
+
+    axs, axes_grid = compute_axes_grid(s; axis, palettes)
+
+    sizes = map(length, axs)
+    if sizes !== (1, 1) && fig isa Axis
+        error("You can only pass an Axis to draw!, if the calculated layout only contains one element. Elements: $(sizes)")
+    end
+
+    return map(ae -> AxisEntries(ae, fig), axes_grid)
+end
+
+function compute_axes_grid(s::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
     layers::Layers = s
     processedlayers = map(process, layers)
@@ -78,28 +91,19 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
         mergewith!(mergescales, scales, categoricalscales(processedlayer, palettes))
     end
     # fit scales (compute plot values using all data values)
-    map!(fitscale, scales, scales)
+    map!(fitscale, values(scales))
 
-    function create_axis(fig, c)
+    function create_axis(c)
         type = get(axis, :type, Axis)
-        options = Base.structdiff(axis, (; type))
-        ax = type(fig[Tuple(c)...]; options...)
-        return AxisEntries(ax, ProcessedLayer[], scales)
-    end
-    function create_axis(ax::Axis, c)
-        if !isempty(axis)
-            @warn("Axis got passed, but also axis attributes. Ignoring axis attributes: $(axis)")
-        end
-        return AxisEntries(ax, ProcessedLayer[], scales)
+        options = NamedArguments(pairs(Base.structdiff(axis, (; type))))
+        position = Tuple(c)
+
+        return AxisSpecEntries(AxisSpec(type, position, options), Entry[], scales)
     end
     axs = compute_grid_positions(scales)
-    sizes = map(length, axs)
 
-    if sizes !== (1, 1) && fig isa Axis
-        error("You can only pass an Axis to draw!, if the calculated layout only contains one element. Elements: $(sizes)")
-    end
     axes_grid = map(CartesianIndices(axs)) do c
-        return create_axis(fig, c)
+        return create_axis(c)
     end
 
     for processedlayer in processedlayers
@@ -132,21 +136,24 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
 
     # Axis labels and ticks
     for ae in axes_grid
-        ndims = isaxis2d(ae) ? 2 : 3
+        ndims = ae.type isa Axis ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
             # TODO: move this computation out of the `for` loop
             scale = get(scales, i) do
                 return compute_extrema(AlgebraOfGraphics.processedlayers(axes_grid), i)
             end
             isnothing(scale) && continue
-            label = compute_label(ae.processedlayers, i)
+            label = compute_label(ae.entries, i)
             for (k, v) in pairs((label=string(label), ticks=ticks(scale)))
                 keyword = Symbol(var, k)
-                keyword in keys(axis) || (getproperty(ae.axis, keyword)[] = v)
+                if keyword ∉ keys(axis)
+                    ae.axis.options[k] = v
+                end
             end
         end
     end
-    return axes_grid
+
+    return axs, axes_grid
 end
 
 function Makie.plot!(fig, s::OneOrMoreLayers;
