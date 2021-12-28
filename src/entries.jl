@@ -1,4 +1,3 @@
-# TODO: use `Dictionary` also for `labels` and `attributes`?
 Base.@kwdef struct Entry
     plottype::PlotFunc=Any
     primary::NamedArguments=NamedArguments()
@@ -63,9 +62,6 @@ end
 function lengthen_primary(e::Entry)
     N = length(first(e.positional))
     primary = map(t -> fill(t, N), e.primary)
-    @assert length(primary.indices) == length(primary.values)
-    @assert length(e.named.indices) == length(e.named.values)
-    @assert length(e.primary.indices) == length(e.primary.values)
     return Entry(e; primary)
 end
 
