@@ -18,15 +18,15 @@ function _groupreduce(agg, summaries::Tuple, values::Tuple)
     return map(value, results)
 end
 
-function groupreduce(agg, e::Entry)
-    N = length(e.positional)
-    summaries = Any[mapreduce(collect∘uniquesorted, mergesorted, e.positional[idx]) for idx in 1:N-1]
-    entry = map(e) do p, n
+function groupreduce(agg, input::ProcessedLayer)
+    N = length(input.positional)
+    summaries = Any[mapreduce(collect∘uniquesorted, mergesorted, input.positional[idx]) for idx in 1:N-1]
+    output = map(input) do p, n
         positional = vcat(summaries, Any[_groupreduce(agg, Tuple(summaries), Tuple(p))])
         named = n
         return positional, named
     end
     default_plottype = categoricalplottypes[length(summaries)]
-    plottype = Makie.plottype(entry.plottype, default_plottype)
-    return Entry(entry; plottype)
+    plottype = Makie.plottype(output.plottype, default_plottype)
+    return ProcessedLayer(output; plottype)
 end

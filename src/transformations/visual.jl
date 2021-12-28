@@ -4,10 +4,10 @@ struct Visual
 end
 Visual(plottype=Any; kwargs...) = Visual(plottype, NamedArguments(kwargs))
 
-function (v::Visual)(e::Entry)
-    plottype = Makie.plottype(v.plottype, e.plottype)
-    attributes = merge(e.attributes, v.attributes)
-    return Entry(e; plottype, attributes)
+function (v::Visual)(input::ProcessedLayer)
+    plottype = Makie.plottype(v.plottype, input.plottype)
+    attributes = merge(input.attributes, v.attributes)
+    return ProcessedLayer(input; plottype, attributes)
 end
 
 visual(plottype=Any; kwargs...) = transformation(Visual(plottype; kwargs...))

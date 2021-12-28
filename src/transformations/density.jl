@@ -29,18 +29,18 @@ function _density(data...; datalimits, npoints, kwargs...)
     return (rgs..., res)
 end
 
-function (d::DensityAnalysis)(le::Entry)
-    datalimits = compute_datalimits(le.positional, d.datalimits)
+function (d::DensityAnalysis)(input::ProcessedLayer)
+    datalimits = compute_datalimits(input.positional, d.datalimits)
     options = valid_options((; datalimits, d.npoints, d.kernel, d.bandwidth))
-    entry = map(le) do p, n
+    output = map(input) do p, n
         return _density(p...; pairs(n)..., pairs(options)...), (;)
     end
-    N = length(le.positional)
-    labels = set(le.labels, N+1 => "pdf")
+    N = length(input.positional)
+    labels = set(input.labels, N+1 => "pdf")
     plottypes = [LinesFill, Heatmap, Volume]
     default_plottype = plottypes[N]
-    plottype = Makie.plottype(le.plottype, default_plottype)
-    return Entry(entry; plottype, labels)
+    plottype = Makie.plottype(input.plottype, default_plottype)
+    return ProcessedLayer(output; plottype, labels)
 end
 
 """
