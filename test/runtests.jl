@@ -77,16 +77,16 @@ end
     df = (x=rand(1000), y=rand(1000), z=rand(1000), c=rand(["a", "b", "c"], 1000))
     d = mapping(:x => exp, [:y, :z], color=:c, marker = dims(1) => renamer(["a", "b"]))
     layer = data(df) * d
-    entry = AlgebraOfGraphics.process_mappings(layer)
-    @test entry.positional[1] == fill(map(exp, df.x))
-    @test entry.positional[2] == [df.y, df.z]
-    @test entry.primary[:color] == fill(df.c)
-    @test entry.primary[:marker] == [fill(Sorted(1, "a")), fill(Sorted(2, "b"))]
-    @test entry.named == NamedArguments((;))
-    @test entry.labels[1] == fill("x")
-    @test entry.labels[2] ==  ["y", "z"]
-    @test entry.labels[:color] == fill("c")
-    @test entry.labels[:marker] == ""
+    pl = AlgebraOfGraphics.process_mappings(layer)
+    @test pl.positional[1] == fill(map(exp, df.x))
+    @test pl.positional[2] == [df.y, df.z]
+    @test pl.primary[:color] == fill(df.c)
+    @test pl.primary[:marker] == [fill(Sorted(1, "a")), fill(Sorted(2, "b"))]
+    @test pl.named == NamedArguments((;))
+    @test pl.labels[1] == fill("x")
+    @test pl.labels[2] ==  ["y", "z"]
+    @test pl.labels[:color] == fill("c")
+    @test pl.labels[:marker] == ""
 end
 
 @testset "grouping" begin
@@ -94,60 +94,60 @@ end
     df.c[1:3] .= ["a", "b", "c"] # ensure all three values exist
     d = mapping(:x => exp, [:y, :z], color=:c, marker=dims(1) => t -> ["1", "2"][t], markersize=:w)
     layer = data(df) * d
-    e = AlgebraOfGraphics.to_entry(layer)
-    entries = map(CartesianIndices(AlgebraOfGraphics.shape(e))) do c
-        primary, positional, named = map((e.primary, e.positional, e.named)) do tup
+    pl = AlgebraOfGraphics.to_processedlayer(layer)
+    pls = map(CartesianIndices(AlgebraOfGraphics.shape(pl))) do c
+        primary, positional, named = map((pl.primary, pl.positional, pl.named)) do tup
             return map(v -> v[c], tup)
         end
-        labels = map(l -> AlgebraOfGraphics.getnewindex(l, c), e.labels)
-        return Entry(e; primary, positional, named, labels)
+        labels = map(l -> AlgebraOfGraphics.getnewindex(l, c), pl.labels)
+        return ProcessedLayer(pl; primary, positional, named, labels)
     end
-    @test length(entries) == 6
+    @test length(pls) == 6
     for i in 1: 6
-        @test entries[i].plottype === Any
-        @test isempty(entries[i].attributes)
-        @test entries[i].labels[1] == "x"
-        @test entries[i].labels[2] == (i ≤ 3 ? "y" : "z")
-        @test entries[i].labels[:color] == "c"
-        @test entries[i].labels[:marker] == ""
-        @test entries[i].labels[:markersize] == "w"
+        @test pls[i].plottype === Any
+        @test isempty(pls[i].attributes)
+        @test pls[i].labels[1] == "x"
+        @test pls[i].labels[2] == (i ≤ 3 ? "y" : "z")
+        @test pls[i].labels[:color] == "c"
+        @test pls[i].labels[:marker] == ""
+        @test pls[i].labels[:markersize] == "w"
     end
 
-    @test entries[1].primary[:color] == "a"
-    @test entries[1].primary[:marker] == "1"
-    @test entries[1].positional[1] == exp.(df.x[df.c .== "a"])
-    @test entries[1].positional[2] == df.y[df.c .== "a"]
-    @test entries[1].named[:markersize] == df.w[df.c .== "a"]
+    @test pls[1].primary[:color] == "a"
+    @test pls[1].primary[:marker] == "1"
+    @test pls[1].positional[1] == exp.(df.x[df.c .== "a"])
+    @test pls[1].positional[2] == df.y[df.c .== "a"]
+    @test pls[1].named[:markersize] == df.w[df.c .== "a"]
     
-    @test entries[2].primary[:color] == "b"
-    @test entries[2].primary[:marker] == "1"
-    @test entries[2].positional[1] == exp.(df.x[df.c .== "b"])
-    @test entries[2].positional[2] == df.y[df.c .== "b"]
-    @test entries[2].named[:markersize] == df.w[df.c .== "b"]
+    @test pls[2].primary[:color] == "b"
+    @test pls[2].primary[:marker] == "1"
+    @test pls[2].positional[1] == exp.(df.x[df.c .== "b"])
+    @test pls[2].positional[2] == df.y[df.c .== "b"]
+    @test pls[2].named[:markersize] == df.w[df.c .== "b"]
     
-    @test entries[3].primary[:color] == "c"
-    @test entries[3].primary[:marker] == "1"
-    @test entries[3].positional[1] == exp.(df.x[df.c .== "c"])
-    @test entries[3].positional[2] == df.y[df.c .== "c"]
-    @test entries[3].named[:markersize] == df.w[df.c .== "c"]
+    @test pls[3].primary[:color] == "c"
+    @test pls[3].primary[:marker] == "1"
+    @test pls[3].positional[1] == exp.(df.x[df.c .== "c"])
+    @test pls[3].positional[2] == df.y[df.c .== "c"]
+    @test pls[3].named[:markersize] == df.w[df.c .== "c"]
 
-    @test entries[4].primary[:color] == "a"
-    @test entries[4].primary[:marker] == "2"
-    @test entries[4].positional[1] == exp.(df.x[df.c .== "a"])
-    @test entries[4].positional[2] == df.z[df.c .== "a"]
-    @test entries[4].named[:markersize] == df.w[df.c .== "a"]
+    @test pls[4].primary[:color] == "a"
+    @test pls[4].primary[:marker] == "2"
+    @test pls[4].positional[1] == exp.(df.x[df.c .== "a"])
+    @test pls[4].positional[2] == df.z[df.c .== "a"]
+    @test pls[4].named[:markersize] == df.w[df.c .== "a"]
 
-    @test entries[5].primary[:color] == "b"
-    @test entries[5].primary[:marker] == "2"
-    @test entries[5].positional[1] == exp.(df.x[df.c .== "b"])
-    @test entries[5].positional[2] == df.z[df.c .== "b"]
-    @test entries[5].named[:markersize] == df.w[df.c .== "b"]
+    @test pls[5].primary[:color] == "b"
+    @test pls[5].primary[:marker] == "2"
+    @test pls[5].positional[1] == exp.(df.x[df.c .== "b"])
+    @test pls[5].positional[2] == df.z[df.c .== "b"]
+    @test pls[5].named[:markersize] == df.w[df.c .== "b"]
 
-    @test entries[6].primary[:color] == "c"
-    @test entries[6].primary[:marker] == "2"
-    @test entries[6].positional[1] == exp.(df.x[df.c .== "c"])
-    @test entries[6].positional[2] == df.z[df.c .== "c"]
-    @test entries[6].named[:markersize] == df.w[df.c .== "c"]
+    @test pls[6].primary[:color] == "c"
+    @test pls[6].primary[:marker] == "2"
+    @test pls[6].positional[1] == exp.(df.x[df.c .== "c"])
+    @test pls[6].positional[2] == df.z[df.c .== "c"]
+    @test pls[6].named[:markersize] == df.w[df.c .== "c"]
 end
 
 @testset "helpers" begin

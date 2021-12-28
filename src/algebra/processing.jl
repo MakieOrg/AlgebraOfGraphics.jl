@@ -92,15 +92,15 @@ shiftdims(v::AbstractArray) = reshape(v, 1, axes(v)...)
 shiftdims(v::Tuple) = shiftdims(collect(v))
 shiftdims(v) = v
 
-function group(entry::ProcessedLayer)
-    grouping = Tuple(only(v) for v in values(entry.primary) if haszerodims(v))
+function group(pl::ProcessedLayer)
+    grouping = Tuple(only(v) for v in values(pl.primary) if haszerodims(v))
     perm, rgs = permutation_ranges(grouping)
-    axs = shape(entry)
-    primary, positional, named = map((entry.primary, entry.positional, entry.named)) do vars
+    axs = shape(pl)
+    primary, positional, named = map((pl.primary, pl.positional, pl.named)) do vars
         return map(vs -> subgroups(vs, perm, rgs, axs), vars)
     end
-    labels = map(shiftdims, entry.labels)
-    return ProcessedLayer(entry; primary, positional, named, labels)
+    labels = map(shiftdims, pl.labels)
+    return ProcessedLayer(pl; primary, positional, named, labels)
 end
 
 function getlabeledarray(layer::Layer, s)
@@ -142,15 +142,15 @@ function process_mappings(layer::Layer)
 end
 
 """
-    to_entry(layer::Layer)
+    to_processedlayer(layer::Layer)
 
-Convert `layer` to equivalent entry, excluding transformations.
+Convert `layer` to equivalent pl, excluding transformations.
 """
-function to_entry(layer::Layer)
-    entry = process_mappings(layer)
-    grouped_entry = isnothing(layer.data) ? entry : group(entry)
+function to_processedlayer(layer::Layer)
+    pl = process_mappings(layer)
+    grouped_entry = isnothing(layer.data) ? pl : group(pl)
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
     return ProcessedLayer(grouped_entry; primary)
 end
 
-process(layer::Layer) = layer.transformation(to_entry(layer))
+process(layer::Layer) = layer.transformation(to_processedlayer(layer))
