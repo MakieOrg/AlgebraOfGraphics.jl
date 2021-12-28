@@ -1,41 +1,7 @@
-Base.@kwdef struct Entry
-    plottype::PlotFunc=Any
-    primary::NamedArguments=NamedArguments()
-    positional::Arguments=Arguments()
-    named::NamedArguments=NamedArguments()
-    labels::MixedArguments=MixedArguments()
-    attributes::NamedArguments=NamedArguments()
-end
-
-function Base.get(e::Entry, key::Int, default)
-    return key in keys(e.positional) ? e.positional[key] : default
-end
-
-function Base.get(e::Entry, key::Symbol, default)
-    return get(e.named, key, default)
-end
-
-function Entry(e::Entry; kwargs...)
-    nt = (; e.plottype, e.primary, e.positional, e.named, e.labels, e.attributes)
-    return Entry(; merge(nt, values(kwargs))...)
-end
-
-function unnest(v::AbstractArray)
-    return map_pairs(first(v)) do (k, _)
-        return [el[k] for el in v]
-    end
-end
-
-function Base.map(f, e::Entry)
-    axs = shape(e)
-    outputs = map(CartesianIndices(axs)) do c
-        p = map(v -> getnewindex(v, c), e.positional)
-        n = map(v -> getnewindex(v, c), e.named)
-        return f(p, n)
-    end
-    positional = unnest(map(first, outputs))
-    named = unnest(map(last, outputs))
-    return Entry(e; positional, named)
+struct Entry
+    plottype::PlotFunc
+    positional::Arguments
+    named::NamedArguments
 end
 
 """

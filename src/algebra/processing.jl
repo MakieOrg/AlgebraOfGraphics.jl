@@ -1,3 +1,45 @@
+## Format for layer after processing
+
+Base.@kwdef struct ProcessedLayer
+    plottype::PlotFunc=Any
+    primary::NamedArguments=NamedArguments()
+    positional::Arguments=Arguments()
+    named::NamedArguments=NamedArguments()
+    labels::MixedArguments=MixedArguments()
+    attributes::NamedArguments=NamedArguments()
+end
+
+function Base.get(pl::ProcessedLayer, key::Int, default)
+    return key in keys(pl.positional) ? pl.positional[key] : default
+end
+
+function Base.get(pl::ProcessedLayer, key::Symbol, default)
+    return get(pl.named, key, default)
+end
+
+function ProcessedLayer(pl::ProcessedLayer; kwargs...)
+    nt = (; pl.plottype, pl.primary, pl.positional, pl.named, pl.labels, pl.attributes)
+    return ProcessedLayer(; merge(nt, values(kwargs))...)
+end
+
+function unnest(v::AbstractArray)
+    return map_pairs(first(v)) do (k, _)
+        return [el[k] for el in v]
+    end
+end
+
+function Base.map(f, pl::ProcessedLayer)
+    axs = shape(pl)
+    outputs = map(CartesianIndices(axs)) do c
+        p = map(v -> getnewindex(v, c), pl.positional)
+        n = map(v -> getnewindex(v, c), pl.named)
+        return f(p, n)
+    end
+    positional = unnest(map(first, outputs))
+    named = unnest(map(last, outputs))
+    return ProcessedLayer(pl; positional, named)
+end
+
 ## Grouping machinery
 
 fast_hashed(v::AbstractVector) = isbitstype(eltype(v)) ? PooledArray(v) : v
@@ -11,10 +53,10 @@ end
 
 concatenate_values(args...) = mapreduce(values, append!, args, init=Any[])
 
-allvariables(e::Entry) = concatenate_values(e.primary, e.positional, e.named)
+allvariables(pl::ProcessedLayer) = concatenate_values(pl.primary, pl.positional, pl.named)
 allvariables(l::Layer) = concatenate_values(l.positional, l.named)
 
-function shape(x::Union{Entry, Layer})
+function shape(x::Union{ProcessedLayer, Layer})
     arrays = map(var -> var isa ArrayLike ? var : fill(nothing), allvariables(x))
     return Broadcast.combine_axes(arrays...)
 end
@@ -50,7 +92,7 @@ shiftdims(v::AbstractArray) = reshape(v, 1, axes(v)...)
 shiftdims(v::Tuple) = shiftdims(collect(v))
 shiftdims(v) = v
 
-function group(entry::Entry)
+function group(entry::ProcessedLayer)
     grouping = Tuple(only(v) for v in values(entry.primary) if haszerodims(v))
     perm, rgs = permutation_ranges(grouping)
     axs = shape(entry)
@@ -58,7 +100,7 @@ function group(entry::Entry)
         return map(vs -> subgroups(vs, perm, rgs, axs), vars)
     end
     labels = map(shiftdims, entry.labels)
-    return Entry(entry; primary, positional, named, labels)
+    return ProcessedLayer(entry; primary, positional, named, labels)
 end
 
 function getlabeledarray(layer::Layer, s)
@@ -96,7 +138,7 @@ function process_mappings(layer::Layer)
         end
     end
     primary, named = separate(hascategoricalentry, named)
-    return Entry(; primary, positional, named, labels)
+    return ProcessedLayer(; primary, positional, named, labels)
 end
 
 """
@@ -108,7 +150,7 @@ function to_entry(layer::Layer)
     entry = process_mappings(layer)
     grouped_entry = isnothing(layer.data) ? entry : group(entry)
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
-    return Entry(grouped_entry; primary)
+    return ProcessedLayer(grouped_entry; primary)
 end
 
 process(layer::Layer) = layer.transformation(to_entry(layer))
