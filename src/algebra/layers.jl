@@ -34,17 +34,17 @@ to_label(label::AbstractString) = label
 to_label(labels::ArrayLike) = reduce(mergelabels, labels)
 
 function categoricalscales(e::Entry, palettes)
-    cs = Dict{KeyType, Any}()
+    cs = MixedArguments()
     for (key, val) in pairs(e.primary)
         palette = get(palettes, key, automatic)
         label = to_label(get(e.labels, key, ""))
-        cs[key] = CategoricalScale(uniquevalues(val), palette, label)
+        insert!(cs, key, CategoricalScale(uniquevalues(val), palette, label))
     end
     for (key, val) in pairs(e.positional)
         hascategoricalentry(val) || continue
         palette = automatic
         label = to_label(get(e.labels, key, ""))
-        cs[key] = CategoricalScale(mapreduce(uniquevalues, mergesorted, val), palette, label)
+        insert!(cs, key, CategoricalScale(mapreduce(uniquevalues, mergesorted, val), palette, label))
     end
     return cs
 end
@@ -73,11 +73,12 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     theme_palettes = NamedTuple(Makie.current_default_theme()[:palette])
     palettes = merge((layout=wrap,), map(to_value, theme_palettes), palettes)
 
-    scales = mapreduce(mergewith!(mergescales), entries) do entry
-        return categoricalscales(entry, palettes)
+    scales = MixedArguments()
+    for entry in entries
+        mergewith!(mergescales, scales, categoricalscales(entry, palettes))
     end
     # fit scales (compute plot values using all data values)
-    map!(fitscale, values(scales))
+    map!(fitscale, scales, scales)
 
     function create_axis(fig, c)
         type = get(axis, :type, Axis)
@@ -107,9 +108,10 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
                 return map(v -> getnewindex(v, c), tup)
             end
             rows, cols = compute_grid_positions(scales, primary)
-            labels = copy(e.labels)
-            map!(l -> getnewindex(l, c), values(labels))
-            entry = Entry(e; primary, positional, named, labels)
+            labels = map(l -> getnewindex(l, c), e.labels)
+            # create novel `attributes` object, copying keys and values of `e.attributes`
+            plottype, attributes = e.plottype, set(e.attributes)
+            entry = Entry(; plottype, primary, positional, named, labels, attributes)
             for i in rows, j in cols
                 ae = axes_grid[i, j]
                 push!(ae.entries, entry)
@@ -122,7 +124,9 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     if !isnothing(labeledcolorrange)
         _, colorrange = labeledcolorrange
         for entry in AlgebraOfGraphics.entries(axes_grid)
-            entry.attributes[:colorrange] = colorrange
+            # `attributes` were obtained via `set` above,
+            # so it is OK to edit the keys
+            set!(entry.attributes, :colorrange, colorrange)
         end
     end
 
@@ -130,14 +134,15 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
     for ae in axes_grid
         ndims = isaxis2d(ae) ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
+            # TODO: move this computation out of the `for` loop
             scale = get(scales, i) do
                 return compute_extrema(AlgebraOfGraphics.entries(axes_grid), i)
             end
             isnothing(scale) && continue
             label = compute_label(ae.entries, i)
-            for (k′, v) in pairs((label=string(label), ticks=ticks(scale)))
-                k = Symbol(var, k′)
-                k in keys(axis) || (getproperty(ae.axis, k)[] = v)
+            for (k, v) in pairs((label=string(label), ticks=ticks(scale)))
+                keyword = Symbol(var, k)
+                keyword in keys(axis) || (getproperty(ae.axis, keyword)[] = v)
             end
         end
     end

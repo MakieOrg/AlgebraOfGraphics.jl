@@ -4,8 +4,8 @@ Base.@kwdef struct Entry
     primary::NamedArguments=NamedArguments()
     positional::Arguments=Arguments()
     named::NamedArguments=NamedArguments()
-    labels::Dict{KeyType, Any}=Dict{KeyType, Any}()
-    attributes::Dict{Symbol, Any}=Dict{Symbol, Any}()
+    labels::MixedArguments=MixedArguments()
+    attributes::NamedArguments=NamedArguments()
 end
 
 function Base.get(e::Entry, key::Int, default)
@@ -48,7 +48,7 @@ Each scale should be a `CategoricalScale`.
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
-    scales::Dict{KeyType, Any}
+    scales::MixedArguments
 end
 
 # Slightly complex machinery to recombine stacked barplots
@@ -63,6 +63,9 @@ end
 function lengthen_primary(e::Entry)
     N = length(first(e.positional))
     primary = map(t -> fill(t, N), e.primary)
+    @assert length(primary.indices) == length(primary.values)
+    @assert length(e.named.indices) == length(e.named.values)
+    @assert length(e.primary.indices) == length(e.primary.values)
     return Entry(e; primary)
 end
 
@@ -78,6 +81,30 @@ function stack(short_entries::AbstractVector{Entry})
     positional = map(vcat, map(entry -> entry.positional, entries)...)
     named = map(vcat, map(entry -> entry.named, entries)...)
     return Entry(first(entries); primary, positional, named)
+end
+
+function compute_attributes(attributes, primary, named, scales)
+    attrs = NamedArguments()
+    merge!(attrs, attributes)
+    merge!(attrs, primary)
+    merge!(attrs, named)
+
+    # implement alpha transparency
+    alpha = get(attrs, :alpha, nothing)
+    color = get(attrs, :color, nothing)
+    if !isnothing(color)
+        set!(attrs, :color, isnothing(alpha) ? color : (color, alpha))
+    end
+
+    # opt out of the default cycling mechanism
+    set!(attrs, :cycle, nothing)
+
+    # compute dodging information
+    dodge = get(scales, :dodge, nothing)
+    isa(dodge, CategoricalScale) && set!(attrs, :n_dodge, maximum(plotvalues(dodge)))
+
+    # remove unnecessary information
+    return unset(attrs, :col, :row, :layout, :alpha)
 end
 
 function Makie.plot!(ae::AxisEntries)
@@ -96,30 +123,9 @@ function Makie.plot!(ae::AxisEntries)
             end
         end
 
-        attributes = copy(entry.attributes)
-        for dict in (primary, named), (key, value) in pairs(dict)
-            attributes[key] = value
-        end
-
-        # Remove layout info
-        for sym in [:col, :row, :layout]
-            pop!(attributes, sym, nothing)
-        end
-
-        # Avoid automated cycling
-        get!(attributes, :cycle, nothing)
-
-        # Set dodging information
-        dodge = get(scales, :dodge, nothing)
-        isa(dodge, CategoricalScale) && (attributes[:n_dodge] = maximum(plotvalues(dodge)))
-
-        # Implement alpha transparency
-        alpha = pop!(attributes, :alpha, nothing)
-        color = get(attributes, :color, nothing)
-        !isnothing(color) && alpha isa Number && (attributes[:color] = (color, alpha))
-
+        attrs = compute_attributes(entry.attributes, primary, named, scales)
         plottype = Makie.plottype(entry.plottype, positional...)
-        plot!(plottype, axis, positional...; attributes...)
+        plot!(plottype, axis, positional...; pairs(attrs)...)
     end
     return ae
 end

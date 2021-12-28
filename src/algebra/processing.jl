@@ -57,8 +57,7 @@ function group(entry::Entry)
     primary, positional, named = map((entry.primary, entry.positional, entry.named)) do vars
         return map(vs -> subgroups(vs, perm, rgs, axs), vars)
     end
-    labels = copy(entry.labels)
-    map!(shiftdims, values(labels))
+    labels = map(shiftdims, entry.labels)
     return Entry(entry; primary, positional, named, labels)
 end
 
@@ -88,11 +87,11 @@ function getlabeledarray(layer::Layer, s)
 end
 
 function process_mappings(layer::Layer)
-    labels = Dict{KeyType, Any}()
+    labels = MixedArguments()
     positional, named = map((layer.positional, layer.named)) do tup
         return map_pairs(tup) do (key, value)
             label, arr = getlabeledarray(layer, value)
-            labels[key] = label
+            insert!(labels, key, label)
             return arr
         end
     end

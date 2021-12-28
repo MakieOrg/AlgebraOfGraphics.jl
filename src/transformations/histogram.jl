@@ -16,37 +16,38 @@ function midpoints(edges::AbstractRange)
 end
 
 function _histogram(data...; bins=sturges(length(data[1])), weights=automatic,
-    normalization::Symbol=:none, extrema::Tuple, closed::Symbol=:left)
+    normalization::Symbol, datalimits::Tuple, closed::Symbol)
 
     bins_tuple = bins isa Tuple ? bins : map(_ -> bins, data)
-    edges = compute_edges(extrema, bins_tuple, closed)
+    edges = compute_edges(datalimits, bins_tuple, closed)
     w = weights === automatic ? () : (to_weights(weights),)
     h = fit(Histogram, data, w..., edges)
     return normalize(h, mode=normalization)
 end
 
-struct HistogramAnalysis
-    options::Dict{Symbol, Any}
+Base.@kwdef struct HistogramAnalysis{D, B}
+    datalimits::D=automatic
+    bins::B=automatic
+    closed::Symbol=:left
+    normalization::Symbol=:none
 end
 
 function (h::HistogramAnalysis)(le::Entry)
-    options = copy(h.options)
-    get!(options, :extrema) do
-        return Tuple(map(v -> mapreduce(extrema, extend_extrema, v), le.positional))
-    end
+    datalimits = compute_datalimits(le.positional, h.datalimits)
+    options = valid_options((; datalimits, h.bins, h.closed, h.normalization))
 
     entry = map(le) do p, n
-        hist = _histogram(p...; pairs(n)..., options...)
+        hist = _histogram(p...; pairs(n)..., pairs(options)...)
         return (map(midpoints, hist.edges)..., hist.weights), (;)
     end
 
     N = length(le.positional)
-    labels, attributes = copy(entry.labels), copy(entry.attributes)
-    normalization = get(options, :normalization, :none)
-    labels[N + 1] = normalization == :none ? "count" : string(normalization)
-    if N == 1
-        attributes[:dodge_gap] = 0
-        attributes[:x_gap] = 0
+    label = h.normalization == :none ? "count" : string(h.normalization)
+    labels = set(entry.labels, N+1 => label)
+    attributes = if N == 1
+        set(entry.attributes, :dodge_gap => 0, :x_gap => 0)
+    else
+        entry.attributes
     end
     default_plottype = categoricalplottypes[N]
     plottype = Makie.plottype(entry.plottype, default_plottype)
@@ -54,12 +55,14 @@ function (h::HistogramAnalysis)(le::Entry)
 end
 
 """
-    histogram(; bins=automatic, weights=automatic, normalization=:none)
+    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none)
 
 Compute a histogram. `bins` can be an `Int` to create that
-number of equal-width bins over the range of `values`.
-Alternatively, it can be a sorted iterable of bin edges. The histogram
-can be normalized by setting `normalization`. Possible values are:
+number of equal-width bins over the range of `values`. In that case, the range covered
+by the `bins` is defined by `datalimits` (defaults to the extrema of the data).
+Alternatively, `bins` can be a sorted iterable of bin edges.
+`closed` determines whether the the intervals are closed to the left or to the right.
+The histogram can be normalized by setting `normalization`. Possible values are:
 *  `:pdf`: Normalize by sum of weights and bin sizes. Resulting histogram
    has norm 1 and represents a PDF.
 * `:density`: Normalize by bin sizes only. Resulting histogram represents
@@ -75,4 +78,4 @@ Weighted data is supported via the keyword `weights`.
     Normalizations are computed withing groups. For example, in the case of
     `normalization=:pdf`, sum of weights *within each group* will be equal to `1`.
 """
-histogram(; options...) = transformation(HistogramAnalysis(Dict{Symbol, Any}(options)))
+histogram(; options...) = transformation(HistogramAnalysis(; options...))

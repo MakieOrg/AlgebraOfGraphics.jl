@@ -1,8 +1,8 @@
-struct LinearAnalysis
-    options::Dict{Symbol, Any}
+Base.@kwdef struct LinearAnalysis{I}
+    npoints::Int=200
+    dropcollinear::Bool=false
+    interval::I=automatic
 end
-
-LinearAnalysis(; kwargs...) = LinearAnalysis(Dict{Symbol, Any}(kwargs))
 
 add_intercept_column(x::AbstractVector{T}) where {T} = [ones(T, length(x)) x]
 
@@ -11,12 +11,11 @@ function (l::LinearAnalysis)(le::Entry)
     entry = map(le) do p, n
         x, y = p
         weights = get(n, :weights, similar(x, 0))
-        npoints = get(l.options, :npoints, 200)
-        interval = get(l.options, :interval, length(weights) > 0 ? nothing : :confidence)
-        dropcollinear = get(l.options, :dropcollinear, false)
-        lin_model = GLM.lm(add_intercept_column(x), collect(y); wts=weights, dropcollinear)
+        default_interval = length(weights) > 0 ? nothing : :confidence
+        interval = l.interval === automatic ? default_interval : l.interval
+        lin_model = GLM.lm(add_intercept_column(x), collect(y); wts=weights, l.dropcollinear)
         isnothing(lin_model) && return Entry[]
-        x̂ = range(extrema(x)..., length=npoints)
+        x̂ = range(extrema(x)..., length=l.npoints)
         pred = GLM.predict(lin_model, add_intercept_column(x̂); interval)
         return if !isnothing(interval)
             ŷ, lower, upper = map(vec, pred) # GLM prediction returns matrices
@@ -32,11 +31,14 @@ function (l::LinearAnalysis)(le::Entry)
 end
 
 """
-    linear(; interval)
+    linear(; interval=automatic, dropcollinear=false, npoints=200)
 
 Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent.
 Valid values of interval are `:confidence` delimiting the uncertainty of the predicted
 relationship, and `:prediction` delimiting estimated bounds for new data points.
+By default, this analysis errors on singular (collinear) data. To avoid that,
+it is possible to set `dropcollinear=true`.
+`npoints` is the number of points used by Makie to draw the line
 """
-linear(; kwargs...) = transformation(LinearAnalysis(; kwargs...))
+linear(; options...) = transformation(LinearAnalysis(; options...))

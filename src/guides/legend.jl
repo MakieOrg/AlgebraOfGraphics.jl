@@ -40,16 +40,17 @@ function plottypes_attributes(entries)
     return plottypes, attributes
 end
 
-hassymbolkey((k, v)::Pair) = k isa Symbol
-
 compute_legend(fg::FigureGrid) = compute_legend(fg.grid)
-function compute_legend(grid::Matrix{AxisEntries})
-    # assume all subplots have same scales, to be changed to support free scales
-    scales = filter(hassymbolkey, first(grid).scales)
 
-    # remove keywords that don't support legends
-    for key in [:row, :col, :layout, :stack, :dodge, :group]
-        pop!(scales, key, nothing)
+function compute_legend(grid::Matrix{AxisEntries})
+    # gather all named scales
+    scales = NamedArguments()
+    for (k, v) in pairs(first(grid).scales)
+        # ignore positional scales
+        k isa Symbol || continue
+        # ignore keywords that don't support legends
+        k in [:row, :col, :layout, :stack, :dodge, :group] && continue
+        insert!(scales, k, v)
     end
 
     # if no legend-worthy keyword remains return nothing
@@ -65,7 +66,7 @@ function compute_legend(grid::Matrix{AxisEntries})
     elements_list = Vector{Vector{LegendElement}}[]
 
     for title in titles
-        label_attrs = [key for (key, val) in scales if val.label == title]
+        label_attrs = [key for (key, val) in pairs(scales) if val.label == title]
         uniquevalues = mapreduce(k -> datavalues(scales[k]), assert_equal, label_attrs)
         elements = map(eachindex(uniquevalues)) do idx
             local elements = LegendElement[]
