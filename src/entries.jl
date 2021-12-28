@@ -1,7 +1,26 @@
+"""
+    Entry(plottype::PlotFunc, positional::Arguments, named::NamedArguments)
+
+Define plottype as well as positional and named arguments for a single plot.
+"""
 struct Entry
     plottype::PlotFunc
     positional::Arguments
     named::NamedArguments
+end
+
+# Use technique from https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/289
+# to encode all axis information without creating the axis.
+struct AxisSpec
+    type::Union{Type{Axis}, Type{Axis3}}
+    position::Tuple{Int,Int}
+    options::Dict{KeyType, Any}
+end
+
+struct AxisSpecEntries
+    axis::AxisSpec
+    entries::Vector{Entry}
+    scales::MixedArguments
 end
 
 """

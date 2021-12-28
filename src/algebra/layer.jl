@@ -28,3 +28,52 @@ function Base.:*(l1::Layer, l2::Layer)
     named = merge(l1.named, l2.named)
     return Layer(; transformation, data, positional, named)
 end
+
+## Format for layer after processing
+
+Base.@kwdef struct ProcessedLayer
+    plottype::PlotFunc=Any
+    primary::NamedArguments=NamedArguments()
+    positional::Arguments=Arguments()
+    named::NamedArguments=NamedArguments()
+    labels::MixedArguments=MixedArguments()
+    attributes::NamedArguments=NamedArguments()
+end
+
+function Base.get(processedlayer::ProcessedLayer, key::Int, default)
+    return key in keys(processedlayer.positional) ? processedlayer.positional[key] : default
+end
+
+function Base.get(processedlayer::ProcessedLayer, key::Symbol, default)
+    return get(processedlayer.named, key, default)
+end
+
+function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
+    nt = (;
+        processedlayer.plottype,
+        processedlayer.primary,
+        processedlayer.positional,
+        processedlayer.named,
+        processedlayer.labels,
+        processedlayer.attributes
+    )
+    return ProcessedLayer(; merge(nt, values(kwargs))...)
+end
+
+function unnest(v::AbstractArray)
+    return map_pairs(first(v)) do (k, _)
+        return [el[k] for el in v]
+    end
+end
+
+function Base.map(f, processedlayer::ProcessedLayer)
+    axs = shape(processedlayer)
+    outputs = map(CartesianIndices(axs)) do c
+        p = map(v -> getnewindex(v, c), processedlayer.positional)
+        n = map(v -> getnewindex(v, c), processedlayer.named)
+        return f(p, n)
+    end
+    positional = unnest(map(first, outputs))
+    named = unnest(map(last, outputs))
+    return ProcessedLayer(processedlayer; positional, named)
+end
