@@ -119,10 +119,10 @@ function compute_grid_positions(scales, primary=NamedArguments())
         lscale = get(scales, :layout, nothing)
         return if !isnothing(scale)
             rg = Base.OneTo(maximum(plotvalues(scale)))
-            haskey(primary, sym) ? rescale(fill(primary[sym]), scale) : rg
+            haskey(primary, sym) ? fill(primary[sym]) : rg
         elseif !isnothing(lscale)
             rg = Base.OneTo(maximum(f, plotvalues(lscale)))
-            haskey(primary, :layout) ? map(f, rescale(fill(primary[:layout]), lscale)) : rg
+            haskey(primary, :layout) ? fill(f(primary[:layout])) : rg
         else
             Base.OneTo(1)
         end
