@@ -17,10 +17,7 @@ function colorbar!(figpos, grid; kwargs...)
 end
 
 function has_zcolor(entry::Entry)
-    return entry.plottype <: Union{Heatmap, Contour, Contourf, Surface} &&
-        !haskey(entry.primary, :color) &&
-        !haskey(entry.named, :color) &&
-        !haskey(entry.attributes, :color)
+    return entry.plottype <: Union{Heatmap, Contour, Contourf, Surface} && !haskey(entry.named, :color)
 end
 
 function getlabeledcolorrange(grid)
@@ -30,7 +27,8 @@ function getlabeledcolorrange(grid)
         return get(entry, key, nothing) isa AbstractArray{<:Number}
     end
     colorrange = compute_extrema(continuous_color_entries, key)
-    label = compute_label(continuous_color_entries, key)
+    # label = compute_label(continuous_color_entries, key)
+    label = "" # FIXME: figure out a cleaner way
     return isnothing(colorrange) ? nothing : (label, colorrange)
 end
 
@@ -41,7 +39,7 @@ function compute_colorbar(grid::Matrix{AxisEntries})
     label, limits = labeledcolorrange
     colormap = current_default_theme().colormap[]
     for entry in entries(grid)
-        colormap = to_value(get(entry.attributes, :colormap, colormap))
+        colormap = to_value(get(entry, :colormap, colormap))
     end
     return (; label, limits, colormap)
 end

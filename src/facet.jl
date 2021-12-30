@@ -332,8 +332,10 @@ end
 ## Layout helpers
 
 isaxis2d(::Axis) = true
-isaxis2d(::Any) = false
+isaxis2d(::Axis3) = false
+isaxis2d(ax::AxisSpec) = ax.type <: Axis
 isaxis2d(ae::AxisEntries) = isaxis2d(ae.axis)
+isaxis2d(ae::AxisSpecEntries) = isaxis2d(ae.axis)
 
 for sym in [:hidexdecorations!, :hideydecorations!, :hidedecorations!]
     @eval function $sym(ae::AxisEntries; kwargs...)

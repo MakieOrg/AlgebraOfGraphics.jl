@@ -53,7 +53,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
         mergewith!(mergescales, scales, categoricalscales(processedlayer, palettes))
     end
     # fit scales (compute plot values using all data values)
-    map!(fitscale, values(scales))
+    map!(fitscale, scales, scales)
 
     indices = CartesianIndices(compute_grid_positions(scales))
     axes_grid = map(c -> AxisSpecEntries(AxisSpec(c, axis), Entry[], scales), indices)
@@ -80,7 +80,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
 
     # Axis labels and ticks
     for (ae, labels) in zip(axes_grid, labels_grid)
-        ndims = ae.type isa Axis ? 2 : 3
+        ndims = isaxis2d(ae) ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
             # TODO: move this computation out of the `for` loop
             scale = get(scales, i) do

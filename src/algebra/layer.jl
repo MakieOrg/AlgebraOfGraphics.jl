@@ -40,14 +40,6 @@ Base.@kwdef struct ProcessedLayer
     attributes::NamedArguments=NamedArguments()
 end
 
-function Base.get(processedlayer::ProcessedLayer, key::Int, default)
-    return key in keys(processedlayer.positional) ? processedlayer.positional[key] : default
-end
-
-function Base.get(processedlayer::ProcessedLayer, key::Symbol, default)
-    return get(processedlayer.named, key, default)
-end
-
 function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
     nt = (;
         processedlayer.plottype,
@@ -60,7 +52,17 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
     return ProcessedLayer(; merge(nt, values(kwargs))...)
 end
 
-ProcessedLayer(layer::Layer) = layer.transformation(to_processedlayer(layer))
+"""
+    ProcessedLayer(layer::Layer)
+
+Convert `layer` to equivalent processed layer.
+"""
+function ProcessedLayer(layer::Layer)
+    processedlayer = process_mappings(layer)
+    grouped_entry = isnothing(layer.data) ? processedlayer : group(processedlayer)
+    primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
+    return layer.transformation(ProcessedLayer(grouped_entry; primary))
+end
 
 function unnest(v::AbstractArray)
     return map_pairs(first(v)) do (k, _)
@@ -111,16 +113,6 @@ function mergeable(processedlayer::ProcessedLayer)
     return processedlayer.plottype <: BarPlot && haskey(processedlayer.primary, :stack)
 end
 
-function rescale(p::ProcessedLayer, c::CartesianIndex, field::Symbol, scales)
-    return map_pairs(getproperty(p, field)) do (key, values)
-        value = getnewindex(values, c)
-        isprimary = field == :primary
-        input = isprimary ? fill(value) : value
-        output = rescale(input, get(scales, key, nothing))
-        return isprimary ? only(output) : output
-    end
-end
-
 function compute_grid_positions(scales, primary=NamedArguments())
     return map((:row, :col), (first, last)) do sym, f
         scale = get(scales, sym, nothing)
@@ -161,6 +153,16 @@ function compute_attributes(attributes, primary, named, scales)
     return unset(attrs, :col, :row, :layout, :alpha)
 end
 
+function rescale(p::ProcessedLayer, c::CartesianIndex, field::Symbol, scales)
+    return map_pairs(getproperty(p, field)) do (key, values)
+        value = getnewindex(values, c)
+        isprimary = field == :primary
+        input = isprimary ? fill(value) : value
+        output = rescale(input, get(scales, key, nothing))
+        return isprimary ? only(output) : output
+    end
+end
+
 function compute_entries_grid!(processedlayer::ProcessedLayer, labels_grid, scales)
     ismergeable = mergeable(processedlayer)
     entries_grid = map(_ -> Entry[], labels_grid)
@@ -176,11 +178,12 @@ function compute_entries_grid!(processedlayer::ProcessedLayer, labels_grid, scal
         end
         plottype, attributes = processedlayer.plottype, processedlayer.attributes
         attrs = compute_attributes(attributes, primary, named, scales)
+        # plottype = Makie.plottype(entry.plottype, positional...)
         entry = Entry(plottype, positional, attrs)
         for i in rows, j in cols
             entries = entries_grid[i, j]
-            if ismergeable && !isempty(entries)
-                append!(only(entries), entry)
+            if ismergeable
+                isempty(entries) ? push!(entries, copy_content(entry)) : append!(only(entries), entry)
             else
                 push!(entries, entry)
             end

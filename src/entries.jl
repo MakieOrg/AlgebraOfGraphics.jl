@@ -9,10 +9,31 @@ struct Entry
     named::NamedArguments
 end
 
+function Base.get(entry::Entry, key::Int, default)
+    return get(entry.positional, key, default)
+end
+
+function Base.get(entry::Entry, key::Symbol, default)
+    return get(entry.named, key, default)
+end
+
+append_or_assertequal!(v1::AbstractVector, v2::AbstractVector) = append!(v1, v2)
+append_or_assertequal!(v1, v2) = assert_equal(v1, v2)
+
+copy_ifvector(v::AbstractVector) = copy(v)
+copy_ifvector(x) = x
+
+function copy_content(entry::Entry)
+    plottype = entry.plottype
+    positional = map(copy_ifvector, entry.positional)
+    named = map(copy_ifvector, entry.named)
+    return Entry(plottype, positional, named)
+end
+
 function Base.append!(e1::Entry, e2::Entry)
     plottype = assert_equal(e1.plottype, e2.plottype)
     positional = map(append!, e1.positional, e2.positional)
-    named = map(append!, e1.named, e2.named)
+    named = map(append_or_assertequal!, e1.named, e2.named)
     return Entry(plottype, positional, named)
 end
 
@@ -50,7 +71,7 @@ struct AxisEntries
 end
 
 function AxisEntries(ae::AxisSpecEntries, fig)
-    ax = ae.axis.type(fig[ae.axis.position...]; ae.axis.attributes...)
+    ax = ae.axis.type(fig[ae.axis.position...]; pairs(ae.axis.attributes)...)
     AxisEntries(ax, ae.entries, ae.scales)
 end
 
@@ -64,9 +85,7 @@ end
 function Makie.plot!(ae::AxisEntries)
     axis, entries = ae.axis, ae.entries
     for entry in entries
-        positional, named = entry.positional, entry.named
-        plottype = Makie.plottype(entry.plottype, positional...)
-        plot!(plottype, axis, positional...; pairs(named)...)
+        plot!(entry.plottype, axis, entry.positional...; pairs(entry.named)...)
     end
     return ae
 end

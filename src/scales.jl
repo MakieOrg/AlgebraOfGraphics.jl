@@ -107,14 +107,6 @@ function mergelabels(label1, label2)
     end
 end
 
-function compute_label(entries, key)
-    label = ""
-    for entry in entries
-        label = mergelabels(label, get(entry.labels, key, ""))
-    end
-    return something(label, "")
-end
-
 function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     data = mergesorted(c1.data, c2.data)
     palette = assert_equal(c1.palette, c2.palette)

@@ -29,7 +29,7 @@ function plottypes_attributes(entries)
         # FIXME: this should probably use the rescaled values
         plottype = Makie.plottype(entry.plottype, entry.positional...)
         n = findfirst(==(plottype), plottypes)
-        attrs = (keys(entry.primary)..., keys(entry.named)...)
+        attrs = keys(entry.named)
         if isnothing(n)
             push!(plottypes, plottype)
             push!(attributes, collect(Symbol, attrs))
