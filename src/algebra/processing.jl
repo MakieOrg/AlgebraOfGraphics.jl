@@ -110,5 +110,3 @@ function to_processedlayer(layer::Layer)
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
     return ProcessedLayer(grouped_entry; primary)
 end
-
-process(layer::Layer) = layer.transformation(to_processedlayer(layer))

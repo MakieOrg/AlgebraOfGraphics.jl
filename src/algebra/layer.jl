@@ -60,6 +60,8 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
     return ProcessedLayer(; merge(nt, values(kwargs))...)
 end
 
+ProcessedLayer(layer::Layer) = layer.transformation(to_processedlayer(layer))
+
 function unnest(v::AbstractArray)
     return map_pairs(first(v)) do (k, _)
         return [el[k] for el in v]

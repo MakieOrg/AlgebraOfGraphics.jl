@@ -14,7 +14,14 @@ end
 struct AxisSpec
     type::Union{Type{Axis}, Type{Axis3}}
     position::Tuple{Int,Int}
-    options::Dict{KeyType, Any}
+    attributes::NamedArguments
+end
+
+extract_type(; type=Axis, options...) = type, NamedArguments(options)
+
+function AxisSpec(position, options)
+    type, attributes = extract_type(; pairs(options)...)
+    return AxisSpec(type, Tuple(position), attributes)
 end
 
 struct AxisSpecEntries
@@ -36,45 +43,42 @@ struct AxisEntries
 end
 
 function AxisEntries(ae::AxisSpecEntries, fig)
-    ax = ae.axis.type(fig[ae.axis.position...]; ae.axis.options...)
+    ax = ae.axis.type(fig[ae.axis.position...]; ae.axis.attributes...)
     AxisEntries(ax, ae.entries, ae.scales)
 end
 
 function AxisEntries(ae::AxisSpecEntries, ax::Union{Axis,Axis3})
     if !isempty(ax)
-        @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $(a.axis.options)")
+        @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $(a.axis.attributes)")
     end
     AxisEntries(ax, ae.entries, ae.scales)
 end
-
 
 # Slightly complex machinery to recombine stacked barplots
 function mergeable(e1::Entry, e2::Entry)
     for e in (e1, e2)
         e.plottype <: BarPlot || return false
-        haskey(e.primary, :stack) || return false
+        haskey(e.named, :stack) || return false
     end
     return true
 end
 
 function lengthen_primary(e::Entry)
-    N = length(first(e.positional))
-    primary = map(t -> fill(t, N), e.primary)
-    return Entry(e; primary)
-end
-
-function maybecollapse(v::AbstractArray)
-    f = first(v)
-    return all(isequal(f), v) ? fill(f) : v
+    plottype, positional = e.plottype, e.positional
+    N = length(first(positional))
+    named = map(v -> haszerodims(v) ? fill(v[], N) : v, e.named)
+    return Entry(plottype, positional, named)
 end
 
 # Combine entries as a unique entry with longer data
 function stack(short_entries::AbstractVector{Entry})
+    entry = first(short_entries)
+    length(short_entries) == 1 && return entry
     entries = map(lengthen_primary, short_entries)
-    primary = map(maybecollapse∘vcat, map(entry -> entry.primary, entries)...)
+    # TODO: avoid splatting here
     positional = map(vcat, map(entry -> entry.positional, entries)...)
     named = map(vcat, map(entry -> entry.named, entries)...)
-    return Entry(first(entries); primary, positional, named)
+    return Entry(entry.plottype, positional, named)
 end
 
 function compute_attributes(attributes, primary, named, scales)
@@ -102,7 +106,7 @@ function compute_attributes(attributes, primary, named, scales)
 end
 
 function Makie.plot!(ae::AxisEntries)
-    axis, entries, scales = ae.axis, ae.entries, ae.scales
+    axis, entries = ae.axis, ae.entries
     i, N = 1, length(entries)
     while i ≤ N
         j = i + 1
@@ -110,16 +114,10 @@ function Makie.plot!(ae::AxisEntries)
             j += 1
         end
         entry, i = stack(entries[i:j-1]), j
-        primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
-            return map_pairs(tup) do (key, value)
-                rescaled = rescale(value, get(scales, key, nothing))
-                return haszerodims(rescaled) ? rescaled[] : rescaled
-            end
-        end
-
-        attrs = compute_attributes(entry.attributes, primary, named, scales)
+        positional = entry.positional
+        named = map(v -> haszerodims(v) ? v[] : v, entry.named)
         plottype = Makie.plottype(entry.plottype, positional...)
-        plot!(plottype, axis, positional...; pairs(attrs)...)
+        plot!(plottype, axis, positional...; pairs(named)...)
     end
     return ae
 end

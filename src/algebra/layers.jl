@@ -68,11 +68,10 @@ end
 function compute_axes_grid(fig, s::OneOrMoreLayers;
     axis=NamedTuple(), palettes=NamedTuple())
 
-    axs, axes_grid = compute_axes_grid(s; axis, palettes)
-
-    sizes = map(length, axs)
-    if sizes !== (1, 1) && fig isa Axis
-        error("You can only pass an Axis to draw!, if the calculated layout only contains one element. Elements: $(sizes)")
+    axes_grid = compute_axes_grid(s; axis, palettes)
+    sz = size(axes_grid)
+    if sz !== (1, 1) && fig isa Axis
+        error("You can only pass an `Axis` to `draw!`, if the calculated layout only contains one element. Elements: $(sz)")
     end
 
     return map(ae -> AxisEntries(ae, fig), axes_grid)
@@ -81,7 +80,7 @@ end
 function compute_axes_grid(s::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
     layers::Layers = s
-    processedlayers = map(process, layers)
+    processedlayers = map(ProcessedLayer, layers)
 
     theme_palettes = NamedTuple(Makie.current_default_theme()[:palette])
     palettes = merge((layout=wrap,), map(to_value, theme_palettes), palettes)
@@ -93,49 +92,50 @@ function compute_axes_grid(s::OneOrMoreLayers;
     # fit scales (compute plot values using all data values)
     map!(fitscale, values(scales))
 
-    function create_axis(c)
-        type = get(axis, :type, Axis)
-        options = NamedArguments(pairs(Base.structdiff(axis, (; type))))
-        position = Tuple(c)
-
-        return AxisSpecEntries(AxisSpec(type, position, options), Entry[], scales)
+    axes_grid = map(CartesianIndices(compute_grid_positions(scales))) do c
+        axis_spec = AxisSpec(c, axis)
+        return AxisSpecEntries(axis_spec, Entry[], scales)
     end
-    axs = compute_grid_positions(scales)
 
-    axes_grid = map(CartesianIndices(axs)) do c
-        return create_axis(c)
-    end
+    labels_grid = map(_ -> MixedArguments(), axes_grid)
 
     for processedlayer in processedlayers
         for c in CartesianIndices(shape(processedlayer))
-            primary, positional, named = map((processedlayer.primary, processedlayer.positional, processedlayer.named)) do tup
-                return map(v -> getnewindex(v, c), tup)
+            containers = (processedlayer.primary, processedlayer.positional, processedlayer.named)
+            primary, positional, named = map(containers) do container
+                return map_pairs(container) do (key, values)
+                    value = getnewindex(values, c)
+                    return rescale(value, get(scales, key, nothing))
+                end
             end
             rows, cols = compute_grid_positions(scales, primary)
             labels = map(l -> getnewindex(l, c), processedlayer.labels)
             # create novel `attributes` object, copying keys and values of `processedlayer.attributes`
-            plottype, attributes = processedlayer.plottype, set(processedlayer.attributes)
-            processedlayer = ProcessedLayer(; plottype, primary, positional, named, labels, attributes)
+            plottype, attributes = processedlayer.plottype, processedlayer.attributes
+            attrs = compute_attributes(attributes, primary, named, scales)
+            entry = Entry(plottype, positional, attrs)
             for i in rows, j in cols
                 ae = axes_grid[i, j]
-                push!(ae.processedlayers, processedlayer)
+                push!(ae.entries, entry)
+                mergewith!(mergelabels, labels_grid[i, j], labels)
             end
         end
     end
 
-    # Link colors
-    labeledcolorrange = getlabeledcolorrange(axes_grid)
-    if !isnothing(labeledcolorrange)
-        _, colorrange = labeledcolorrange
-        for processedlayer in AlgebraOfGraphics.processedlayers(axes_grid)
-            # `attributes` were obtained via `set` above,
-            # so it is OK to edit the keys
-            set!(processedlayer.attributes, :colorrange, colorrange)
-        end
-    end
+    # FIXME: add back before merging
+    # # Link colors
+    # labeledcolorrange = getlabeledcolorrange(axes_grid)
+    # if !isnothing(labeledcolorrange)
+    #     _, colorrange = labeledcolorrange
+    #     for processedlayer in AlgebraOfGraphics.processedlayers(axes_grid)
+    #         # `attributes` were obtained via `set` above, FIXME: no longer true
+    #         # so it is OK to edit the keys
+    #         set!(processedlayer.attributes, :colorrange, colorrange)
+    #     end
+    # end
 
     # Axis labels and ticks
-    for ae in axes_grid
+    for (ae, labels) in zip(axes_grid, labels_grid)
         ndims = ae.type isa Axis ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
             # TODO: move this computation out of the `for` loop
@@ -143,17 +143,17 @@ function compute_axes_grid(s::OneOrMoreLayers;
                 return compute_extrema(AlgebraOfGraphics.processedlayers(axes_grid), i)
             end
             isnothing(scale) && continue
-            label = compute_label(ae.entries, i)
+            # FIXME: make sure what to do if `label` is `nothing`
+            label = something(get(labels, i, nothing), "")
             for (k, v) in pairs((label=string(label), ticks=ticks(scale)))
                 keyword = Symbol(var, k)
-                if keyword ∉ keys(axis)
-                    ae.axis.options[k] = v
-                end
+                # Only set attribute if it was not present beforehand
+                get!(ae.axis.attributes, keyword, v)
             end
         end
     end
 
-    return axs, axes_grid
+    return axes_grid
 end
 
 function Makie.plot!(fig, s::OneOrMoreLayers;
