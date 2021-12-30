@@ -9,6 +9,13 @@ struct Entry
     named::NamedArguments
 end
 
+function Base.append!(e1::Entry, e2::Entry)
+    plottype = assert_equal(e1.plottype, e2.plottype)
+    positional = map(append!, e1.positional, e2.positional)
+    named = map(append!, e1.named, e2.named)
+    return Entry(plottype, positional, named)
+end
+
 # Use technique from https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/289
 # to encode all axis information without creating the axis.
 struct AxisSpec
@@ -54,68 +61,10 @@ function AxisEntries(ae::AxisSpecEntries, ax::Union{Axis,Axis3})
     AxisEntries(ax, ae.entries, ae.scales)
 end
 
-# Slightly complex machinery to recombine stacked barplots
-function mergeable(e1::Entry, e2::Entry)
-    for e in (e1, e2)
-        e.plottype <: BarPlot || return false
-        haskey(e.named, :stack) || return false
-    end
-    return true
-end
-
-function lengthen_primary(e::Entry)
-    plottype, positional = e.plottype, e.positional
-    N = length(first(positional))
-    named = map(v -> haszerodims(v) ? fill(v[], N) : v, e.named)
-    return Entry(plottype, positional, named)
-end
-
-# Combine entries as a unique entry with longer data
-function stack(short_entries::AbstractVector{Entry})
-    entry = first(short_entries)
-    length(short_entries) == 1 && return entry
-    entries = map(lengthen_primary, short_entries)
-    # TODO: avoid splatting here
-    positional = map(vcat, map(entry -> entry.positional, entries)...)
-    named = map(vcat, map(entry -> entry.named, entries)...)
-    return Entry(entry.plottype, positional, named)
-end
-
-function compute_attributes(attributes, primary, named, scales)
-    attrs = NamedArguments()
-    merge!(attrs, attributes)
-    merge!(attrs, primary)
-    merge!(attrs, named)
-
-    # implement alpha transparency
-    alpha = get(attrs, :alpha, nothing)
-    color = get(attrs, :color, nothing)
-    if !isnothing(color)
-        set!(attrs, :color, isnothing(alpha) ? color : (color, alpha))
-    end
-
-    # opt out of the default cycling mechanism
-    set!(attrs, :cycle, nothing)
-
-    # compute dodging information
-    dodge = get(scales, :dodge, nothing)
-    isa(dodge, CategoricalScale) && set!(attrs, :n_dodge, maximum(plotvalues(dodge)))
-
-    # remove unnecessary information
-    return unset(attrs, :col, :row, :layout, :alpha)
-end
-
 function Makie.plot!(ae::AxisEntries)
     axis, entries = ae.axis, ae.entries
-    i, N = 1, length(entries)
-    while i ≤ N
-        j = i + 1
-        while j ≤ N && mergeable(entries[i], entries[j])
-            j += 1
-        end
-        entry, i = stack(entries[i:j-1]), j
-        positional = entry.positional
-        named = map(v -> haszerodims(v) ? v[] : v, entry.named)
+    for entry in entries
+        positional, named = entry.positional, entry.named
         plottype = Makie.plottype(entry.plottype, positional...)
         plot!(plottype, axis, positional...; pairs(named)...)
     end
@@ -123,7 +72,7 @@ function Makie.plot!(ae::AxisEntries)
 end
 
 entries(grid::AbstractMatrix{AxisEntries}) = Iterators.flatten(ae.entries for ae in grid)
-entries(grid::AbstractMatrix{_AxisEntries_}) = Iterators.flatten(ae.entries for ae in grid)
+entries(grid::AbstractMatrix{AxisSpecEntries}) = Iterators.flatten(ae.entries for ae in grid)
 
 struct FigureGrid
     figure::Figure

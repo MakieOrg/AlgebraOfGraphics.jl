@@ -28,43 +28,6 @@ function Base.:*(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
     return Layers([el1 * el2 for el1 in l1 for el2 in l2])
 end
 
-uniquevalues(v::ArrayLike) = collect(uniquesorted(vec(v)))
-
-to_label(label::AbstractString) = label
-to_label(labels::ArrayLike) = reduce(mergelabels, labels)
-
-function categoricalscales(processedlayer::ProcessedLayer, palettes)
-    cs = MixedArguments()
-    for (key, val) in pairs(processedlayer.primary)
-        palette = get(palettes, key, automatic)
-        label = to_label(get(processedlayer.labels, key, ""))
-        insert!(cs, key, CategoricalScale(uniquevalues(val), palette, label))
-    end
-    for (key, val) in pairs(processedlayer.positional)
-        hascategoricalentry(val) || continue
-        palette = automatic
-        label = to_label(get(processedlayer.labels, key, ""))
-        insert!(cs, key, CategoricalScale(mapreduce(uniquevalues, mergesorted, val), palette, label))
-    end
-    return cs
-end
-
-function compute_grid_positions(scales, primary=NamedArguments())
-    return map((:row, :col), (first, last)) do sym, f
-        scale = get(scales, sym, nothing)
-        lscale = get(scales, :layout, nothing)
-        return if !isnothing(scale)
-            rg = Base.OneTo(maximum(plotvalues(scale)))
-            haskey(primary, sym) ? rescale(fill(primary[sym]), scale) : rg
-        elseif !isnothing(lscale)
-            rg = Base.OneTo(maximum(f, plotvalues(lscale)))
-            haskey(primary, :layout) ? map(f, rescale(fill(primary[:layout]), lscale)) : rg
-        else
-            Base.OneTo(1)
-        end
-    end
-end
-
 function compute_axes_grid(fig, s::OneOrMoreLayers;
     axis=NamedTuple(), palettes=NamedTuple())
 
@@ -92,33 +55,14 @@ function compute_axes_grid(s::OneOrMoreLayers;
     # fit scales (compute plot values using all data values)
     map!(fitscale, values(scales))
 
-    axes_grid = map(CartesianIndices(compute_grid_positions(scales))) do c
-        axis_spec = AxisSpec(c, axis)
-        return AxisSpecEntries(axis_spec, Entry[], scales)
-    end
-
+    indices = CartesianIndices(compute_grid_positions(scales))
+    axes_grid = map(c -> AxisSpecEntries(AxisSpec(c, axis), Entry[], scales), indices)
     labels_grid = map(_ -> MixedArguments(), axes_grid)
 
     for processedlayer in processedlayers
-        for c in CartesianIndices(shape(processedlayer))
-            containers = (processedlayer.primary, processedlayer.positional, processedlayer.named)
-            primary, positional, named = map(containers) do container
-                return map_pairs(container) do (key, values)
-                    value = getnewindex(values, c)
-                    return rescale(value, get(scales, key, nothing))
-                end
-            end
-            rows, cols = compute_grid_positions(scales, primary)
-            labels = map(l -> getnewindex(l, c), processedlayer.labels)
-            # create novel `attributes` object, copying keys and values of `processedlayer.attributes`
-            plottype, attributes = processedlayer.plottype, processedlayer.attributes
-            attrs = compute_attributes(attributes, primary, named, scales)
-            entry = Entry(plottype, positional, attrs)
-            for i in rows, j in cols
-                ae = axes_grid[i, j]
-                push!(ae.entries, entry)
-                mergewith!(mergelabels, labels_grid[i, j], labels)
-            end
+        entries = compute_entries_grid!(processedlayer, labels_grid, scales)
+        for idx in eachindex(axes_grid)
+            append!(axes_grid[idx].entries, entries[idx])
         end
     end
 
@@ -140,7 +84,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
         for (i, var) in zip(1:ndims, (:x, :y, :z))
             # TODO: move this computation out of the `for` loop
             scale = get(scales, i) do
-                return compute_extrema(AlgebraOfGraphics.processedlayers(axes_grid), i)
+                return compute_extrema(AlgebraOfGraphics.entries(axes_grid), i)
             end
             isnothing(scale) && continue
             # FIXME: make sure what to do if `label` is `nothing`
@@ -154,53 +98,4 @@ function compute_axes_grid(s::OneOrMoreLayers;
     end
 
     return axes_grid
-end
-
-function Makie.plot!(fig, s::OneOrMoreLayers;
-                     axis=NamedTuple(), palettes=NamedTuple())
-    grid = compute_axes_grid(fig, s; axis, palettes)
-    foreach(plot!, grid)
-    return grid
-end
-
-function Makie.plot(s::OneOrMoreLayers;
-                    axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
-    fig = Figure(; figure...)
-    grid = plot!(fig, s; axis, palettes)
-    return FigureGrid(fig, grid)
-end
-
-"""
-    draw(s; axis=NamedTuple(), figure=NamedTuple, palettes=NamedTuple())
-
-Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object `s`.
-The output can be customized by giving axis attributes to `axis`, figure attributes
-to `figure`, or custom palettes to `palettes`.
-Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@ref),
-[`legend!`](@ref), and [`colorbar!`](@ref) independently.
-"""
-function draw(s::OneOrMoreLayers;
-              axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple(),
-              facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple())
-    fg = plot(s; axis, figure, palettes)
-    facet!(fg; facet)
-    colorbar!(fg; colorbar...)
-    legend!(fg; legend...)
-    resizetocontent!(fg)
-    return fg
-end
-
-"""
-    draw!(fig, s; axis=NamedTuple(), palettes=NamedTuple())
-
-Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object `s` on `fig`.
-`fig` can be a figure, a position in a layout, or an axis if `s` has no facet specification.
-The output can be customized by giving axis attributes to `axis` or custom palettes
-to `palettes`.  
-"""
-function draw!(fig, s::OneOrMoreLayers;
-               axis=NamedTuple(), palettes=NamedTuple(), facet=NamedTuple())
-    ag = plot!(fig, s; axis, palettes)
-    facet!(fig, ag; facet)
-    return ag
 end

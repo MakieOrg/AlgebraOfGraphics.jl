@@ -61,5 +61,6 @@ include("guides/guides.jl")
 include("guides/legendelements.jl")
 include("guides/legend.jl")
 include("guides/colorbar.jl")
+include("draw.jl")
 
 end
