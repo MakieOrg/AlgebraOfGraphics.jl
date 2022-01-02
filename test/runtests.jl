@@ -1,6 +1,6 @@
 using AlgebraOfGraphics, Makie, Test
 using AlgebraOfGraphics: Sorted
-using AlgebraOfGraphics: map_pairs, separate
+using AlgebraOfGraphics: separate
 using AlgebraOfGraphics: Arguments, NamedArguments
 
 @testset "utils" begin
@@ -28,14 +28,16 @@ end
 @testset "arguments" begin
     s = Arguments([10, 20, 30])
     @test s == Any[10, 20, 30]
-    t = map_pairs(s) do (k, v)
+    t = map(keys(s)) do k
+        v = s[k]
         return "key $k and value $v"
     end
     @test t == ["key 1 and value 10", "key 2 and value 20", "key 3 and value 30"]
 
     s = NamedArguments([:a, :b, :c], [10, 20, 30])
     @test s == NamedArguments((a=10, b=20, c=30))
-    t = map_pairs(s) do (k, v)
+    t = map(keys(s)) do k
+        v = s[k]
         return "key $k and value $v"
     end
     @test t == NamedArguments(

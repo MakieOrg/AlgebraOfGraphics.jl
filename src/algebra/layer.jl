@@ -64,21 +64,17 @@ function ProcessedLayer(layer::Layer)
     return layer.transformation(ProcessedLayer(grouped_entry; primary))
 end
 
-function unnest(v::AbstractArray)
-    return map_pairs(first(v)) do (k, _)
-        return [el[k] for el in v]
-    end
-end
+unnest(vs::AbstractArray, indices) = map(k -> [el[k] for el in vs], indices)
+
+unnest_arrays(vs) = unnest(vs, keys(first(vs)))
+unnest_dictionaries(vs) = unnest(vs, Indices(keys(first(vs))))
 
 function Base.map(f, processedlayer::ProcessedLayer)
     axs = shape(processedlayer)
     outputs = map(CartesianIndices(axs)) do c
-        p = map(v -> getnewindex(v, c), processedlayer.positional)
-        n = map(v -> getnewindex(v, c), processedlayer.named)
-        return f(p, n)
+        return f(slice(processedlayer.positional, c), slice(processedlayer.named, c))
     end
-    positional = unnest(map(first, outputs))
-    named = unnest(map(last, outputs))
+    positional, named = unnest_arrays(map(first, outputs)), unnest_dictionaries(map(last, outputs))
     return ProcessedLayer(processedlayer; positional, named)
 end
 

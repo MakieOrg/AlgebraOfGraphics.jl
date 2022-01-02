@@ -28,13 +28,6 @@ function separate(f, d::AbstractDictionary)
     return d1, d2
 end
 
-# `f` takes a pair and returns a unique value
-function map_pairs(f, s)
-    ks, vs = keys(s), values(s)
-    res = collect(Any, Iterators.map(f∘Pair,  ks, vs))
-    return eltype(ks) <: Symbol ? NamedArguments(collect(Symbol, ks), res) : res
-end
-
 function valid_options(nt)
     ks = filter(k -> nt[k] !== automatic, keys(nt))
     return NamedTuple{ks}(nt)
