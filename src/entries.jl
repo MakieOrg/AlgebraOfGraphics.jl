@@ -17,19 +17,6 @@ function Base.get(entry::Entry, key::Symbol, default)
     return get(entry.named, key, default)
 end
 
-append_or_assertequal!(v1::AbstractVector, v2::AbstractVector) = append!(v1, v2)
-append_or_assertequal!(v1, v2) = assert_equal(v1, v2)
-
-copy_ifvector(v::AbstractVector) = copy(v)
-copy_ifvector(x) = x
-
-function copy_content(entry::Entry)
-    plottype = entry.plottype
-    positional = map(copy_ifvector, entry.positional)
-    named = map(copy_ifvector, entry.named)
-    return Entry(plottype, positional, named)
-end
-
 function Base.append!(e1::Entry, e2::Entry)
     plottype = assert_equal(e1.plottype, e2.plottype)
     positional = map(append!, e1.positional, e2.positional)

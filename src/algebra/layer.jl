@@ -144,30 +144,6 @@ function compute_grid_positions(scales, primary=NamedArguments())
     end
 end
 
-function compute_attributes(attributes, primary, named, scales)
-    attrs = NamedArguments()
-    merge!(attrs, attributes)
-    merge!(attrs, primary)
-    merge!(attrs, named)
-
-    # implement alpha transparency
-    alpha = get(attrs, :alpha, nothing)
-    color = get(attrs, :color, nothing)
-    if !isnothing(color)
-        set!(attrs, :color, isnothing(alpha) ? color : (color, alpha))
-    end
-
-    # opt out of the default cycling mechanism
-    set!(attrs, :cycle, nothing)
-
-    # compute dodging information
-    dodge = get(scales, :dodge, nothing)
-    isa(dodge, CategoricalScale) && set!(attrs, :n_dodge, maximum(plotvalues(dodge)))
-
-    # remove unnecessary information
-    return unset(attrs, :col, :row, :layout, :alpha)
-end
-
 function rescale(p::ProcessedLayer, field::Symbol, scales)
     isprimary = field == :primary
     return map_pairs(getproperty(p, field)) do (key, values)
@@ -180,7 +156,16 @@ function rescale(p::ProcessedLayer, scales::MixedArguments)
     primary, positional, named = map((:primary, :positional, :named)) do field
         return rescale(p, field, scales)
     end
-    return ProcessedLayer(p; primary, positional, named)
+
+    # compute dodging information
+    dodge = get(scales, :dodge, nothing)
+    attributes = if isa(dodge, CategoricalScale)
+        set(p.attributes, :n_dodge => maximum(plotvalues(dodge)))
+    else
+        p.attributes
+    end
+
+    return ProcessedLayer(p; primary, positional, named, attributes)
 end
 
 slice(v, c) = map(el -> getnewindex(el, c), v)
@@ -193,29 +178,63 @@ function slice(processedlayer::ProcessedLayer, c)
     return ProcessedLayer(processedlayer; labels, primary, positional, named)
 end
 
+# This method works on a "sliced" `ProcessedLayer`
+function compute_attributes(pl::ProcessedLayer)
+    attrs = NamedArguments()
+    merge!(attrs, pl.attributes)
+    merge!(attrs, pl.primary)
+    merge!(attrs, pl.named)
+
+    # implement alpha transparency
+    alpha = get(attrs, :alpha, nothing)
+    color = get(attrs, :color, nothing)
+    if !isnothing(color)
+        set!(attrs, :color, isnothing(alpha) ? color : (color, alpha))
+    end
+
+    # opt out of the default cycling mechanism
+    set!(attrs, :cycle, nothing)
+
+    # remove unnecessary information
+    return unset(attrs, :col, :row, :layout, :alpha)
+end
+
+# This method works on a "sliced" `ProcessedLayer`
+function compute_entry(pl::ProcessedLayer)
+    plottype, positional = pl.plottype, pl.positional
+    named = compute_attributes(pl)
+    # plottype = Makie.plottype(plottype, pl.positional...)
+    return Entry(plottype, positional, named)
+end
+
+# This method works on a list of "sliced" `ProcessedLayer`s
+function concatenate(pls::AbstractVector{ProcessedLayer})
+    pl = first(pls)
+    ns = [mapreduce(length, assert_equal, Iterators.flatten([pl.positional, pl.named])) for pl in pls]
+
+    primary = map(key -> reduce(vcat, [fill(pl.primary[key], n) for (pl, n) in zip(pls, ns)]), keys(pl.primary))
+    positional = map(key -> reduce(vcat, [pl.positional[key] for pl in pls]), keys(pl.positional))
+    named = map(key -> reduce(vcat, [pl.named[key] for pl in pls]), keys(pl.named))
+
+    return ProcessedLayer(pl; primary, positional, named)
+end
+
 function compute_entries_grid!(processedlayer::ProcessedLayer, labels_grid, scales::MixedArguments)
     processedlayer = rescale(processedlayer, scales)
     ismergeable = mergeable(processedlayer)
-    entries_grid = map(_ -> Entry[], labels_grid)
+
+    pls_grid = map(_ -> ProcessedLayer[], labels_grid)
     for c in CartesianIndices(shape(processedlayer))
         pl = slice(processedlayer, c)
         rows, cols = compute_grid_positions(scales, pl.primary)
-        if ismergeable
-            N = length(first(pl.positional))
-            map!(v -> fill(v, N), pl.primary, pl.primary)
-        end
-        attrs = compute_attributes(pl.attributes, pl.primary, pl.named, scales)
-        # plottype = Makie.plottype(entry.plottype, pl.positional...)
-        entry = Entry(pl.plottype, pl.positional, attrs)
         for i in rows, j in cols
-            entries = entries_grid[i, j]
-            if ismergeable
-                isempty(entries) ? push!(entries, copy_content(entry)) : append!(only(entries), entry)
-            else
-                push!(entries, entry)
-            end
-            mergewith!(mergelabels, labels_grid[i, j], pl.labels)
+            push!(pls_grid[i, j], pl)
+            mergewith!(mergelabels, labels_grid[i, j], pl.labels) #FIXME: should have been computed already
         end
     end
-    return entries_grid
+
+    return map(pls_grid) do pls
+        isempty(pls) && return Entry[]
+        return ismergeable ? [compute_entry(concatenate(pls))] : map(compute_entry, pls)
+    end
 end

@@ -54,9 +54,11 @@ function group(processedlayer::ProcessedLayer)
     grouping = Tuple(only(v) for v in values(processedlayer.primary) if haszerodims(v))
     perm, rgs = permutation_ranges(grouping)
     axs = shape(processedlayer)
-    primary, positional, named = map((processedlayer.primary, processedlayer.positional, processedlayer.named)) do vars
-        return map(vs -> subgroups(vs, perm, rgs, axs), vars)
-    end
+
+    primary = map(vs -> subgroups(vs, perm, rgs, axs), processedlayer.primary)
+    positional = map(vs -> subgroups(vs, perm, rgs, axs), processedlayer.positional)
+    named = map(vs -> subgroups(vs, perm, rgs, axs), processedlayer.named)
+
     labels = map(shiftdims, processedlayer.labels)
     return ProcessedLayer(processedlayer; primary, positional, named, labels)
 end
@@ -97,16 +99,4 @@ function process_mappings(layer::Layer)
     end
     primary, named = separate(hascategoricalentry, named)
     return ProcessedLayer(; primary, positional, named, labels)
-end
-
-"""
-    to_processedlayer(layer::Layer)
-
-Convert `layer` to equivalent processed layer, excluding transformations.
-"""
-function to_processedlayer(layer::Layer)
-    processedlayer = process_mappings(layer)
-    grouped_entry = isnothing(layer.data) ? processedlayer : group(processedlayer)
-    primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
-    return ProcessedLayer(grouped_entry; primary)
 end
