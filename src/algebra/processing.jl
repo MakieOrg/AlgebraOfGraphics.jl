@@ -88,15 +88,15 @@ function getlabeledarray(layer::Layer, s)
     return label, arr
 end
 
+function extract_values!(pairs, labels)
+    merge!(labels, Dictionary(map(first, pairs)))
+    return map(last, pairs)
+end
+
 function process_mappings(layer::Layer)
     labels = MixedArguments()
-    positional, named = map((layer.positional, layer.named)) do tup
-        return map_pairs(tup) do (key, value)
-            label, arr = getlabeledarray(layer, value)
-            insert!(labels, key, label)
-            return arr
-        end
-    end
+    positional = extract_values!(map(v -> getlabeledarray(layer, v), layer.positional), labels)
+    named = extract_values!(map(v -> getlabeledarray(layer, v), layer.named), labels)
     primary, named = separate(hascategoricalentry, named)
     return ProcessedLayer(; primary, positional, named, labels)
 end

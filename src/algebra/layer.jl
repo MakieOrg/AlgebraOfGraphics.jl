@@ -146,7 +146,9 @@ end
 
 function rescale(p::ProcessedLayer, field::Symbol, scales)
     isprimary = field == :primary
-    return map_pairs(getproperty(p, field)) do (key, values)
+    container = getproperty(p, field)
+    return map(keys(container)) do key
+        values = container[key]
         scale = get(scales, key, nothing)
         return isprimary ? rescale(values, scale) : rescale.(values, Ref(scale))
     end
