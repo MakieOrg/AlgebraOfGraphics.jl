@@ -105,6 +105,21 @@ function categoricalscales(processedlayer::ProcessedLayer, palettes)
     return cs
 end
 
+# FIXME: find out cleaner fix for continuous scales
+function continuouslabels(processedlayer::ProcessedLayer)
+    labels = MixedArguments()
+    for key in keys(processedlayer.named)
+        label = to_label(get(processedlayer.labels, key, ""))
+        insert!(labels, key, label)
+    end
+    for (key, val) in pairs(processedlayer.positional)
+        hascategoricalentry(val) && continue
+        label = to_label(get(processedlayer.labels, key, ""))
+        insert!(labels, key, label)
+    end
+    return labels
+end
+
 ## Machinery to convert a `ProcessedLayer` to a grid of entries
 
 # Determine whether entries from a `ProcessedLayer` should be merged 
@@ -153,33 +168,45 @@ function compute_attributes(attributes, primary, named, scales)
     return unset(attrs, :col, :row, :layout, :alpha)
 end
 
-function rescale(p::ProcessedLayer, c::CartesianIndex, field::Symbol, scales)
+function rescale(p::ProcessedLayer, field::Symbol, scales)
+    isprimary = field == :primary
     return map_pairs(getproperty(p, field)) do (key, values)
-        value = getnewindex(values, c)
-        isprimary = field == :primary
-        input = isprimary ? fill(value) : value
-        output = rescale(input, get(scales, key, nothing))
-        return isprimary ? only(output) : output
+        scale = get(scales, key, nothing)
+        return isprimary ? rescale(values, scale) : rescale.(values, Ref(scale))
     end
 end
 
-function compute_entries_grid!(processedlayer::ProcessedLayer, labels_grid, scales)
+function rescale(p::ProcessedLayer, scales::MixedArguments)
+    primary, positional, named = map((:primary, :positional, :named)) do field
+        return rescale(p, field, scales)
+    end
+    return ProcessedLayer(p; primary, positional, named)
+end
+
+slice(v, c) = map(el -> getnewindex(el, c), v)
+
+function slice(processedlayer::ProcessedLayer, c)
+    labels = slice(processedlayer.labels, c)
+    primary = slice(processedlayer.primary, c)
+    positional = slice(processedlayer.positional, c)
+    named = slice(processedlayer.named, c)
+    return ProcessedLayer(processedlayer; labels, primary, positional, named)
+end
+
+function compute_entries_grid!(processedlayer::ProcessedLayer, labels_grid, scales::MixedArguments)
+    processedlayer = rescale(processedlayer, scales)
     ismergeable = mergeable(processedlayer)
     entries_grid = map(_ -> Entry[], labels_grid)
     for c in CartesianIndices(shape(processedlayer))
-        labels = map(l -> getnewindex(l, c), processedlayer.labels)
-        primary, positional, named = map((:primary, :positional, :named)) do field
-            return rescale(processedlayer, c, field, scales)
-        end
-        rows, cols = compute_grid_positions(scales, primary)
+        pl = slice(processedlayer, c)
+        rows, cols = compute_grid_positions(scales, pl.primary)
         if ismergeable
-            N = length(first(positional))
-            map!(v -> fill(v, N), primary, primary)
+            N = length(first(pl.positional))
+            map!(v -> fill(v, N), pl.primary, pl.primary)
         end
-        plottype, attributes = processedlayer.plottype, processedlayer.attributes
-        attrs = compute_attributes(attributes, primary, named, scales)
-        # plottype = Makie.plottype(entry.plottype, positional...)
-        entry = Entry(plottype, positional, attrs)
+        attrs = compute_attributes(pl.attributes, pl.primary, pl.named, scales)
+        # plottype = Makie.plottype(entry.plottype, pl.positional...)
+        entry = Entry(pl.plottype, pl.positional, attrs)
         for i in rows, j in cols
             entries = entries_grid[i, j]
             if ismergeable
@@ -187,7 +214,7 @@ function compute_entries_grid!(processedlayer::ProcessedLayer, labels_grid, scal
             else
                 push!(entries, entry)
             end
-            mergewith!(mergelabels, labels_grid[i, j], labels)
+            mergewith!(mergelabels, labels_grid[i, j], pl.labels)
         end
     end
     return entries_grid
