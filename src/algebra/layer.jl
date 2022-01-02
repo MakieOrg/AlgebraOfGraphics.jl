@@ -86,35 +86,32 @@ to_label(label::AbstractString) = label
 to_label(labels::ArrayLike) = reduce(mergelabels, labels)
 
 function categoricalscales(processedlayer::ProcessedLayer, palettes)
-    cs = MixedArguments()
-    for (key, val) in pairs(processedlayer.primary)
-        palette = get(palettes, key, automatic)
+    categoricals = MixedArguments()
+    merge!(categoricals, processedlayer.primary)
+    merge!(categoricals, Dictionary(filter(hascategoricalentry, processedlayer.positional)))
+    return map(keys(categoricals)) do key
+        val = categoricals[key]
+        palette = key isa Integer ? automatic : get(palettes, key, automatic)
+        datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
         label = to_label(get(processedlayer.labels, key, ""))
-        insert!(cs, key, CategoricalScale(uniquevalues(val), palette, label))
+        return CategoricalScale(datavalues, palette, label)
     end
-    for (key, val) in pairs(processedlayer.positional)
-        hascategoricalentry(val) || continue
-        palette = automatic
-        label = to_label(get(processedlayer.labels, key, ""))
-        insert!(cs, key, CategoricalScale(mapreduce(uniquevalues, mergesorted, val), palette, label))
-    end
-    return cs
 end
 
-# FIXME: find out cleaner fix for continuous scales
-function continuouslabels(processedlayer::ProcessedLayer)
-    labels = MixedArguments()
-    for key in keys(processedlayer.named)
-        label = to_label(get(processedlayer.labels, key, ""))
-        insert!(labels, key, label)
-    end
-    for (key, val) in pairs(processedlayer.positional)
-        hascategoricalentry(val) && continue
-        label = to_label(get(processedlayer.labels, key, ""))
-        insert!(labels, key, label)
-    end
-    return labels
-end
+# # FIXME: find out cleaner fix for continuous scales
+# function continuouslabels(processedlayer::ProcessedLayer)
+#     labels = MixedArguments()
+#     for key in keys(processedlayer.named)
+#         label = to_label(get(processedlayer.labels, key, ""))
+#         insert!(labels, key, label)
+#     end
+#     for (key, val) in pairs(processedlayer.positional)
+#         hascategoricalentry(val) && continue
+#         label = to_label(get(processedlayer.labels, key, ""))
+#         insert!(labels, key, label)
+#     end
+#     return labels
+# end
 
 ## Machinery to convert a `ProcessedLayer` to a grid of entries
 
@@ -193,7 +190,7 @@ function compute_attributes(pl::ProcessedLayer)
     # opt out of the default cycling mechanism
     set!(attrs, :cycle, nothing)
 
-    # remove unnecessary information
+    # remove unnecessary information (somehow inplace `unset!` causes access to undefined reference)
     return unset(attrs, :col, :row, :layout, :alpha)
 end
 

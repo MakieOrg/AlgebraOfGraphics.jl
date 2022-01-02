@@ -42,23 +42,21 @@ end
 
 compute_legend(fg::FigureGrid) = compute_legend(fg.grid)
 
-function compute_legend(grid::Matrix{AxisEntries})
-    # gather all named scales
-    scales = NamedArguments()
-    for (k, v) in pairs(first(grid).scales)
-        # ignore positional scales
-        k isa Symbol || continue
-        # ignore keywords that don't support legends
-        k in [:row, :col, :layout, :stack, :dodge, :group] && continue
-        insert!(scales, k, v)
-    end
+# ignore positional scales and keywords that don't support legends
+function legendable_scales(scales)
+    invalid_keys = [:row, :col, :layout, :stack, :dodge, :group]
+    indices = filter(k -> k isa Symbol && k ∉ invalid_keys, keys(scales))
+    return getindices(scales, indices)
+end
 
-    # if no legend-worthy keyword remains return nothing
+function compute_legend(grid::Matrix{AxisEntries})
+    # gather valid named scales
+    scales = legendable_scales(first(grid).scales)
+
+    # if no legendable scale is present, return nothing
     isempty(scales) && return nothing
 
     titles = unique!(collect(String, (scale.label for scale in values(scales))))
-    # empty strings create difficulties with the layout
-    nonemptytitles = map(t -> isempty(t) ? " " : t, titles)
 
     plottypes, attributes = plottypes_attributes(entries(grid))
 
@@ -81,7 +79,7 @@ function compute_legend(grid::Matrix{AxisEntries})
         push!(labels, map(string, uniquevalues))
         push!(elements_list, elements)
     end
-    return elements_list, labels, nonemptytitles
+    return elements_list, labels, titles
 end
 
 # Notes
