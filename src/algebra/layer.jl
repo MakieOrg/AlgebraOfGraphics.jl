@@ -180,14 +180,14 @@ function compute_attributes(pl::ProcessedLayer)
     merge!(attrs, pl.named)
 
     # implement alpha transparency
-    alpha = get(attrs, :alpha, nothing)
-    color = get(attrs, :color, nothing)
-    if !isnothing(color)
-        set!(attrs, :color, isnothing(alpha) ? color : (color, alpha))
-    end
+    alpha = get(attrs, :alpha, automatic)
+    color = get(attrs, :color, automatic)
+    (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
 
     # opt out of the default cycling mechanism
-    set!(attrs, :cycle, nothing)
+    cycle = nothing
+
+    merge!(attrs, Dictionary(valid_options(; color, cycle)))
 
     # remove unnecessary information 
     return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)

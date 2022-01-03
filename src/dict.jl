@@ -5,14 +5,7 @@ const NamedArguments = Dictionary{Symbol, Any}
 const MixedArguments = Dictionary{KeyType, Any}
 
 # make a copy with distinct keys
-function set(d::AbstractDictionary, ps::Pair...)
-    res = similar(copy(keys(d)), eltype(d))
-    copyto!(res, d)
-    for (k, v) in ps
-        set!(res, k, v)
-    end
-    return res
-end
+set(d::AbstractDictionary, ps::Pair...) = merge(d, dictionary(ps))
 
 function filterkeys(f, d::AbstractDictionary)
     idxs = findall(f, keys(d))
@@ -27,6 +20,8 @@ function separate(f, d::AbstractDictionary)
     end
     return d1, d2
 end
+
+valid_options(; options...) = valid_options(values(options))
 
 function valid_options(nt)
     ks = filter(k -> nt[k] !== automatic, keys(nt))

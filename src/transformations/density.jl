@@ -31,7 +31,7 @@ end
 
 function (d::DensityAnalysis)(input::ProcessedLayer)
     datalimits = compute_datalimits(input.positional, d.datalimits)
-    options = valid_options((; datalimits, d.npoints, d.kernel, d.bandwidth))
+    options = valid_options(; datalimits, d.npoints, d.kernel, d.bandwidth)
     output = map(input) do p, n
         return _density(p...; pairs(n)..., pairs(options)...), (;)
     end
