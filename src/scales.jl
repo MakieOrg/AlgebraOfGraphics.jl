@@ -1,3 +1,5 @@
+## Categorical Scales
+
 increment!(idx::Ref) = (idx[] += 1; idx[])
 
 cycle(v::AbstractVector, i::Int) = v[mod1(i, length(v))]
@@ -47,6 +49,19 @@ end
 
 datavalues(c::CategoricalScale) = c.data
 plotvalues(c::CategoricalScale) = c.plot
+
+## Continuous Scales
+
+struct ContinuousScale{T}
+    extrema::NTuple{2, T}
+    label::Union{String, Nothing}
+end
+
+function fitscale(c::ContinuousScale)
+    extrema = c.extrema
+    label = something(c.label, "")
+    return ContinuousScale(extrema, label)
+end
 
 rescale(values, ::Nothing) = values
 
@@ -155,7 +170,8 @@ Determine whether `v` should be treated as a continuous, geometrical, or categor
 scientific_eltype(v::ArrayLike) = scientific_type(eltype(v))
 scientific_eltype(v) = categorical
 
-hascategoricalentry(u) = any(el -> scientific_eltype(el) === categorical, u)
+iscategoricalcontainer(u) = any(el -> scientific_eltype(el) === categorical, u)
+iscontinuouscontainer(u) = all(el -> scientific_eltype(el) === continuous, u)
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 extend_extrema(::Nothing, (l2, u2)) = (l2, u2)

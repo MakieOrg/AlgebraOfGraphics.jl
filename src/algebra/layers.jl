@@ -56,7 +56,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
     map!(fitscale, scales, scales)
 
     indices = CartesianIndices(compute_grid_positions(scales))
-    axes_grid = map(c -> AxisSpecEntries(AxisSpec(c, axis), Entry[], scales), indices)
+    axes_grid = map(c -> AxisSpecEntries(AxisSpec(c, axis), Entry[], scales, NamedArguments()), indices)
     labels_grid = map(_ -> MixedArguments(), axes_grid)
 
     for processedlayer in processedlayers

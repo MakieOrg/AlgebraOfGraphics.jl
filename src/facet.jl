@@ -2,7 +2,7 @@
 
 function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
 
-    scale = get(aes[1].scales, :layout, nothing)
+    scale = get(aes[1].categoricalscales, :layout, nothing)
     isnothing(scale) && return
 
     # Link axes and hide decorations if appropriate
@@ -32,7 +32,7 @@ end
 
 function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     M, N = size(aes)
-    row_scale, col_scale = map(sym -> get(aes[1].scales, sym, nothing), (:row, :col))
+    row_scale, col_scale = map(sym -> get(aes[1].categoricalscales, sym, nothing), (:row, :col))
     all(isnothing, (row_scale, col_scale)) && return
 
     # Link axes and hide decorations if appropriate

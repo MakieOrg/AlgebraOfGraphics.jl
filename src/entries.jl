@@ -42,31 +42,34 @@ end
 struct AxisSpecEntries
     axis::AxisSpec
     entries::Vector{Entry}
-    scales::MixedArguments
+    categoricalscales::MixedArguments
+    continuousscales::MixedArguments
 end
 
 """
-    AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, scales)
+    AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, categoricalscales, continuousscales)
 
 Define all ingredients to make plots on an axis.
-Each scale should be a `CategoricalScale`.
+Each categorical scale should be a `CategoricalScale`, and each continuous
+scale should be a `ContinuousScale`.
 """
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
-    scales::MixedArguments
+    categoricalscales::MixedArguments
+    continuousscales::MixedArguments
 end
 
 function AxisEntries(ae::AxisSpecEntries, fig)
     ax = ae.axis.type(fig[ae.axis.position...]; pairs(ae.axis.attributes)...)
-    AxisEntries(ax, ae.entries, ae.scales)
+    AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales)
 end
 
 function AxisEntries(ae::AxisSpecEntries, ax::Union{Axis,Axis3})
     if !isempty(ax)
         @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $(a.axis.attributes)")
     end
-    AxisEntries(ax, ae.entries, ae.scales)
+    AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales)
 end
 
 function Makie.plot!(ae::AxisEntries)

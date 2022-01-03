@@ -49,7 +49,7 @@ end
 
 function compute_legend(grid::Matrix{AxisEntries})
     # gather valid named scales
-    scales = legendable_scales(first(grid).scales)
+    scales = legendable_scales(first(grid).categoricalscales)
 
     # if no legendable scale is present, return nothing
     isempty(scales) && return nothing

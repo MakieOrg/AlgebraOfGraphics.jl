@@ -88,12 +88,23 @@ to_label(labels::ArrayLike) = reduce(mergelabels, labels)
 function categoricalscales(processedlayer::ProcessedLayer, palettes)
     categoricals = MixedArguments()
     merge!(categoricals, processedlayer.primary)
-    merge!(categoricals, Dictionary(filter(hascategoricalentry, processedlayer.positional)))
+    merge!(categoricals, Dictionary(filter(iscategoricalcontainer, processedlayer.positional)))
     return map(keys(categoricals), categoricals) do key, val
         palette = key isa Integer ? automatic : get(palettes, key, automatic)
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
         label = to_label(get(processedlayer.labels, key, ""))
         return CategoricalScale(datavalues, palette, label)
+    end
+end
+
+function continuousscales(processedlayer::ProcessedLayer)
+    continuous = MixedArguments()
+    merge!(continuous, filter(iscontinuouscontainer, processedlayer.named))
+    merge!(continuous, Dictionary(filter(iscontinuouscontainer, processedlayer.positional)))
+    return map(keys(continuous), continuous) do key, val
+        extrema = mapreduce(Makie.extrema_nan, extend_extrema, val)
+        label = to_label(get(processedlayer.labels, key, ""))
+        return ContinousScale(extrema, label)
     end
 end
 
@@ -106,7 +117,7 @@ end
 #         insert!(labels, key, label)
 #     end
 #     for (key, val) in pairs(processedlayer.positional)
-#         hascategoricalentry(val) && continue
+#         iscategoricalcontainer(val) && continue
 #         label = to_label(get(processedlayer.labels, key, ""))
 #         insert!(labels, key, label)
 #     end
