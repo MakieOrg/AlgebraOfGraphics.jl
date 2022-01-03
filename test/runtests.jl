@@ -28,16 +28,14 @@ end
 @testset "arguments" begin
     s = Arguments([10, 20, 30])
     @test s == Any[10, 20, 30]
-    t = map(keys(s)) do k
-        v = s[k]
+    t = map(keys(s), s) do k, v
         return "key $k and value $v"
     end
     @test t == ["key 1 and value 10", "key 2 and value 20", "key 3 and value 30"]
 
     s = NamedArguments([:a, :b, :c], [10, 20, 30])
     @test s == NamedArguments((a=10, b=20, c=30))
-    t = map(keys(s)) do k
-        v = s[k]
+    t = map(keys(s), s) do k, v
         return "key $k and value $v"
     end
     @test t == NamedArguments(
@@ -59,7 +57,7 @@ end
     @test keys(s) !== keys(t)
 
     s = NamedArguments([:a, :b, :c], [1, 2, 3])
-    t = AlgebraOfGraphics.unset(s, :a, :b)
+    t = AlgebraOfGraphics.filterkeys(!in((:a, :b)), s)
     @test t == NamedArguments([:c], [3])
 end
 

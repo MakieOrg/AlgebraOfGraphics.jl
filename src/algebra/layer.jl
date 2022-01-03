@@ -89,8 +89,7 @@ function categoricalscales(processedlayer::ProcessedLayer, palettes)
     categoricals = MixedArguments()
     merge!(categoricals, processedlayer.primary)
     merge!(categoricals, Dictionary(filter(hascategoricalentry, processedlayer.positional)))
-    return map(keys(categoricals)) do key
-        val = categoricals[key]
+    return map(keys(categoricals), categoricals) do key, val
         palette = key isa Integer ? automatic : get(palettes, key, automatic)
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
         label = to_label(get(processedlayer.labels, key, ""))
@@ -99,6 +98,7 @@ function categoricalscales(processedlayer::ProcessedLayer, palettes)
 end
 
 # # FIXME: find out cleaner fix for continuous scales
+# Also fix https://github.com/JuliaPlots/AlgebraOfGraphics.jl/issues/288 while at it
 # function continuouslabels(processedlayer::ProcessedLayer)
 #     labels = MixedArguments()
 #     for key in keys(processedlayer.named)
@@ -140,8 +140,7 @@ end
 function rescale(p::ProcessedLayer, field::Symbol, scales)
     isprimary = field == :primary
     container = getproperty(p, field)
-    return map(keys(container)) do key
-        values = container[key]
+    return map(keys(container), container) do key, values
         scale = get(scales, key, nothing)
         return isprimary ? rescale(values, scale) : rescale.(values, Ref(scale))
     end
@@ -190,8 +189,8 @@ function compute_attributes(pl::ProcessedLayer)
     # opt out of the default cycling mechanism
     set!(attrs, :cycle, nothing)
 
-    # remove unnecessary information (somehow inplace `unset!` causes access to undefined reference)
-    return unset(attrs, :col, :row, :layout, :alpha)
+    # remove unnecessary information 
+    return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
 end
 
 # This method works on a "sliced" `ProcessedLayer`

@@ -14,8 +14,8 @@ function set(d::AbstractDictionary, ps::Pair...)
     return res
 end
 
-function unset(d::AbstractDictionary, ks...)
-    idxs = findall(!in(ks), keys(d))
+function filterkeys(f, d::AbstractDictionary)
+    idxs = findall(f, keys(d))
     return getindices(d, idxs)
 end
 
