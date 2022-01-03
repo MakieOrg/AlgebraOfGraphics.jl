@@ -97,22 +97,6 @@ function categoricalscales(processedlayer::ProcessedLayer, palettes)
     end
 end
 
-# # FIXME: find out cleaner fix for continuous scales
-# Also fix https://github.com/JuliaPlots/AlgebraOfGraphics.jl/issues/288 while at it
-# function continuouslabels(processedlayer::ProcessedLayer)
-#     labels = MixedArguments()
-#     for key in keys(processedlayer.named)
-#         label = to_label(get(processedlayer.labels, key, ""))
-#         insert!(labels, key, label)
-#     end
-#     for (key, val) in pairs(processedlayer.positional)
-#         iscategoricalcontainer(val) && continue
-#         label = to_label(get(processedlayer.labels, key, ""))
-#         insert!(labels, key, label)
-#     end
-#     return labels
-# end
-
 ## Machinery to convert a `ProcessedLayer` to a grid of entries
 
 # Determine whether entries from a `ProcessedLayer` should be merged 
@@ -221,6 +205,7 @@ function concatenate(pls::AbstractVector{ProcessedLayer})
     return ProcessedLayer(pl; primary, positional, named)
 end
 
+# Also fix https://github.com/JuliaPlots/AlgebraOfGraphics.jl/issues/288 while at it
 function color_key(pl::ProcessedLayer)
     for field in (:primary, :named, :attributes)
         haskey(getproperty(pl, field), :color) && return :color
