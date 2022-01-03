@@ -173,7 +173,7 @@ function slice(processedlayer::ProcessedLayer, c)
 end
 
 # This method works on a "sliced" `ProcessedLayer`
-function compute_attributes(pl::ProcessedLayer)
+function compute_attributes(pl::ProcessedLayer, continuousscales)
     attrs = NamedArguments()
     merge!(attrs, pl.attributes)
     merge!(attrs, pl.primary)
@@ -184,19 +184,27 @@ function compute_attributes(pl::ProcessedLayer)
     color = get(attrs, :color, automatic)
     (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
 
+    # Implement color range
+    colorscale = get(continuousscales, :color, nothing)
+    colorrange = if (color === automatic) || isnothing(colorscale)
+        automatic
+    else
+        colorscale.extrema
+    end
+
     # opt out of the default cycling mechanism
     cycle = nothing
 
-    merge!(attrs, Dictionary(valid_options(; color, cycle)))
+    merge!(attrs, Dictionary(valid_options(; color, colorrange, cycle)))
 
     # remove unnecessary information 
     return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
 end
 
 # This method works on a "sliced" `ProcessedLayer`
-function compute_entry(pl::ProcessedLayer)
+function compute_entry(pl::ProcessedLayer, continuousscales)
     plottype, positional = pl.plottype, pl.positional
-    named = compute_attributes(pl)
+    named = compute_attributes(pl, continuousscales)
     # plottype = Makie.plottype(plottype, pl.positional...) FIXME: do we need this?
     return Entry(plottype, positional, named)
 end
@@ -213,6 +221,26 @@ function concatenate(pls::AbstractVector{ProcessedLayer})
     return ProcessedLayer(pl; primary, positional, named)
 end
 
+function color_key(pl::ProcessedLayer)
+    for field in (:primary, :named, :attributes)
+        haskey(getproperty(pl, field), :color) && return :color
+    end
+    zcolor_recipe = pl.plottype <: Union{Heatmap, Contour, Contourf, Surface}
+    return zcolor_recipe ? 3 : :color
+end
+
+function getlabeledcolorrange(grid)
+    zcolor = any(has_zcolor, entries(grid))
+    key = zcolor ? 3 : :color
+    continuous_color_entries = Iterators.filter(entries(grid)) do entry
+        return get(entry, key, nothing) isa AbstractArray{<:Number}
+    end
+    colorrange = compute_extrema(continuous_color_entries, key)
+    # label = compute_label(continuous_color_entries, key)
+    label = "" # FIXME: figure out a cleaner way
+    return isnothing(colorrange) ? nothing : (label, colorrange)
+end
+
 # This method works on a "sliced" `ProcessedLayer`
 function continuousscales(processedlayer::ProcessedLayer)
     continuous = MixedArguments()
@@ -226,24 +254,29 @@ function continuousscales(processedlayer::ProcessedLayer)
     end
 end
 
-function compute_entries_grid!(processedlayer::ProcessedLayer,
-                               categoricalscales::MixedArguments,
-                               continuousscales_grid::AbstractMatrix)
-    processedlayer = rescale(processedlayer, categoricalscales)
-    ismergeable = mergeable(processedlayer)
+function append_entries!(axes_grid, processedlayer::ProcessedLayer, merged_continuousscales::MixedArguments)
 
-    pls_grid = map(_ -> ProcessedLayer[], continuousscales_grid)
+    pls_grid = map(_ -> ProcessedLayer[], axes_grid)
+    categoricalscales = first(axes_grid).categoricalscales
     for c in CartesianIndices(shape(processedlayer))
         pl = slice(processedlayer, c)
         rows, cols = compute_grid_positions(categoricalscales, pl.primary)
         for i in rows, j in cols
             push!(pls_grid[i, j], pl)
-            mergewith!(mergescales, continuousscales_grid[i, j], continuousscales(pl))
         end
     end
 
-    return map(pls_grid) do pls
-        isempty(pls) && return Entry[]
-        return ismergeable ? [compute_entry(concatenate(pls))] : map(compute_entry, pls)
+    ismergeable = mergeable(processedlayer)
+    for idx in eachindex(axes_grid, pls_grid)
+        ae, pls = axes_grid[idx], pls_grid[idx]
+        isempty(pls) && continue
+        if ismergeable
+            push!(ae.entries, compute_entry(concatenate(pls), merged_continuousscales))
+        else
+            for pl in pls
+                push!(ae.entries, compute_entry(pl, merged_continuousscales))
+            end
+        end
     end
+    return
 end

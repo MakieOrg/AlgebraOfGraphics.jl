@@ -52,38 +52,36 @@ function compute_axes_grid(s::OneOrMoreLayers;
     for processedlayer in processedlayers
         mergewith!(mergescales, scales, categoricalscales(processedlayer, palettes))
     end
-    # fit scales (compute plot values using all data values)
+    # fit categorical scales (compute plot values using all data values)
     map!(fitscale, scales, scales)
 
+    # fit continuous scales
     indices = CartesianIndices(compute_grid_positions(scales))
-    axes_grid = map(c -> AxisSpecEntries(AxisSpec(c, axis), Entry[], scales, NamedArguments()), indices)
-    continuousscales_grid = map(_ -> MixedArguments(), axes_grid)
-
+    processedlayers = map(pl -> rescale(pl, scales), processedlayers)
+    continuousscales_grid = map(_ -> MixedArguments(), indices)
     for processedlayer in processedlayers
-        entries = compute_entries_grid!(processedlayer, scales, continuousscales_grid)
-        for idx in eachindex(axes_grid)
-            append!(axes_grid[idx].entries, entries[idx])
+        for c in CartesianIndices(shape(processedlayer))
+            pl = slice(processedlayer, c)
+            rows, cols = compute_grid_positions(scales, pl.primary)
+            for i in rows, j in cols
+                mergewith!(mergescales, continuousscales_grid[i, j], continuousscales(pl))
+            end
         end
     end
 
-    # FIXME: add back before merging
-    # Link colors
-    labeledcolorrange = getlabeledcolorrange(axes_grid)
-    if !isnothing(labeledcolorrange)
-        _, colorrange = labeledcolorrange
-        for processedlayer in AlgebraOfGraphics.processedlayers(axes_grid)
-            # `attributes` were obtained via `set` above, FIXME: no longer true
-            # so it is OK to edit the keys
-            set!(processedlayer.attributes, :colorrange, colorrange)
-        end
+    # Needed to use global extrema
+    merged_continuousscales = reduce(mergewith(mergescales), continuousscales_grid)
+    axes_grid = map(c -> AxisSpecEntries(AxisSpec(c, axis), Entry[], scales, continuousscales_grid[c]), indices)
+    for processedlayer in processedlayers
+        append_entries!(axes_grid, processedlayer, merged_continuousscales)
     end
 
     # Axis labels and ticks
-    for (ae, continuousscales) in zip(axes_grid, continuousscales_grid)
+    for ae in axes_grid
         ndims = isaxis2d(ae) ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
-            scale = get(scales, i) do
-                return get(continuousscales, i, nothing) # FIXME: Should maybe fit across axes?
+            scale = get(ae.categoricalscales, i) do
+                return get(ae.continuousscales, i, nothing) # FIXME: Should maybe fit across axes?
             end
             isnothing(scale) && continue
             label = something(scale.label, "")
