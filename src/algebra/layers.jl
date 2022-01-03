@@ -69,8 +69,8 @@ function compute_axes_grid(s::OneOrMoreLayers;
         end
     end
 
-    # Needed to use global extrema
-    merged_continuousscales = reduce(mergewith(mergescales), continuousscales_grid)
+    # Compute merged continuous scales, as it may be needed to use global extrema
+    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=MixedArguments())
     axes_grid = map(c -> AxisSpecEntries(AxisSpec(c, axis), Entry[], scales, continuousscales_grid[c]), indices)
     for processedlayer in processedlayers
         append_entries!(axes_grid, processedlayer, merged_continuousscales)
@@ -85,6 +85,8 @@ function compute_axes_grid(s::OneOrMoreLayers;
             end
             isnothing(scale) && continue
             label = something(scale.label, "")
+            # Use global scales for ticks for now, TODO: requires a nicer mechanism
+            (scale isa ContinuousScale) && (scale = merged_continuousscales[i])
             for (k, v) in pairs((label=string(label), ticks=ticks(scale)))
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand

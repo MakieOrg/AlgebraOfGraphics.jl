@@ -57,12 +57,6 @@ struct ContinuousScale{T}
     label::Union{String, Nothing}
 end
 
-function fitscale(c::ContinuousScale)
-    extrema = c.extrema
-    label = something(c.label, "")
-    return ContinuousScale(extrema, label)
-end
-
 rescale(values, ::Nothing) = values
 
 # recentering hack to avoid Float32 conversion errors on recent dates
