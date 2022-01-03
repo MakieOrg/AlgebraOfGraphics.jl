@@ -319,8 +319,10 @@ get_nonempty_aes(aes) = filter(!empty_ae, aes)
 first_nonempty_axis(aes) = first(get_nonempty_aes(aes)).axis
 
 function facet!(fig, aes::AbstractMatrix{AxisEntries}; facet)
-    facet_wrap!(fig, aes; facet)
-    facet_grid!(fig, aes; facet)
+    update(fig) do f
+        facet_wrap!(f, aes; facet)
+        facet_grid!(f, aes; facet)
+    end
     return
 end
 

@@ -1,6 +1,19 @@
+# Wrap layout updates in an update block to avoid triggering multiple updates
+function update(f, fig)
+    layout = fig.layout
+    block_updates = layout.block_updates
+    layout.block_updates = true
+    output = f(fig)
+    layout.block_updates = block_updates
+    block_updates || Makie.GridLayoutBase.update!(layout)
+    return output
+end
+
+update(f, ax::Union{Axis, Axis3}) = f(ax)
+
 function Makie.plot!(fig, s::OneOrMoreLayers;
                      axis=NamedTuple(), palettes=NamedTuple())
-    grid = compute_axes_grid(fig, s; axis, palettes)
+    grid = update(f -> compute_axes_grid(f, s; axis, palettes), fig)
     foreach(plot!, grid)
     return grid
 end
@@ -24,12 +37,15 @@ Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@r
 function draw(s::OneOrMoreLayers;
               axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple(),
               facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple())
-    fg = plot(s; axis, figure, palettes)
-    facet!(fg; facet)
-    colorbar!(fg; colorbar...)
-    legend!(fg; legend...)
-    resizetocontent!(fg)
-    return fg
+    return update(Figure(; figure...)) do f
+        grid = plot!(f, s; axis, palettes)
+        fg = FigureGrid(f, grid)
+        facet!(fg; facet)
+        colorbar!(fg; colorbar...)
+        legend!(fg; legend...)
+        resizetocontent!(fg)
+        return fg
+    end
 end
 
 """
@@ -42,7 +58,9 @@ to `palettes`.
 """
 function draw!(fig, s::OneOrMoreLayers;
                axis=NamedTuple(), palettes=NamedTuple(), facet=NamedTuple())
-    ag = plot!(fig, s; axis, palettes)
-    facet!(fig, ag; facet)
-    return ag
+    return update(fig) do f
+        ag = plot!(f, s; axis, palettes)
+        facet!(f, ag; facet)
+        return ag
+    end
 end
