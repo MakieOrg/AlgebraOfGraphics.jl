@@ -130,12 +130,20 @@ function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     return CategoricalScale(data, palette, label)
 end
 
+function mergescales(c1::ContinuousScale, c2::ContinuousScale)
+    extrema = extend_extrema(c1.extrema, c2.extrema)
+    label = mergelabels(c1.label, c2.label)
+    return ContinuousScale(extrema, label)
+end
+
 # Logic to create ticks from a scale
 # Should take current tick to incorporate information
 function ticks(scale::CategoricalScale)
     u = map(string, datavalues(scale))
     return (axes(u, 1), u)
 end
+
+ticks(scale::ContinuousScale) = ticks(scale.extrema)
 
 ticks((min, max)::NTuple{2, Any}) = automatic
 
@@ -171,7 +179,7 @@ scientific_eltype(v::ArrayLike) = scientific_type(eltype(v))
 scientific_eltype(v) = categorical
 
 iscategoricalcontainer(u) = any(el -> scientific_eltype(el) === categorical, u)
-iscontinuouscontainer(u) = all(el -> scientific_eltype(el) === continuous, u)
+iscontinuous(u) = scientific_eltype(u) === continuous
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 extend_extrema(::Nothing, (l2, u2)) = (l2, u2)

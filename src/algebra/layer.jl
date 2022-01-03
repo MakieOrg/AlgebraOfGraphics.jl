@@ -97,17 +97,6 @@ function categoricalscales(processedlayer::ProcessedLayer, palettes)
     end
 end
 
-function continuousscales(processedlayer::ProcessedLayer)
-    continuous = MixedArguments()
-    merge!(continuous, filter(iscontinuouscontainer, processedlayer.named))
-    merge!(continuous, Dictionary(filter(iscontinuouscontainer, processedlayer.positional)))
-    return map(keys(continuous), continuous) do key, val
-        extrema = mapreduce(Makie.extrema_nan, extend_extrema, val)
-        label = to_label(get(processedlayer.labels, key, ""))
-        return ContinousScale(extrema, label)
-    end
-end
-
 # # FIXME: find out cleaner fix for continuous scales
 # Also fix https://github.com/JuliaPlots/AlgebraOfGraphics.jl/issues/288 while at it
 # function continuouslabels(processedlayer::ProcessedLayer)
@@ -208,7 +197,7 @@ end
 function compute_entry(pl::ProcessedLayer)
     plottype, positional = pl.plottype, pl.positional
     named = compute_attributes(pl)
-    # plottype = Makie.plottype(plottype, pl.positional...)
+    # plottype = Makie.plottype(plottype, pl.positional...) FIXME: do we need this?
     return Entry(plottype, positional, named)
 end
 
@@ -224,17 +213,32 @@ function concatenate(pls::AbstractVector{ProcessedLayer})
     return ProcessedLayer(pl; primary, positional, named)
 end
 
-function compute_entries_grid!(processedlayer::ProcessedLayer, labels_grid, scales::MixedArguments)
-    processedlayer = rescale(processedlayer, scales)
+# This method works on a "sliced" `ProcessedLayer`
+function continuousscales(processedlayer::ProcessedLayer)
+    continuous = MixedArguments()
+    merge!(continuous, filter(iscontinuous, processedlayer.named))
+    merge!(continuous, Dictionary(filter(iscontinuous, processedlayer.positional)))
+    # FIXME: `color` might take from a different scale
+    return map(keys(continuous), continuous) do key, val
+        extrema = mapreduce(Makie.extrema_nan, extend_extrema, val)
+        label = to_label(get(processedlayer.labels, key, ""))
+        return ContinuousScale(extrema, label)
+    end
+end
+
+function compute_entries_grid!(processedlayer::ProcessedLayer,
+                               categoricalscales::MixedArguments,
+                               continuousscales_grid::AbstractMatrix)
+    processedlayer = rescale(processedlayer, categoricalscales)
     ismergeable = mergeable(processedlayer)
 
-    pls_grid = map(_ -> ProcessedLayer[], labels_grid)
+    pls_grid = map(_ -> ProcessedLayer[], continuousscales_grid)
     for c in CartesianIndices(shape(processedlayer))
         pl = slice(processedlayer, c)
-        rows, cols = compute_grid_positions(scales, pl.primary)
+        rows, cols = compute_grid_positions(categoricalscales, pl.primary)
         for i in rows, j in cols
             push!(pls_grid[i, j], pl)
-            mergewith!(mergelabels, labels_grid[i, j], pl.labels) #FIXME: should have been computed already
+            mergewith!(mergescales, continuousscales_grid[i, j], continuousscales(pl))
         end
     end
 

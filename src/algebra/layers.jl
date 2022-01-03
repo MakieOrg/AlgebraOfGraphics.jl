@@ -57,38 +57,36 @@ function compute_axes_grid(s::OneOrMoreLayers;
 
     indices = CartesianIndices(compute_grid_positions(scales))
     axes_grid = map(c -> AxisSpecEntries(AxisSpec(c, axis), Entry[], scales, NamedArguments()), indices)
-    labels_grid = map(_ -> MixedArguments(), axes_grid)
+    continuousscales_grid = map(_ -> MixedArguments(), axes_grid)
 
     for processedlayer in processedlayers
-        entries = compute_entries_grid!(processedlayer, labels_grid, scales)
+        entries = compute_entries_grid!(processedlayer, scales, continuousscales_grid)
         for idx in eachindex(axes_grid)
             append!(axes_grid[idx].entries, entries[idx])
         end
     end
 
     # FIXME: add back before merging
-    # # Link colors
-    # labeledcolorrange = getlabeledcolorrange(axes_grid)
-    # if !isnothing(labeledcolorrange)
-    #     _, colorrange = labeledcolorrange
-    #     for processedlayer in AlgebraOfGraphics.processedlayers(axes_grid)
-    #         # `attributes` were obtained via `set` above, FIXME: no longer true
-    #         # so it is OK to edit the keys
-    #         set!(processedlayer.attributes, :colorrange, colorrange)
-    #     end
-    # end
+    # Link colors
+    labeledcolorrange = getlabeledcolorrange(axes_grid)
+    if !isnothing(labeledcolorrange)
+        _, colorrange = labeledcolorrange
+        for processedlayer in AlgebraOfGraphics.processedlayers(axes_grid)
+            # `attributes` were obtained via `set` above, FIXME: no longer true
+            # so it is OK to edit the keys
+            set!(processedlayer.attributes, :colorrange, colorrange)
+        end
+    end
 
     # Axis labels and ticks
-    for (ae, labels) in zip(axes_grid, labels_grid)
+    for (ae, continuousscales) in zip(axes_grid, continuousscales_grid)
         ndims = isaxis2d(ae) ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
-            # TODO: move this computation out of the `for` loop
             scale = get(scales, i) do
-                return compute_extrema(AlgebraOfGraphics.entries(axes_grid), i)
+                return get(continuousscales, i, nothing) # FIXME: Should maybe fit across axes?
             end
             isnothing(scale) && continue
-            # FIXME: make sure what to do if `label` is `nothing`
-            label = something(get(labels, i, nothing), "")
+            label = something(scale.label, "")
             for (k, v) in pairs((label=string(label), ticks=ticks(scale)))
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand
