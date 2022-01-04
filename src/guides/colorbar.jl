@@ -21,7 +21,7 @@ function compute_colorbar(grid::Matrix{AxisEntries})
     colorscales = filter(!isnothing, [get(ae.continuousscales, :color, nothing) for ae in grid])
     isempty(colorscales) && return
     colorscale = reduce(mergescales, colorscales)
-    label = something(colorscale.label, "")
+    label = getlabel(colorscale)
     limits = colorscale.extrema
     colormap = current_default_theme().colormap[]
     # FIXME: handle separate colorbars

@@ -54,7 +54,7 @@ function compute_legend(grid::Matrix{AxisEntries})
     # if no legendable scale is present, return nothing
     isempty(scales) && return nothing
 
-    titles = unique!(collect(String, (scale.label for scale in values(scales))))
+    titles = unique!(collect(map(getlabel, scales)))
 
     plottypes, attributes = plottypes_attributes(entries(grid))
 
@@ -62,7 +62,7 @@ function compute_legend(grid::Matrix{AxisEntries})
     elements_list = Vector{Vector{LegendElement}}[]
 
     for title in titles
-        label_attrs = [key for (key, val) in pairs(scales) if val.label == title]
+        label_attrs = [key for (key, val) in pairs(scales) if getlabel(val) == title]
         uniquevalues = mapreduce(k -> datavalues(scales[k]), assert_equal, label_attrs)
         elements = map(eachindex(uniquevalues)) do idx
             local elements = LegendElement[]

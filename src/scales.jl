@@ -43,12 +43,12 @@ function fitscale(c::CategoricalScale)
     data = c.data
     palette = c.palette
     plot = apply_palette(c.palette, c.data)
-    label = something(c.label, "")
-    return CategoricalScale(data, plot, palette, label)
+    return CategoricalScale(data, plot, palette, c.label)
 end
 
 datavalues(c::CategoricalScale) = c.data
 plotvalues(c::CategoricalScale) = c.plot
+getlabel(c::CategoricalScale) = something(c.label, "")
 
 ## Continuous Scales
 
@@ -56,6 +56,8 @@ struct ContinuousScale{T}
     extrema::NTuple{2, T}
     label::Union{AbstractString, Nothing}
 end
+
+getlabel(c::ContinuousScale) = something(c.label, "")
 
 rescale(values) = rescale(values, nothing)
 rescale(values, ::Nothing) = values

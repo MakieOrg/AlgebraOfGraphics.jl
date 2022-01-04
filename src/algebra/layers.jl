@@ -123,7 +123,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
                 return get(ae.continuousscales, i, nothing)
             end
             isnothing(scale) && continue
-            label = something(scale.label, "")
+            label = getlabel(scale)
             # Use global scales for ticks for now, TODO: requires a nicer mechanism
             (scale isa ContinuousScale) && (scale = merged_continuousscales[i])
             for (k, v) in pairs((label=to_string(label), ticks=ticks(scale)))
