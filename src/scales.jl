@@ -15,7 +15,7 @@ function apply_palette(p::Union{AbstractVector, AbstractColorList}, uv)
 end
 
 apply_palette(::Automatic, uv) = eachindex(uv)
-# apply_palette(p, uv) = map(p, eachindex(uv)) # FIXME: what is the correct fallback?
+apply_palette(p, uv) = map(p, uv)
 
 # TODO: add more customizations?
 struct Wrap end

@@ -28,6 +28,15 @@ function Base.:*(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
     return Layers([el1 * el2 for el1 in l1 for el2 in l2])
 end
 
+function compute_processedlayers_grid(processedlayers, categoricalscales)
+    indices = CartesianIndices(compute_grid_positions(categoricalscales))
+    pls_grid = map(_ -> ProcessedLayer[], indices)
+    for processedlayer in processedlayers
+        append_processedlayers!(pls_grid, processedlayer, scales)
+    end
+    return pls_grid
+end
+
 function compute_axes_grid(fig, s::OneOrMoreLayers;
     axis=NamedTuple(), palettes=NamedTuple())
 
@@ -55,19 +64,19 @@ function compute_axes_grid(s::OneOrMoreLayers;
     # fit categorical scales (compute plot values using all data values)
     map!(fitscale, scales, scales)
 
-    # fit continuous scales
-    indices = CartesianIndices(compute_grid_positions(scales))
-    processedlayers = map(pl -> rescale(pl, scales), processedlayers)
-    continuousscales_grid = map(_ -> MixedArguments(), indices)
-    for processedlayer in processedlayers
-        for c in CartesianIndices(shape(processedlayer))
-            pl = slice(processedlayer, c)
-            rows, cols = compute_grid_positions(scales, pl.primary)
-            for i in rows, j in cols
-                mergewith!(mergescales, continuousscales_grid[i, j], continuousscales(pl))
-            end
-        end
-    end
+    pls_grid = compute_processedlayers_grid(processedlayers, scales)
+    continuousscales_grid = map(_ -> MixedArguments(), pls_grid)
+
+    # continuousscales_grid = map(_ -> MixedArguments(), indices)
+    # for processedlayer in processedlayers
+    #     for c in CartesianIndices(shape(processedlayer))
+    #         pl = slice(processedlayer, c)
+    #         rows, cols = compute_grid_positions(scales, pl.primary)
+    #         for i in rows, j in cols
+    #             mergewith!(mergescales, continuousscales_grid[i, j], continuousscales(pl))
+    #         end
+    #     end
+    # end
 
     # Compute merged continuous scales, as it may be needed to use global extrema
     merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=MixedArguments())
@@ -81,7 +90,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
         ndims = isaxis2d(ae) ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
             scale = get(ae.categoricalscales, i) do
-                return get(ae.continuousscales, i, nothing) # FIXME: Should maybe fit across axes?
+                return get(ae.continuousscales, i, nothing)
             end
             isnothing(scale) && continue
             label = something(scale.label, "")

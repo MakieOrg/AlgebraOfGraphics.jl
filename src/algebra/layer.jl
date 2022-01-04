@@ -157,6 +157,42 @@ function slice(processedlayer::ProcessedLayer, c)
     return ProcessedLayer(processedlayer; labels, primary, positional, named)
 end
 
+# This method works on a list of "sliced" `ProcessedLayer`s
+function concatenate(pls::AbstractVector{ProcessedLayer})
+    pl = first(pls)
+    ns = [mapreduce(length, assert_equal, Iterators.flatten([pl.positional, pl.named])) for pl in pls]
+
+    primary = map(key -> reduce(vcat, [fill(pl.primary[key], n) for (pl, n) in zip(pls, ns)]), keys(pl.primary))
+    positional = map(key -> reduce(vcat, [pl.positional[key] for pl in pls]), keys(pl.positional))
+    named = map(key -> reduce(vcat, [pl.named[key] for pl in pls]), keys(pl.named))
+
+    return ProcessedLayer(pl; primary, positional, named)
+end
+
+function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::MixedArguments)
+
+    processedlayer = rescale(processedlayer, categoricalscales)
+    tmp_pls_grid = map(_ -> ProcessedLayer[], axes_grid)
+    for c in CartesianIndices(shape(processedlayer))
+        pl = slice(processedlayer, c)
+        rows, cols = compute_grid_positions(categoricalscales, pl.primary)
+        for i in rows, j in cols
+            push!(tmp_pls_grid[i, j], pl)
+        end
+    end
+
+    ismergeable = mergeable(processedlayer)
+    for (pls, tmp_pls) in zip(pls_grid, tmp_pls_grid)
+        isempty(tmp_pls) && continue
+        if ismergeable
+            push!(pls, concatenate(pls))
+        else
+            append!(pls, tmp_pls)
+        end
+    end
+    return pls_grid
+end
+
 # This method works on a "sliced" `ProcessedLayer`
 function compute_attributes(pl::ProcessedLayer, continuousscales)
     attrs = NamedArguments()
@@ -194,18 +230,6 @@ function compute_entry(pl::ProcessedLayer, continuousscales)
     return Entry(plottype, positional, named)
 end
 
-# This method works on a list of "sliced" `ProcessedLayer`s
-function concatenate(pls::AbstractVector{ProcessedLayer})
-    pl = first(pls)
-    ns = [mapreduce(length, assert_equal, Iterators.flatten([pl.positional, pl.named])) for pl in pls]
-
-    primary = map(key -> reduce(vcat, [fill(pl.primary[key], n) for (pl, n) in zip(pls, ns)]), keys(pl.primary))
-    positional = map(key -> reduce(vcat, [pl.positional[key] for pl in pls]), keys(pl.positional))
-    named = map(key -> reduce(vcat, [pl.named[key] for pl in pls]), keys(pl.named))
-
-    return ProcessedLayer(pl; primary, positional, named)
-end
-
 # Also fix https://github.com/JuliaPlots/AlgebraOfGraphics.jl/issues/288 while at it
 function color_key(pl::ProcessedLayer)
     for field in (:primary, :named, :attributes)
@@ -238,31 +262,4 @@ function continuousscales(processedlayer::ProcessedLayer)
         label = to_label(get(processedlayer.labels, key, ""))
         return ContinuousScale(extrema, label)
     end
-end
-
-function append_entries!(axes_grid, processedlayer::ProcessedLayer, merged_continuousscales::MixedArguments)
-
-    pls_grid = map(_ -> ProcessedLayer[], axes_grid)
-    categoricalscales = first(axes_grid).categoricalscales
-    for c in CartesianIndices(shape(processedlayer))
-        pl = slice(processedlayer, c)
-        rows, cols = compute_grid_positions(categoricalscales, pl.primary)
-        for i in rows, j in cols
-            push!(pls_grid[i, j], pl)
-        end
-    end
-
-    ismergeable = mergeable(processedlayer)
-    for idx in eachindex(axes_grid, pls_grid)
-        ae, pls = axes_grid[idx], pls_grid[idx]
-        isempty(pls) && continue
-        if ismergeable
-            push!(ae.entries, compute_entry(concatenate(pls), merged_continuousscales))
-        else
-            for pl in pls
-                push!(ae.entries, compute_entry(pl, merged_continuousscales))
-            end
-        end
-    end
-    return
 end
