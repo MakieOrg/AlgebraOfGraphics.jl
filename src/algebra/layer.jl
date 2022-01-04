@@ -126,18 +126,14 @@ function compute_grid_positions(scales, primary=NamedArguments())
     end
 end
 
-function rescale(p::ProcessedLayer, field::Symbol, scales)
-    isprimary = field == :primary
-    container = getproperty(p, field)
-    return map(keys(container), container) do key, values
-        scale = get(scales, key, nothing)
-        return isprimary ? rescale(values, scale) : rescale.(values, Ref(scale))
-    end
-end
-
 function rescale(p::ProcessedLayer, scales::MixedArguments)
-    primary, positional, named = map((:primary, :positional, :named)) do field
-        return rescale(p, field, scales)
+    primary = map(keys(p.primary), p.primary) do key, values
+        scale = get(scales, key, nothing)
+        return rescale(values, scale)
+    end
+    positional = map(keys(p.positional), p.positional) do key, values
+        scale = get(scales, key, nothing)
+        return rescale.(values, Ref(scale))
     end
 
     # compute dodging information
@@ -148,7 +144,7 @@ function rescale(p::ProcessedLayer, scales::MixedArguments)
         p.attributes
     end
 
-    return ProcessedLayer(p; primary, positional, named, attributes)
+    return ProcessedLayer(p; primary, positional, attributes)
 end
 
 slice(v, c) = map(el -> getnewindex(el, c), v)
