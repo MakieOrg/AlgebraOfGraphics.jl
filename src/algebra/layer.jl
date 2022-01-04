@@ -127,7 +127,7 @@ function continuousscales(processedlayer::ProcessedLayer)
     end
     # TODO: also encode colormap here
     if has_zcolor(processedlayer) && !haskey(continuousscales, :color)
-        colorscale = get(continuousscales, 3 ,nothing)
+        colorscale = get(continuousscales, 3, nothing)
         isnothing(colorscale) || insert!(continuousscales, :color, colorscale)
     end
     return continuousscales
