@@ -119,6 +119,7 @@ function continuousscales(processedlayer::ProcessedLayer)
     continuous = MixedArguments()
     merge!(continuous, filter(iscontinuous, processedlayer.named))
     merge!(continuous, Dictionary(filter(iscontinuous, processedlayer.positional)))
+
     continuousscales = map(keys(continuous), continuous) do key, val
         extrema = Makie.extrema_nan(val)
         label = to_label(get(processedlayer.labels, key, ""))
@@ -126,7 +127,8 @@ function continuousscales(processedlayer::ProcessedLayer)
     end
     # TODO: also encode colormap here
     if has_zcolor(processedlayer) && !haskey(continuousscales, :color)
-        insert!(continuousscales, :color, continuousscales[3])
+        colorscale = get(continuousscales, 3, nothing)
+        isnothing(colorscale) || insert!(continuousscales, :color, colorscale)
     end
     return continuousscales
 end
@@ -155,12 +157,8 @@ function rescale(p::ProcessedLayer, categoricalscales::MixedArguments)
         return rescale(values, scale)
     end
     positional = map(keys(p.positional), p.positional) do key, values
-        return if iscategoricalcontainer(values)
-            scale = get(categoricalscales, key, nothing)
-            rescale.(values, Ref(scale))
-        else
-            values
-        end
+        scale = get(categoricalscales, key, nothing)
+        return rescale.(values, Ref(scale))
     end
 
     # compute dodging information

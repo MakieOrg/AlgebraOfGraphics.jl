@@ -59,9 +59,6 @@ end
 
 getlabel(c::ContinuousScale) = something(c.label, "")
 
-rescale(values) = rescale(values, nothing)
-rescale(values, ::Nothing) = values
-
 # recentering hack to avoid Float32 conversion errors on recent dates
 # TODO: remove once Makie supports dates
 const time_offset = let startingdate = Date(2020, 01, 01)
@@ -94,8 +91,14 @@ function datetimeticks(f, datetimes::AbstractVector{<:TimeType})
     return datetimeticks(datetimes, map(string∘f, datetimes))
 end
 
-rescale(values::AbstractArray{<:TimeType}, ::Nothing) = map(datetime2float, values) 
-rescale(values::AbstractArray{<:Verbatim}, ::Nothing) = map(getindex, values)
+# Rescaling methods that do not depend on context
+elementwise_rescale(value::TimeType) = datetime2float(value) 
+elementwise_rescale(value::Verbatim) = value[]
+elementwise_rescale(value) = value
+
+contextfree_rescale(values) = map(elementwise_rescale, values)
+
+rescale(values, ::Nothing) = values
 
 function rescale(values, c::CategoricalScale)
     # Do not rescale continuous data with categorical scale
