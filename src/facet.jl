@@ -26,7 +26,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     if is2d && consistent_xlabels(aes)
         span_xlabel!(fig, aes)
     end
-    
+
     return
 end
 

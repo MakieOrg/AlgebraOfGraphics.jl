@@ -87,7 +87,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
             label = something(scale.label, "")
             # Use global scales for ticks for now, TODO: requires a nicer mechanism
             (scale isa ContinuousScale) && (scale = merged_continuousscales[i])
-            for (k, v) in pairs((label=string(label), ticks=ticks(scale)))
+            for (k, v) in pairs((label=to_string(label), ticks=ticks(scale)))
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand
                 get!(ae.axis.attributes, keyword, v)
