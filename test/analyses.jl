@@ -39,6 +39,18 @@
 
     @test rgx[2] ≈ rgx2
     @test d[2] ≈ d2
+    
+    @test processedlayer.primary == NamedArguments((color=["a", "b"],))
+    @test processedlayer.attributes == NamedArguments()
+    @test processedlayer.plottype == AlgebraOfGraphics.LinesFill
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "pdf")
+    insert!(labels, :color, "c")
+    for key in keys(labels)
+        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
+    end
 end
 
 @testset "density2d" begin
@@ -70,4 +82,94 @@ end
     @test rgx[2] ≈ rgx2
     @test rgy[2] ≈ rgy2
     @test d[2] ≈ d2
+
+    @test processedlayer.primary == NamedArguments((color=["a", "b"],))
+    @test processedlayer.attributes == NamedArguments()
+    @test processedlayer.plottype == Heatmap
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "y")
+    insert!(labels, 3, "pdf")
+    insert!(labels, :color, "c")
+    for key in keys(labels)
+        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
+    end
+end
+
+@testset "expectation1d" begin
+    df = (x=rand(["a", "b"], 1000), y=rand(1000), c=rand(["a", "b"], 1000))
+
+    layer = data(df) * mapping(:x, :y, layout=:c) * expectation()
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    ma1 = mean(df.y[(df.x .== "a") .& (df.c .== "a")])
+    mb1 = mean(df.y[(df.x .== "b") .& (df.c .== "a")])
+
+    ma2 = mean(df.y[(df.x .== "a") .& (df.c .== "b")])
+    mb2 = mean(df.y[(df.x .== "b") .& (df.c .== "b")])
+
+    x, m = processedlayer.positional
+    x1, m1 = x[1], m[1]
+    x2, m2 = x[2], m[2]
+
+    @test x1 == ["a", "b"]
+    @test m1 ≈ [ma1, mb1]
+
+    @test x2 == ["a", "b"]
+    @test m2 ≈ [ma2, mb2]
+
+    @test processedlayer.primary == NamedArguments((layout=["a", "b"],))
+    @test processedlayer.attributes == NamedArguments()
+    @test processedlayer.plottype == BarPlot
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "y")
+    insert!(labels, :layout, "c")
+    for key in keys(labels)
+        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
+    end
+end
+
+@testset "expectation2d" begin
+    df = (x=rand(["a", "b"], 1000), y=rand(["a", "b"], 1000), z=rand(1000), c=rand(["a", "b"], 1000))
+
+    layer = data(df) * mapping(:x, :y, :z, layout=:c) * expectation()
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    maa1 = mean(df.z[(df.x .== "a") .& (df.y .== "a") .& (df.c .== "a")])
+    mab1 = mean(df.z[(df.x .== "a") .& (df.y .== "b") .& (df.c .== "a")])
+    mba1 = mean(df.z[(df.x .== "b") .& (df.y .== "a") .& (df.c .== "a")])
+    mbb1 = mean(df.z[(df.x .== "b") .& (df.y .== "b") .& (df.c .== "a")])
+
+    maa2 = mean(df.z[(df.x .== "a") .& (df.y .== "a") .& (df.c .== "b")])
+    mab2 = mean(df.z[(df.x .== "a") .& (df.y .== "b") .& (df.c .== "b")])
+    mba2 = mean(df.z[(df.x .== "b") .& (df.y .== "a") .& (df.c .== "b")])
+    mbb2 = mean(df.z[(df.x .== "b") .& (df.y .== "b") .& (df.c .== "b")])
+
+    x, y, m = processedlayer.positional
+    x1, y1, m1 = x[1], y[1], m[1]
+    x2, y2, m2 = x[2], y[2], m[2]
+
+    @test x1 == ["a", "b"]
+    @test y1 == ["a", "b"]
+    @test m1 ≈ [maa1 mab1; mba1 mbb1]
+
+    @test x2 == ["a", "b"]
+    @test y2 == ["a", "b"]
+    @test m2 ≈ [maa2 mab2; mba2 mbb2]
+
+    @test processedlayer.primary == NamedArguments((layout=["a", "b"],))
+    @test processedlayer.attributes == NamedArguments()
+    @test processedlayer.plottype == Heatmap
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "y")
+    insert!(labels, 3, "z")
+    insert!(labels, :layout, "c")
+    for key in keys(labels)
+        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
+    end
 end

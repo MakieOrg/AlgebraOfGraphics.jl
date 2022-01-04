@@ -1,12 +1,12 @@
-using AlgebraOfGraphics, Makie, Test
+using AlgebraOfGraphics, Makie, Random, Statistics, Test
+
 using AlgebraOfGraphics: Sorted
 using AlgebraOfGraphics: separate
-using AlgebraOfGraphics: Arguments, NamedArguments
-
-using Random
-Random.seed!(1234)
+using AlgebraOfGraphics: Arguments, MixedArguments, NamedArguments
 
 using KernelDensity: kde, pdf
+
+Random.seed!(1234)
 
 include("utils.jl")
 include("algebra.jl")
