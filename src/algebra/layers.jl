@@ -67,7 +67,7 @@ function compute_entries_continuousscales(pls_grid)
 
     for idx in eachindex(pls_grid), pl in pls_grid[idx]
         # Apply continuous transformations
-        positional = map(rescale, pl.positional)
+        positional = map(contextfree_rescale, pl.positional)
         plottype = Makie.plottype(pl.plottype, positional...)
 
         # Compute continuous scales with correct plottype, to figure out role of color
@@ -75,7 +75,7 @@ function compute_entries_continuousscales(pls_grid)
         mergewith!(mergescales, continuousscales_grid[idx], continuousscales)
 
         # Compute `Entry` with rescaled columns
-        named = compute_attributes(pl.attributes, pl.primary, map(rescale, pl.named))
+        named = compute_attributes(pl.attributes, pl.primary, map(contextfree_rescale, pl.named))
         entry = Entry(plottype, positional, named)
         push!(entries_grid[idx], entry)
     end
@@ -97,7 +97,7 @@ function compute_entries_continuousscales(pls_grid)
 end
 
 function compute_axes_grid(fig, s::OneOrMoreLayers;
-    axis=NamedTuple(), palettes=NamedTuple())
+                           axis=NamedTuple(), palettes=NamedTuple())
 
     axes_grid = compute_axes_grid(s; axis, palettes)
     sz = size(axes_grid)
@@ -151,7 +151,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
             isnothing(scale) && continue
             label = getlabel(scale)
             # Use global scales for ticks for now
-            # TODO: requires a nicer mechanism taking into account axis linking
+            # TODO: requires a nicer mechanism that takes into account axis linking
             (scale isa ContinuousScale) && (scale = merged_continuousscales[i])
             for (k, v) in pairs((label=to_string(label), ticks=ticks(scale)))
                 keyword = Symbol(var, k)
