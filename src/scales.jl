@@ -54,7 +54,7 @@ plotvalues(c::CategoricalScale) = c.plot
 
 struct ContinuousScale{T}
     extrema::NTuple{2, T}
-    label::Union{String, Nothing}
+    label::Union{AbstractString, Nothing}
 end
 
 rescale(values, ::Nothing) = values
