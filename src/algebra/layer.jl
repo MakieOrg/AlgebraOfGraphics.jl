@@ -69,6 +69,16 @@ unnest(vs::AbstractArray, indices) = map(k -> [el[k] for el in vs], indices)
 unnest_arrays(vs) = unnest(vs, keys(first(vs)))
 unnest_dictionaries(vs) = unnest(vs, Indices(keys(first(vs))))
 
+slice(v, c) = map(el -> getnewindex(el, c), v)
+
+function slice(processedlayer::ProcessedLayer, c)
+    labels = slice(processedlayer.labels, c)
+    primary = slice(processedlayer.primary, c)
+    positional = slice(processedlayer.positional, c)
+    named = slice(processedlayer.named, c)
+    return ProcessedLayer(processedlayer; labels, primary, positional, named)
+end
+
 function Base.map(f, processedlayer::ProcessedLayer)
     axs = shape(processedlayer)
     outputs = map(CartesianIndices(axs)) do c
@@ -97,18 +107,31 @@ function categoricalscales(processedlayer::ProcessedLayer, palettes)
     end
 end
 
-## Machinery to convert a `ProcessedLayer` to a grid of entries
-
-# Determine whether entries from a `ProcessedLayer` should be merged 
-function mergeable(processedlayer::ProcessedLayer)
-    plottype, primary = processedlayer.plottype, processedlayer.primary
-    # merge violins for correct renormalization
-    plottype <: Violin && return true
-    # merge stacked barplots
-    plottype <: BarPlot && haskey(primary, :stack) && return true
-    # do not merge by default
-    return false
+function has_zcolor(pl::ProcessedLayer)
+    for field in (:primary, :named, :attributes)
+        haskey(getproperty(pl, field), :color) && return false
+    end
+    return pl.plottype <: Union{Heatmap, Contour, Contourf, Surface}
 end
+
+# This method works on a "sliced" `ProcessedLayer`
+function continuousscales(processedlayer::ProcessedLayer)
+    continuous = MixedArguments()
+    merge!(continuous, filter(iscontinuous, processedlayer.named))
+    merge!(continuous, Dictionary(filter(iscontinuous, processedlayer.positional)))
+    continuousscales = map(keys(continuous), continuous) do key, val
+        extrema = mapreduce(Makie.extrema_nan, extend_extrema, val)
+        label = to_label(get(processedlayer.labels, key, ""))
+        return ContinuousScale(extrema, label)
+    end
+    # TODO: also encode colormap here
+    if has_zcolor(processedlayer) && !haskey(continuousscales, :color)
+        insert!(continuousscales, :color, continuousscales[3])
+    end
+    return continuousscales
+end
+
+## Machinery to convert a `ProcessedLayer` to a grid of slices of `ProcessedLayer`s
 
 function compute_grid_positions(scales, primary=NamedArguments())
     return map((:row, :col), (first, last)) do sym, f
@@ -147,14 +170,15 @@ function rescale(p::ProcessedLayer, scales::MixedArguments)
     return ProcessedLayer(p; primary, positional, attributes)
 end
 
-slice(v, c) = map(el -> getnewindex(el, c), v)
-
-function slice(processedlayer::ProcessedLayer, c)
-    labels = slice(processedlayer.labels, c)
-    primary = slice(processedlayer.primary, c)
-    positional = slice(processedlayer.positional, c)
-    named = slice(processedlayer.named, c)
-    return ProcessedLayer(processedlayer; labels, primary, positional, named)
+# Determine whether entries from a `ProcessedLayer` should be merged 
+function mergeable(processedlayer::ProcessedLayer)
+    plottype, primary = processedlayer.plottype, processedlayer.primary
+    # merge violins for correct renormalization
+    plottype <: Violin && return true
+    # merge stacked barplots
+    plottype <: BarPlot && haskey(primary, :stack) && return true
+    # do not merge by default
+    return false
 end
 
 # This method works on a list of "sliced" `ProcessedLayer`s
@@ -190,49 +214,4 @@ function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categ
         end
     end
     return pls_grid
-end
-
-function compute_attributes(attributes, primary, named)
-    attrs = NamedArguments()
-    merge!(attrs, attributes)
-    merge!(attrs, primary)
-    merge!(attrs, named)
-
-    # implement alpha transparency
-    alpha = get(attrs, :alpha, automatic)
-    color = get(attrs, :color, automatic)
-    (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
-
-    # opt out of the default cycling mechanism
-    cycle = nothing
-
-    merge!(attrs, Dictionary(valid_options(; color, cycle)))
-
-    # remove unnecessary information 
-    return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
-end
-
-# Also fix https://github.com/JuliaPlots/AlgebraOfGraphics.jl/issues/288 while at it
-function has_zcolor(pl::ProcessedLayer)
-    for field in (:primary, :named, :attributes)
-        haskey(getproperty(pl, field), :color) && return false
-    end
-    return pl.plottype <: Union{Heatmap, Contour, Contourf, Surface}
-end
-
-# This method works on a "sliced" `ProcessedLayer`
-function continuousscales(processedlayer::ProcessedLayer)
-    continuous = MixedArguments()
-    merge!(continuous, filter(iscontinuous, processedlayer.named))
-    merge!(continuous, Dictionary(filter(iscontinuous, processedlayer.positional)))
-    # FIXME: `color` might take from a different scale
-    continuousscales = map(keys(continuous), continuous) do key, val
-        extrema = mapreduce(Makie.extrema_nan, extend_extrema, val)
-        label = to_label(get(processedlayer.labels, key, ""))
-        return ContinuousScale(extrema, label)
-    end
-    if has_zcolor(processedlayer) && !haskey(continuousscales, :color)
-        insert!(continuousscales, :color, continuousscales[3])
-    end
-    return continuousscales
 end

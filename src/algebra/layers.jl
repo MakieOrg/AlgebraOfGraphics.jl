@@ -37,6 +37,26 @@ function compute_processedlayers_grid(processedlayers, categoricalscales)
     return pls_grid
 end
 
+function compute_attributes(attributes, primary, named)
+    attrs = NamedArguments()
+    merge!(attrs, attributes)
+    merge!(attrs, primary)
+    merge!(attrs, named)
+
+    # implement alpha transparency
+    alpha = get(attrs, :alpha, automatic)
+    color = get(attrs, :color, automatic)
+    (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
+
+    # opt out of the default cycling mechanism
+    cycle = nothing
+
+    merge!(attrs, Dictionary(valid_options(; color, cycle)))
+
+    # remove unnecessary information 
+    return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
+end
+
 function compute_entries_continuousscales(pls_grid)
     entries_grid = map(_ -> Entry[], pls_grid)
     continuousscales_grid = map(_ -> MixedArguments(), pls_grid)
