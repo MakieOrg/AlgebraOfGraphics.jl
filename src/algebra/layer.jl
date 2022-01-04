@@ -100,9 +100,14 @@ end
 ## Machinery to convert a `ProcessedLayer` to a grid of entries
 
 # Determine whether entries from a `ProcessedLayer` should be merged 
-# Useful to recombine stacked barplots, but may have other applications
 function mergeable(processedlayer::ProcessedLayer)
-    return processedlayer.plottype <: BarPlot && haskey(processedlayer.primary, :stack)
+    plottype, primary = processedlayer.plottype, processedlayer.primary
+    # merge violins for correct renormalization
+    plottype <: Violin && return true
+    # merge stacked barplots
+    plottype <: BarPlot && haskey(primary, :stack) && return true
+    # do not merge by default
+    return false
 end
 
 function compute_grid_positions(scales, primary=NamedArguments())
@@ -187,9 +192,9 @@ end
 
 # This method works on a "sliced" `ProcessedLayer`
 function compute_entry(pl::ProcessedLayer, continuousscales)
-    plottype, positional = pl.plottype, pl.positional
+    positional = pl.positional
     named = compute_attributes(pl, continuousscales)
-    # plottype = Makie.plottype(plottype, pl.positional...) FIXME: do we need this?
+    plottype = Makie.plottype(pl.plottype, positional...)
     return Entry(plottype, positional, named)
 end
 

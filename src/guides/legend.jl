@@ -26,7 +26,7 @@ function plottypes_attributes(entries)
     plottypes = PlotFunc[]
     attributes = Vector{Symbol}[]
     for entry in entries
-        plottype = Makie.plottype(entry.plottype, entry.positional...)
+        plottype = entry.plottype
         n = findfirst(==(plottype), plottypes)
         attrs = keys(entry.named)
         if isnothing(n)
