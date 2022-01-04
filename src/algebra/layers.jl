@@ -58,6 +58,10 @@ function compute_attributes(attributes, primary, named)
 end
 
 function compute_entries_continuousscales(pls_grid)
+    # Here processed layers in `pls_grid` are "sliced",
+    # the categorical scales have been applied, but not
+    # the continuous scales
+
     entries_grid = map(_ -> Entry[], pls_grid)
     continuousscales_grid = map(_ -> MixedArguments(), pls_grid)
 
@@ -83,11 +87,9 @@ function compute_entries_continuousscales(pls_grid)
     if !isnothing(colorscale)
         # TODO: might need to change to support temporal color scale
         colorrange = colorscale.extrema
-        for entries in entries_grid
-            for entry in entries
-                # Safe to do, as each entry has a separate `named` dictionary
-                set!(entry.named, :colorrange, colorrange)
-            end
+        for entries in entries_grid, entry in entries
+            # Safe to do, as each entry has a separate `named` dictionary
+            set!(entry.named, :colorrange, colorrange)
         end
     end
 
@@ -144,7 +146,8 @@ function compute_axes_grid(s::OneOrMoreLayers;
             end
             isnothing(scale) && continue
             label = getlabel(scale)
-            # Use global scales for ticks for now, TODO: requires a nicer mechanism
+            # Use global scales for ticks for now
+            # TODO: requires a nicer mechanism taking into account axis linking
             (scale isa ContinuousScale) && (scale = merged_continuousscales[i])
             for (k, v) in pairs((label=to_string(label), ticks=ticks(scale)))
                 keyword = Symbol(var, k)
