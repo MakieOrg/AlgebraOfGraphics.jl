@@ -170,9 +170,8 @@ function concatenate(pls::AbstractVector{ProcessedLayer})
 end
 
 function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::MixedArguments)
-
     processedlayer = rescale(processedlayer, categoricalscales)
-    tmp_pls_grid = map(_ -> ProcessedLayer[], axes_grid)
+    tmp_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
     for c in CartesianIndices(shape(processedlayer))
         pl = slice(processedlayer, c)
         rows, cols = compute_grid_positions(categoricalscales, pl.primary)
@@ -185,7 +184,7 @@ function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categ
     for (pls, tmp_pls) in zip(pls_grid, tmp_pls_grid)
         isempty(tmp_pls) && continue
         if ismergeable
-            push!(pls, concatenate(pls))
+            push!(pls, concatenate(tmp_pls))
         else
             append!(pls, tmp_pls)
         end
@@ -193,62 +192,32 @@ function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categ
     return pls_grid
 end
 
-# This method works on a "sliced" `ProcessedLayer`
-function compute_attributes(pl::ProcessedLayer, continuousscales)
+function compute_attributes(attributes, primary, named)
     attrs = NamedArguments()
-    merge!(attrs, pl.attributes)
-    merge!(attrs, pl.primary)
-    merge!(attrs, pl.named)
+    merge!(attrs, attributes)
+    merge!(attrs, primary)
+    merge!(attrs, named)
 
     # implement alpha transparency
     alpha = get(attrs, :alpha, automatic)
     color = get(attrs, :color, automatic)
     (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
 
-    # Implement color range
-    colorscale = get(continuousscales, :color, nothing)
-    colorrange = if (color === automatic) || isnothing(colorscale)
-        automatic
-    else
-        colorscale.extrema
-    end
-
     # opt out of the default cycling mechanism
     cycle = nothing
 
-    merge!(attrs, Dictionary(valid_options(; color, colorrange, cycle)))
+    merge!(attrs, Dictionary(valid_options(; color, cycle)))
 
     # remove unnecessary information 
     return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
 end
 
-# This method works on a "sliced" `ProcessedLayer`
-function compute_entry(pl::ProcessedLayer, continuousscales)
-    positional = pl.positional
-    named = compute_attributes(pl, continuousscales)
-    plottype = Makie.plottype(pl.plottype, positional...)
-    return Entry(plottype, positional, named)
-end
-
 # Also fix https://github.com/JuliaPlots/AlgebraOfGraphics.jl/issues/288 while at it
-function color_key(pl::ProcessedLayer)
+function has_zcolor(pl::ProcessedLayer)
     for field in (:primary, :named, :attributes)
-        haskey(getproperty(pl, field), :color) && return :color
+        haskey(getproperty(pl, field), :color) && return false
     end
-    zcolor_recipe = pl.plottype <: Union{Heatmap, Contour, Contourf, Surface}
-    return zcolor_recipe ? 3 : :color
-end
-
-function getlabeledcolorrange(grid)
-    zcolor = any(has_zcolor, entries(grid))
-    key = zcolor ? 3 : :color
-    continuous_color_entries = Iterators.filter(entries(grid)) do entry
-        return get(entry, key, nothing) isa AbstractArray{<:Number}
-    end
-    colorrange = compute_extrema(continuous_color_entries, key)
-    # label = compute_label(continuous_color_entries, key)
-    label = "" # FIXME: figure out a cleaner way
-    return isnothing(colorrange) ? nothing : (label, colorrange)
+    return pl.plottype <: Union{Heatmap, Contour, Contourf, Surface}
 end
 
 # This method works on a "sliced" `ProcessedLayer`
@@ -257,9 +226,13 @@ function continuousscales(processedlayer::ProcessedLayer)
     merge!(continuous, filter(iscontinuous, processedlayer.named))
     merge!(continuous, Dictionary(filter(iscontinuous, processedlayer.positional)))
     # FIXME: `color` might take from a different scale
-    return map(keys(continuous), continuous) do key, val
+    continuousscales = map(keys(continuous), continuous) do key, val
         extrema = mapreduce(Makie.extrema_nan, extend_extrema, val)
         label = to_label(get(processedlayer.labels, key, ""))
         return ContinuousScale(extrema, label)
     end
+    if has_zcolor(processedlayer) && !haskey(continuousscales, :color)
+        insert!(continuousscales, :color, continuousscales[3])
+    end
+    return continuousscales
 end

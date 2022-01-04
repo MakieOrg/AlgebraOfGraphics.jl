@@ -57,6 +57,7 @@ struct ContinuousScale{T}
     label::Union{AbstractString, Nothing}
 end
 
+rescale(values) = rescale(values, nothing)
 rescale(values, ::Nothing) = values
 
 # recentering hack to avoid Float32 conversion errors on recent dates

@@ -32,9 +32,46 @@ function compute_processedlayers_grid(processedlayers, categoricalscales)
     indices = CartesianIndices(compute_grid_positions(categoricalscales))
     pls_grid = map(_ -> ProcessedLayer[], indices)
     for processedlayer in processedlayers
-        append_processedlayers!(pls_grid, processedlayer, scales)
+        append_processedlayers!(pls_grid, processedlayer, categoricalscales)
     end
     return pls_grid
+end
+
+function compute_entries_continuousscales(pls_grid)
+    entries_grid = map(_ -> Entry[], pls_grid)
+    continuousscales_grid = map(_ -> MixedArguments(), pls_grid)
+
+    for idx in eachindex(pls_grid), pl in pls_grid[idx]
+        # Apply continuous transformations
+        positional = map(rescale, pl.positional)
+        plottype = Makie.plottype(pl.plottype, positional...)
+
+        # Compute continuous scales with correct plottype, to figure out role of color
+        continuousscales = AlgebraOfGraphics.continuousscales(ProcessedLayer(pl; plottype))
+        mergewith!(mergescales, continuousscales_grid[idx], continuousscales)
+
+        # Compute `Entry` with rescaled columns
+        named = compute_attributes(pl.attributes, pl.primary, map(rescale, pl.named))
+        entry = Entry(plottype, positional, named)
+        push!(entries_grid[idx], entry)
+    end
+
+    # Compute merged continuous scales, as it may be needed to use global extrema
+    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=MixedArguments())
+
+    colorscale = get(merged_continuousscales, :color, nothing)
+    if !isnothing(colorscale)
+        # TODO: might need to change to support temporal color scale
+        colorrange = colorscale.extrema
+        for entries in entries_grid
+            for entry in entries
+                # Safe to do, as each entry has a separate `named` dictionary
+                set!(entry.named, :colorrange, colorrange)
+            end
+        end
+    end
+
+    return entries_grid, continuousscales_grid, merged_continuousscales
 end
 
 function compute_axes_grid(fig, s::OneOrMoreLayers;
@@ -65,24 +102,17 @@ function compute_axes_grid(s::OneOrMoreLayers;
     map!(fitscale, scales, scales)
 
     pls_grid = compute_processedlayers_grid(processedlayers, scales)
-    continuousscales_grid = map(_ -> MixedArguments(), pls_grid)
+    entries_grid, continuousscales_grid, merged_continuousscales =
+        compute_entries_continuousscales(pls_grid)
 
-    # continuousscales_grid = map(_ -> MixedArguments(), indices)
-    # for processedlayer in processedlayers
-    #     for c in CartesianIndices(shape(processedlayer))
-    #         pl = slice(processedlayer, c)
-    #         rows, cols = compute_grid_positions(scales, pl.primary)
-    #         for i in rows, j in cols
-    #             mergewith!(mergescales, continuousscales_grid[i, j], continuousscales(pl))
-    #         end
-    #     end
-    # end
-
-    # Compute merged continuous scales, as it may be needed to use global extrema
-    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=MixedArguments())
-    axes_grid = map(c -> AxisSpecEntries(AxisSpec(c, axis), Entry[], scales, continuousscales_grid[c]), indices)
-    for processedlayer in processedlayers
-        append_entries!(axes_grid, processedlayer, merged_continuousscales)
+    indices = CartesianIndices(pls_grid)
+    axes_grid = map(indices) do c
+        return AxisSpecEntries(
+            AxisSpec(c, axis),
+            entries_grid[c],
+            scales,
+            continuousscales_grid[c]
+        )
     end
 
     # Axis labels and ticks
