@@ -41,10 +41,9 @@ makedocs(;
             "layers/operations.md",
             "layers/draw.md",
         ],
-        # FIXME: internals require rewriting
-        # "Internals" => [
-        #     "generated/entries.md",
-        # ],
+        "Internals" => [
+            "generated/entries.md",
+        ],
         "API" => [
             "API/types.md",
             "API/functions.md",
