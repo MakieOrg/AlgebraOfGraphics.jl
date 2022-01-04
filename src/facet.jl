@@ -181,8 +181,8 @@ function col_labels!(fig, aes, scale)
     end
 
     for (index, label) in zipped_scale
-        Label(fig[1, index, Top()], string(label);
-        padding=facetlabelpadding, attributes...)
+        Label(fig[1, index, Top()], to_string(label);
+              padding=facetlabelpadding, attributes...)
     end
 end
 
@@ -197,9 +197,9 @@ function row_labels!(fig, aes, scale)
     end
 
     for (index, label) in zipped_scale
-        Label(fig[index, N, Right()], string(label);
-            rotation=-π/2, padding=facetlabelpadding,
-            attributes...)
+        Label(fig[index, N, Right()], to_string(label);
+              rotation=-π/2, padding=facetlabelpadding,
+              attributes...)
     end
 end
 
@@ -213,8 +213,8 @@ function panel_labels!(fig, aes, scale)
     end
 
     for (index, label) in zipped_scale        
-        Label(fig[index..., Top()], string(label);
-            padding=facetlabelpadding, attributes...)
+        Label(fig[index..., Top()], to_string(label);
+              padding=facetlabelpadding, attributes...)
     end
 end
 
