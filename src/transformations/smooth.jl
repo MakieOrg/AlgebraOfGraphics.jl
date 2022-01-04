@@ -4,8 +4,8 @@ Base.@kwdef struct SmoothAnalysis
     degree::Int=2
 end
 
-function (l::SmoothAnalysis)(le::Entry)
-    entry = map(le) do p, _
+function (l::SmoothAnalysis)(input::ProcessedLayer)
+    output = map(input) do p, _
         x, y = p
         min, max = extrema(x)
         model = Loess.loess(Float64.(x), Float64.(y); l.span, l.degree)
@@ -13,8 +13,8 @@ function (l::SmoothAnalysis)(le::Entry)
         ŷ = Loess.predict(model, x̂)
         return (x̂, ŷ), (;)
     end
-    plottype = Makie.plottype(entry.plottype, Lines)
-    return Entry(entry; plottype)
+    plottype = Makie.plottype(output.plottype, Lines)
+    return ProcessedLayer(output; plottype)
 end
 
 """

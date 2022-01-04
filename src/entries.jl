@@ -1,132 +1,87 @@
-Base.@kwdef struct Entry
-    plottype::PlotFunc=Any
-    primary::NamedArguments=NamedArguments()
-    positional::Arguments=Arguments()
-    named::NamedArguments=NamedArguments()
-    labels::MixedArguments=MixedArguments()
-    attributes::NamedArguments=NamedArguments()
+"""
+    Entry(plottype::PlotFunc, positional::Arguments, named::NamedArguments)
+
+Define plottype as well as positional and named arguments for a single plot.
+"""
+struct Entry
+    plottype::PlotFunc
+    positional::Arguments
+    named::NamedArguments
 end
 
-function Base.get(e::Entry, key::Int, default)
-    return key in keys(e.positional) ? e.positional[key] : default
+function Base.get(entry::Entry, key::Int, default)
+    return get(entry.positional, key, default)
 end
 
-function Base.get(e::Entry, key::Symbol, default)
-    return get(e.named, key, default)
+function Base.get(entry::Entry, key::Symbol, default)
+    return get(entry.named, key, default)
 end
 
-function Entry(e::Entry; kwargs...)
-    nt = (; e.plottype, e.primary, e.positional, e.named, e.labels, e.attributes)
-    return Entry(; merge(nt, values(kwargs))...)
+function Base.append!(e1::Entry, e2::Entry)
+    plottype = assert_equal(e1.plottype, e2.plottype)
+    positional = map(append!, e1.positional, e2.positional)
+    named = map(append_or_assertequal!, e1.named, e2.named)
+    return Entry(plottype, positional, named)
 end
 
-function unnest(v::AbstractArray)
-    return map_pairs(first(v)) do (k, _)
-        return [el[k] for el in v]
-    end
+# Use technique from https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/289
+# to encode all axis information without creating the axis.
+struct AxisSpec
+    type::Union{Type{Axis}, Type{Axis3}}
+    position::Tuple{Int,Int}
+    attributes::NamedArguments
 end
 
-function Base.map(f, e::Entry)
-    axs = shape(e)
-    outputs = map(CartesianIndices(axs)) do c
-        p = map(v -> getnewindex(v, c), e.positional)
-        n = map(v -> getnewindex(v, c), e.named)
-        return f(p, n)
-    end
-    positional = unnest(map(first, outputs))
-    named = unnest(map(last, outputs))
-    return Entry(e; positional, named)
+extract_type(; type=Axis, options...) = type, NamedArguments(options)
+
+function AxisSpec(position, options)
+    type, attributes = extract_type(; pairs(options)...)
+    return AxisSpec(type, Tuple(position), attributes)
+end
+
+struct AxisSpecEntries
+    axis::AxisSpec
+    entries::Vector{Entry}
+    categoricalscales::MixedArguments
+    continuousscales::MixedArguments
 end
 
 """
-    AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, scales)
+    AxisEntries(axis::Union{Axis, Nothing}, entries::Vector{Entry}, categoricalscales, continuousscales)
 
 Define all ingredients to make plots on an axis.
-Each scale should be a `CategoricalScale`.
+Each categorical scale should be a `CategoricalScale`, and each continuous
+scale should be a `ContinuousScale`.
 """
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
-    scales::MixedArguments
+    categoricalscales::MixedArguments
+    continuousscales::MixedArguments
 end
 
-# Slightly complex machinery to recombine stacked barplots
-function mergeable(e1::Entry, e2::Entry)
-    for e in (e1, e2)
-        e.plottype <: BarPlot || return false
-        haskey(e.primary, :stack) || return false
+function AxisEntries(ae::AxisSpecEntries, fig)
+    ax = ae.axis.type(fig[ae.axis.position...]; pairs(ae.axis.attributes)...)
+    AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales)
+end
+
+function AxisEntries(ae::AxisSpecEntries, ax::Union{Axis,Axis3})
+    if !isempty(ax)
+        @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $(a.axis.attributes)")
     end
-    return true
-end
-
-function lengthen_primary(e::Entry)
-    N = length(first(e.positional))
-    primary = map(t -> fill(t, N), e.primary)
-    return Entry(e; primary)
-end
-
-function maybecollapse(v::AbstractArray)
-    f = first(v)
-    return all(isequal(f), v) ? fill(f) : v
-end
-
-# Combine entries as a unique entry with longer data
-function stack(short_entries::AbstractVector{Entry})
-    entries = map(lengthen_primary, short_entries)
-    primary = map(maybecollapse∘vcat, map(entry -> entry.primary, entries)...)
-    positional = map(vcat, map(entry -> entry.positional, entries)...)
-    named = map(vcat, map(entry -> entry.named, entries)...)
-    return Entry(first(entries); primary, positional, named)
-end
-
-function compute_attributes(attributes, primary, named, scales)
-    attrs = NamedArguments()
-    merge!(attrs, attributes)
-    merge!(attrs, primary)
-    merge!(attrs, named)
-
-    # implement alpha transparency
-    alpha = get(attrs, :alpha, nothing)
-    color = get(attrs, :color, nothing)
-    if !isnothing(color)
-        set!(attrs, :color, isnothing(alpha) ? color : (color, alpha))
-    end
-
-    # opt out of the default cycling mechanism
-    set!(attrs, :cycle, nothing)
-
-    # compute dodging information
-    dodge = get(scales, :dodge, nothing)
-    isa(dodge, CategoricalScale) && set!(attrs, :n_dodge, maximum(plotvalues(dodge)))
-
-    # remove unnecessary information
-    return unset(attrs, :col, :row, :layout, :alpha)
+    AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales)
 end
 
 function Makie.plot!(ae::AxisEntries)
-    axis, entries, scales = ae.axis, ae.entries, ae.scales
-    i, N = 1, length(entries)
-    while i ≤ N
-        j = i + 1
-        while j ≤ N && mergeable(entries[i], entries[j])
-            j += 1
-        end
-        entry, i = stack(entries[i:j-1]), j
-        primary, positional, named = map((entry.primary, entry.positional, entry.named)) do tup
-            return map_pairs(tup) do (key, value)
-                rescaled = rescale(value, get(scales, key, nothing))
-                return haszerodims(rescaled) ? rescaled[] : rescaled
-            end
-        end
-
-        attrs = compute_attributes(entry.attributes, primary, named, scales)
-        plottype = Makie.plottype(entry.plottype, positional...)
-        plot!(plottype, axis, positional...; pairs(attrs)...)
+    axis, entries = ae.axis, ae.entries
+    for entry in entries
+        plot!(entry.plottype, axis, entry.positional...; pairs(entry.named)...)
     end
     return ae
 end
 
 entries(grid::AbstractMatrix{AxisEntries}) = Iterators.flatten(ae.entries for ae in grid)
+entries(grid::AbstractMatrix{AxisSpecEntries}) = Iterators.flatten(ae.entries for ae in grid)
 
 struct FigureGrid
     figure::Figure

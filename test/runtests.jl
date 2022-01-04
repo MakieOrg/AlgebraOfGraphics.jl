@@ -1,6 +1,6 @@
 using AlgebraOfGraphics, Makie, Test
 using AlgebraOfGraphics: Sorted
-using AlgebraOfGraphics: map_pairs, separate
+using AlgebraOfGraphics: separate
 using AlgebraOfGraphics: Arguments, NamedArguments
 
 @testset "utils" begin
@@ -28,14 +28,14 @@ end
 @testset "arguments" begin
     s = Arguments([10, 20, 30])
     @test s == Any[10, 20, 30]
-    t = map_pairs(s) do (k, v)
+    t = map(keys(s), s) do k, v
         return "key $k and value $v"
     end
     @test t == ["key 1 and value 10", "key 2 and value 20", "key 3 and value 30"]
 
     s = NamedArguments([:a, :b, :c], [10, 20, 30])
     @test s == NamedArguments((a=10, b=20, c=30))
-    t = map_pairs(s) do (k, v)
+    t = map(keys(s), s) do k, v
         return "key $k and value $v"
     end
     @test t == NamedArguments(
@@ -57,7 +57,7 @@ end
     @test keys(s) !== keys(t)
 
     s = NamedArguments([:a, :b, :c], [1, 2, 3])
-    t = AlgebraOfGraphics.unset(s, :a, :b)
+    t = AlgebraOfGraphics.filterkeys(!in((:a, :b)), s)
     @test t == NamedArguments([:c], [3])
 end
 
@@ -77,16 +77,16 @@ end
     df = (x=rand(1000), y=rand(1000), z=rand(1000), c=rand(["a", "b", "c"], 1000))
     d = mapping(:x => exp, [:y, :z], color=:c, marker = dims(1) => renamer(["a", "b"]))
     layer = data(df) * d
-    entry = AlgebraOfGraphics.process_mappings(layer)
-    @test entry.positional[1] == fill(map(exp, df.x))
-    @test entry.positional[2] == [df.y, df.z]
-    @test entry.primary[:color] == fill(df.c)
-    @test entry.primary[:marker] == [fill(Sorted(1, "a")), fill(Sorted(2, "b"))]
-    @test entry.named == NamedArguments((;))
-    @test entry.labels[1] == fill("x")
-    @test entry.labels[2] ==  ["y", "z"]
-    @test entry.labels[:color] == fill("c")
-    @test entry.labels[:marker] == ""
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.positional[1] == fill(map(exp, df.x))
+    @test processedlayer.positional[2] == [df.y, df.z]
+    @test processedlayer.primary[:color] == fill(df.c)
+    @test processedlayer.primary[:marker] == [fill(Sorted(1, "a")), fill(Sorted(2, "b"))]
+    @test processedlayer.named == NamedArguments((;))
+    @test processedlayer.labels[1] == fill("x")
+    @test processedlayer.labels[2] ==  ["y", "z"]
+    @test processedlayer.labels[:color] == fill("c")
+    @test processedlayer.labels[:marker] == ""
 end
 
 @testset "grouping" begin
@@ -94,60 +94,60 @@ end
     df.c[1:3] .= ["a", "b", "c"] # ensure all three values exist
     d = mapping(:x => exp, [:y, :z], color=:c, marker=dims(1) => t -> ["1", "2"][t], markersize=:w)
     layer = data(df) * d
-    e = AlgebraOfGraphics.to_entry(layer)
-    entries = map(CartesianIndices(AlgebraOfGraphics.shape(e))) do c
-        primary, positional, named = map((e.primary, e.positional, e.named)) do tup
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+    processedlayers = map(CartesianIndices(AlgebraOfGraphics.shape(processedlayer))) do c
+        primary, positional, named = map((processedlayer.primary, processedlayer.positional, processedlayer.named)) do tup
             return map(v -> v[c], tup)
         end
-        labels = map(l -> AlgebraOfGraphics.getnewindex(l, c), e.labels)
-        return Entry(e; primary, positional, named, labels)
+        labels = map(l -> AlgebraOfGraphics.getnewindex(l, c), processedlayer.labels)
+        return ProcessedLayer(processedlayer; primary, positional, named, labels)
     end
-    @test length(entries) == 6
+    @test length(processedlayers) == 6
     for i in 1: 6
-        @test entries[i].plottype === Any
-        @test isempty(entries[i].attributes)
-        @test entries[i].labels[1] == "x"
-        @test entries[i].labels[2] == (i ≤ 3 ? "y" : "z")
-        @test entries[i].labels[:color] == "c"
-        @test entries[i].labels[:marker] == ""
-        @test entries[i].labels[:markersize] == "w"
+        @test processedlayers[i].plottype === Any
+        @test isempty(processedlayers[i].attributes)
+        @test processedlayers[i].labels[1] == "x"
+        @test processedlayers[i].labels[2] == (i ≤ 3 ? "y" : "z")
+        @test processedlayers[i].labels[:color] == "c"
+        @test processedlayers[i].labels[:marker] == ""
+        @test processedlayers[i].labels[:markersize] == "w"
     end
 
-    @test entries[1].primary[:color] == "a"
-    @test entries[1].primary[:marker] == "1"
-    @test entries[1].positional[1] == exp.(df.x[df.c .== "a"])
-    @test entries[1].positional[2] == df.y[df.c .== "a"]
-    @test entries[1].named[:markersize] == df.w[df.c .== "a"]
+    @test processedlayers[1].primary[:color] == "a"
+    @test processedlayers[1].primary[:marker] == "1"
+    @test processedlayers[1].positional[1] == exp.(df.x[df.c .== "a"])
+    @test processedlayers[1].positional[2] == df.y[df.c .== "a"]
+    @test processedlayers[1].named[:markersize] == df.w[df.c .== "a"]
     
-    @test entries[2].primary[:color] == "b"
-    @test entries[2].primary[:marker] == "1"
-    @test entries[2].positional[1] == exp.(df.x[df.c .== "b"])
-    @test entries[2].positional[2] == df.y[df.c .== "b"]
-    @test entries[2].named[:markersize] == df.w[df.c .== "b"]
+    @test processedlayers[2].primary[:color] == "b"
+    @test processedlayers[2].primary[:marker] == "1"
+    @test processedlayers[2].positional[1] == exp.(df.x[df.c .== "b"])
+    @test processedlayers[2].positional[2] == df.y[df.c .== "b"]
+    @test processedlayers[2].named[:markersize] == df.w[df.c .== "b"]
     
-    @test entries[3].primary[:color] == "c"
-    @test entries[3].primary[:marker] == "1"
-    @test entries[3].positional[1] == exp.(df.x[df.c .== "c"])
-    @test entries[3].positional[2] == df.y[df.c .== "c"]
-    @test entries[3].named[:markersize] == df.w[df.c .== "c"]
+    @test processedlayers[3].primary[:color] == "c"
+    @test processedlayers[3].primary[:marker] == "1"
+    @test processedlayers[3].positional[1] == exp.(df.x[df.c .== "c"])
+    @test processedlayers[3].positional[2] == df.y[df.c .== "c"]
+    @test processedlayers[3].named[:markersize] == df.w[df.c .== "c"]
 
-    @test entries[4].primary[:color] == "a"
-    @test entries[4].primary[:marker] == "2"
-    @test entries[4].positional[1] == exp.(df.x[df.c .== "a"])
-    @test entries[4].positional[2] == df.z[df.c .== "a"]
-    @test entries[4].named[:markersize] == df.w[df.c .== "a"]
+    @test processedlayers[4].primary[:color] == "a"
+    @test processedlayers[4].primary[:marker] == "2"
+    @test processedlayers[4].positional[1] == exp.(df.x[df.c .== "a"])
+    @test processedlayers[4].positional[2] == df.z[df.c .== "a"]
+    @test processedlayers[4].named[:markersize] == df.w[df.c .== "a"]
 
-    @test entries[5].primary[:color] == "b"
-    @test entries[5].primary[:marker] == "2"
-    @test entries[5].positional[1] == exp.(df.x[df.c .== "b"])
-    @test entries[5].positional[2] == df.z[df.c .== "b"]
-    @test entries[5].named[:markersize] == df.w[df.c .== "b"]
+    @test processedlayers[5].primary[:color] == "b"
+    @test processedlayers[5].primary[:marker] == "2"
+    @test processedlayers[5].positional[1] == exp.(df.x[df.c .== "b"])
+    @test processedlayers[5].positional[2] == df.z[df.c .== "b"]
+    @test processedlayers[5].named[:markersize] == df.w[df.c .== "b"]
 
-    @test entries[6].primary[:color] == "c"
-    @test entries[6].primary[:marker] == "2"
-    @test entries[6].positional[1] == exp.(df.x[df.c .== "c"])
-    @test entries[6].positional[2] == df.z[df.c .== "c"]
-    @test entries[6].named[:markersize] == df.w[df.c .== "c"]
+    @test processedlayers[6].primary[:color] == "c"
+    @test processedlayers[6].primary[:marker] == "2"
+    @test processedlayers[6].positional[1] == exp.(df.x[df.c .== "c"])
+    @test processedlayers[6].positional[2] == df.z[df.c .== "c"]
+    @test processedlayers[6].named[:markersize] == df.w[df.c .== "c"]
 end
 
 @testset "helpers" begin

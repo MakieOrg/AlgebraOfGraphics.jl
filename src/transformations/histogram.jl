@@ -32,26 +32,26 @@ Base.@kwdef struct HistogramAnalysis{D, B}
     normalization::Symbol=:none
 end
 
-function (h::HistogramAnalysis)(le::Entry)
-    datalimits = compute_datalimits(le.positional, h.datalimits)
-    options = valid_options((; datalimits, h.bins, h.closed, h.normalization))
+function (h::HistogramAnalysis)(input::ProcessedLayer)
+    datalimits = compute_datalimits(input.positional, h.datalimits)
+    options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
 
-    entry = map(le) do p, n
+    output = map(input) do p, n
         hist = _histogram(p...; pairs(n)..., pairs(options)...)
         return (map(midpoints, hist.edges)..., hist.weights), (;)
     end
 
-    N = length(le.positional)
+    N = length(input.positional)
     label = h.normalization == :none ? "count" : string(h.normalization)
-    labels = set(entry.labels, N+1 => label)
+    labels = set(output.labels, N+1 => label)
     attributes = if N == 1
-        set(entry.attributes, :dodge_gap => 0, :x_gap => 0)
+        set(output.attributes, :dodge_gap => 0, :x_gap => 0)
     else
-        entry.attributes
+        output.attributes
     end
     default_plottype = categoricalplottypes[N]
-    plottype = Makie.plottype(entry.plottype, default_plottype)
-    return Entry(entry; plottype, labels, attributes)
+    plottype = Makie.plottype(output.plottype, default_plottype)
+    return ProcessedLayer(output; plottype, labels, attributes)
 end
 
 """

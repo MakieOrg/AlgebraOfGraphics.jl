@@ -1,18 +1,21 @@
+## Categorical Scales
+
 increment!(idx::Ref) = (idx[] += 1; idx[])
 
 cycle(v::AbstractVector, i::Int) = v[mod1(i, length(v))]
 
 function apply_palette(p::Union{AbstractVector, AbstractColorList}, uv)
-    values, pairs = Any[], Dictionary()
+    values, pairs = Any[], Pair[]
     for x in p
-        x isa Pair ? set!(pairs, first(x), last(x)) : push!(values, x)
+        target = ifelse(x isa Pair, pairs, values)
+        push!(target, x)
     end
-    idx = Ref(0)
-    return [get(() -> cycle(values, increment!(idx)), pairs, v) for v in uv]
+    dict, idx = dictionary(pairs), Ref(0)
+    return [get(() -> cycle(values, increment!(idx)), dict, v) for v in uv]
 end
 
 apply_palette(::Automatic, uv) = eachindex(uv)
-apply_palette(p, uv) = map(p, eachindex(uv)) # FIXME: maybe apply to values instead?
+apply_palette(p, uv) = map(p, uv)
 
 # TODO: add more customizations?
 struct Wrap end
@@ -28,10 +31,10 @@ struct CategoricalScale{S, T, U}
     data::S
     plot::T
     palette::U
-    label::Union{String, Nothing}
+    label::Union{AbstractString, Nothing}
 end
 
-function CategoricalScale(data, palette, label::Union{String, Nothing})
+function CategoricalScale(data, palette, label::Union{AbstractString, Nothing})
     return CategoricalScale(data, nothing, palette, label)
 end
 
@@ -40,13 +43,23 @@ function fitscale(c::CategoricalScale)
     data = c.data
     palette = c.palette
     plot = apply_palette(c.palette, c.data)
-    label = something(c.label, "")
-    return CategoricalScale(data, plot, palette, label)
+    return CategoricalScale(data, plot, palette, c.label)
 end
 
 datavalues(c::CategoricalScale) = c.data
 plotvalues(c::CategoricalScale) = c.plot
+getlabel(c::CategoricalScale) = something(c.label, "")
 
+## Continuous Scales
+
+struct ContinuousScale{T}
+    extrema::NTuple{2, T}
+    label::Union{AbstractString, Nothing}
+end
+
+getlabel(c::ContinuousScale) = something(c.label, "")
+
+rescale(values) = rescale(values, nothing)
 rescale(values, ::Nothing) = values
 
 # recentering hack to avoid Float32 conversion errors on recent dates
@@ -107,14 +120,6 @@ function mergelabels(label1, label2)
     end
 end
 
-function compute_label(entries, key)
-    label = ""
-    for entry in entries
-        label = mergelabels(label, get(entry.labels, key, ""))
-    end
-    return something(label, "")
-end
-
 function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     data = mergesorted(c1.data, c2.data)
     palette = assert_equal(c1.palette, c2.palette)
@@ -122,12 +127,20 @@ function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     return CategoricalScale(data, palette, label)
 end
 
+function mergescales(c1::ContinuousScale, c2::ContinuousScale)
+    extrema = extend_extrema(c1.extrema, c2.extrema)
+    label = mergelabels(c1.label, c2.label)
+    return ContinuousScale(extrema, label)
+end
+
 # Logic to create ticks from a scale
 # Should take current tick to incorporate information
 function ticks(scale::CategoricalScale)
-    u = map(string, datavalues(scale))
+    u = map(to_string, datavalues(scale))
     return (axes(u, 1), u)
 end
+
+ticks(scale::ContinuousScale) = ticks(scale.extrema)
 
 ticks((min, max)::NTuple{2, Any}) = automatic
 
@@ -162,7 +175,8 @@ Determine whether `v` should be treated as a continuous, geometrical, or categor
 scientific_eltype(v::ArrayLike) = scientific_type(eltype(v))
 scientific_eltype(v) = categorical
 
-hascategoricalentry(u) = any(el -> scientific_eltype(el) === categorical, u)
+iscategoricalcontainer(u) = any(el -> scientific_eltype(el) === categorical, u)
+iscontinuous(u) = scientific_eltype(u) === continuous
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
 extend_extrema(::Nothing, (l2, u2)) = (l2, u2)

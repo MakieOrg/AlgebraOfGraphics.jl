@@ -3,6 +3,9 @@
 const ArrayLike = Union{AbstractArray, Tuple}
 const StringLike = Union{AbstractString, Symbol}
 
+to_string(s) = string(s)
+to_string(s::AbstractString) = s
+
 struct Sorted{T}
     idx::UInt32
     value::T
@@ -83,7 +86,7 @@ function renamer(arr::ArrayLike)
 end
 
 function sorter(ks...)
-    vs = map(string, ks)
+    vs = map(to_string, ks)
     return Renamer(ks, vs)
 end
 
@@ -96,7 +99,7 @@ A vararg method `sorter("low", "medium", "high")` is also supported.
 The order of `ks` is respected in the legend.
 """
 function sorter(ks::ArrayLike)
-    vs = map(string, ks)
+    vs = map(to_string, ks)
     return Renamer(ks, vs)
 end
 

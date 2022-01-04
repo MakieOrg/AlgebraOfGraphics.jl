@@ -26,10 +26,9 @@ function plottypes_attributes(entries)
     plottypes = PlotFunc[]
     attributes = Vector{Symbol}[]
     for entry in entries
-        # FIXME: this should probably use the rescaled values
-        plottype = Makie.plottype(entry.plottype, entry.positional...)
+        plottype = entry.plottype
         n = findfirst(==(plottype), plottypes)
-        attrs = (keys(entry.primary)..., keys(entry.named)...)
+        attrs = keys(entry.named)
         if isnothing(n)
             push!(plottypes, plottype)
             push!(attributes, collect(Symbol, attrs))
@@ -42,31 +41,28 @@ end
 
 compute_legend(fg::FigureGrid) = compute_legend(fg.grid)
 
-function compute_legend(grid::Matrix{AxisEntries})
-    # gather all named scales
-    scales = NamedArguments()
-    for (k, v) in pairs(first(grid).scales)
-        # ignore positional scales
-        k isa Symbol || continue
-        # ignore keywords that don't support legends
-        k in [:row, :col, :layout, :stack, :dodge, :group] && continue
-        insert!(scales, k, v)
-    end
+# ignore positional scales and keywords that don't support legends
+function legendable_scales(scales)
+    invalid_keys = [:col, :row, :layout, :stack, :dodge, :group]
+    return filterkeys(k -> k isa Symbol && k ∉ invalid_keys, scales)
+end
 
-    # if no legend-worthy keyword remains return nothing
+function compute_legend(grid::Matrix{AxisEntries})
+    # gather valid named scales
+    scales = legendable_scales(first(grid).categoricalscales)
+
+    # if no legendable scale is present, return nothing
     isempty(scales) && return nothing
 
-    titles = unique!(collect(String, (scale.label for scale in values(scales))))
-    # empty strings create difficulties with the layout
-    nonemptytitles = map(t -> isempty(t) ? " " : t, titles)
+    titles = unique!(collect(map(getlabel, scales)))
 
     plottypes, attributes = plottypes_attributes(entries(grid))
 
-    labels = Vector{String}[]
+    labels = Vector{AbstractString}[]
     elements_list = Vector{Vector{LegendElement}}[]
 
     for title in titles
-        label_attrs = [key for (key, val) in pairs(scales) if val.label == title]
+        label_attrs = [key for (key, val) in pairs(scales) if getlabel(val) == title]
         uniquevalues = mapreduce(k -> datavalues(scales[k]), assert_equal, label_attrs)
         elements = map(eachindex(uniquevalues)) do idx
             local elements = LegendElement[]
@@ -78,10 +74,10 @@ function compute_legend(grid::Matrix{AxisEntries})
             end
             return elements
         end
-        push!(labels, map(string, uniquevalues))
+        push!(labels, map(to_string, uniquevalues))
         push!(elements_list, elements)
     end
-    return elements_list, labels, nonemptytitles
+    return elements_list, labels, titles
 end
 
 # Notes

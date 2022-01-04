@@ -7,7 +7,7 @@ end
 
 struct ExpectationAnalysis end
 
-(e::ExpectationAnalysis)(entry::Entry) = groupreduce(Mean, entry)
+(e::ExpectationAnalysis)(input::ProcessedLayer) = groupreduce(Mean, input)
 
 """
     expectation()

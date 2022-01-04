@@ -11,10 +11,10 @@ end
 
 concatenate_values(args...) = mapreduce(values, append!, args, init=Any[])
 
-allvariables(e::Entry) = concatenate_values(e.primary, e.positional, e.named)
+allvariables(pl::ProcessedLayer) = concatenate_values(pl.primary, pl.positional, pl.named)
 allvariables(l::Layer) = concatenate_values(l.positional, l.named)
 
-function shape(x::Union{Entry, Layer})
+function shape(x::Union{ProcessedLayer, Layer})
     arrays = map(var -> var isa ArrayLike ? var : fill(nothing), allvariables(x))
     return Broadcast.combine_axes(arrays...)
 end
@@ -50,15 +50,17 @@ shiftdims(v::AbstractArray) = reshape(v, 1, axes(v)...)
 shiftdims(v::Tuple) = shiftdims(collect(v))
 shiftdims(v) = v
 
-function group(entry::Entry)
-    grouping = Tuple(only(v) for v in values(entry.primary) if haszerodims(v))
+function group(processedlayer::ProcessedLayer)
+    grouping = Tuple(only(v) for v in values(processedlayer.primary) if haszerodims(v))
     perm, rgs = permutation_ranges(grouping)
-    axs = shape(entry)
-    primary, positional, named = map((entry.primary, entry.positional, entry.named)) do vars
-        return map(vs -> subgroups(vs, perm, rgs, axs), vars)
-    end
-    labels = map(shiftdims, entry.labels)
-    return Entry(entry; primary, positional, named, labels)
+    axs = shape(processedlayer)
+
+    primary = map(vs -> subgroups(vs, perm, rgs, axs), processedlayer.primary)
+    positional = map(vs -> subgroups(vs, perm, rgs, axs), processedlayer.positional)
+    named = map(vs -> subgroups(vs, perm, rgs, axs), processedlayer.named)
+
+    labels = map(shiftdims, processedlayer.labels)
+    return ProcessedLayer(processedlayer; primary, positional, named, labels)
 end
 
 function getlabeledarray(layer::Layer, s)
@@ -73,7 +75,7 @@ function getlabeledarray(layer::Layer, s)
         arr = map(fill∘f, CartesianIndices(sz))
     elseif isnothing(data)
         vs, (f, label) = select(data, s)
-        isprim = any(hascategoricalentry, vs)
+        isprim = any(iscategoricalcontainer, vs)
         arr = isprim ? map(fill∘f, vs...) : map(x -> map(f, x...), zip(vs...)) 
     else
         selector = s isa AbstractArray ? s : fill(s)
@@ -86,29 +88,15 @@ function getlabeledarray(layer::Layer, s)
     return label, arr
 end
 
+function extract_values!(pairs, labels)
+    merge!(labels, Dictionary(map(first, pairs)))
+    return map(last, pairs)
+end
+
 function process_mappings(layer::Layer)
     labels = MixedArguments()
-    positional, named = map((layer.positional, layer.named)) do tup
-        return map_pairs(tup) do (key, value)
-            label, arr = getlabeledarray(layer, value)
-            insert!(labels, key, label)
-            return arr
-        end
-    end
-    primary, named = separate(hascategoricalentry, named)
-    return Entry(; primary, positional, named, labels)
+    positional = extract_values!(map(v -> getlabeledarray(layer, v), layer.positional), labels)
+    named = extract_values!(map(v -> getlabeledarray(layer, v), layer.named), labels)
+    primary, named = separate(iscategoricalcontainer, named)
+    return ProcessedLayer(; primary, positional, named, labels)
 end
-
-"""
-    to_entry(layer::Layer)
-
-Convert `layer` to equivalent entry, excluding transformations.
-"""
-function to_entry(layer::Layer)
-    entry = process_mappings(layer)
-    grouped_entry = isnothing(layer.data) ? entry : group(entry)
-    primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
-    return Entry(grouped_entry; primary)
-end
-
-process(layer::Layer) = layer.transformation(to_entry(layer))

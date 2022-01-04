@@ -9,11 +9,11 @@ struct FrequencyAnalysis end
 
 to_nothings(v) = fill(nothing, axes(v))
 
-function (f::FrequencyAnalysis)(entry::Entry)
-    positional = vcat(entry.positional, Any[map(to_nothings, first(entry.positional))])
-    labels = set(entry.labels, length(positional) => "count")
-    augmented_entry = Entry(entry; positional, labels)
-    return groupreduce(Counter, augmented_entry)
+function (f::FrequencyAnalysis)(input::ProcessedLayer)
+    positional = vcat(input.positional, Any[map(to_nothings, first(input.positional))])
+    labels = set(input.labels, length(positional) => "count")
+    augmented_input = ProcessedLayer(input; positional, labels)
+    return groupreduce(Counter, augmented_input)
 end
 
 """

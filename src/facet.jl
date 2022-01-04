@@ -2,7 +2,7 @@
 
 function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
 
-    scale = get(aes[1].scales, :layout, nothing)
+    scale = get(aes[1].categoricalscales, :layout, nothing)
     isnothing(scale) && return
 
     # Link axes and hide decorations if appropriate
@@ -26,13 +26,13 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     if is2d && consistent_xlabels(aes)
         span_xlabel!(fig, aes)
     end
-    
+
     return
 end
 
 function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     M, N = size(aes)
-    row_scale, col_scale = map(sym -> get(aes[1].scales, sym, nothing), (:row, :col))
+    row_scale, col_scale = map(sym -> get(aes[1].categoricalscales, sym, nothing), (:row, :col))
     all(isnothing, (row_scale, col_scale)) && return
 
     # Link axes and hide decorations if appropriate
@@ -181,8 +181,8 @@ function col_labels!(fig, aes, scale)
     end
 
     for (index, label) in zipped_scale
-        Label(fig[1, index, Top()], string(label);
-        padding=facetlabelpadding, attributes...)
+        Label(fig[1, index, Top()], to_string(label);
+              padding=facetlabelpadding, attributes...)
     end
 end
 
@@ -197,9 +197,9 @@ function row_labels!(fig, aes, scale)
     end
 
     for (index, label) in zipped_scale
-        Label(fig[index, N, Right()], string(label);
-            rotation=-π/2, padding=facetlabelpadding,
-            attributes...)
+        Label(fig[index, N, Right()], to_string(label);
+              rotation=-π/2, padding=facetlabelpadding,
+              attributes...)
     end
 end
 
@@ -213,8 +213,8 @@ function panel_labels!(fig, aes, scale)
     end
 
     for (index, label) in zipped_scale        
-        Label(fig[index..., Top()], string(label);
-            padding=facetlabelpadding, attributes...)
+        Label(fig[index..., Top()], to_string(label);
+              padding=facetlabelpadding, attributes...)
     end
 end
 
@@ -319,8 +319,10 @@ get_nonempty_aes(aes) = filter(!empty_ae, aes)
 first_nonempty_axis(aes) = first(get_nonempty_aes(aes)).axis
 
 function facet!(fig, aes::AbstractMatrix{AxisEntries}; facet)
-    facet_wrap!(fig, aes; facet)
-    facet_grid!(fig, aes; facet)
+    update(fig) do f
+        facet_wrap!(f, aes; facet)
+        facet_grid!(f, aes; facet)
+    end
     return
 end
 
@@ -332,8 +334,10 @@ end
 ## Layout helpers
 
 isaxis2d(::Axis) = true
-isaxis2d(::Any) = false
+isaxis2d(::Axis3) = false
+isaxis2d(ax::AxisSpec) = ax.type <: Axis
 isaxis2d(ae::AxisEntries) = isaxis2d(ae.axis)
+isaxis2d(ae::AxisSpecEntries) = isaxis2d(ae.axis)
 
 for sym in [:hidexdecorations!, :hideydecorations!, :hidedecorations!]
     @eval function $sym(ae::AxisEntries; kwargs...)

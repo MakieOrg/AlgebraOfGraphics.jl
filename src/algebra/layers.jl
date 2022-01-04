@@ -28,172 +28,131 @@ function Base.:*(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
     return Layers([el1 * el2 for el1 in l1 for el2 in l2])
 end
 
-uniquevalues(v::ArrayLike) = collect(uniquesorted(vec(v)))
-
-to_label(label::AbstractString) = label
-to_label(labels::ArrayLike) = reduce(mergelabels, labels)
-
-function categoricalscales(e::Entry, palettes)
-    cs = MixedArguments()
-    for (key, val) in pairs(e.primary)
-        palette = get(palettes, key, automatic)
-        label = to_label(get(e.labels, key, ""))
-        insert!(cs, key, CategoricalScale(uniquevalues(val), palette, label))
+function compute_processedlayers_grid(processedlayers, categoricalscales)
+    indices = CartesianIndices(compute_grid_positions(categoricalscales))
+    pls_grid = map(_ -> ProcessedLayer[], indices)
+    for processedlayer in processedlayers
+        append_processedlayers!(pls_grid, processedlayer, categoricalscales)
     end
-    for (key, val) in pairs(e.positional)
-        hascategoricalentry(val) || continue
-        palette = automatic
-        label = to_label(get(e.labels, key, ""))
-        insert!(cs, key, CategoricalScale(mapreduce(uniquevalues, mergesorted, val), palette, label))
-    end
-    return cs
+    return pls_grid
 end
 
-function compute_grid_positions(scales, primary=NamedArguments())
-    return map((:row, :col), (first, last)) do sym, f
-        scale = get(scales, sym, nothing)
-        lscale = get(scales, :layout, nothing)
-        return if !isnothing(scale)
-            rg = Base.OneTo(maximum(plotvalues(scale)))
-            haskey(primary, sym) ? rescale(fill(primary[sym]), scale) : rg
-        elseif !isnothing(lscale)
-            rg = Base.OneTo(maximum(f, plotvalues(lscale)))
-            haskey(primary, :layout) ? map(f, rescale(fill(primary[:layout]), lscale)) : rg
-        else
-            Base.OneTo(1)
+function compute_attributes(attributes, primary, named)
+    attrs = NamedArguments()
+    merge!(attrs, attributes)
+    merge!(attrs, primary)
+    merge!(attrs, named)
+
+    # implement alpha transparency
+    alpha = get(attrs, :alpha, automatic)
+    color = get(attrs, :color, automatic)
+    (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
+
+    # opt out of the default cycling mechanism
+    cycle = nothing
+
+    merge!(attrs, Dictionary(valid_options(; color, cycle)))
+
+    # remove unnecessary information 
+    return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
+end
+
+function compute_entries_continuousscales(pls_grid)
+    entries_grid = map(_ -> Entry[], pls_grid)
+    continuousscales_grid = map(_ -> MixedArguments(), pls_grid)
+
+    for idx in eachindex(pls_grid), pl in pls_grid[idx]
+        # Apply continuous transformations
+        positional = map(rescale, pl.positional)
+        plottype = Makie.plottype(pl.plottype, positional...)
+
+        # Compute continuous scales with correct plottype, to figure out role of color
+        continuousscales = AlgebraOfGraphics.continuousscales(ProcessedLayer(pl; plottype))
+        mergewith!(mergescales, continuousscales_grid[idx], continuousscales)
+
+        # Compute `Entry` with rescaled columns
+        named = compute_attributes(pl.attributes, pl.primary, map(rescale, pl.named))
+        entry = Entry(plottype, positional, named)
+        push!(entries_grid[idx], entry)
+    end
+
+    # Compute merged continuous scales, as it may be needed to use global extrema
+    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=MixedArguments())
+
+    colorscale = get(merged_continuousscales, :color, nothing)
+    if !isnothing(colorscale)
+        # TODO: might need to change to support temporal color scale
+        colorrange = colorscale.extrema
+        for entries in entries_grid
+            for entry in entries
+                # Safe to do, as each entry has a separate `named` dictionary
+                set!(entry.named, :colorrange, colorrange)
+            end
         end
     end
+
+    return entries_grid, continuousscales_grid, merged_continuousscales
 end
 
 function compute_axes_grid(fig, s::OneOrMoreLayers;
+    axis=NamedTuple(), palettes=NamedTuple())
+
+    axes_grid = compute_axes_grid(s; axis, palettes)
+    sz = size(axes_grid)
+    if sz !== (1, 1) && fig isa Axis
+        error("You can only pass an `Axis` to `draw!`, if the calculated layout only contains one element. Elements: $(sz)")
+    end
+
+    return map(ae -> AxisEntries(ae, fig), axes_grid)
+end
+
+function compute_axes_grid(s::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
     layers::Layers = s
-    entries = map(process, layers)
+    processedlayers = map(ProcessedLayer, layers)
 
     theme_palettes = NamedTuple(Makie.current_default_theme()[:palette])
     palettes = merge((layout=wrap,), map(to_value, theme_palettes), palettes)
 
     scales = MixedArguments()
-    for entry in entries
-        mergewith!(mergescales, scales, categoricalscales(entry, palettes))
+    for processedlayer in processedlayers
+        mergewith!(mergescales, scales, categoricalscales(processedlayer, palettes))
     end
-    # fit scales (compute plot values using all data values)
+    # fit categorical scales (compute plot values using all data values)
     map!(fitscale, scales, scales)
 
-    function create_axis(fig, c)
-        type = get(axis, :type, Axis)
-        options = Base.structdiff(axis, (; type))
-        ax = type(fig[Tuple(c)...]; options...)
-        return AxisEntries(ax, Entry[], scales)
-    end
-    function create_axis(ax::Axis, c)
-        if !isempty(axis)
-            @warn("Axis got passed, but also axis attributes. Ignoring axis attributes: $(axis)")
-        end
-        return AxisEntries(ax, Entry[], scales)
-    end
-    axs = compute_grid_positions(scales)
-    sizes = map(length, axs)
+    pls_grid = compute_processedlayers_grid(processedlayers, scales)
+    entries_grid, continuousscales_grid, merged_continuousscales =
+        compute_entries_continuousscales(pls_grid)
 
-    if sizes !== (1, 1) && fig isa Axis
-        error("You can only pass an Axis to draw!, if the calculated layout only contains one element. Elements: $(sizes)")
-    end
-    axes_grid = map(CartesianIndices(axs)) do c
-        return create_axis(fig, c)
-    end
-
-    for e in entries
-        for c in CartesianIndices(shape(e))
-            primary, positional, named = map((e.primary, e.positional, e.named)) do tup
-                return map(v -> getnewindex(v, c), tup)
-            end
-            rows, cols = compute_grid_positions(scales, primary)
-            labels = map(l -> getnewindex(l, c), e.labels)
-            # create novel `attributes` object, copying keys and values of `e.attributes`
-            plottype, attributes = e.plottype, set(e.attributes)
-            entry = Entry(; plottype, primary, positional, named, labels, attributes)
-            for i in rows, j in cols
-                ae = axes_grid[i, j]
-                push!(ae.entries, entry)
-            end
-        end
-    end
-
-    # Link colors
-    labeledcolorrange = getlabeledcolorrange(axes_grid)
-    if !isnothing(labeledcolorrange)
-        _, colorrange = labeledcolorrange
-        for entry in AlgebraOfGraphics.entries(axes_grid)
-            # `attributes` were obtained via `set` above,
-            # so it is OK to edit the keys
-            set!(entry.attributes, :colorrange, colorrange)
-        end
+    indices = CartesianIndices(pls_grid)
+    axes_grid = map(indices) do c
+        return AxisSpecEntries(
+            AxisSpec(c, axis),
+            entries_grid[c],
+            scales,
+            continuousscales_grid[c]
+        )
     end
 
     # Axis labels and ticks
     for ae in axes_grid
         ndims = isaxis2d(ae) ? 2 : 3
         for (i, var) in zip(1:ndims, (:x, :y, :z))
-            # TODO: move this computation out of the `for` loop
-            scale = get(scales, i) do
-                return compute_extrema(AlgebraOfGraphics.entries(axes_grid), i)
+            scale = get(ae.categoricalscales, i) do
+                return get(ae.continuousscales, i, nothing)
             end
             isnothing(scale) && continue
-            label = compute_label(ae.entries, i)
-            for (k, v) in pairs((label=string(label), ticks=ticks(scale)))
+            label = getlabel(scale)
+            # Use global scales for ticks for now, TODO: requires a nicer mechanism
+            (scale isa ContinuousScale) && (scale = merged_continuousscales[i])
+            for (k, v) in pairs((label=to_string(label), ticks=ticks(scale)))
                 keyword = Symbol(var, k)
-                keyword in keys(axis) || (getproperty(ae.axis, keyword)[] = v)
+                # Only set attribute if it was not present beforehand
+                get!(ae.axis.attributes, keyword, v)
             end
         end
     end
+
     return axes_grid
-end
-
-function Makie.plot!(fig, s::OneOrMoreLayers;
-                     axis=NamedTuple(), palettes=NamedTuple())
-    grid = compute_axes_grid(fig, s; axis, palettes)
-    foreach(plot!, grid)
-    return grid
-end
-
-function Makie.plot(s::OneOrMoreLayers;
-                    axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
-    fig = Figure(; figure...)
-    grid = plot!(fig, s; axis, palettes)
-    return FigureGrid(fig, grid)
-end
-
-"""
-    draw(s; axis=NamedTuple(), figure=NamedTuple, palettes=NamedTuple())
-
-Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object `s`.
-The output can be customized by giving axis attributes to `axis`, figure attributes
-to `figure`, or custom palettes to `palettes`.
-Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@ref),
-[`legend!`](@ref), and [`colorbar!`](@ref) independently.
-"""
-function draw(s::OneOrMoreLayers;
-              axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple(),
-              facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple())
-    fg = plot(s; axis, figure, palettes)
-    facet!(fg; facet)
-    colorbar!(fg; colorbar...)
-    legend!(fg; legend...)
-    resizetocontent!(fg)
-    return fg
-end
-
-"""
-    draw!(fig, s; axis=NamedTuple(), palettes=NamedTuple())
-
-Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object `s` on `fig`.
-`fig` can be a figure, a position in a layout, or an axis if `s` has no facet specification.
-The output can be customized by giving axis attributes to `axis` or custom palettes
-to `palettes`.  
-"""
-function draw!(fig, s::OneOrMoreLayers;
-               axis=NamedTuple(), palettes=NamedTuple(), facet=NamedTuple())
-    ag = plot!(fig, s; axis, palettes)
-    facet!(fig, ag; facet)
-    return ag
 end

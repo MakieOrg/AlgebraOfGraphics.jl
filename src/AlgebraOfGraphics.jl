@@ -18,7 +18,7 @@ import Makie.MakieLayout: hidexdecorations!,
                           linkyaxes!
 using GridLayoutBase: determinedirsize, Col, Row
 using PooledArrays: PooledArray
-using Dictionaries: AbstractDictionary, Dictionary, getindices, set!
+using Dictionaries: AbstractDictionary, Dictionary, Indices, dictionary, getindices, set!
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, normalize, weights, AbstractWeights, sturges
 
@@ -27,6 +27,7 @@ import FileIO
 import RelocatableFolders
 
 export hideinnerdecorations!, deleteemptyaxes!
+export Layer, ProcessedLayer
 export Entry, AxisEntries
 export renamer, sorter, nonnumeric, verbatim
 export density, histogram, linear, smooth, expectation, frequency
@@ -60,5 +61,6 @@ include("guides/guides.jl")
 include("guides/legendelements.jl")
 include("guides/legend.jl")
 include("guides/colorbar.jl")
+include("draw.jl")
 
 end
