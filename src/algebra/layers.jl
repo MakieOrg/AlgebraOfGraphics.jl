@@ -116,14 +116,18 @@ function compute_axes_grid(s::OneOrMoreLayers;
     theme_palettes = NamedTuple(Makie.current_default_theme()[:palette])
     palettes = merge((layout=wrap,), map(to_value, theme_palettes), palettes)
 
-    scales = MixedArguments()
+    categoricalscales = MixedArguments()
     for processedlayer in processedlayers
-        mergewith!(mergescales, scales, categoricalscales(processedlayer, palettes))
+        mergewith!(
+            mergescales,
+            categoricalscales,
+            AlgebraOfGraphics.categoricalscales(processedlayer, palettes)
+        )
     end
     # fit categorical scales (compute plot values using all data values)
-    map!(fitscale, scales, scales)
+    map!(fitscale, categoricalscales, categoricalscales)
 
-    pls_grid = compute_processedlayers_grid(processedlayers, scales)
+    pls_grid = compute_processedlayers_grid(processedlayers, categoricalscales)
     entries_grid, continuousscales_grid, merged_continuousscales =
         compute_entries_continuousscales(pls_grid)
 
@@ -132,7 +136,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
         return AxisSpecEntries(
             AxisSpec(c, axis),
             entries_grid[c],
-            scales,
+            categoricalscales,
             continuousscales_grid[c]
         )
     end

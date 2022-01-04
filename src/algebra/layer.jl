@@ -120,7 +120,7 @@ function continuousscales(processedlayer::ProcessedLayer)
     merge!(continuous, filter(iscontinuous, processedlayer.named))
     merge!(continuous, Dictionary(filter(iscontinuous, processedlayer.positional)))
     continuousscales = map(keys(continuous), continuous) do key, val
-        extrema = mapreduce(Makie.extrema_nan, extend_extrema, val)
+        extrema = Makie.extrema_nan(val)
         label = to_label(get(processedlayer.labels, key, ""))
         return ContinuousScale(extrema, label)
     end
@@ -133,10 +133,10 @@ end
 
 ## Machinery to convert a `ProcessedLayer` to a grid of slices of `ProcessedLayer`s
 
-function compute_grid_positions(scales, primary=NamedArguments())
+function compute_grid_positions(categoricalscales, primary=NamedArguments())
     return map((:row, :col), (first, last)) do sym, f
-        scale = get(scales, sym, nothing)
-        lscale = get(scales, :layout, nothing)
+        scale = get(categoricalscales, sym, nothing)
+        lscale = get(categoricalscales, :layout, nothing)
         return if !isnothing(scale)
             rg = Base.OneTo(maximum(plotvalues(scale)))
             haskey(primary, sym) ? fill(primary[sym]) : rg
@@ -149,18 +149,22 @@ function compute_grid_positions(scales, primary=NamedArguments())
     end
 end
 
-function rescale(p::ProcessedLayer, scales::MixedArguments)
+function rescale(p::ProcessedLayer, categoricalscales::MixedArguments)
     primary = map(keys(p.primary), p.primary) do key, values
-        scale = get(scales, key, nothing)
+        scale = get(categoricalscales, key, nothing)
         return rescale(values, scale)
     end
     positional = map(keys(p.positional), p.positional) do key, values
-        scale = get(scales, key, nothing)
-        return rescale.(values, Ref(scale))
+        return if iscategoricalcontainer(values)
+            scale = get(categoricalscales, key, nothing)
+            rescale.(values, Ref(scale))
+        else
+            values
+        end
     end
 
     # compute dodging information
-    dodge = get(scales, :dodge, nothing)
+    dodge = get(categoricalscales, :dodge, nothing)
     attributes = if isa(dodge, CategoricalScale)
         set(p.attributes, :n_dodge => maximum(plotvalues(dodge)))
     else
