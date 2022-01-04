@@ -41,6 +41,7 @@
     @test d[2] ≈ d2
     
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
+    @test isempty(processedlayer.named)
     @test processedlayer.attributes == NamedArguments()
     @test processedlayer.plottype == AlgebraOfGraphics.LinesFill
 
@@ -84,6 +85,7 @@ end
     @test d[2] ≈ d2
 
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
+    @test isempty(processedlayer.named)
     @test processedlayer.attributes == NamedArguments()
     @test processedlayer.plottype == Heatmap
 
@@ -120,6 +122,7 @@ end
     @test m2 ≈ [ma2, mb2]
 
     @test processedlayer.primary == NamedArguments((layout=["a", "b"],))
+    @test isempty(processedlayer.named)
     @test processedlayer.attributes == NamedArguments()
     @test processedlayer.plottype == BarPlot
 
@@ -161,6 +164,7 @@ end
     @test m2 ≈ [maa2 mab2; mba2 mbb2]
 
     @test processedlayer.primary == NamedArguments((layout=["a", "b"],))
+    @test isempty(processedlayer.named)
     @test processedlayer.attributes == NamedArguments()
     @test processedlayer.plottype == Heatmap
 
@@ -168,6 +172,85 @@ end
     insert!(labels, 1, "x")
     insert!(labels, 2, "y")
     insert!(labels, 3, "z")
+    insert!(labels, :layout, "c")
+    for key in keys(labels)
+        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
+    end
+end
+
+@testset "frequency1d" begin
+    df = (x=rand(["a", "b"], 1000), c=rand(["a", "b"], 1000))
+
+    layer = data(df) * mapping(:x, layout=:c) * frequency()
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    na1 = sum((df.x .== "a") .& (df.c .== "a"))
+    nb1 = sum((df.x .== "b") .& (df.c .== "a"))
+
+    na2 = sum((df.x .== "a") .& (df.c .== "b"))
+    nb2 = sum((df.x .== "b") .& (df.c .== "b"))
+
+    x, n = processedlayer.positional
+    x1, n1 = x[1], n[1]
+    x2, n2 = x[2], n[2]
+
+    @test x1 == ["a", "b"]
+    @test n1 ≈ [na1, nb1]
+
+    @test x2 == ["a", "b"]
+    @test n2 ≈ [na2, nb2]
+
+    @test processedlayer.primary == NamedArguments((layout=["a", "b"],))
+    @test isempty(processedlayer.named)
+    @test processedlayer.attributes == NamedArguments()
+    @test processedlayer.plottype == BarPlot
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "count")
+    insert!(labels, :layout, "c")
+    for key in keys(labels)
+        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
+    end
+end
+
+@testset "frequency2d" begin
+    df = (x=rand(["a", "b"], 1000), y=rand(["a", "b"], 1000), c=rand(["a", "b"], 1000))
+
+    layer = data(df) * mapping(:x, :y, layout=:c) * frequency()
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    naa1 = sum((df.x .== "a") .& (df.y .== "a") .& (df.c .== "a"))
+    nab1 = sum((df.x .== "a") .& (df.y .== "b") .& (df.c .== "a"))
+    nba1 = sum((df.x .== "b") .& (df.y .== "a") .& (df.c .== "a"))
+    nbb1 = sum((df.x .== "b") .& (df.y .== "b") .& (df.c .== "a"))
+
+    naa2 = sum((df.x .== "a") .& (df.y .== "a") .& (df.c .== "b"))
+    nab2 = sum((df.x .== "a") .& (df.y .== "b") .& (df.c .== "b"))
+    nba2 = sum((df.x .== "b") .& (df.y .== "a") .& (df.c .== "b"))
+    nbb2 = sum((df.x .== "b") .& (df.y .== "b") .& (df.c .== "b"))
+
+    x, y, n = processedlayer.positional
+    x1, y1, n1 = x[1], y[1], n[1]
+    x2, y2, n2 = x[2], y[2], n[2]
+
+    @test x1 == ["a", "b"]
+    @test y1 == ["a", "b"]
+    @test n1 ≈ [naa1 nab1; nba1 nbb1]
+
+    @test x2 == ["a", "b"]
+    @test y2 == ["a", "b"]
+    @test n2 ≈ [naa2 nab2; nba2 nbb2]
+
+    @test processedlayer.primary == NamedArguments((layout=["a", "b"],))
+    @test isempty(processedlayer.named)
+    @test processedlayer.attributes == NamedArguments()
+    @test processedlayer.plottype == Heatmap
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "y")
+    insert!(labels, 3, "count")
     insert!(labels, :layout, "c")
     for key in keys(labels)
         @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
