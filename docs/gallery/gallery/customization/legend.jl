@@ -18,6 +18,12 @@ draw(plt)
 
 fg = draw(plt, legend=(position=:top, titleposition=:left, framevisible=true, padding=5))
 
+# To adjust the title and order of labels in a legend you can use the pair syntax.
+
+layers = linear() +  mapping(color= :group => sorter(["a looooooong label", "and one more long label",  "an even loooooonger label"]) => "Labels")
+plt = data(df) * layers * mapping(:x, :y)
+draw(plt)
+
 # save cover image #src
 mkpath("assets") #src
 save("assets/legend_tweaking.png", fg) #src
