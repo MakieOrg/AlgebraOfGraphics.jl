@@ -37,7 +37,10 @@ function compute_processedlayers_grid(processedlayers, categoricalscales)
     return pls_grid
 end
 
-function compute_attributes(attributes, primary, named)
+function compute_attributes(pl::ProcessedLayer)
+    plottype, primary, positional, named, attributes =
+        pl.plottype, pl.primary, pl.positional, pl.named, pl.attributes
+
     attrs = NamedArguments()
     merge!(attrs, attributes)
     merge!(attrs, primary)
@@ -52,6 +55,13 @@ function compute_attributes(attributes, primary, named)
     cycle = nothing
 
     merge!(attrs, Dictionary(valid_options(; color, cycle)))
+
+    # avoid automatic bar width computation in Makie
+    if (plottype <: BarPlot) && !haskey(attrs, :width)
+        x = first(positional)
+        width = (x isa AbstractRange) && (length(positional) == 2) ? step(x) : 1.0
+        insert!(attrs, :width, width)
+    end
 
     # remove unnecessary information 
     return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
@@ -68,6 +78,7 @@ function compute_entries_continuousscales(pls_grid)
     for idx in eachindex(pls_grid), pl in pls_grid[idx]
         # Apply continuous transformations
         positional = map(contextfree_rescale, pl.positional)
+        named = map(contextfree_rescale, pl.named)
         plottype = Makie.plottype(pl.plottype, positional...)
 
         # Compute continuous scales with correct plottype, to figure out role of color
@@ -75,8 +86,8 @@ function compute_entries_continuousscales(pls_grid)
         mergewith!(mergescales, continuousscales_grid[idx], continuousscales)
 
         # Compute `Entry` with rescaled columns
-        named = compute_attributes(pl.attributes, pl.primary, map(contextfree_rescale, pl.named))
-        entry = Entry(plottype, positional, named)
+        attrs = compute_attributes(ProcessedLayer(pl; plottype, positional, named))
+        entry = Entry(plottype, positional, attrs)
         push!(entries_grid[idx], entry)
     end
 
