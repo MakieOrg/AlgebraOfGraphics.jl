@@ -12,7 +12,7 @@
 # you define.
 
 # In fact `visual` can be used for any plotting function that is defined using
-# the `@recipe` macro from Makie. This means that if you have a custom recpie
+# the `@recipe` macro from Makie. This means that if you have a custom recipe
 # defined in another package you can use it from AlgebraOfGraphics just like any
 # of the plotting functions defined in Makie.
 
