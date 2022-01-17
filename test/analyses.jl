@@ -310,6 +310,10 @@ end
     for key in keys(labels)
         @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
     end
+
+    bins = 12.3
+    layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.histogram(; bins)
+    @test_throws ArgumentError AlgebraOfGraphics.ProcessedLayer(layer)
 end
 
 @testset "histogram2d" begin
@@ -377,4 +381,8 @@ end
     for key in keys(labels)
         @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
     end
+
+    bins = rand(2, 2)
+    layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.histogram(; bins)
+    @test_throws ArgumentError AlgebraOfGraphics.ProcessedLayer(layer)
 end

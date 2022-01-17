@@ -13,12 +13,14 @@ _kde(data::Tuple; kwargs...) = kde(data; kwargs...)
 defaultdatalimits(positional) = map(v -> mapreduce(extrema, extend_extrema, v), Tuple(positional))
 
 applydatalimits(f::Function, d) = map(f, d)
-applydatalimits(limits::Union{AbstractArray, Tuple}, _) = limits
+applydatalimits(limits::Tuple, _) = limits
 
-function _density(vs...; datalimits, npoints, kwargs...)
+function _density(vs::Tuple; datalimits, npoints, kwargs...)
     k = _kde(vs; kwargs...)
-    es = applydatalimits(datalimits, vs)
-    rgs = map(e -> range(e...; length=npoints), es)
+    intervals = applydatalimits(datalimits, vs)
+    rgs = map(intervals) do (min, max)
+        return range(min, max; length=npoints)
+    end
     res = pdf(k, rgs...)
     return (rgs..., res)
 end
@@ -27,7 +29,7 @@ function (d::DensityAnalysis)(input::ProcessedLayer)
     datalimits = d.datalimits === automatic ? defaultdatalimits(input.positional) : d.datalimits
     options = valid_options(; datalimits, d.npoints, d.kernel, d.bandwidth)
     output = map(input) do p, n
-        return _density(p...; pairs(n)..., pairs(options)...), (;)
+        return _density(Tuple(p); pairs(n)..., pairs(options)...), (;)
     end
     N = length(input.positional)
     labels = set(input.labels, N+1 => "pdf")

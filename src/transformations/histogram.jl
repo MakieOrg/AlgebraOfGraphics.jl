@@ -3,24 +3,26 @@ const categoricalplottypes = [BarPlot, Heatmap, Volume]
 to_weights(v) = weights(v)
 to_weights(v::AbstractWeights) = v
 
-function compute_edges(extrema, bins::Tuple{Vararg{Integer}}, closed)
-    return map(extrema, bins) do (min, max), n
-        histrange(float(min), float(max), n, closed)
+function compute_edges(intervals::Tuple, bins, closed)
+    bs = bins isa Tuple ? bins : map(_ -> bins, intervals)
+    return map(intervals, bs) do (min, max), b
+        b isa AbstractVector && return b
+        b isa Integer && return histrange(float(min), float(max), b, closed)
+        msg = "only AbstractVector and Integer or tuples thereof are accepted as bins"
+        throw(ArgumentError(msg))
     end
 end
-compute_edges(extrema, bins::Tuple{Vararg{AbstractArray}}, closed) = bins
 
 function midpoints(edges::AbstractRange)
     min, s, l = minimum(edges), step(edges), length(edges)
     return range(min + s / 2, step=s, length=l - 1)
 end
 
-function _histogram(vs...; bins=sturges(length(vs[1])), weights=automatic,
+function _histogram(vs::Tuple; bins=sturges(length(vs[1])), weights=automatic,
     normalization::Symbol, datalimits, closed::Symbol)
 
-    bins_tuple = bins isa Tuple ? bins : map(_ -> bins, vs)
-    es = applydatalimits(datalimits, vs)
-    edges = compute_edges(es, bins_tuple, closed)
+    intervals = applydatalimits(datalimits, vs)
+    edges = compute_edges(intervals, bins, closed)
     h = if weights === automatic
         fit(Histogram, vs, edges)
     else
@@ -41,7 +43,7 @@ function (h::HistogramAnalysis)(input::ProcessedLayer)
     options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
 
     output = map(input) do p, n
-        hist = _histogram(p...; pairs(n)..., pairs(options)...)
+        hist = _histogram(Tuple(p); pairs(n)..., pairs(options)...)
         return (map(midpoints, hist.edges)..., hist.weights), (;)
     end
 
