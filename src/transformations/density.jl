@@ -21,9 +21,9 @@ end
 applydatalimits(f::Function, d) = map(f, d)
 applydatalimits(limits::Union{AbstractArray, Tuple}, _) = limits
 
-function _density(data...; datalimits, npoints, kwargs...)
-    k = _kde(data; kwargs...)
-    es = applydatalimits(datalimits, data)
+function _density(vs...; datalimits, npoints, kwargs...)
+    k = _kde(vs; kwargs...)
+    es = applydatalimits(datalimits, vs)
     rgs = map(e -> range(e...; length=npoints), es)
     res = pdf(k, rgs...)
     return (rgs..., res)

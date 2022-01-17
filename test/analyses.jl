@@ -311,3 +311,70 @@ end
         @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
     end
 end
+
+@testset "histogram2d" begin
+    df = (x=rand(1000), y=rand(1000), c=rand(["a", "b"], 1000))
+    binsx, binsy = 0:0.01:1, 0:0.02:1
+    bins = (binsx, binsy)
+
+    layer = data(df) * mapping(:x, :y, layout=:c) * AlgebraOfGraphics.histogram(; bins)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    y1 = df.y[df.c .== "a"]
+    w1 = fit(Histogram, (x1, y1), bins).weights
+
+    x2 = df.x[df.c .== "b"]
+    y2 = df.y[df.c .== "b"]
+    w2 = fit(Histogram, (x2, y2), bins).weights
+
+    rgx, rgy, w = processedlayer.positional
+
+    @test rgx[1] ≈ (binsx[1:end-1] .+ binsx[2:end]) ./ 2
+    @test rgy[1] ≈ (binsy[1:end-1] .+ binsy[2:end]) ./ 2
+    @test w[1] == w1
+
+    @test rgx[2] ≈ (binsx[1:end-1] .+ binsx[2:end]) ./ 2
+    @test rgy[2] ≈ (binsy[1:end-1] .+ binsy[2:end]) ./ 2
+    @test w[2] == w2
+
+    bins, closed = 12, :left
+    layer = data(df) * mapping(:x, :y, layout=:c) * AlgebraOfGraphics.histogram(; bins, closed, datalimits=extrema)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    y1 = df.y[df.c .== "a"]
+    binsx1 = histrange(extrema(x1)..., bins, closed)
+    binsy1 = histrange(extrema(y1)..., bins, closed)
+    w1 = fit(Histogram, (x1, y1), (binsx1, binsy1)).weights
+
+    x2 = df.x[df.c .== "b"]
+    y2 = df.y[df.c .== "b"]
+    binsx2 = histrange(extrema(x2)..., bins, closed)
+    binsy2 = histrange(extrema(y2)..., bins, closed)
+    w2 = fit(Histogram, (x2, y2), (binsx2, binsy2)).weights
+
+    rgx, rgy, w = processedlayer.positional
+
+    @test rgx[1] ≈ (binsx1[1:end-1] .+ binsx1[2:end]) ./ 2
+    @test rgy[1] ≈ (binsy1[1:end-1] .+ binsy1[2:end]) ./ 2
+    @test w[1] == w1
+
+    @test rgx[2] ≈ (binsx2[1:end-1] .+ binsx2[2:end]) ./ 2
+    @test rgy[2] ≈ (binsy2[1:end-1] .+ binsy2[2:end]) ./ 2
+    @test w[2] == w2
+
+    @test processedlayer.primary == NamedArguments((layout=["a", "b"],))
+    @test isempty(processedlayer.named)
+    @test isempty(processedlayer.attributes)
+    @test processedlayer.plottype == AlgebraOfGraphics.Heatmap
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "y")
+    insert!(labels, 3, "count")
+    insert!(labels, :layout, "c")
+    for key in keys(labels)
+        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
+    end
+end

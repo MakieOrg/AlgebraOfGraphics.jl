@@ -15,14 +15,17 @@ function midpoints(edges::AbstractRange)
     return range(min + s / 2, step=s, length=l - 1)
 end
 
-function _histogram(data...; bins=sturges(length(data[1])), weights=automatic,
+function _histogram(vs...; bins=sturges(length(vs[1])), weights=automatic,
     normalization::Symbol, datalimits, closed::Symbol)
 
-    bins_tuple = bins isa Tuple ? bins : map(_ -> bins, data)
-    es = applydatalimits(datalimits, data)
+    bins_tuple = bins isa Tuple ? bins : map(_ -> bins, vs)
+    es = applydatalimits(datalimits, vs)
     edges = compute_edges(es, bins_tuple, closed)
-    w = weights === automatic ? () : (to_weights(weights),)
-    h = fit(Histogram, data, w..., edges)
+    h = if weights === automatic
+        fit(Histogram, vs, edges)
+    else
+        fit(Histogram, vs, to_weights(weights), edges)
+    end
     return normalize(h, mode=normalization)
 end
 
