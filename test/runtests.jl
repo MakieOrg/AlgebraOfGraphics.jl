@@ -5,6 +5,7 @@ using AlgebraOfGraphics: separate
 using AlgebraOfGraphics: Arguments, MixedArguments, NamedArguments
 
 using KernelDensity: kde, pdf
+using StatsBase: fit, histrange, Histogram
 
 Random.seed!(1234)
 

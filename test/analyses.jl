@@ -39,7 +39,7 @@
 
     @test rgx[2] ≈ rgx2
     @test d[2] ≈ d2
-    
+
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
     @test isempty(processedlayer.named)
     @test processedlayer.attributes == NamedArguments()
@@ -252,6 +252,61 @@ end
     insert!(labels, 2, "y")
     insert!(labels, 3, "count")
     insert!(labels, :layout, "c")
+    for key in keys(labels)
+        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
+    end
+end
+
+@testset "histogram1D" begin
+    df = (x=rand(1000), c=rand(["a", "b"], 1000))
+    bins = 0:0.01:1
+
+    layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.histogram(; bins)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    w1 = fit(Histogram, x1, bins).weights
+
+    x2 = df.x[df.c .== "b"]
+    w2 = fit(Histogram, x2, bins).weights
+
+    rgx, w = processedlayer.positional
+
+    @test rgx[1] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
+    @test w[1] == w1
+
+    @test rgx[2] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
+    @test w[2] == w2
+
+    bins, closed = 12, :left
+    layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.histogram(; bins, closed, datalimits=extrema)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    bins1 = histrange(extrema(x1)..., bins, closed)
+    w1 = fit(Histogram, x1, bins1).weights
+
+    x2 = df.x[df.c .== "b"]
+    bins2 = histrange(extrema(x2)..., bins, closed)
+    w2 = fit(Histogram, x2, bins2).weights
+
+    rgx, w = processedlayer.positional
+
+    @test rgx[1] ≈ (bins1[1:end-1] .+ bins1[2:end]) ./ 2
+    @test w[1] ≈ w1
+
+    @test rgx[2] ≈ (bins2[1:end-1] .+ bins2[2:end]) ./ 2
+    @test w[2] ≈ w2
+
+    @test processedlayer.primary == NamedArguments((color=["a", "b"],))
+    @test isempty(processedlayer.named)
+    @test processedlayer.attributes == NamedArguments((dodge_gap=0, x_gap=0))
+    @test processedlayer.plottype == AlgebraOfGraphics.BarPlot
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "count")
+    insert!(labels, :color, "c")
     for key in keys(labels)
         @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
     end
