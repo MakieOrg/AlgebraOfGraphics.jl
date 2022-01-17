@@ -37,7 +37,7 @@ Base.@kwdef struct HistogramAnalysis{D, B}
 end
 
 function (h::HistogramAnalysis)(input::ProcessedLayer)
-    datalimits = compute_datalimits(input.positional, h.datalimits)
+    datalimits = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
     options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
 
     output = map(input) do p, n

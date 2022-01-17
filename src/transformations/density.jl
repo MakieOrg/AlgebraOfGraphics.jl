@@ -10,13 +10,7 @@ end
 _kde(data::NTuple{1, Any}; kwargs...) = kde(data...; kwargs...)
 _kde(data::Tuple; kwargs...) = kde(data; kwargs...)
 
-function compute_datalimits(positional, datalimits)
-    return if datalimits === automatic
-        map(v -> mapreduce(extrema, extend_extrema, v), Tuple(positional))
-    else
-        datalimits
-    end
-end
+defaultdatalimits(positional) = map(v -> mapreduce(extrema, extend_extrema, v), Tuple(positional))
 
 applydatalimits(f::Function, d) = map(f, d)
 applydatalimits(limits::Union{AbstractArray, Tuple}, _) = limits
@@ -30,7 +24,7 @@ function _density(vs...; datalimits, npoints, kwargs...)
 end
 
 function (d::DensityAnalysis)(input::ProcessedLayer)
-    datalimits = compute_datalimits(input.positional, d.datalimits)
+    datalimits = d.datalimits === automatic ? defaultdatalimits(input.positional) : d.datalimits
     options = valid_options(; datalimits, d.npoints, d.kernel, d.bandwidth)
     output = map(input) do p, n
         return _density(p...; pairs(n)..., pairs(options)...), (;)

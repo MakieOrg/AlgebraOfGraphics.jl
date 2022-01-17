@@ -8,6 +8,7 @@
     - density (1d and 2d),
     - expectation (1d and 2d),
     - frequency (1d and 2d),
+    - histogram (1d and 2d),
 
 ## Faceted plots
 
