@@ -324,6 +324,18 @@ end
 
     @test rgx[2] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
     @test w[2] ≈ w2
+
+    @test processedlayer.primary == NamedArguments((color=["a", "b"],))
+    @test isempty(processedlayer.named)
+    @test processedlayer.attributes == NamedArguments((dodge_gap=0, x_gap=0))
+    @test processedlayer.plottype == AlgebraOfGraphics.BarPlot
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, :color, "c")
+    insert!(labels, :weights, "z")
+    insert!(labels, 2, "count")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
 
 @testset "histogram2d" begin
@@ -422,6 +434,19 @@ end
     @test rgx[2] ≈ (binsx[1:end-1] .+ binsx[2:end]) ./ 2
     @test rgy[2] ≈ (binsy[1:end-1] .+ binsy[2:end]) ./ 2
     @test w[2] == w2
+
+    @test processedlayer.primary == NamedArguments((layout=["a", "b"],))
+    @test isempty(processedlayer.named)
+    @test isempty(processedlayer.attributes)
+    @test processedlayer.plottype == AlgebraOfGraphics.Heatmap
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "y")
+    insert!(labels, :layout, "c")
+    insert!(labels, :weights, "z")
+    insert!(labels, 3, "count")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
 
 @testset "linear" begin
@@ -432,15 +457,15 @@ end
 
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
-    lm1 = lm([fill(one(eltype(x1)), length(x1)) x1], y1; dropcollinear)
+    lm1 = GLM.lm([fill(one(eltype(x1)), length(x1)) x1], y1; dropcollinear)
     x̂1 = range(extrema(x1)...; length=npoints)
-    ŷ1, lower1, upper1 = map(vec, predict(lm1, [ones(length(x̂1)) x̂1]; interval=:confidence))
+    ŷ1, lower1, upper1 = map(vec, GLM.predict(lm1, [ones(length(x̂1)) x̂1]; interval=:confidence))
 
     x2 = df.x[df.c .== "b"]
     y2 = df.y[df.c .== "b"]
-    lm2 = lm([fill(one(eltype(x2)), length(x2)) x2], y2; dropcollinear)
+    lm2 = GLM.lm([fill(one(eltype(x2)), length(x2)) x2], y2; dropcollinear)
     x̂2 = range(extrema(x2)...; length=npoints)
-    ŷ2, lower2, upper2 = map(vec, predict(lm2, [ones(length(x̂2)) x̂2]; interval=:confidence))
+    ŷ2, lower2, upper2 = map(vec, GLM.predict(lm2, [ones(length(x̂2)) x̂2]; interval=:confidence))
 
     x̂, ŷ = processedlayer.positional
     lower, upper = processedlayer.named[:lower], processedlayer.named[:upper]
@@ -454,7 +479,8 @@ end
     @test ŷ[2] ≈ ŷ2
     @test lower[2] ≈ lower2
     @test upper[2] ≈ upper2
-
+    
+    @test processedlayer.primary == NamedArguments((color=["a", "b"],))
     @test isempty(processedlayer.attributes)
     
     @test processedlayer.plottype == LinesFill
@@ -475,16 +501,16 @@ end
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
     z1 = df.z[df.c .== "a"]
-    lm1 = lm([fill(one(eltype(x1)), length(x1)) x1], y1; dropcollinear, wts=z1)
+    lm1 = GLM.lm([fill(one(eltype(x1)), length(x1)) x1], y1; dropcollinear, wts=z1)
     x̂1 = range(extrema(x1)...; length=npoints)
-    ŷ1 = vec(predict(lm1, [ones(length(x̂1)) x̂1]; interval=nothing))
+    ŷ1 = vec(GLM.predict(lm1, [ones(length(x̂1)) x̂1]; interval=nothing))
 
     x2 = df.x[df.c .== "b"]
     y2 = df.y[df.c .== "b"]
     z2 = df.z[df.c .== "b"]
-    lm2 = lm([fill(one(eltype(x2)), length(x2)) x2], y2; dropcollinear, wts=z2)
+    lm2 = GLM.lm([fill(one(eltype(x2)), length(x2)) x2], y2; dropcollinear, wts=z2)
     x̂2 = range(extrema(x2)...; length=npoints)
-    ŷ2 = vec(predict(lm2, [ones(length(x̂2)) x̂2]; interval=nothing))
+    ŷ2 = vec(GLM.predict(lm2, [ones(length(x̂2)) x̂2]; interval=nothing))
 
     x̂, ŷ = processedlayer.positional
 
@@ -494,6 +520,7 @@ end
     @test x̂[2] ≈ x̂2
     @test ŷ[2] ≈ ŷ2
 
+    @test processedlayer.primary == NamedArguments((color=["a", "b"],))
     @test isempty(processedlayer.named)
     @test isempty(processedlayer.attributes)
 
@@ -504,5 +531,44 @@ end
     insert!(labels, 2, "y")
     insert!(labels, :color, "c")
     insert!(labels, :weights, "z")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
+end
+
+@testset "smooth" begin
+    df = (x=rand(1000), y=rand(1000), c=rand(["a", "b"], 1000))
+    npoints = 150
+    layer = data(df) * mapping(:x, :y, color=:c) * smooth(; npoints)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    y1 = df.y[df.c .== "a"]
+    loess1 = Loess.loess(x1, y1)
+    x̂1 = range(extrema(x1)...; length=npoints)
+    ŷ1 = Loess.predict(loess1, x̂1)
+
+    x2 = df.x[df.c .== "b"]
+    y2 = df.y[df.c .== "b"]
+    loess2 = Loess.loess(x2, y2)
+    x̂2 = range(extrema(x2)...; length=npoints)
+    ŷ2 = Loess.predict(loess2, x̂2)
+
+    x̂, ŷ = processedlayer.positional
+
+    @test x̂[1] ≈ x̂1
+    @test ŷ[1] ≈ ŷ1
+
+    @test x̂[2] ≈ x̂2
+    @test ŷ[2] ≈ ŷ2
+
+    @test processedlayer.primary == NamedArguments((color=["a", "b"],))
+    @test isempty(processedlayer.named)
+    @test isempty(processedlayer.attributes)
+    
+    @test processedlayer.plottype == Lines
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "y")
+    insert!(labels, :color, "c")
     @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end

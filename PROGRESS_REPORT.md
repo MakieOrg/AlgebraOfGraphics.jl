@@ -12,7 +12,7 @@
     - weighted histogram (1d and 2d),
     - linear regression,
     - weighted linear regression,
-    - TODO: smooth,
+    - smooth regression.
 
 ## Faceted plots
 

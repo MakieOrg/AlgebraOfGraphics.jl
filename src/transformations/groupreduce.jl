@@ -1,4 +1,4 @@
-# Investigate link with transducers, potentially had shim to support OnlineStats
+# Potentially add shim to support OnlineStats
 function _groupreduce(agg, summaries::Tuple, values::Tuple)
     init, op, value = agg.init, agg.op, agg.value
     results = map(_ -> init(), CartesianIndices(map(length, summaries)))
