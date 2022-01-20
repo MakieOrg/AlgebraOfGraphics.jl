@@ -9,6 +9,8 @@
     - expectation (1d and 2d),
     - frequency (1d and 2d),
     - histogram (1d and 2d),
+    - TODO: linear,
+    - TODO: smooth,
 
 ## Faceted plots
 

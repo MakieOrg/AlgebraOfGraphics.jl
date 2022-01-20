@@ -1,8 +1,5 @@
 const categoricalplottypes = [BarPlot, Heatmap, Volume]
 
-to_weights(v) = weights(v)
-to_weights(v::AbstractWeights) = v
-
 function compute_edges(intervals::Tuple, bins, closed)
     bs = bins isa Tuple ? bins : map(_ -> bins, intervals)
     return map(intervals, bs) do (min, max), b
@@ -26,7 +23,7 @@ function _histogram(vs::Tuple; bins=sturges(length(vs[1])), weights=automatic,
     h = if weights === automatic
         fit(Histogram, vs, edges)
     else
-        fit(Histogram, vs, to_weights(weights), edges)
+        fit(Histogram, vs, StatsBase.weights(weights), edges)
     end
     return normalize(h, mode=normalization)
 end

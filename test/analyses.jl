@@ -316,6 +316,30 @@ end
     @test_throws ArgumentError AlgebraOfGraphics.ProcessedLayer(layer)
 end
 
+@testset "weightedhistogram1d" begin
+    df = (x=rand(1000), z=rand(1000), c=rand(["a", "b"], 1000))
+    bins = 0:0.01:1
+
+    layer = data(df) * mapping(:x, color=:c, weights=:z) * AlgebraOfGraphics.histogram(; bins)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    z1 = df.z[df.c .== "a"]
+    w1 = fit(Histogram, x1, weights(z1), bins).weights
+
+    x2 = df.x[df.c .== "b"]
+    z2 = df.z[df.c .== "b"]
+    w2 = fit(Histogram, x2, weights(z2), bins).weights
+
+    rgx, w = processedlayer.positional
+
+    @test rgx[1] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
+    @test w[1] ≈ w1
+
+    @test rgx[2] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
+    @test w[2] ≈ w2
+end
+
 @testset "histogram2d" begin
     df = (x=rand(1000), y=rand(1000), c=rand(["a", "b"], 1000))
     binsx, binsy = 0:0.01:1, 0:0.02:1
@@ -385,4 +409,33 @@ end
     bins = rand(2, 2)
     layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.histogram(; bins)
     @test_throws ArgumentError AlgebraOfGraphics.ProcessedLayer(layer)
+end
+
+@testset "weightedhistogram2d" begin
+    df = (x=rand(1000), y=rand(1000), z=rand(1000), c=rand(["a", "b"], 1000))
+    binsx, binsy = 0:0.01:1, 0:0.02:1
+    bins = (binsx, binsy)
+
+    layer = data(df) * mapping(:x, :y, layout=:c, weights=:z) * AlgebraOfGraphics.histogram(; bins)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    y1 = df.y[df.c .== "a"]
+    z1 = df.z[df.c .== "a"]
+    w1 = fit(Histogram, (x1, y1), weights(z1), bins).weights
+
+    x2 = df.x[df.c .== "b"]
+    y2 = df.y[df.c .== "b"]
+    z2 = df.z[df.c .== "b"]
+    w2 = fit(Histogram, (x2, y2), weights(z2), bins).weights
+
+    rgx, rgy, w = processedlayer.positional
+
+    @test rgx[1] ≈ (binsx[1:end-1] .+ binsx[2:end]) ./ 2
+    @test rgy[1] ≈ (binsy[1:end-1] .+ binsy[2:end]) ./ 2
+    @test w[1] == w1
+
+    @test rgx[2] ≈ (binsx[1:end-1] .+ binsx[2:end]) ./ 2
+    @test rgy[2] ≈ (binsy[1:end-1] .+ binsy[2:end]) ./ 2
+    @test w[2] == w2
 end
