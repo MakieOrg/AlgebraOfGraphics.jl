@@ -14,6 +14,13 @@
     - weighted linear regression,
     - smooth regression.
 
+- TODO: test logic from `ProcessedLayer` to plot
+- TODO: test legend construction
+- TODO: simplify and test logic for facet layout
+- TODO: unit tests for grouping machinery (esp. `_groupreduce`)
+- TODO: finalize and test wide and pregrouped APIs
+- TODO: optimize and test plotting for geometrical objects (GeoInterface)
+
 ## Faceted plots
 
 - Improved performance by blocking MakieLayout updates while building the figure. Done as part of [#316](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/316).
