@@ -571,4 +571,30 @@ end
     insert!(labels, 2, "y")
     insert!(labels, :color, "c")
     @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
+
+    # Also test integer input
+    df = (x=rand(1:3, 1000), y=rand(1000), c=rand(["a", "b"], 1000))
+    npoints = 150
+    layer = data(df) * mapping(:x, :y, color=:c) * smooth(; npoints)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    y1 = df.y[df.c .== "a"]
+    loess1 = Loess.loess(x1, y1)
+    x̂1 = range(extrema(x1)...; length=npoints)
+    ŷ1 = Loess.predict(loess1, x̂1)
+
+    x2 = df.x[df.c .== "b"]
+    y2 = df.y[df.c .== "b"]
+    loess2 = Loess.loess(x2, y2)
+    x̂2 = range(extrema(x2)...; length=npoints)
+    ŷ2 = Loess.predict(loess2, x̂2)
+
+    x̂, ŷ = processedlayer.positional
+
+    @test x̂[1] ≈ x̂1
+    @test ŷ[1] ≈ ŷ1
+
+    @test x̂[2] ≈ x̂2
+    @test ŷ[2] ≈ ŷ2
 end
