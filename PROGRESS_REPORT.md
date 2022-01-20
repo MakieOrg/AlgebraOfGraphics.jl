@@ -4,12 +4,14 @@
 
 - Reworked internal representation of layers and processed layers to enable "Makie-independent testing" in [#312](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/312), [#313](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/313), and [#316](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/316).
 
-- Added tests for the following analyses:
+- Added tests for the following analyses (in [#319](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/319)):
     - density (1d and 2d),
     - expectation (1d and 2d),
     - frequency (1d and 2d),
     - histogram (1d and 2d),
-    - TODO: linear,
+    - weighted histogram (1d and 2d),
+    - linear regression,
+    - weighted linear regression,
     - TODO: smooth,
 
 ## Faceted plots

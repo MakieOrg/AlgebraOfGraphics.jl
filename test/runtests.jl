@@ -6,6 +6,7 @@ using AlgebraOfGraphics: Arguments, MixedArguments, NamedArguments
 
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, weights
+using GLM: lm, predict
 
 Random.seed!(1234)
 

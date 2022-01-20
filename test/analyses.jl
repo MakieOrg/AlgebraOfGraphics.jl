@@ -47,11 +47,9 @@
 
     labels = MixedArguments()
     insert!(labels, 1, "x")
-    insert!(labels, 2, "pdf")
     insert!(labels, :color, "c")
-    for key in keys(labels)
-        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
-    end
+    insert!(labels, 2, "pdf")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
 
 @testset "density2d" begin
@@ -92,11 +90,9 @@ end
     labels = MixedArguments()
     insert!(labels, 1, "x")
     insert!(labels, 2, "y")
-    insert!(labels, 3, "pdf")
     insert!(labels, :color, "c")
-    for key in keys(labels)
-        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
-    end
+    insert!(labels, 3, "pdf")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
 
 @testset "expectation1d" begin
@@ -130,9 +126,7 @@ end
     insert!(labels, 1, "x")
     insert!(labels, 2, "y")
     insert!(labels, :layout, "c")
-    for key in keys(labels)
-        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
-    end
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
 
 @testset "expectation2d" begin
@@ -173,9 +167,7 @@ end
     insert!(labels, 2, "y")
     insert!(labels, 3, "z")
     insert!(labels, :layout, "c")
-    for key in keys(labels)
-        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
-    end
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
 
 @testset "frequency1d" begin
@@ -207,11 +199,9 @@ end
 
     labels = MixedArguments()
     insert!(labels, 1, "x")
-    insert!(labels, 2, "count")
     insert!(labels, :layout, "c")
-    for key in keys(labels)
-        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
-    end
+    insert!(labels, 2, "count")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
 
 @testset "frequency2d" begin
@@ -250,18 +240,16 @@ end
     labels = MixedArguments()
     insert!(labels, 1, "x")
     insert!(labels, 2, "y")
-    insert!(labels, 3, "count")
     insert!(labels, :layout, "c")
-    for key in keys(labels)
-        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
-    end
+    insert!(labels, 3, "count")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
 
 @testset "histogram1D" begin
     df = (x=rand(1000), c=rand(["a", "b"], 1000))
     bins = 0:0.01:1
 
-    layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.histogram(; bins)
+    layer = data(df) * mapping(:x, color=:c) * histogram(; bins)
     processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
 
     x1 = df.x[df.c .== "a"]
@@ -279,7 +267,7 @@ end
     @test w[2] == w2
 
     bins, closed = 12, :left
-    layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.histogram(; bins, closed, datalimits=extrema)
+    layer = data(df) * mapping(:x, color=:c) * histogram(; bins, closed, datalimits=extrema)
     processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
 
     x1 = df.x[df.c .== "a"]
@@ -305,14 +293,12 @@ end
 
     labels = MixedArguments()
     insert!(labels, 1, "x")
-    insert!(labels, 2, "count")
     insert!(labels, :color, "c")
-    for key in keys(labels)
-        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
-    end
+    insert!(labels, 2, "count")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 
     bins = 12.3
-    layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.histogram(; bins)
+    layer = data(df) * mapping(:x, color=:c) * histogram(; bins)
     @test_throws ArgumentError AlgebraOfGraphics.ProcessedLayer(layer)
 end
 
@@ -320,7 +306,7 @@ end
     df = (x=rand(1000), z=rand(1000), c=rand(["a", "b"], 1000))
     bins = 0:0.01:1
 
-    layer = data(df) * mapping(:x, color=:c, weights=:z) * AlgebraOfGraphics.histogram(; bins)
+    layer = data(df) * mapping(:x, color=:c, weights=:z) * histogram(; bins)
     processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
 
     x1 = df.x[df.c .== "a"]
@@ -345,7 +331,7 @@ end
     binsx, binsy = 0:0.01:1, 0:0.02:1
     bins = (binsx, binsy)
 
-    layer = data(df) * mapping(:x, :y, layout=:c) * AlgebraOfGraphics.histogram(; bins)
+    layer = data(df) * mapping(:x, :y, layout=:c) * histogram(; bins)
     processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
 
     x1 = df.x[df.c .== "a"]
@@ -367,7 +353,7 @@ end
     @test w[2] == w2
 
     bins, closed = 12, :left
-    layer = data(df) * mapping(:x, :y, layout=:c) * AlgebraOfGraphics.histogram(; bins, closed, datalimits=extrema)
+    layer = data(df) * mapping(:x, :y, layout=:c) * histogram(; bins, closed, datalimits=extrema)
     processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
 
     x1 = df.x[df.c .== "a"]
@@ -400,14 +386,12 @@ end
     labels = MixedArguments()
     insert!(labels, 1, "x")
     insert!(labels, 2, "y")
-    insert!(labels, 3, "count")
     insert!(labels, :layout, "c")
-    for key in keys(labels)
-        @test labels[key] == AlgebraOfGraphics.to_label(processedlayer.labels[key])
-    end
+    insert!(labels, 3, "count")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 
     bins = rand(2, 2)
-    layer = data(df) * mapping(:x, color=:c) * AlgebraOfGraphics.histogram(; bins)
+    layer = data(df) * mapping(:x, color=:c) * histogram(; bins)
     @test_throws ArgumentError AlgebraOfGraphics.ProcessedLayer(layer)
 end
 
@@ -416,7 +400,7 @@ end
     binsx, binsy = 0:0.01:1, 0:0.02:1
     bins = (binsx, binsy)
 
-    layer = data(df) * mapping(:x, :y, layout=:c, weights=:z) * AlgebraOfGraphics.histogram(; bins)
+    layer = data(df) * mapping(:x, :y, layout=:c, weights=:z) * histogram(; bins)
     processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
 
     x1 = df.x[df.c .== "a"]
@@ -438,4 +422,87 @@ end
     @test rgx[2] ≈ (binsx[1:end-1] .+ binsx[2:end]) ./ 2
     @test rgy[2] ≈ (binsy[1:end-1] .+ binsy[2:end]) ./ 2
     @test w[2] == w2
+end
+
+@testset "linear" begin
+    df = (x=rand(1000), y=rand(1000), c=rand(["a", "b"], 1000))
+    npoints, dropcollinear = 150, false
+    layer = data(df) * mapping(:x, :y, color=:c) * linear(; npoints, dropcollinear)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    y1 = df.y[df.c .== "a"]
+    lm1 = lm([fill(one(eltype(x1)), length(x1)) x1], y1; dropcollinear)
+    x̂1 = range(extrema(x1)...; length=npoints)
+    ŷ1, lower1, upper1 = map(vec, predict(lm1, [ones(length(x̂1)) x̂1]; interval=:confidence))
+
+    x2 = df.x[df.c .== "b"]
+    y2 = df.y[df.c .== "b"]
+    lm2 = lm([fill(one(eltype(x2)), length(x2)) x2], y2; dropcollinear)
+    x̂2 = range(extrema(x2)...; length=npoints)
+    ŷ2, lower2, upper2 = map(vec, predict(lm2, [ones(length(x̂2)) x̂2]; interval=:confidence))
+
+    x̂, ŷ = processedlayer.positional
+    lower, upper = processedlayer.named[:lower], processedlayer.named[:upper]
+
+    @test x̂[1] ≈ x̂1
+    @test ŷ[1] ≈ ŷ1
+    @test lower[1] ≈ lower1
+    @test upper[1] ≈ upper1
+
+    @test x̂[2] ≈ x̂2
+    @test ŷ[2] ≈ ŷ2
+    @test lower[2] ≈ lower2
+    @test upper[2] ≈ upper2
+
+    @test isempty(processedlayer.attributes)
+    
+    @test processedlayer.plottype == LinesFill
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "y")
+    insert!(labels, :color, "c")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
+end
+
+@testset "weightedlinear" begin
+    df = (x=rand(1000), y=rand(1000), z=rand(1000), c=rand(["a", "b"], 1000))
+    npoints, dropcollinear = 150, false
+    layer = data(df) * mapping(:x, :y, color=:c, weights=:z) * linear(; npoints, dropcollinear)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    y1 = df.y[df.c .== "a"]
+    z1 = df.z[df.c .== "a"]
+    lm1 = lm([fill(one(eltype(x1)), length(x1)) x1], y1; dropcollinear, wts=z1)
+    x̂1 = range(extrema(x1)...; length=npoints)
+    ŷ1 = vec(predict(lm1, [ones(length(x̂1)) x̂1]; interval=nothing))
+
+    x2 = df.x[df.c .== "b"]
+    y2 = df.y[df.c .== "b"]
+    z2 = df.z[df.c .== "b"]
+    lm2 = lm([fill(one(eltype(x2)), length(x2)) x2], y2; dropcollinear, wts=z2)
+    x̂2 = range(extrema(x2)...; length=npoints)
+    ŷ2 = vec(predict(lm2, [ones(length(x̂2)) x̂2]; interval=nothing))
+
+    x̂, ŷ = processedlayer.positional
+
+    @test x̂[1] ≈ x̂1
+    @test ŷ[1] ≈ ŷ1
+
+    @test x̂[2] ≈ x̂2
+    @test ŷ[2] ≈ ŷ2
+
+    @test isempty(processedlayer.named)
+    @test isempty(processedlayer.attributes)
+
+    @test processedlayer.plottype == Lines
+
+    labels = MixedArguments()
+    insert!(labels, 1, "x")
+    insert!(labels, 2, "y")
+    insert!(labels, :color, "c")
+    insert!(labels, :weights, "z")
+    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
