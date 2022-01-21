@@ -449,6 +449,18 @@ end
     @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
 
+@testset "intercept" begin
+    x = rand(10)
+    mat = AlgebraOfGraphics.add_intercept_column(x)
+    @test mat == [ones(10) x]
+    @test eltype(mat) == Float64
+    
+    x = rand(1:3, 10)
+    mat = AlgebraOfGraphics.add_intercept_column(x)
+    @test mat == [ones(10) x]
+    @test eltype(mat) == Float64
+end
+
 @testset "linear" begin
     df = (x=rand(1000), y=rand(1000), c=rand(["a", "b"], 1000))
     npoints, dropcollinear = 150, false

@@ -3,9 +3,9 @@ const categoricalplottypes = [BarPlot, Heatmap, Volume]
 function compute_edges(intervals::Tuple, bins, closed)
     bs = bins isa Tuple ? bins : map(_ -> bins, intervals)
     return map(intervals, bs) do (min, max), b
-        b isa AbstractVector && return b
+        b isa AbstractRange && return b
         b isa Integer && return histrange(float(min), float(max), b, closed)
-        msg = "only AbstractVector and Integer or tuples thereof are accepted as bins"
+        msg = "only AbstractRange and Integer or tuples thereof are accepted as bins"
         throw(ArgumentError(msg))
     end
 end
