@@ -60,11 +60,17 @@ end
 """
     histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none)
 
-Compute a histogram. `bins` can be an `Int` to create that
-number of equal-width bins over the range of `values`. In that case, the range covered
-by the `bins` is defined by `datalimits` (defaults to the extrema of the data).
-Alternatively, `bins` can be a sorted iterable of bin edges.
+Compute a histogram.
+
+The attribute `bins` can be an `Integer`, an `AbstractRange`, or a `Tuple`
+of either integers or ranges (useful for 2- or 3-dimensional histograms).
+When `bins` is an `Integer`, it denotes the approximate number of equal-width
+intervals used to compute the histogram. In that case, the range covered by the
+intervals is defined by `datalimits` (defaults to the extrema of the data).
+When `bins` is an `AbstractRange`, it denotes the intervals directly.
+
 `closed` determines whether the the intervals are closed to the left or to the right.
+
 The histogram can be normalized by setting `normalization`. Possible values are:
 *  `:pdf`: Normalize by sum of weights and bin sizes. Resulting histogram
    has norm 1 and represents a PDF.
@@ -74,6 +80,7 @@ The histogram can be normalized by setting `normalization`. Possible values are:
    represents the fraction of probability mass for each bin and does not have
    norm 1.
 *  `:none`: Do not normalize.
+
 Weighted data is supported via the keyword `weights`.
 
 !!! note
