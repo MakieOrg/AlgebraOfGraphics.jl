@@ -21,7 +21,7 @@ fg = draw(plt, legend=(position=:top, titleposition=:left, framevisible=true, pa
 
 # To adjust the title and order of labels in a legend you can use the pair syntax.
 
-layers = linear() +  mapping(color= :group => sorter(labels) => "Labels")
+layers = linear() +  mapping(color=:group => sorter(labels) => "Labels")
 plt = data(df) * layers * mapping(:x, :y)
 draw(plt)
 
