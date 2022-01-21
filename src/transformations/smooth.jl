@@ -7,9 +7,8 @@ end
 function (l::SmoothAnalysis)(input::ProcessedLayer)
     output = map(input) do p, _
         x, y = p
-        min, max = extrema(x)
-        model = Loess.loess(Float64.(x), Float64.(y); l.span, l.degree)
-        x̂ = collect(range(min, max, length=l.npoints))
+        model = Loess.loess(x, y; l.span, l.degree)
+        x̂ = range(extrema(x)..., length=l.npoints)
         ŷ = Loess.predict(model, x̂)
         return (x̂, ŷ), (;)
     end

@@ -4,7 +4,12 @@ Base.@kwdef struct LinearAnalysis{I}
     interval::I=automatic
 end
 
-add_intercept_column(x::AbstractVector{T}) where {T} = [ones(T, length(x)) x]
+function add_intercept_column(x::AbstractVector{T}) where {T}
+    mat = similar(x, float(T), (length(x), 2))
+    fill!(view(mat, :, 1), 1)
+    copyto!(view(mat, :, 2), x)
+    return mat
+end
 
 # TODO: add multidimensional version
 function (l::LinearAnalysis)(input::ProcessedLayer)
@@ -14,7 +19,8 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         default_interval = length(weights) > 0 ? nothing : :confidence
         interval = l.interval === automatic ? default_interval : l.interval
         # FIXME: handle collinear case gracefully
-        lin_model = GLM.lm(add_intercept_column(x), collect(y); wts=weights, l.dropcollinear)
+        # TODO: fix GLM to handle AbstractArray here
+        lin_model = GLM.lm(add_intercept_column(x), collect(y); wts=collect(weights), l.dropcollinear)
         x̂ = range(extrema(x)..., length=l.npoints)
         pred = GLM.predict(lin_model, add_intercept_column(x̂); interval)
         return if !isnothing(interval)

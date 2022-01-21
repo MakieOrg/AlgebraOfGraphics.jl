@@ -10,30 +10,26 @@ end
 _kde(data::NTuple{1, Any}; kwargs...) = kde(data...; kwargs...)
 _kde(data::Tuple; kwargs...) = kde(data; kwargs...)
 
-function compute_datalimits(positional, datalimits)
-    return if datalimits === automatic
-        map(v -> mapreduce(extrema, extend_extrema, v), Tuple(positional))
-    else
-        datalimits
-    end
-end
+defaultdatalimits(positional) = map(v -> mapreduce(extrema, extend_extrema, v), Tuple(positional))
 
 applydatalimits(f::Function, d) = map(f, d)
-applydatalimits(limits::Union{AbstractArray, Tuple}, _) = limits
+applydatalimits(limits::Tuple, _) = limits
 
-function _density(data...; datalimits, npoints, kwargs...)
-    k = _kde(data; kwargs...)
-    es = applydatalimits(datalimits, data)
-    rgs = map(e -> range(e...; length=npoints), es)
+function _density(vs::Tuple; datalimits, npoints, kwargs...)
+    k = _kde(vs; kwargs...)
+    intervals = applydatalimits(datalimits, vs)
+    rgs = map(intervals) do (min, max)
+        return range(min, max; length=npoints)
+    end
     res = pdf(k, rgs...)
     return (rgs..., res)
 end
 
 function (d::DensityAnalysis)(input::ProcessedLayer)
-    datalimits = compute_datalimits(input.positional, d.datalimits)
+    datalimits = d.datalimits === automatic ? defaultdatalimits(input.positional) : d.datalimits
     options = valid_options(; datalimits, d.npoints, d.kernel, d.bandwidth)
     output = map(input) do p, n
-        return _density(p...; pairs(n)..., pairs(options)...), (;)
+        return _density(Tuple(p); pairs(n)..., pairs(options)...), (;)
     end
     N = length(input.positional)
     labels = set(input.labels, N+1 => "pdf")

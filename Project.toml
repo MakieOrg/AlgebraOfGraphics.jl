@@ -31,7 +31,7 @@ GeoInterface = "0.5"
 GeometryBasics = "0.4.1"
 GridLayoutBase = "0.6"
 KernelDensity = "0.6"
-Loess = "0.5"
+Loess = "0.5.1"
 Makie = "0.15.2"
 PlotUtils = "1"
 PooledArrays = "1"
@@ -42,7 +42,9 @@ Tables = "1.4"
 julia = "1.6"
 
 [extras]
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Random", "Statistics", "Test"]
