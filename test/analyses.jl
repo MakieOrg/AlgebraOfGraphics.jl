@@ -502,6 +502,38 @@ end
     insert!(labels, 2, "y")
     insert!(labels, :color, "c")
     @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
+
+    # Test `interval` and `level` custom values
+    df = (x=rand(1000), y=rand(1000), c=rand(["a", "b"], 1000))
+    npoints, dropcollinear = 150, false
+    interval, level = :prediction, 0.9
+    layer = data(df) * mapping(:x, :y, color=:c) * linear(; npoints, dropcollinear, interval, level)
+    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+
+    x1 = df.x[df.c .== "a"]
+    y1 = df.y[df.c .== "a"]
+    lm1 = GLM.lm([fill(one(eltype(x1)), length(x1)) x1], y1; dropcollinear)
+    x̂1 = range(extrema(x1)...; length=npoints)
+    ŷ1, lower1, upper1 = map(vec, GLM.predict(lm1, [ones(length(x̂1)) x̂1]; interval, level))
+
+    x2 = df.x[df.c .== "b"]
+    y2 = df.y[df.c .== "b"]
+    lm2 = GLM.lm([fill(one(eltype(x2)), length(x2)) x2], y2; dropcollinear)
+    x̂2 = range(extrema(x2)...; length=npoints)
+    ŷ2, lower2, upper2 = map(vec, GLM.predict(lm2, [ones(length(x̂2)) x̂2]; interval, level))
+
+    x̂, ŷ = processedlayer.positional
+    lower, upper = processedlayer.named[:lower], processedlayer.named[:upper]
+
+    @test x̂[1] ≈ x̂1
+    @test ŷ[1] ≈ ŷ1
+    @test lower[1] ≈ lower1
+    @test upper[1] ≈ upper1
+
+    @test x̂[2] ≈ x̂2
+    @test ŷ[2] ≈ ŷ2
+    @test lower[2] ≈ lower2
+    @test upper[2] ≈ upper2
 end
 
 @testset "weightedlinear" begin
