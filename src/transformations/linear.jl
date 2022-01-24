@@ -44,10 +44,10 @@ Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determi
 Use `interval` to specify what type of interval the shaded band should represent,
 for a given coverage `level` (the default `0.95` equates `alpha = 0.05`).
 Valid values of `interval` are `:confidence`, to delimit the uncertainty of the predicted
-relationship, or `:prediction`, to delimit estimated bounds for new data points.
+relationship, and `:prediction`, to delimit estimated bounds for new data points.
 Use `interval = nothing` to only compute the line fit, without any uncertainty estimate. 
 By default, this analysis errors on singular (collinear) data. To avoid that,
 it is possible to set `dropcollinear=true`.
-`npoints` is the number of points used by Makie to draw the line
+`npoints` is the number of points used by Makie to draw the shaded band.
 """
 linear(; options...) = transformation(LinearAnalysis(; options...))
