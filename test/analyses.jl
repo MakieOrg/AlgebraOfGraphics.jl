@@ -288,7 +288,7 @@ end
 
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
     @test isempty(processedlayer.named)
-    @test processedlayer.attributes == NamedArguments((dodge_gap=0, x_gap=0))
+    @test processedlayer.attributes == NamedArguments((gap=0, dodge_gap=0))
     @test processedlayer.plottype == AlgebraOfGraphics.BarPlot
 
     labels = MixedArguments()
@@ -327,7 +327,7 @@ end
 
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
     @test isempty(processedlayer.named)
-    @test processedlayer.attributes == NamedArguments((dodge_gap=0, x_gap=0))
+    @test processedlayer.attributes == NamedArguments((gap=0, dodge_gap=0))
     @test processedlayer.plottype == AlgebraOfGraphics.BarPlot
 
     labels = MixedArguments()

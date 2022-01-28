@@ -8,6 +8,12 @@
 
 - Customizable axis linking behavior.
 - Customizable legend and colorbar position and look.
+- In v0.6.1, support `level` in `linear` analysis for confidence interval.
+
+## Internal changes
+
+- In v0.6.1, replaced tuples and named tuples in `Layer` and `Entry` with dictionaries from [Dictionaries.jl](https://github.com/andyferris/Dictionaries.jl).
+- In v0.6.1, split internal `Entry` type into `ProcessedLayer` (to be used for analyses) and `Entry` (to be used for plotting).
 
 # AlgebraOfGraphics.jl v0.5 Release Notes
 
