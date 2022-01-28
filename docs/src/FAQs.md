@@ -117,5 +117,5 @@ fg #hide
 !!! note
 
     When setting the `width` and `height` dimensions of each axis manually you
-    will need to call `AlgebraOfGraphics.resizetocontent!(fg)` before
+    will need to call `resize_to_layout!(fg)` before
     displaying the figure such that each axis is sized correctly.

@@ -43,7 +43,7 @@ function draw(s::OneOrMoreLayers;
         facet!(fg; facet)
         colorbar!(fg; colorbar...)
         legend!(fg; legend...)
-        resizetocontent!(fg)
+        resize_to_layout!(fg)
         return fg
     end
 end
