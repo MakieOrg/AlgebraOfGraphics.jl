@@ -268,12 +268,15 @@ end
     w2 = fit(Histogram, x2, bins).weights
 
     rgx, w = processedlayer.positional
+    width = processedlayer.named[:width]
 
     @test rgx[1] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
     @test w[1] == w1
+    @test width[1] ≈ diff(bins)
 
     @test rgx[2] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
     @test w[2] == w2
+    @test width[2] ≈ diff(bins)
 
     bins, closed = 12, :left
     layer = data(df) * mapping(:x, color=:c) * histogram(; bins, closed, datalimits=extrema)
@@ -288,15 +291,15 @@ end
     w2 = fit(Histogram, x2, bins2).weights
 
     rgx, w = processedlayer.positional
-    widths = processedlayer.named[:width]
+    width = processedlayer.named[:width]
 
     @test rgx[1] ≈ (bins1[1:end-1] .+ bins1[2:end]) ./ 2
     @test w[1] ≈ w1
-    @test widths[1] ≈ diff(bins1)
+    @test width[1] ≈ diff(bins1)
 
     @test rgx[2] ≈ (bins2[1:end-1] .+ bins2[2:end]) ./ 2
     @test w[2] ≈ w2
-    @test widths[2] ≈ diff(bins2)
+    @test width[2] ≈ diff(bins2)
 
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
     @test processedlayer.attributes == NamedArguments((gap=0, dodge_gap=0))
@@ -330,15 +333,15 @@ end
     w2 = fit(Histogram, x2, weights(z2), bins).weights
 
     rgx, w = processedlayer.positional
-    widths = processedlayer.named[:width]
+    width = processedlayer.named[:width]
 
     @test rgx[1] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
     @test w[1] ≈ w1
-    @test widths[1] ≈ diff(bins)
+    @test width[1] ≈ diff(bins)
 
     @test rgx[2] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
     @test w[2] ≈ w2
-    @test widths[2] ≈ diff(bins)
+    @test width[2] ≈ diff(bins)
 
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
     @test keys(processedlayer.named) == Indices([:width])
