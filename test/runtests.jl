@@ -5,6 +5,8 @@ using AlgebraOfGraphics: separate
 using AlgebraOfGraphics: midpoints
 using AlgebraOfGraphics: Arguments, MixedArguments, NamedArguments
 
+using Dictionaries: Indices
+
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, weights
 using GLM: GLM

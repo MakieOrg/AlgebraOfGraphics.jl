@@ -70,12 +70,12 @@ end
 
 Compute a histogram.
 
-The attribute `bins` can be an `Integer`, an `AbstractRange`, or a `Tuple`
-of either integers or ranges (useful for 2- or 3-dimensional histograms).
+The attribute `bins` can be an `Integer`, an `AbstractVector` (in particular, a range), or
+a `Tuple` of either integers or abstract vectors (useful for 2- or 3-dimensional histograms).
 When `bins` is an `Integer`, it denotes the approximate number of equal-width
 intervals used to compute the histogram. In that case, the range covered by the
 intervals is defined by `datalimits` (defaults to the extrema of the data).
-When `bins` is an `AbstractRange`, it denotes the intervals directly.
+When `bins` is an `AbstractVector`, it denotes the intervals directly.
 
 `closed` determines whether the the intervals are closed to the left or to the right.
 
