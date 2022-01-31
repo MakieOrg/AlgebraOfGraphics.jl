@@ -41,7 +41,9 @@ function (h::HistogramAnalysis)(input::ProcessedLayer)
 
     output = map(input) do p, n
         hist = _histogram(Tuple(p); pairs(n)..., pairs(options)...)
-        return (map(midpoints, hist.edges)..., hist.weights), (;)
+        edges, weights = hist.edges, hist.weights
+        named = length(edges) === 1 ? (width=step(first(edges)),) : (;)
+        return (map(midpoints, edges)..., weights), named
     end
 
     N = length(input.positional)

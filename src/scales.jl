@@ -92,9 +92,11 @@ function datetimeticks(f, datetimes::AbstractVector{<:TimeType})
 end
 
 # Rescaling methods that do not depend on context
-contextfree_rescale(values::AbstractArray{<:TimeType}) = map(datetime2float, values)
-contextfree_rescale(values::AbstractArray{<:Verbatim}) = map(getindex, values)
-contextfree_rescale(values::AbstractArray) = values
+elementwise_rescale(value::TimeType) = datetime2float(value) 
+elementwise_rescale(value::Verbatim) = value[]
+elementwise_rescale(value) = value
+
+contextfree_rescale(values) = map(elementwise_rescale, values)
 
 rescale(values, ::Nothing) = values
 
