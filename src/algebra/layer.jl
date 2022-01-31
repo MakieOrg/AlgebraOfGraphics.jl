@@ -183,14 +183,32 @@ function mergeable(processedlayer::ProcessedLayer)
     return false
 end
 
+function extend_scalars(v, n)
+    w = Broadcast.broadcastable(v)
+    nd = ndims(w)
+    if nd == 0
+        # TODO: consider lazy container
+        return fill(only(w), n)
+    elseif nd == 1
+        assert_equal(length(w), n)
+        return w
+    else
+        throw(ArgumentError("expecting scalar or vector, found array with $nd indices"))
+    end
+end
+
 # This method works on a list of "sliced" `ProcessedLayer`s
 function concatenate(pls::AbstractVector{ProcessedLayer})
     pl = first(pls)
-    ns = [mapreduce(length, assert_equal, Iterators.flatten([pl.positional, pl.named])) for pl in pls]
+    ns = [mapreduce(length, assert_equal, pl.positional) for pl in pls]
 
-    primary = map(key -> reduce(vcat, [fill(pl.primary[key], n) for (pl, n) in zip(pls, ns)]), keys(pl.primary))
+    primary = map(keys(pl.primary)) do key
+        return reduce(vcat, [extend_scalars(pl.primary[key], n) for (pl, n) in zip(pls, ns)])
+    end
+    named = map(keys(pl.named)) do key
+        return reduce(vcat, [extend_scalars(pl.named[key], n) for (pl, n) in zip(pls, ns)])
+    end
     positional = map(key -> reduce(vcat, [pl.positional[key] for pl in pls]), keys(pl.positional))
-    named = map(key -> reduce(vcat, [pl.named[key] for pl in pls]), keys(pl.named))
 
     return ProcessedLayer(pl; primary, positional, named)
 end
