@@ -3,11 +3,17 @@ const categoricalplottypes = [BarPlot, Heatmap, Volume]
 function compute_edges(intervals::Tuple, bins, closed)
     bs = bins isa Tuple ? bins : map(_ -> bins, intervals)
     return map(intervals, bs) do (min, max), b
-        b isa AbstractRange && return b
+        b isa AbstractVector && return b
         b isa Integer && return histrange(float(min), float(max), b, closed)
-        msg = "only AbstractRange and Integer or tuples thereof are accepted as bins"
+        msg = "only AbstractVector and Integer or tuples thereof are accepted as bins"
         throw(ArgumentError(msg))
     end
+end
+
+function midpoints(edges::AbstractVector)
+    i0, i1 = firstindex(edges), lastindex(edges)
+    front, tail = view(edges, i0:i1-1), view(edges, i0+1:i1)
+    return (front .+ tail) ./ 2
 end
 
 function midpoints(edges::AbstractRange)
@@ -41,7 +47,9 @@ function (h::HistogramAnalysis)(input::ProcessedLayer)
 
     output = map(input) do p, n
         hist = _histogram(Tuple(p); pairs(n)..., pairs(options)...)
-        return (map(midpoints, hist.edges)..., hist.weights), (;)
+        edges, weights = hist.edges, hist.weights
+        named = length(edges) == 1 ? (; width=diff(first(edges))) : (;)
+        return (map(midpoints, edges)..., weights), named
     end
 
     N = length(input.positional)
@@ -62,12 +70,12 @@ end
 
 Compute a histogram.
 
-The attribute `bins` can be an `Integer`, an `AbstractRange`, or a `Tuple`
-of either integers or ranges (useful for 2- or 3-dimensional histograms).
+The attribute `bins` can be an `Integer`, an `AbstractVector` (in particular, a range), or
+a `Tuple` of either integers or abstract vectors (useful for 2- or 3-dimensional histograms).
 When `bins` is an `Integer`, it denotes the approximate number of equal-width
 intervals used to compute the histogram. In that case, the range covered by the
 intervals is defined by `datalimits` (defaults to the extrema of the data).
-When `bins` is an `AbstractRange`, it denotes the intervals directly.
+When `bins` is an `AbstractVector`, it denotes the intervals directly.
 
 `closed` determines whether the the intervals are closed to the left or to the right.
 

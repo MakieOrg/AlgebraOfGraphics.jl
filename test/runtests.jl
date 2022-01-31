@@ -2,7 +2,10 @@ using AlgebraOfGraphics, Makie, Random, Statistics, Test
 
 using AlgebraOfGraphics: Sorted
 using AlgebraOfGraphics: separate
+using AlgebraOfGraphics: midpoints
 using AlgebraOfGraphics: Arguments, MixedArguments, NamedArguments
+
+using Dictionaries: Indices
 
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, weights

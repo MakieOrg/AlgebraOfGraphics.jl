@@ -56,12 +56,9 @@ function compute_attributes(pl::ProcessedLayer)
 
     merge!(attrs, Dictionary(valid_options(; color, cycle)))
 
-    # avoid automatic bar width computation in Makie
-    if (plottype <: BarPlot) && !haskey(attrs, :width)
-        x = first(positional)
-        width = (x isa AbstractRange) && (length(positional) == 2) ? step(x) : 1.0
-        insert!(attrs, :width, width)
-    end
+    # avoid automatic bar width computation in Makie (issue #277)
+    # TODO: consider only implementing this when `x` is categorical
+    (plottype <: BarPlot) && !haskey(attrs, :width) && insert!(attrs, :width, 1)
 
     # remove unnecessary information 
     return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
