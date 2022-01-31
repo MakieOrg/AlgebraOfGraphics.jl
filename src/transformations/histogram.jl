@@ -3,11 +3,17 @@ const categoricalplottypes = [BarPlot, Heatmap, Volume]
 function compute_edges(intervals::Tuple, bins, closed)
     bs = bins isa Tuple ? bins : map(_ -> bins, intervals)
     return map(intervals, bs) do (min, max), b
-        b isa AbstractRange && return b
+        b isa AbstractVector && return b
         b isa Integer && return histrange(float(min), float(max), b, closed)
-        msg = "only AbstractRange and Integer or tuples thereof are accepted as bins"
+        msg = "only AbstractVector and Integer or tuples thereof are accepted as bins"
         throw(ArgumentError(msg))
     end
+end
+
+function midpoints(edges::AbstractVector)
+    i0, i1 = firstindex(edges), lastindex(edges)
+    front, tail = view(edges, i0:i1-1), view(edges, i0+1:i1)
+    return (front .+ tail) ./ 2
 end
 
 function midpoints(edges::AbstractRange)

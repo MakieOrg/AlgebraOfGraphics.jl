@@ -245,6 +245,15 @@ end
     @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 end
 
+@testset "midpoints" begin
+    edges = [1, 2, 10, 12]
+    @test midpoints(edges) ≈ [1.5, 6, 11]
+
+    edges_rg = 1:2:5
+    edges_v = [1, 3, 5]
+    @test midpoints(edges_v) ≈ midpoints(edges_rg) ≈ [2, 4]
+end
+
 @testset "histogram1D" begin
     df = (x=rand(1000), c=rand(["a", "b"], 1000))
     bins = 0:0.01:1
@@ -279,16 +288,19 @@ end
     w2 = fit(Histogram, x2, bins2).weights
 
     rgx, w = processedlayer.positional
+    widths = processedlayer.named[:width]
 
     @test rgx[1] ≈ (bins1[1:end-1] .+ bins1[2:end]) ./ 2
     @test w[1] ≈ w1
+    @test widths[1] ≈ diff(bins1)
 
     @test rgx[2] ≈ (bins2[1:end-1] .+ bins2[2:end]) ./ 2
     @test w[2] ≈ w2
+    @test widths[2] ≈ diff(bins2)
 
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
-    @test isempty(processedlayer.named)
     @test processedlayer.attributes == NamedArguments((gap=0, dodge_gap=0))
+    @test keys(processedlayer.named) == Indices([:width])
     @test processedlayer.plottype == AlgebraOfGraphics.BarPlot
 
     labels = MixedArguments()
@@ -304,7 +316,7 @@ end
 
 @testset "weightedhistogram1d" begin
     df = (x=rand(1000), z=rand(1000), c=rand(["a", "b"], 1000))
-    bins = 0:0.01:1
+    bins = collect(0:0.01:1) # test vector of bins
 
     layer = data(df) * mapping(:x, color=:c, weights=:z) * histogram(; bins)
     processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
@@ -318,15 +330,18 @@ end
     w2 = fit(Histogram, x2, weights(z2), bins).weights
 
     rgx, w = processedlayer.positional
+    widths = processedlayer.named[:width]
 
     @test rgx[1] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
     @test w[1] ≈ w1
+    @test widths[1] ≈ diff(bins)
 
     @test rgx[2] ≈ (bins[1:end-1] .+ bins[2:end]) ./ 2
     @test w[2] ≈ w2
+    @test widths[2] ≈ diff(bins)
 
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
-    @test isempty(processedlayer.named)
+    @test keys(processedlayer.named) == Indices([:width])
     @test processedlayer.attributes == NamedArguments((gap=0, dodge_gap=0))
     @test processedlayer.plottype == AlgebraOfGraphics.BarPlot
 
