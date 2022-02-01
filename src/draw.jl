@@ -15,7 +15,7 @@ end
 
 function Makie.plot!(fig, s::OneOrMoreLayers;
                      axis=NamedTuple(), palettes=NamedTuple())
-    if (fig isa Union{Axis, Axis3}) && !isempty(axis)
+    if isa(fig, Union{Axis, Axis3}) && !isempty(axis)
         @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $axis.")
     end
     grid = update(f -> compute_axes_grid(f, s; axis, palettes), fig)
