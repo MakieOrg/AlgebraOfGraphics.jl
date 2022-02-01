@@ -8,7 +8,7 @@ function update(f, fig)
     layout.block_updates = true
     output = f(fig)
     layout.block_updates = block_updates
-    block_updates || Makie.GridLayoutBase.update!(layout)
+    block_updates || update!(layout)
     return output
 end
 
