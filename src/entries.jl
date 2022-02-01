@@ -66,9 +66,6 @@ function AxisEntries(ae::AxisSpecEntries, fig)
 end
 
 function AxisEntries(ae::AxisSpecEntries, ax::Union{Axis,Axis3})
-    if !isempty(ax)
-        @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $(a.axis.attributes)")
-    end
     AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales)
 end
 

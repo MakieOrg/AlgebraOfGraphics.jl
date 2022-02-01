@@ -1,18 +1,23 @@
+get_layout(gl::GridLayout) = gl
+get_layout(f::Union{Figure, GridPosition}) = f.layout
+get_layout(l::Union{MakieLayout.Layoutable, GridSubposition}) = get_layout(l.parent)
+
 # Wrap layout updates in an update block to avoid triggering multiple updates
 function update(f, fig)
-    layout = fig.layout
+    layout = get_layout(fig)
     block_updates = layout.block_updates
     layout.block_updates = true
     output = f(fig)
     layout.block_updates = block_updates
-    block_updates || Makie.GridLayoutBase.update!(layout)
+    block_updates || update!(layout)
     return output
 end
 
-update(f, ax::Union{Axis, Axis3}) = f(ax)
-
 function Makie.plot!(fig, s::OneOrMoreLayers;
                      axis=NamedTuple(), palettes=NamedTuple())
+    if isa(fig, Union{Axis, Axis3}) && !isempty(axis)
+        @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $axis.")
+    end
     grid = update(f -> compute_axes_grid(f, s; axis, palettes), fig)
     foreach(plot!, grid)
     return grid
@@ -43,7 +48,7 @@ function draw(s::OneOrMoreLayers;
         facet!(fg; facet)
         colorbar!(fg; colorbar...)
         legend!(fg; legend...)
-        resizetocontent!(fg)
+        resize_to_layout!(fg)
         return fg
     end
 end

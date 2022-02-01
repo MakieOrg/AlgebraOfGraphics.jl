@@ -389,17 +389,6 @@ function deleteemptyaxes!(aes::Matrix{AxisEntries})
     end
 end
 
-function resizetocontent!(fig::Figure)
-    figsize = size(fig.scene)
-    sz = map((Col(), Row()), figsize) do dir, currentsize
-        inferredsize = determinedirsize(fig.layout, dir)
-        return ceil(Int, something(inferredsize, currentsize))
-    end
-    sz == figsize || resize!(fig.scene, sz)
-    return fig
-end
+Makie.resize_to_layout!(fg::FigureGrid) = resize_to_layout!(fg.figure)
 
-function resizetocontent!(fg::FigureGrid)
-    resizetocontent!(fg.figure)
-    return fg
-end
+@deprecate resizetocontent!(fig) (resize_to_layout!(fig); fig)
