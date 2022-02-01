@@ -1,4 +1,4 @@
-get_layout(gl::GridLayout) = gl # Consider whether getting parent layout in case of nesting
+get_layout(gl::GridLayout) = gl
 get_layout(f::Union{Figure, GridPosition}) = f.layout
 get_layout(l::Union{MakieLayout.Layoutable, GridSubposition}) = get_layout(l.parent)
 
