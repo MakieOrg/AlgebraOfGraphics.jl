@@ -55,3 +55,17 @@ end
     t = AlgebraOfGraphics.filterkeys(!in((:a, :b)), s)
     @test t == NamedArguments([:c], [3])
 end
+
+@testset "layout utils" begin
+    fig = Figure()
+    pos = fig[1, 1]
+    subpos = pos[1, 2:3]
+    ax = Axis(pos[2, 1])
+    @test get_layout(fig) == get_layout(pos) == get_layout(subpos) == get_layout(ax) == fig.layout
+
+    fig = Figure()
+    pos = fig[1, 2] = GridLayout()
+    @test get_layout(fig) != get_layout(pos)
+    @test get_layout(pos) == pos
+    @test get_layout(pos).parent == get_layout(fig)
+end
