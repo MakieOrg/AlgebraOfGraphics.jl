@@ -13,7 +13,7 @@ position `figpos`. Attributes allowed in `kwargs` are the same as `MakieLayout.L
 """
 function legend!(figpos, grid; kwargs...)
     legend = compute_legend(grid)
-    return isnothing(legend) ? nothing : Legend(figpos, legend...; kwargs...)
+    return isnothing(legend) ? nothing : update(f -> Legend(f, legend...; kwargs...), figpos)
 end
 
 """

@@ -13,7 +13,7 @@ position `figpos`. Attributes allowed in `kwargs` are the same as `MakieLayout.C
 """
 function colorbar!(figpos, grid; kwargs...)
     colorbar = compute_colorbar(grid)
-    return isnothing(colorbar) ? nothing : Colorbar(figpos; colorbar..., kwargs...)
+    return isnothing(colorbar) ? nothing : update(f -> Colorbar(f; colorbar..., kwargs...), figpos)
 end
 
 compute_colorbar(fg::FigureGrid) = compute_colorbar(fg.grid)

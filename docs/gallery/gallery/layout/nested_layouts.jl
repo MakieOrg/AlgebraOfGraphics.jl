@@ -34,6 +34,24 @@ end
 legend!(fig[end+1, 2], ag, orientation=:horizontal, tellheight=true)
 fig
 
+# The above also works in more nested situations.
+
+resolution = (800, 600)
+f = Figure(; resolution)
+ax = Axis(f[1, 1], title="Some plot")
+subfig = f[1, 2]
+ax2 = Axis(subfig[1, 1])
+
+df = (
+    x=rand(500),
+    y=rand(500),
+    c=rand(["a", "b", "c"], 500),
+)
+plt = data(df) * mapping(:x, :y, color=:c)
+
+draw!(subfig[2, 1], plt)
+f
+
 # It is also possible to let Makie control the axis and plot directly on top of it.
 
 resolution = (800, 300)
