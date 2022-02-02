@@ -55,31 +55,43 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     return
 end
 
+"""
+    get_with_options(collection, key, default=automatic; options)
+
+Internal helper function to get the value corresponding to `key` in a `collection`.
+If the value is not present, return `default`.
+If the value is not among the `options`, warn and return `default`.
+"""
+function get_with_options(collection, key, default=automatic; options)
+    value = get(collection, key, default)
+    if isequal(value, default) || value in options
+        return value
+    else
+        msg = sprint() do io
+            print(io, "Replaced invalid keyword $key = ")
+            show(io, value)
+            print(io, " by ")
+            show(io, default)
+            print(io, ". ")
+            print(io, "Valid values are ")
+            for option in options
+                show(io, option)
+                print(io, ", ")
+            end
+            print(io, "or ")
+            show(io, default)
+            print(io, ".")
+        end
+        @warn msg
+        return default
+    end
+end
+
 function clean_facet_attributes(aes, facet)
-    linkxaxes = get(facet, :linkxaxes, automatic)
-    linkyaxes = get(facet, :linkyaxes, automatic)
-    hidexdecorations = get(facet, :hidexdecorations, automatic)
-    hideydecorations = get(facet, :hideydecorations, automatic)
-
-    if linkxaxes ∉ [:all, :colwise, :minimal, :none, true, false, automatic]
-        @warn "Replaced invalid keyword linkxaxes = $linkxaxes by automatic"
-        linkxaxes = automatic
-    end
-
-    if linkyaxes ∉ [:all, :rowwise, :minimal, :none, true, false, automatic] 
-        @warn "Replaced invalid keyword linkyaxes = $linkyaxes by automatic"
-        linkyaxes = automatic
-    end
-
-    if hidexdecorations ∉ [true, false, automatic]
-        @warn "Replaced invalid keyword hidexdecorations = $hidexdecorations by automatic"
-        hidexdecorations = automatic
-    end
-
-    if hideydecorations ∉ [true, false, automatic] 
-        @warn "Replaced invalid keyword hideydecorations = $hideydecorations by automatic"
-        hideydecorations = automatic
-    end
+    linkxaxes = get_with_options(facet, :linkxaxes, options=(:all, :colwise, :minimal, :none, true, false))
+    linkyaxes = get_with_options(facet, :linkyaxes, options=(:all, :rowwise, :minimal, :none, true, false))
+    hidexdecorations = get_with_options(facet, :hidexdecorations, options=(true, false))
+    hideydecorations = get_with_options(facet, :hideydecorations, options=(true, false))
 
     if linkxaxes === automatic
         if consistent_xlabels(aes)
