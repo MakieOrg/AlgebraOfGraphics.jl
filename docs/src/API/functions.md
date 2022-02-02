@@ -30,4 +30,5 @@ datetimeticks
 AlgebraOfGraphics.scientific_eltype
 AlgebraOfGraphics.scientific_type
 AlgebraOfGraphics.plottypes_attributes
+AlgebraOfGraphics.get_with_options
 ```

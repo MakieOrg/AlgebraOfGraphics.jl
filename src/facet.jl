@@ -111,81 +111,28 @@ function clean_facet_attributes(aes, facet)
     return (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
 end
 
-# link axes
-
-link_xaxes!(aes::AbstractArray{<:AxisEntries}) = (linkxaxes!(aes...); aes)
-link_yaxes!(aes::AbstractArray{<:AxisEntries}) = (linkyaxes!(aes...); aes)
-
-function link_axes!(aes; linkxaxes, linkyaxes)
-    linkxaxes == :all && link_xaxes!(aes)
-    linkxaxes == :colwise && foreach(link_xaxes!, eachcol(aes))
-
-    linkyaxes == :all && link_yaxes!(aes)
-    linkyaxes == :rowise && foreach(link_yaxes!, eachrow(aes))
-
-    return aes
-end
-
 # facet labels
 
-function col_labels!(fig, aes, scale)
-    zipped_scale = zip(plotvalues(scale), datavalues(scale))
+function labels!(fig, aes, scale, dir)
+    # Reference axis to extract attributes
+    ax = first_nonempty_axis(aes)
+    attributes = (color=ax.titlecolor, font=ax.titlefont, textsize=ax.titlesize)
 
-    titlegap, attributes = facetlabelattributes(first_nonempty_axis(aes))
-
-    facetlabelpadding = lift(titlegap) do gap
-        return (0f0, 0f0, gap, 0f0)
+    padding_index = dir == :row ? 1 : 3
+    facetlabelpadding = lift(ax.titlegap) do gap
+        return ntuple(i -> i == padding_index ? gap : 0f0, 4)
     end
 
-    for (index, label) in zipped_scale
-        Label(fig[1, index, Top()], to_string(label);
-              padding=facetlabelpadding, attributes...)
-    end
-end
-
-function row_labels!(fig, aes, scale)
-    _, N = size(aes)
-    zipped_scale = zip(plotvalues(scale), datavalues(scale))
-
-    titlegap, attributes = facetlabelattributes(first_nonempty_axis(aes))
-
-    facetlabelpadding = lift(titlegap) do gap
-        return (gap, 0f0, 0f0, 0f0)
-    end
-
-    for (index, label) in zipped_scale
-        Label(fig[index, N, Right()], to_string(label);
-              rotation=-π/2, padding=facetlabelpadding,
-              attributes...)
+    for (index, label) in zip(plotvalues(scale), datavalues(scale))
+        rotation = dir == :row ? π/2 : 0.0 
+        position = dir == :col ? fig[1, index, Top()] : dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]
+        Label(position, to_string(label); rotation, padding=facetlabelpadding, attributes...)
     end
 end
 
-function panel_labels!(fig, aes, scale)
-    zipped_scale = zip(plotvalues(scale), datavalues(scale))
-
-    titlegap, attributes = facetlabelattributes(first_nonempty_axis(aes))
-
-    facetlabelpadding = lift(titlegap) do gap
-        return (0f0, 0f0, gap, 0f0)
-    end
-
-    for (index, label) in zipped_scale        
-        Label(fig[index..., Top()], to_string(label);
-              padding=facetlabelpadding, attributes...)
-    end
-end
-
-function facetlabelattributes(ax)
-    titlegap = ax.titlegap
-
-    attributes = (
-        color=ax.titlecolor,
-        font=ax.titlefont,
-        textsize=ax.titlesize,
-    )
-
-    return (; titlegap, attributes)
-end
+col_labels!(fig, aes, scale) = labels!(fig, aes, scale, :col)
+row_labels!(fig, aes, scale) = labels!(fig, aes, scale, :row)
+panel_labels!(fig, aes, scale) = labels!(fig, aes, scale, :wrap)
 
 # consistent axis labels
 
@@ -298,6 +245,21 @@ for sym in [:linkxaxes!, :linkyaxes!, :linkaxes!]
         axs = filter(isaxis2d, map(ae->ae.axis, (ae, aes...)))
         isempty(axs) || $sym(axs...)
     end
+end
+
+# Handy non-splatting versions
+
+link_xaxes!(aes::AbstractArray{<:AxisEntries}) = (linkxaxes!(aes...); aes)
+link_yaxes!(aes::AbstractArray{<:AxisEntries}) = (linkyaxes!(aes...); aes)
+
+function link_axes!(aes; linkxaxes, linkyaxes)
+    linkxaxes == :all && link_xaxes!(aes)
+    linkxaxes == :colwise && foreach(link_xaxes!, eachcol(aes))
+
+    linkyaxes == :all && link_yaxes!(aes)
+    linkyaxes == :rowise && foreach(link_yaxes!, eachrow(aes))
+
+    return aes
 end
 
 function hideinnerdecorations!(aes, hidexdecorations, hideydecorations)
