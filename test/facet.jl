@@ -111,3 +111,27 @@ end
         @test label.textsize == ax.titlesize
     end
 end
+
+@testset "spanned labels" begin
+    df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
+    plt = data(df) * mapping(:x => "xlabel", :y => "ylabel", col=:i, row=:j)
+    fig = Figure();
+    aes = compute_axes_grid(fig, plt)
+    ax = first(aes).axis
+
+    label = span_xlabel!(fig, aes)
+    @test label.rotation[] == 0.0
+    @test label.color == ax.xlabelcolor
+    @test label.font == ax.xlabelfont
+    @test label.textsize == ax.xlabelsize
+    @test label.text[] == "xlabel"
+    @test label in contents(fig[3, :, Bottom()])
+
+    label = span_ylabel!(fig, aes)
+    @test label.rotation[] == π/2
+    @test label.color == ax.ylabelcolor
+    @test label.font == ax.ylabelfont
+    @test label.textsize == ax.ylabelsize
+    @test label.text[] == "ylabel"
+    @test label in contents(fig[:, 1, Left()])
+end
