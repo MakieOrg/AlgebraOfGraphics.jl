@@ -362,5 +362,3 @@ function deleteemptyaxes!(aes::Matrix{AxisEntries})
 end
 
 Makie.resize_to_layout!(fg::FigureGrid) = resize_to_layout!(fg.figure)
-
-@deprecate resizetocontent!(fig) (resize_to_layout!(fig); fig)

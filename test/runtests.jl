@@ -5,9 +5,10 @@ using AlgebraOfGraphics: separate
 using AlgebraOfGraphics: midpoints
 using AlgebraOfGraphics: get_layout
 using AlgebraOfGraphics: get_with_options, clean_facet_attributes
+using AlgebraOfGraphics: compute_axes_grid
 using AlgebraOfGraphics: Arguments, MixedArguments, NamedArguments
 
-using Makie: automatic
+using Makie: automatic, Figure
 
 using Dictionaries: Indices
 
