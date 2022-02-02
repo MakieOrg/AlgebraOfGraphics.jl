@@ -16,7 +16,7 @@ import Makie.MakieLayout: hidexdecorations!,
                           linkaxes!,
                           linkxaxes!,
                           linkyaxes!
-using GridLayoutBase: update!
+using GridLayoutBase: update!, Protrusion
 using PooledArrays: PooledArray
 using Dictionaries: AbstractDictionary, Dictionary, Indices, dictionary, getindices, set!
 using KernelDensity: kde, pdf

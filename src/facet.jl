@@ -30,12 +30,11 @@ end
 
 function normalize_link(link, direction, consistent, directionally_consistent)
     directionwise = Symbol(direction, :wise)
-    link in (:all, directionwise, :none) && return link
     link === automatic && return consistent ? :all : directionally_consistent ? directionwise : :none
     link == :minimal && return directionally_consistent ? directionwise : :none
     link == true && return :all
     link == false && return :none
-    throw(ArgumentError("Could not convert $link to standard link attribute."))
+    return link
 end
 
 normalize_hide(hide, link) = hide === automatic ? (link != :none) : hide
@@ -248,7 +247,7 @@ function hideinnerdecorations!(aes; hidexdecorations, hideydecorations)
         for i in 1:I-1, j in 1:J
             if isempty(aes[i+1,j].entries)
                 # Don't hide x decorations if axis below is empty, but instead improve alignment.
-                aes[i,j].axis.alignmode = Mixed(bottom=MakieLayout.GridLayoutBase.Protrusion(0))
+                aes[i,j].axis.alignmode = Mixed(bottom=Protrusion(0))
             else
                 hide_xdecorations!(aes[i,j])
             end
