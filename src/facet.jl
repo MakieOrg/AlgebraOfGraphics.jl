@@ -1,3 +1,5 @@
+## Options preprocessing
+
 """
     get_with_options(collection, key; options)
 
@@ -54,7 +56,7 @@ function clean_facet_attributes(aes, facet)
     return (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
 end
 
-# facet labels
+## Facet labels
 
 function labels!(fig, aes, scale, dir)
     # Reference axis to extract attributes
@@ -69,7 +71,7 @@ function labels!(fig, aes, scale, dir)
     end
 
     for (index, label) in zip(plotvalues(scale), datavalues(scale))
-        rotation = dir == :row ? π/2 : 0.0 
+        rotation = dir == :row ? -π/2 : 0.0 
         figpos = dir == :col ? fig[1, index, Top()] : dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]
         Label(figpos, to_string(label); rotation, padding=facetlabelpadding, color, font, textsize)
     end
@@ -229,33 +231,33 @@ function link_axes!(aes; linkxaxes, linkyaxes)
     return aes
 end
 
+# Handy grid-preserving versions
+
+hide_xdecorations!(ax) = hidexdecorations!(ax; grid=false, minorgrid=false)
+hide_ydecorations!(ax) = hideydecorations!(ax; grid=false, minorgrid=false)
+
 function hideinnerdecorations!(aes; hidexdecorations, hideydecorations)
     I, J = size(aes)
         
     if hideydecorations
-        hideydecorations!.(aes[:, 2:end], grid = false)
+        for i in 1:I, j in 2:J
+            hide_ydecorations!(aes[i,j])
+        end
     end
-    
-    if hidexdecorations
-        for i in 1:I, j in 1:J
-            # don't hide x decorations if axis below is empty
-            below_empty = (i < I) && isempty(aes[i+1,j].entries)
-            
-            if (i < I) && !below_empty
-                hidexdecorations!(aes[i,j],
-                    grid=false,
-                    ticks=hidexdecorations,
-                    ticklabels=hidexdecorations
-                )
-            end
 
-            if (i < I) && below_empty
-                # improve appearance with empty axes
+    if hidexdecorations
+        for i in 1:I-1, j in 1:J
+            if isempty(aes[i+1,j].entries)
+                # Don't hide x decorations if axis below is empty, but instead improve alignment.
                 aes[i,j].axis.alignmode = Mixed(bottom=MakieLayout.GridLayoutBase.Protrusion(0))
+            else
+                hide_xdecorations!(aes[i,j])
             end
         end
     end
 end
+
+# Miscellaneous utilities
 
 nonemptyaxes(aes) = (ae.axis for ae in aes if !isempty(ae.entries))
 
@@ -268,3 +270,5 @@ function deleteemptyaxes!(aes::AbstractMatrix{AxisEntries})
 end
 
 Makie.resize_to_layout!(fg::FigureGrid) = resize_to_layout!(fg.figure)
+
+@deprecate resizetocontent!(fig) (resize_to_layout!(fig); fig)

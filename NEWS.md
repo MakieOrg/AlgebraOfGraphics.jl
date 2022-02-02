@@ -1,9 +1,3 @@
-# AlgebraOfGraphics.jl v0.7 Release Notes
-
-## Breaking Changes
-
-- Removed `resizetocontent!` method in favor of `Makie.resize_to_layout!`
-
 # AlgebraOfGraphics.jl v0.6 Release Notes
 
 ## Breaking Changes
