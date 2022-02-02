@@ -5,11 +5,13 @@ using AlgebraOfGraphics: separate
 using AlgebraOfGraphics: midpoints
 using AlgebraOfGraphics: get_layout
 using AlgebraOfGraphics: get_with_options, clean_facet_attributes
-using AlgebraOfGraphics: consistent_xlabels, consistent_ylabels, colwise_consistent_xlabels, rowwise_consistent_ylabels 
+using AlgebraOfGraphics: consistent_xlabels, consistent_ylabels, colwise_consistent_xlabels, rowwise_consistent_ylabels
+using AlgebraOfGraphics: col_labels!, row_labels!, panel_labels!
 using AlgebraOfGraphics: compute_axes_grid
 using AlgebraOfGraphics: Arguments, MixedArguments, NamedArguments
 
 using Makie: automatic, Figure
+using GridLayoutBase: contents
 
 using Dictionaries: Indices
 

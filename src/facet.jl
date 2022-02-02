@@ -56,10 +56,11 @@ function clean_facet_attributes(aes, facet)
     return (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
 end
 
-## Facet labels
+## Label computation and layout
 
+# facet labels
 function labels!(fig, aes, scale, dir)
-    # Reference axis to extract attributes
+    # reference axis to extract attributes
     ax = first(nonemptyaxes(aes))
     color = ax.titlecolor
     font = ax.titlefont
@@ -70,7 +71,7 @@ function labels!(fig, aes, scale, dir)
         return ntuple(i -> i == padding_index ? gap : 0f0, 4)
     end
 
-    for (index, label) in zip(plotvalues(scale), datavalues(scale))
+    return map(plotvalues(scale), datavalues(scale)) do index, label
         rotation = dir == :row ? -π/2 : 0.0 
         figpos = dir == :col ? fig[1, index, Top()] : dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]
         Label(figpos, to_string(label); rotation, padding=facetlabelpadding, color, font, textsize)
@@ -79,7 +80,7 @@ end
 
 col_labels!(fig, aes, scale) = labels!(fig, aes, scale, :col)
 row_labels!(fig, aes, scale) = labels!(fig, aes, scale, :row)
-panel_labels!(fig, aes, scale) = labels!(fig, aes, scale, :wrap)
+panel_labels!(fig, aes, scale) = labels!(fig, aes, scale, :layout)
 
 # consistent axis labels
 
@@ -95,10 +96,9 @@ consistent_ylabels(aes) = consistent_attribute(aes, :ylabel)
 colwise_consistent_xlabels(aes) = all(consistent_xlabels, eachcol(aes))
 rowwise_consistent_ylabels(aes) =  all(consistent_ylabels, eachrow(aes))
 
+get_attr(collection, args...) = getproperty(collection, Symbol(args...))
+
 # spanned axis labels
-
-get_attr(axis, var, key) = getproperty(axis, Symbol(var, key))
-
 function span_label!(fig, aes, var)
     for ae in aes
         get_attr(ae.axis, var, :labelvisible)[] = false
@@ -108,7 +108,7 @@ function span_label!(fig, aes, var)
 
     pos = var == :x ? (size(aes, 1), :) : (:, 1)
     labelpadding = get_attr(ax, var, :labelpadding)
-    index, side, Side = var == :x ? (4, :bottom, Bottom()) : (2, :left, Left())
+    index, side, Side = var == :x ? (4, :bottom, Bottom) : (2, :left, Left)
 
     padding = lift(labelpadding, (MakieLayout.protrusionsobservable(ae.axis) for ae in aes[pos...])...) do p, xs...
         protrusion = maximum(x -> getproperty(x, side), xs)
@@ -120,7 +120,7 @@ function span_label!(fig, aes, var)
     color = get_attr(ax, var, :labelcolor)
     font = get_attr(ax, var, :labelfont)
     textsize = get_attr(ax, var, :labelsize)
-    Label(fig[pos..., Side], label; rotation, padding, color, font, textsize)
+    return Label(fig[pos..., Side()], label; rotation, padding, color, font, textsize)
 end
 
 span_xlabel!(fig, aes) = span_label!(fig, aes, :x)
@@ -158,7 +158,6 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
 end
 
 function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
-    M, N = size(aes)
     row_scale, col_scale = map(sym -> get(aes[1].categoricalscales, sym, nothing), (:row, :col))
     all(isnothing, (row_scale, col_scale)) && return
 
