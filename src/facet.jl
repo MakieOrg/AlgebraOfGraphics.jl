@@ -113,32 +113,17 @@ end
 
 # link axes
 
+link_xaxes!(aes::AbstractArray{<:AxisEntries}) = (linkxaxes!(aes...); aes)
+link_yaxes!(aes::AbstractArray{<:AxisEntries}) = (linkyaxes!(aes...); aes)
+
 function link_axes!(aes; linkxaxes, linkyaxes)
-    if linkxaxes == :all
-        linkxaxes!(aes...)
-    elseif linkxaxes == :colwise
-        link_cols!(aes)
-    end
+    linkxaxes == :all && link_xaxes!(aes)
+    linkxaxes == :colwise && foreach(link_xaxes!, eachcol(aes))
 
-    if linkyaxes == :all
-        linkyaxes!(aes...)
-    elseif linkyaxes == :rowwise
-        link_rows!(aes)
-    end
-end
+    linkyaxes == :all && link_yaxes!(aes)
+    linkyaxes == :rowise && foreach(link_yaxes!, eachrow(aes))
 
-function link_rows!(aes)
-    M, N = size(aes)
-    for i in 1:M
-        linkyaxes!(aes[i,:]...)
-    end
-end
-
-function link_cols!(aes)
-    M, N = size(aes)
-    for i in 1:N
-        linkxaxes!(aes[:,i]...)
-    end
+    return aes
 end
 
 # facet labels
@@ -199,32 +184,22 @@ function facetlabelattributes(ax)
         textsize=ax.titlesize,
     )
 
-    (; titlegap, attributes)
+    return (; titlegap, attributes)
 end
 
 # consistent axis labels
 
-function consistent_xlabels(aes)
+function consistent_attribute(aes, attr)
     nonempty_aes = get_nonempty_aes(aes)
     ax = first(nonempty_aes).axis
-    return all(ae -> ae.axis.xlabel[] == ax.xlabel[], nonempty_aes)
+    return all(ae -> getproperty(ae.axis, attr)[] == getproperty(ax, attr)[], nonempty_aes)
 end
 
-function consistent_ylabels(aes)
-    nonempty_aes = get_nonempty_aes(aes)
-    ax = first(nonempty_aes).axis
-    return all(ae -> ae.axis.ylabel[] == ax.ylabel[], nonempty_aes)
-end
+consistent_xlabels(aes) = consistent_attribute(aes, :xlabel)
+consistent_ylabels(aes) = consistent_attribute(aes, :ylabel)
 
-function colwise_consistent_xlabels(aes)
-    _, N = size(aes)
-    all(consistent_xlabels(aes[:,i]) for i in 1:N)
-end
-
-function rowwise_consistent_ylabels(aes)
-    M, _ = size(aes)
-    all(consistent_ylabels(aes[i,:]) for i in 1:M)
-end
+colwise_consistent_xlabels(aes) = all(consistent_xlabels, eachcol(aes))
+rowwise_consistent_ylabels(aes) =  all(consistent_ylabels, eachrow(aes))
 
 # spanned axis labels
 

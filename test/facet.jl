@@ -13,6 +13,10 @@
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
     plt = data(df) * mapping(:x, :y, col=:i, row=:j)
     aes = compute_axes_grid(Figure(), plt)
+    @test consistent_xlabels(aes)
+    @test consistent_ylabels(aes)
+    @test colwise_consistent_xlabels(aes)
+    @test rowwise_consistent_ylabels(aes)
     @test clean_facet_attributes(aes, (hidexdecorations=automatic,)) ==
         (linkxaxes=:all, linkyaxes=:all, hidexdecorations=true, hideydecorations=true)
     @test clean_facet_attributes(aes, (hidexdecorations=automatic, linkxaxes=false)) ==
@@ -24,6 +28,10 @@
     df = (x=rand(100), y1=rand(100), y2=rand(100), i=rand(["a", "b", "c"], 100))
     plt = data(df) * mapping(:x, [:y1, :y2], col=:i, row=dims(1))
     aes = compute_axes_grid(Figure(), plt)
+    @test consistent_xlabels(aes)
+    @test !consistent_ylabels(aes)
+    @test colwise_consistent_xlabels(aes)
+    @test rowwise_consistent_ylabels(aes)
     @test clean_facet_attributes(aes, (hidexdecorations=automatic,)) ==
         (linkxaxes=:all, linkyaxes=:rowwise, hidexdecorations=true, hideydecorations=true)
     @test clean_facet_attributes(aes, (hidexdecorations=automatic, linkxaxes=false)) ==
@@ -35,6 +43,10 @@
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c", "d"], 100))
     plt = data(df) * mapping(:x, :y, layout=:i)
     aes = compute_axes_grid(Figure(), plt)
+    @test consistent_xlabels(aes)
+    @test consistent_ylabels(aes)
+    @test colwise_consistent_xlabels(aes)
+    @test rowwise_consistent_ylabels(aes)
     @test clean_facet_attributes(aes, (hidexdecorations=automatic,)) ==
         (linkxaxes=:all, linkyaxes=:all, hidexdecorations=true, hideydecorations=true)
     @test clean_facet_attributes(aes, (hidexdecorations=automatic, linkxaxes=false)) ==
