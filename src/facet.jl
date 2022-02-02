@@ -56,99 +56,59 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
 end
 
 """
-    get_with_options(collection, key, default=automatic; options)
+    get_with_options(collection, key; options)
 
 Internal helper function to get the value corresponding to `key` in a `collection`.
-If the value is not present, return `default`.
-If the value is not among the `options`, warn and return `default`.
+If the value is not present, return `automatic`.
+If the value is not among the `options`, warn and return `automatic`.
 """
-function get_with_options(collection, key, default=automatic; options)
-    value = get(collection, key, default)
-    if isequal(value, default) || value in options
+function get_with_options(collection, key; options)
+    value = get(collection, key, automatic)
+    if isequal(value, automatic) || value in options
         return value
     else
         msg = sprint() do io
             print(io, "Replaced invalid keyword $key = ")
             show(io, value)
-            print(io, " by ")
-            show(io, default)
-            print(io, ". ")
+            print(io, " by automatic. ")
             print(io, "Valid values are ")
             for option in options
                 show(io, option)
                 print(io, ", ")
             end
-            print(io, "or ")
-            show(io, default)
-            print(io, ".")
+            print(io, "or automatic.")
         end
         @warn msg
-        return default
+        return automatic
     end
 end
 
+function normalize_link(link, direction, consistent, directionally_consistent)
+    directionwise = Symbol(direction, :wise)
+    link in (:all, directionwise, :none) && return link
+    link === automatic && return consistent ? :all : directionally_consistent ? directionwise : :none
+    link == :minimal && return directionally_consistent ? directionwise : :none
+    link == true && return :all
+    link == false && return :none
+    throw(ArgumentError("Could not convert $link to standard link attribute."))
+end
+
+normalize_hide(hide, link) = hide === automatic ? (link != :none) : hide
+
 function clean_facet_attributes(aes, facet)
-    linkxaxes = get_with_options(facet, :linkxaxes, options=(:all, :colwise, :minimal, :none, true, false))
-    linkyaxes = get_with_options(facet, :linkyaxes, options=(:all, :rowwise, :minimal, :none, true, false))
-    hidexdecorations = get_with_options(facet, :hidexdecorations, options=(true, false))
-    hideydecorations = get_with_options(facet, :hideydecorations, options=(true, false))
+    _linkxaxes = get_with_options(facet, :linkxaxes, options=(:all, :colwise, :minimal, :none, true, false))
+    _linkyaxes = get_with_options(facet, :linkyaxes, options=(:all, :rowwise, :minimal, :none, true, false))
 
-    if linkxaxes === automatic
-        if consistent_xlabels(aes)
-            linkxaxes = :all
-        elseif colwise_consistent_xlabels(aes)
-            linkxaxes = :colwise
-        else
-            linkxaxes = :none
-        end
-    end
+    linkxaxes = normalize_link(_linkxaxes, :col, consistent_xlabels(aes), colwise_consistent_xlabels(aes))
+    linkyaxes = normalize_link(_linkyaxes, :row, consistent_ylabels(aes), rowwise_consistent_ylabels(aes))
 
-    if linkxaxes == :minimal
-        if colwise_consistent_xlabels(aes)
-            linkxaxes = :colwise
-        else
-            linkxaxes = :none
-        end
-    end
+    _hidexdecorations = get_with_options(facet, :hidexdecorations, options=(true, false))
+    _hideydecorations = get_with_options(facet, :hideydecorations, options=(true, false))
 
-    if linkyaxes === automatic
-        if consistent_ylabels(aes)
-            linkyaxes = :all
-        elseif rowwise_consistent_ylabels(aes)
-            linkyaxes = :rowwise
-        else
-            linkyaxes = :none
-        end
-    end
+    hidexdecorations = normalize_hide(_hidexdecorations, linkxaxes)
+    hideydecorations = normalize_hide(_hideydecorations, linkyaxes)
 
-    if linkyaxes == :minimal
-        if rowwise_consistent_ylabels(aes)
-            linkyaxes = :rowwise
-        else
-            linkyaxes = :none
-        end
-    end
-
-    if linkxaxes == true
-        linkxaxes = :all
-    elseif linkxaxes == false
-        linkxaxes = :none
-    end
-
-    if linkyaxes == true
-        linkyaxes = :all
-    elseif linkyaxes == false
-        linkyaxes = :none
-    end
-
-    if hidexdecorations === automatic
-        hidexdecorations = (linkxaxes != :none)
-    end
-    if hideydecorations === automatic
-        hideydecorations = (linkyaxes != :none)
-    end
-
-    (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
+    return (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
 end
 
 # link axes
