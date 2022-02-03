@@ -60,7 +60,7 @@ col_labels!(fig, aes, scale) = labels!(fig, aes, scale, :col)
 row_labels!(fig, aes, scale) = labels!(fig, aes, scale, :row)
 panel_labels!(fig, aes, scale) = labels!(fig, aes, scale, :layout)
 
-# consistent axis labels
+# Consistent axis labels
 
 function consistent_attribute(aes, attr)
     axes = nonemptyaxes(aes)
@@ -74,30 +74,28 @@ consistent_ylabels(aes) = consistent_attribute(aes, :ylabel)
 colwise_consistent_xlabels(aes) = all(consistent_xlabels, eachcol(aes))
 rowwise_consistent_ylabels(aes) =  all(consistent_ylabels, eachrow(aes))
 
-get_attr(collection, args...) = getproperty(collection, Symbol(args...))
-
 # spanned axis labels
 function span_label!(fig, aes, var)
+    getattr = GetAttr(var)
     for ae in aes
-        get_attr(ae.axis, var, :labelvisible)[] = false
+        getattr(ae.axis, :labelvisible)[] = false
     end
 
     ax = first(nonemptyaxes(aes))
 
     pos = var == :x ? (size(aes, 1), :) : (:, 1)
-    labelpadding = get_attr(ax, var, :labelpadding)
     index, side, Side = var == :x ? (4, :bottom, Bottom) : (2, :left, Left)
 
-    padding = lift(labelpadding, (MakieLayout.protrusionsobservable(ae.axis) for ae in aes[pos...])...) do p, xs...
+    padding = lift(getattr(ax, :labelpadding), (protrusionsobservable(ae.axis) for ae in aes[pos...])...) do p, xs...
         protrusion = maximum(x -> getproperty(x, side), xs)
         return ntuple(i -> i == index ? protrusion + p : 0f0, 4)
     end
 
-    label = get_attr(ax, var, :label)
+    label = getattr(ax, :label)
     rotation = var == :x ? 0.0 : π/2
-    color = get_attr(ax, var, :labelcolor)
-    font = get_attr(ax, var, :labelfont)
-    textsize = get_attr(ax, var, :labelsize)
+    color = getattr(ax, :labelcolor)
+    font = getattr(ax, :labelfont)
+    textsize = getattr(ax, :labelsize)
     return Label(fig[pos..., Side()], label; rotation, padding, color, font, textsize)
 end
 
@@ -139,7 +137,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     row_scale, col_scale = map(sym -> get(aes[1].categoricalscales, sym, nothing), (:row, :col))
     all(isnothing, (row_scale, col_scale)) && return
 
-    # Link axes and hide decorations if appropriate
+    # link axes and hide decorations if appropriate
     attr = clean_facet_attributes(aes; facet...)
     link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
     hideinnerdecorations!(aes; attr.hidexdecorations, attr.hideydecorations)
@@ -235,6 +233,12 @@ function hideinnerdecorations!(aes; hidexdecorations, hideydecorations)
 end
 
 # Miscellaneous utilities
+
+struct GetAttr
+    var::Symbol
+end
+
+(g::GetAttr)(collection, key) = getproperty(collection, Symbol(g.var, key))
 
 nonemptyaxes(aes) = (ae.axis for ae in aes if !isempty(ae.entries))
 
