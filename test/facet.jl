@@ -195,3 +195,40 @@ end
     end
     @test isempty(contents(fg.figure[2, 3]))
 end
+
+@testset "hidedecorations" begin
+    x = rand(500)
+    y = rand(500)
+    i = rand(["a", "b", "c"], 500)
+    j = rand(["d", "e", "f"], 500)
+    idxs = @. !((i == "b") & (j == "e")) & !((i == "c") & (j == "f"))
+    df = (x=x[idxs], y=y[idxs], i=i[idxs], j=j[idxs])
+    plt = data(df) * mapping(:x => "xlabel", :y => "ylabel", col=:i, row=:j)
+    axis = (
+        xticksvisible=true,
+        xminorticksvisible=true,
+        xgridvisible=true,
+        xminorgridvisible=true,
+        yticksvisible=true,
+        yminorticksvisible=true,
+        ygridvisible=true,
+        yminorgridvisible=true,
+    )
+    fg = draw(plt; axis)
+    for i in 1:3, j in 1:3
+        ax = content(fg.figure[i, j])
+        hidex = i != 3
+        hidey = j != 1
+        @test ax.xticklabelsvisible[] == !hidex
+        @test ax.xticksvisible[] == !hidex
+        @test ax.xminorticksvisible[] == !hidex
+        @test ax.xgridvisible[] == true
+        @test ax.xminorgridvisible[] == true
+
+        @test ax.yticklabelsvisible[] == !hidey
+        @test ax.yticksvisible[] == !hidey
+        @test ax.yminorticksvisible[] == !hidey
+        @test ax.ygridvisible[] == true
+        @test ax.yminorgridvisible[] == true
+    end
+end

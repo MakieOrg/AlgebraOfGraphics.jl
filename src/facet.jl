@@ -112,7 +112,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     # Link axes and hide decorations if appropriate
     attrs = clean_facet_attributes(aes; facet...)
     link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
-    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations)
+    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap=true)
 
     # delete empty axes
     deleteemptyaxes!(aes)
@@ -140,7 +140,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     # link axes and hide decorations if appropriate
     attrs = clean_facet_attributes(aes; facet...)
     link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
-    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations)
+    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap=false)
 
     # span axis labels if appropriate
     is2d = all(isaxis2d, nonemptyaxes(aes))
@@ -211,7 +211,7 @@ end
 hide_xdecorations!(ax) = hidexdecorations!(ax; grid=false, minorgrid=false)
 hide_ydecorations!(ax) = hideydecorations!(ax; grid=false, minorgrid=false)
 
-function hideinnerdecorations!(aes::AbstractArray{AxisEntries}; hidexdecorations, hideydecorations)
+function hideinnerdecorations!(aes::AbstractArray{AxisEntries}; hidexdecorations, hideydecorations, wrap)
     I, J = size(aes)
         
     if hideydecorations
@@ -222,8 +222,8 @@ function hideinnerdecorations!(aes::AbstractArray{AxisEntries}; hidexdecorations
 
     if hidexdecorations
         for i in 1:I-1, j in 1:J
-            if isempty(aes[i+1,j].entries)
-                # Don't hide x decorations if axis below is empty, but instead improve alignment.
+            if wrap && isempty(aes[i+1,j].entries)
+                # In facet_wrap, don't hide x decorations if axis below is empty, but instead improve alignment.
                 aes[i,j].axis.alignmode = Mixed(bottom=Protrusion(0))
             else
                 hide_xdecorations!(aes[i,j])
