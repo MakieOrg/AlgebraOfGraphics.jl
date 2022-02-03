@@ -110,9 +110,9 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     isnothing(scale) && return
 
     # Link axes and hide decorations if appropriate
-    attr = clean_facet_attributes(aes; facet...)
-    link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
-    hideinnerdecorations!(aes; attr.hidexdecorations, attr.hideydecorations)
+    attrs = clean_facet_attributes(aes; facet...)
+    link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
+    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations)
 
     # delete empty axes
     deleteemptyaxes!(aes)
@@ -138,9 +138,9 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     all(isnothing, (row_scale, col_scale)) && return
 
     # link axes and hide decorations if appropriate
-    attr = clean_facet_attributes(aes; facet...)
-    link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
-    hideinnerdecorations!(aes; attr.hidexdecorations, attr.hideydecorations)
+    attrs = clean_facet_attributes(aes; facet...)
+    link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
+    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations)
 
     # span axis labels if appropriate
     is2d = all(isaxis2d, nonemptyaxes(aes))
@@ -196,7 +196,7 @@ end
 link_xaxes!(aes::AbstractArray{AxisEntries}) = (linkxaxes!(aes...); aes)
 link_yaxes!(aes::AbstractArray{AxisEntries}) = (linkyaxes!(aes...); aes)
 
-function link_axes!(aes; linkxaxes, linkyaxes)
+function link_axes!(aes::AbstractArray{AxisEntries}; linkxaxes, linkyaxes)
     linkxaxes == :all && link_xaxes!(aes)
     linkxaxes == :colwise && foreach(link_xaxes!, eachcol(aes))
 
@@ -211,7 +211,7 @@ end
 hide_xdecorations!(ax) = hidexdecorations!(ax; grid=false, minorgrid=false)
 hide_ydecorations!(ax) = hideydecorations!(ax; grid=false, minorgrid=false)
 
-function hideinnerdecorations!(aes; hidexdecorations, hideydecorations)
+function hideinnerdecorations!(aes::AbstractArray{AxisEntries}; hidexdecorations, hideydecorations)
     I, J = size(aes)
         
     if hideydecorations
@@ -238,11 +238,11 @@ struct GetAttr
     var::Symbol
 end
 
-(g::GetAttr)(collection, key) = getproperty(collection, Symbol(g.var, key))
+(g::GetAttr)(collection, args...) = getproperty(collection, Symbol(g.var, args...))
 
 nonemptyaxes(aes) = (ae.axis for ae in aes if !isempty(ae.entries))
 
-function deleteemptyaxes!(aes::AbstractMatrix{AxisEntries})
+function deleteemptyaxes!(aes::AbstractArray{AxisEntries})
     for ae in aes
         if isempty(ae.entries)
             delete!(ae.axis)
