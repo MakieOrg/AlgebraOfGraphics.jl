@@ -1,4 +1,108 @@
-# Apply default faceting look to a grid of `AxisEntries`
+## Options preprocessing
+
+function normalize_link(link, var, consistent, directionally_consistent)
+    directionwise = var == :x ? :colwise : :rowwise
+    default = consistent ? :all : directionally_consistent ? directionwise : :none
+    link === automatic && return default
+    link == :minimal && return directionally_consistent ? directionwise : :none
+    link == true && return :all
+    link == false && return :none
+    link in (:all, directionwise, :none) && return link
+    attribute = Symbol(:link, var, :axes)
+    @warn "Replaced invalid keyword $attribute = $(repr(link)) by automatic. " *
+        "Valid values are :all, $(repr(directionwise)), :minimal, :none, true, false, or automatic."
+    return default
+end
+
+function normalize_hide(hide, link, var)
+    default = link != :none
+    hide === automatic && return default
+    hide isa Bool && return hide
+    attribute = Symbol(:hide, var, :decorations)
+    @warn "Replaced invalid keyword $attribute = $(repr(hide)) by automatic. " *
+        "Valid values are true, false, or automatic."
+    return default
+end
+
+function clean_facet_attributes(aes;
+                                linkxaxes=automatic, linkyaxes=automatic,
+                                hidexdecorations=automatic, hideydecorations=automatic)
+    linkxaxes = normalize_link(linkxaxes, :x, consistent_xlabels(aes), colwise_consistent_xlabels(aes))
+    linkyaxes = normalize_link(linkyaxes, :y, consistent_ylabels(aes), rowwise_consistent_ylabels(aes))
+    hidexdecorations = normalize_hide(hidexdecorations, linkxaxes, :x)
+    hideydecorations = normalize_hide(hideydecorations, linkyaxes, :y)
+    return (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
+end
+
+## Label computation and layout
+
+# facet labels
+function labels!(fig, aes, scale, dir)
+    # reference axis to extract attributes
+    ax = first(nonemptyaxes(aes))
+    color = ax.titlecolor
+    font = ax.titlefont
+    textsize = ax.titlesize
+
+    padding_index = dir == :row ? 1 : 3
+    facetlabelpadding = lift(ax.titlegap) do gap
+        return ntuple(i -> i == padding_index ? gap : 0f0, 4)
+    end
+
+    return map(plotvalues(scale), datavalues(scale)) do index, label
+        rotation = dir == :row ? -π/2 : 0.0 
+        figpos = dir == :col ? fig[1, index, Top()] : dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]
+        Label(figpos, to_string(label); rotation, padding=facetlabelpadding, color, font, textsize)
+    end
+end
+
+col_labels!(fig, aes, scale) = labels!(fig, aes, scale, :col)
+row_labels!(fig, aes, scale) = labels!(fig, aes, scale, :row)
+panel_labels!(fig, aes, scale) = labels!(fig, aes, scale, :layout)
+
+# Consistent axis labels
+
+function consistent_attribute(aes, attr)
+    axes = nonemptyaxes(aes)
+    ax = first(axes)
+    return all(axis -> getproperty(axis, attr)[] == getproperty(ax, attr)[], axes)
+end
+
+consistent_xlabels(aes) = consistent_attribute(aes, :xlabel)
+consistent_ylabels(aes) = consistent_attribute(aes, :ylabel)
+
+colwise_consistent_xlabels(aes) = all(consistent_xlabels, eachcol(aes))
+rowwise_consistent_ylabels(aes) =  all(consistent_ylabels, eachrow(aes))
+
+# spanned axis labels
+function span_label!(fig, aes, var)
+    getattr = GetAttr(var)
+    for ae in aes
+        getattr(ae.axis, :labelvisible)[] = false
+    end
+
+    ax = first(nonemptyaxes(aes))
+
+    pos = var == :x ? (size(aes, 1), :) : (:, 1)
+    index, side, Side = var == :x ? (4, :bottom, Bottom) : (2, :left, Left)
+
+    padding = lift(getattr(ax, :labelpadding), (protrusionsobservable(ae.axis) for ae in aes[pos...])...) do p, xs...
+        protrusion = maximum(x -> getproperty(x, side), xs)
+        return ntuple(i -> i == index ? protrusion + p : 0f0, 4)
+    end
+
+    label = getattr(ax, :label)
+    rotation = var == :x ? 0.0 : π/2
+    color = getattr(ax, :labelcolor)
+    font = getattr(ax, :labelfont)
+    textsize = getattr(ax, :labelsize)
+    return Label(fig[pos..., Side()], label; rotation, padding, color, font, textsize)
+end
+
+span_xlabel!(fig, aes) = span_label!(fig, aes, :x)
+span_ylabel!(fig, aes) = span_label!(fig, aes, :y)
+
+## Apply default faceting look to a grid of `AxisEntries`
 
 function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
 
@@ -6,9 +110,9 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     isnothing(scale) && return
 
     # Link axes and hide decorations if appropriate
-    attr = clean_facet_attributes(aes, facet)
-    link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
-    hideinnerdecorations!(aes, attr.hidexdecorations, attr.hideydecorations)
+    attrs = clean_facet_attributes(aes; facet...)
+    link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
+    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap=true)
 
     # delete empty axes
     deleteemptyaxes!(aes)
@@ -17,8 +121,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     panel_labels!(fig, aes, scale)
 
     # span axis labels if appropriate
-    nonempty_aes = get_nonempty_aes(aes)
-    is2d = isaxis2d(first(nonempty_aes))
+    is2d = all(isaxis2d, nonemptyaxes(aes))
 
     if is2d && consistent_ylabels(aes)
         span_ylabel!(fig, aes)
@@ -31,18 +134,16 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
 end
 
 function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
-    M, N = size(aes)
     row_scale, col_scale = map(sym -> get(aes[1].categoricalscales, sym, nothing), (:row, :col))
     all(isnothing, (row_scale, col_scale)) && return
 
-    # Link axes and hide decorations if appropriate
-    attr = clean_facet_attributes(aes, facet)
-    link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
-    hideinnerdecorations!(aes, attr.hidexdecorations, attr.hideydecorations)
+    # link axes and hide decorations if appropriate
+    attrs = clean_facet_attributes(aes; facet...)
+    link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
+    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap=false)
 
     # span axis labels if appropriate
-    nonempty_aes = get_nonempty_aes(aes)
-    is2d = isaxis2d(first(nonempty_aes))
+    is2d = all(isaxis2d, nonemptyaxes(aes))
 
     if !isnothing(row_scale) && consistent_ylabels(aes)
         is2d && span_ylabel!(fig, aes)
@@ -54,269 +155,6 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     end
     return
 end
-
-function clean_facet_attributes(aes, facet)
-    linkxaxes = get(facet, :linkxaxes, automatic)
-    linkyaxes = get(facet, :linkyaxes, automatic)
-    hidexdecorations = get(facet, :hidexdecorations, automatic)
-    hideydecorations = get(facet, :hideydecorations, automatic)
-
-    if linkxaxes ∉ [:all, :colwise, :minimal, :none, true, false, automatic]
-        @warn "Replaced invalid keyword linkxaxes = $linkxaxes by automatic"
-        linkxaxes = automatic
-    end
-
-    if linkyaxes ∉ [:all, :rowwise, :minimal, :none, true, false, automatic] 
-        @warn "Replaced invalid keyword linkyaxes = $linkyaxes by automatic"
-        linkyaxes = automatic
-    end
-
-    if hidexdecorations ∉ [true, false, automatic]
-        @warn "Replaced invalid keyword hidexdecorations = $hidexdecorations by automatic"
-        hidexdecorations = automatic
-    end
-
-    if hideydecorations ∉ [true, false, automatic] 
-        @warn "Replaced invalid keyword hideydecorations = $hideydecorations by automatic"
-        hideydecorations = automatic
-    end
-
-    if linkxaxes === automatic
-        if consistent_xlabels(aes)
-            linkxaxes = :all
-        elseif colwise_consistent_xlabels(aes)
-            linkxaxes = :colwise
-        else
-            linkxaxes = :none
-        end
-    end
-
-    if linkxaxes == :minimal
-        if colwise_consistent_xlabels(aes)
-            linkxaxes = :colwise
-        else
-            linkxaxes = :none
-        end
-    end
-
-    if linkyaxes === automatic
-        if consistent_ylabels(aes)
-            linkyaxes = :all
-        elseif rowwise_consistent_ylabels(aes)
-            linkyaxes = :rowwise
-        else
-            linkyaxes = :none
-        end
-    end
-
-    if linkyaxes == :minimal
-        if rowwise_consistent_ylabels(aes)
-            linkyaxes = :rowwise
-        else
-            linkyaxes = :none
-        end
-    end
-
-    if linkxaxes == true
-        linkxaxes = :all
-    elseif linkxaxes == false
-        linkxaxes = :none
-    end
-
-    if linkyaxes == true
-        linkyaxes = :all
-    elseif linkyaxes == false
-        linkyaxes = :none
-    end
-
-    if hidexdecorations === automatic
-        hidexdecorations = (linkxaxes != :none)
-    end
-    if hideydecorations === automatic
-        hideydecorations = (linkyaxes != :none)
-    end
-
-    (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
-end
-
-# link axes
-
-function link_axes!(aes; linkxaxes, linkyaxes)
-    if linkxaxes == :all
-        linkxaxes!(aes...)
-    elseif linkxaxes == :colwise
-        link_cols!(aes)
-    end
-
-    if linkyaxes == :all
-        linkyaxes!(aes...)
-    elseif linkyaxes == :rowwise
-        link_rows!(aes)
-    end
-end
-
-function link_rows!(aes)
-    M, N = size(aes)
-    for i in 1:M
-        linkyaxes!(aes[i,:]...)
-    end
-end
-
-function link_cols!(aes)
-    M, N = size(aes)
-    for i in 1:N
-        linkxaxes!(aes[:,i]...)
-    end
-end
-
-# facet labels
-
-function col_labels!(fig, aes, scale)
-    zipped_scale = zip(plotvalues(scale), datavalues(scale))
-
-    titlegap, attributes = facetlabelattributes(first_nonempty_axis(aes))
-
-    facetlabelpadding = lift(titlegap) do gap
-        return (0f0, 0f0, gap, 0f0)
-    end
-
-    for (index, label) in zipped_scale
-        Label(fig[1, index, Top()], to_string(label);
-              padding=facetlabelpadding, attributes...)
-    end
-end
-
-function row_labels!(fig, aes, scale)
-    _, N = size(aes)
-    zipped_scale = zip(plotvalues(scale), datavalues(scale))
-
-    titlegap, attributes = facetlabelattributes(first_nonempty_axis(aes))
-
-    facetlabelpadding = lift(titlegap) do gap
-        return (gap, 0f0, 0f0, 0f0)
-    end
-
-    for (index, label) in zipped_scale
-        Label(fig[index, N, Right()], to_string(label);
-              rotation=-π/2, padding=facetlabelpadding,
-              attributes...)
-    end
-end
-
-function panel_labels!(fig, aes, scale)
-    zipped_scale = zip(plotvalues(scale), datavalues(scale))
-
-    titlegap, attributes = facetlabelattributes(first_nonempty_axis(aes))
-
-    facetlabelpadding = lift(titlegap) do gap
-        return (0f0, 0f0, gap, 0f0)
-    end
-
-    for (index, label) in zipped_scale        
-        Label(fig[index..., Top()], to_string(label);
-              padding=facetlabelpadding, attributes...)
-    end
-end
-
-function facetlabelattributes(ax)
-    titlegap = ax.titlegap
-
-    attributes = (
-        color=ax.titlecolor,
-        font=ax.titlefont,
-        textsize=ax.titlesize,
-    )
-
-    (; titlegap, attributes)
-end
-
-# consistent axis labels
-
-function consistent_xlabels(aes)
-    nonempty_aes = get_nonempty_aes(aes)
-    ax = first(nonempty_aes).axis
-    return all(ae -> ae.axis.xlabel[] == ax.xlabel[], nonempty_aes)
-end
-
-function consistent_ylabels(aes)
-    nonempty_aes = get_nonempty_aes(aes)
-    ax = first(nonempty_aes).axis
-    return all(ae -> ae.axis.ylabel[] == ax.ylabel[], nonempty_aes)
-end
-
-function colwise_consistent_xlabels(aes)
-    _, N = size(aes)
-    all(consistent_xlabels(aes[:,i]) for i in 1:N)
-end
-
-function rowwise_consistent_ylabels(aes)
-    M, _ = size(aes)
-    all(consistent_ylabels(aes[i,:]) for i in 1:M)
-end
-
-# spanned axis labels
-
-function span_xlabel!(fig, aes)
-    M, N = size(aes)
-    
-    for ae in aes
-        ae.axis.xlabelvisible[] = false
-    end
-    protrusion = lift(
-        (xs...) -> maximum(x -> x.bottom, xs),
-        (MakieLayout.protrusionsobservable(ae.axis) for ae in aes[M, :])...
-    )
-
-    ax = first_nonempty_axis(aes)
-    
-    xlabelpadding = lift(protrusion, ax.xlabelpadding) do val, p
-        return (0f0, 0f0, 0f0, val + p)
-    end
-    xlabelcolor = ax.xlabelcolor
-    xlabelfont = ax.xlabelfont
-    xlabelsize = ax.xlabelsize
-    xlabelattributes = (
-        color=xlabelcolor,
-        font=xlabelfont,
-        textsize=xlabelsize,
-    )
-    Label(fig[M, :, Bottom()], ax.xlabel;
-        padding=xlabelpadding, xlabelattributes...)
-end
-
-function span_ylabel!(fig, aes)
-    M, N = size(aes)
-    
-    for ae in aes
-        ae.axis.ylabelvisible[] = false
-    end
-    
-    protrusion = lift(
-        (xs...) -> maximum(x -> x.left, xs),
-        (MakieLayout.protrusionsobservable(ae.axis) for ae in aes[:, 1])...
-    )
-    # TODO: here and below, set in such a way that one can change padding after the fact?
-    ax = first_nonempty_axis(aes)
-    
-    ylabelpadding = lift(protrusion, ax.ylabelpadding) do val, p
-        return (0f0, val + p, 0f0, 0f0)
-    end
-    
-    ylabelcolor = ax.ylabelcolor
-    ylabelfont = ax.ylabelfont
-    ylabelsize = ax.ylabelsize
-    ylabelattributes = (
-        color=ylabelcolor,
-        font=ylabelfont,
-        textsize=ylabelsize,
-    )
-    Label(fig[:, 1, Left()], ax.ylabel;
-        rotation=π/2, padding=ylabelpadding, ylabelattributes...)
-end
-
-empty_ae(ae) = isempty(ae.entries)
-get_nonempty_aes(aes) = filter(!empty_ae, aes)
-first_nonempty_axis(aes) = first(get_nonempty_aes(aes)).axis
 
 function facet!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     update(fig) do f
@@ -353,35 +191,58 @@ for sym in [:linkxaxes!, :linkyaxes!, :linkaxes!]
     end
 end
 
-function hideinnerdecorations!(aes, hidexdecorations, hideydecorations)
+# Handy non-splatting versions
+
+link_xaxes!(aes::AbstractArray{AxisEntries}) = (linkxaxes!(aes...); aes)
+link_yaxes!(aes::AbstractArray{AxisEntries}) = (linkyaxes!(aes...); aes)
+
+function link_axes!(aes::AbstractArray{AxisEntries}; linkxaxes, linkyaxes)
+    linkxaxes == :all && link_xaxes!(aes)
+    linkxaxes == :colwise && foreach(link_xaxes!, eachcol(aes))
+
+    linkyaxes == :all && link_yaxes!(aes)
+    linkyaxes == :rowwise && foreach(link_yaxes!, eachrow(aes))
+
+    return aes
+end
+
+# Handy grid-preserving versions
+
+hide_xdecorations!(ax) = hidexdecorations!(ax; grid=false, minorgrid=false)
+hide_ydecorations!(ax) = hideydecorations!(ax; grid=false, minorgrid=false)
+
+function hideinnerdecorations!(aes::AbstractArray{AxisEntries}; hidexdecorations, hideydecorations, wrap)
     I, J = size(aes)
         
     if hideydecorations
-        hideydecorations!.(aes[:, 2:end], grid = false)
+        for i in 1:I, j in 2:J
+            hide_ydecorations!(aes[i,j])
+        end
     end
-    
-    if hidexdecorations
-        for i in 1:I, j in 1:J
-            # don't hide x decorations if axis below is empty
-            below_empty = (i < I) && empty_ae(aes[i+1,j])
-            
-            if (i < I) && !below_empty
-                hidexdecorations!(aes[i,j],
-                    grid = false,
-                    ticks = hidexdecorations,
-                    ticklabels = hidexdecorations
-                )
-            end
 
-            if (i < I) && below_empty
-                # improve appearance with empty axes
-                aes[i,j].axis.alignmode = Mixed(bottom = MakieLayout.GridLayoutBase.Protrusion(0))
+    if hidexdecorations
+        for i in 1:I-1, j in 1:J
+            if wrap && isempty(aes[i+1,j].entries)
+                # In facet_wrap, don't hide x decorations if axis below is empty, but instead improve alignment.
+                aes[i,j].axis.alignmode = Mixed(bottom=Protrusion(0))
+            else
+                hide_xdecorations!(aes[i,j])
             end
         end
     end
 end
 
-function deleteemptyaxes!(aes::Matrix{AxisEntries})
+# Miscellaneous utilities
+
+struct GetAttr
+    var::Symbol
+end
+
+(g::GetAttr)(collection, args...) = getproperty(collection, Symbol(g.var, args...))
+
+nonemptyaxes(aes) = (ae.axis for ae in aes if !isempty(ae.entries))
+
+function deleteemptyaxes!(aes::AbstractArray{AxisEntries})
     for ae in aes
         if isempty(ae.entries)
             delete!(ae.axis)
