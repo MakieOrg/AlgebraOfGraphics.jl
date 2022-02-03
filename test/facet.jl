@@ -231,4 +231,28 @@ end
         @test ax.ygridvisible[] == true
         @test ax.yminorgridvisible[] == true
     end
+
+    df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c", "d", "e"], 100))
+    plt = data(df) * mapping(:x, :y, layout=:i)
+    fg = draw(plt; facet=(hideydecorations=false,), axis)
+    aes = fg.grid
+    axs = [ae.axis for ae in aes]
+    for c in CartesianIndices(axs)
+        ax = axs[c]
+        i, j = Tuple(c)
+        hidex = (i != 2) && !(i ==1 && j == 3) # above empty plot
+        hidey = false
+        @test ax.xticklabelsvisible[] == !hidex
+        @test ax.xticksvisible[] == !hidex
+        @test ax.xminorticksvisible[] == !hidex
+        @test ax.xgridvisible[] == true
+        @test ax.xminorgridvisible[] == true
+
+        @test ax.yticklabelsvisible[] == !hidey
+        @test ax.yticksvisible[] == !hidey
+        @test ax.yminorticksvisible[] == !hidey
+        @test ax.ygridvisible[] == true
+        @test ax.yminorgridvisible[] == true
+    end
+    @test isempty(contents(fg.figure[2, 3]))
 end
