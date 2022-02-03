@@ -159,4 +159,26 @@ end
         @test ax.xaxislinks == setdiff(axs[:, j], [ax])
         @test ax.yaxislinks == setdiff(axs, [ax])
     end
+
+    fg = draw(plt; facet=(linkxaxes=false, linkyaxes=false))
+    aes = fg.grid
+    axs = [ae.axis for ae in aes]
+    for c in CartesianIndices(axs)
+        i, j = Tuple(c)
+        ax = axs[i, j]
+        @test ax.xaxislinks == Axis[]
+        @test ax.yaxislinks == Axis[]
+    end
+
+    df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c", "d"], 100))
+    plt = data(df) * mapping(:x, :y, layout=:i)
+    fg = draw(plt; facet=(linkxaxes=:all, linkyaxes=:rowwise));
+    aes = fg.grid
+    axs = [ae.axis for ae in aes]
+    for c in CartesianIndices(axs)
+        i, j = Tuple(c)
+        ax = axs[i, j]
+        @test ax.xaxislinks == setdiff(axs, [ax])
+        @test ax.yaxislinks == setdiff(axs[i, :], [ax])
+    end
 end
