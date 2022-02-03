@@ -1,14 +1,4 @@
 @testset "clean facet attributes" begin
-    collection = (a=11, b=automatic, c=:test)
-    value = get_with_options(collection, :a, options=(11, 12))
-    @test value == 11
-    value = get_with_options(collection, :d, options=(11, 12))
-    @test value == automatic
-    @test @test_logs(
-        (:warn, "Replaced invalid keyword a = 11 by automatic. Valid values are :c, :d, or automatic."),
-        get_with_options(collection, :a, options=(:c, :d))
-    ) == automatic
-
     # consistent `x` and `y` labels
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
     plt = data(df) * mapping(:x, :y, col=:i, row=:j)
@@ -17,12 +7,23 @@
     @test consistent_ylabels(aes)
     @test colwise_consistent_xlabels(aes)
     @test rowwise_consistent_ylabels(aes)
-    @test clean_facet_attributes(aes, (hidexdecorations=automatic,)) ==
+    @test clean_facet_attributes(aes, hidexdecorations=automatic) ==
         (linkxaxes=:all, linkyaxes=:all, hidexdecorations=true, hideydecorations=true)
-    @test clean_facet_attributes(aes, (hidexdecorations=automatic, linkxaxes=false)) ==
+    @test clean_facet_attributes(aes, hidexdecorations=automatic, linkxaxes=false) ==
         (linkxaxes=:none, linkyaxes=:all, hidexdecorations=false, hideydecorations=true)
-    @test clean_facet_attributes(aes, (hideydecorations=false, linkyaxes=:minimal)) ==
+    @test clean_facet_attributes(aes, hideydecorations=false, linkyaxes=:minimal) ==
         (linkxaxes=:all, linkyaxes=:rowwise, hidexdecorations=true, hideydecorations=false)
+
+    @test @test_logs(
+        (:warn, "Replaced invalid keyword linkxaxes = :rowwise by automatic. " *
+            "Valid values are :all, :colwise, :minimal, :none, true, false, or automatic."),
+        clean_facet_attributes(aes, hidexdecorations=automatic, linkxaxes=:rowwise)
+    ) == (linkxaxes=:all, linkyaxes=:all, hidexdecorations=true, hideydecorations=true)
+    @test @test_logs(
+        (:warn, "Replaced invalid keyword hidexdecorations = nothing by automatic. " *
+            "Valid values are true, false, or automatic."),
+        clean_facet_attributes(aes, hidexdecorations=nothing, linkxaxes=:colwise)
+    ) == (linkxaxes = :colwise, linkyaxes = :all, hidexdecorations = true, hideydecorations = true)
 
     # consistent `x` and directionally consistent `y` labels
     df = (x=rand(100), y1=rand(100), y2=rand(100), i=rand(["a", "b", "c"], 100))
@@ -32,11 +33,11 @@
     @test !consistent_ylabels(aes)
     @test colwise_consistent_xlabels(aes)
     @test rowwise_consistent_ylabels(aes)
-    @test clean_facet_attributes(aes, (hidexdecorations=automatic,)) ==
+    @test clean_facet_attributes(aes, hidexdecorations=automatic) ==
         (linkxaxes=:all, linkyaxes=:rowwise, hidexdecorations=true, hideydecorations=true)
-    @test clean_facet_attributes(aes, (hidexdecorations=automatic, linkxaxes=false)) ==
+    @test clean_facet_attributes(aes, hidexdecorations=automatic, linkxaxes=false) ==
         (linkxaxes=:none, linkyaxes=:rowwise, hidexdecorations=false, hideydecorations=true)
-    @test clean_facet_attributes(aes, (hideydecorations=false, linkxaxes=:minimal)) ==
+    @test clean_facet_attributes(aes, hideydecorations=false, linkxaxes=:minimal) ==
         (linkxaxes=:colwise, linkyaxes=:rowwise, hidexdecorations=true, hideydecorations=false)
 
     # facet wrap
@@ -47,11 +48,11 @@
     @test consistent_ylabels(aes)
     @test colwise_consistent_xlabels(aes)
     @test rowwise_consistent_ylabels(aes)
-    @test clean_facet_attributes(aes, (hidexdecorations=automatic,)) ==
+    @test clean_facet_attributes(aes, hidexdecorations=automatic) ==
         (linkxaxes=:all, linkyaxes=:all, hidexdecorations=true, hideydecorations=true)
-    @test clean_facet_attributes(aes, (hidexdecorations=automatic, linkxaxes=false)) ==
+    @test clean_facet_attributes(aes, hidexdecorations=automatic, linkxaxes=false) ==
         (linkxaxes=:none, linkyaxes=:all, hidexdecorations=false, hideydecorations=true)
-    @test clean_facet_attributes(aes, (hideydecorations=false, linkyaxes=:minimal)) ==
+    @test clean_facet_attributes(aes, hideydecorations=false, linkyaxes=:minimal) ==
         (linkxaxes=:all, linkyaxes=:rowwise, hidexdecorations=true, hideydecorations=false)
 end
 
@@ -134,4 +135,28 @@ end
     @test label.textsize == ax.ylabelsize
     @test label.text[] == "ylabel"
     @test label in contents(fig[:, 1, Left()])
+end
+
+@testset "linking" begin
+    df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
+    plt = data(df) * mapping(:x => "xlabel", :y => "ylabel", col=:i, row=:j)
+    fg = draw(plt; facet=(linkxaxes=:all, linkyaxes=:rowwise));
+    aes = fg.grid
+    axs = [ae.axis for ae in aes]
+    for c in CartesianIndices(axs)
+        i, j = Tuple(c)
+        ax = axs[i, j]
+        @test ax.xaxislinks == setdiff(axs, [ax])
+        @test ax.yaxislinks == setdiff(axs[i, :], [ax])
+    end
+
+    fg = draw(plt; facet=(linkxaxes=:colwise, linkyaxes=:all))
+    aes = fg.grid
+    axs = [ae.axis for ae in aes]
+    for c in CartesianIndices(axs)
+        i, j = Tuple(c)
+        ax = axs[i, j]
+        @test ax.xaxislinks == setdiff(axs[:, j], [ax])
+        @test ax.yaxislinks == setdiff(axs, [ax])
+    end
 end

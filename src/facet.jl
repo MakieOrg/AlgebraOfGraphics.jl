@@ -1,57 +1,36 @@
 ## Options preprocessing
 
-"""
-    get_with_options(collection, key; options)
-
-Internal helper function to get the value corresponding to `key` in a `collection`.
-If the value is not present, return `automatic`.
-If the value is not among the `options`, warn and return `automatic`.
-"""
-function get_with_options(collection, key; options)
-    value = get(collection, key, automatic)
-    if isequal(value, automatic) || value in options
-        return value
-    else
-        msg = sprint() do io
-            print(io, "Replaced invalid keyword $key = ")
-            show(io, value)
-            print(io, " by automatic. ")
-            print(io, "Valid values are ")
-            for option in options
-                show(io, option)
-                print(io, ", ")
-            end
-            print(io, "or automatic.")
-        end
-        @warn msg
-        return automatic
-    end
-end
-
-function normalize_link(link, direction, consistent, directionally_consistent)
-    directionwise = Symbol(direction, :wise)
-    link === automatic && return consistent ? :all : directionally_consistent ? directionwise : :none
+function normalize_link(link, var, consistent, directionally_consistent)
+    directionwise = var == :x ? :colwise : :rowwise
+    default = consistent ? :all : directionally_consistent ? directionwise : :none
+    link === automatic && return default
     link == :minimal && return directionally_consistent ? directionwise : :none
     link == true && return :all
     link == false && return :none
-    return link
+    link in (:all, directionwise, :none) && return link
+    attribute = Symbol(:link, var, :axes)
+    @warn "Replaced invalid keyword $attribute = $(repr(link)) by automatic. " *
+        "Valid values are :all, $(repr(directionwise)), :minimal, :none, true, false, or automatic."
+    return default
 end
 
-normalize_hide(hide, link) = hide === automatic ? (link != :none) : hide
+function normalize_hide(hide, link, var)
+    default = link != :none
+    hide === automatic && return default
+    hide isa Bool && return hide
+    attribute = Symbol(:hide, var, :decorations)
+    @warn "Replaced invalid keyword $attribute = $(repr(hide)) by automatic. " *
+        "Valid values are true, false, or automatic."
+    return default
+end
 
-function clean_facet_attributes(aes, facet)
-    _linkxaxes = get_with_options(facet, :linkxaxes, options=(:all, :colwise, :minimal, :none, true, false))
-    _linkyaxes = get_with_options(facet, :linkyaxes, options=(:all, :rowwise, :minimal, :none, true, false))
-
-    linkxaxes = normalize_link(_linkxaxes, :col, consistent_xlabels(aes), colwise_consistent_xlabels(aes))
-    linkyaxes = normalize_link(_linkyaxes, :row, consistent_ylabels(aes), rowwise_consistent_ylabels(aes))
-
-    _hidexdecorations = get_with_options(facet, :hidexdecorations, options=(true, false))
-    _hideydecorations = get_with_options(facet, :hideydecorations, options=(true, false))
-
-    hidexdecorations = normalize_hide(_hidexdecorations, linkxaxes)
-    hideydecorations = normalize_hide(_hideydecorations, linkyaxes)
-
+function clean_facet_attributes(aes;
+                                linkxaxes=automatic, linkyaxes=automatic,
+                                hidexdecorations=automatic, hideydecorations=automatic)
+    linkxaxes = normalize_link(linkxaxes, :x, consistent_xlabels(aes), colwise_consistent_xlabels(aes))
+    linkyaxes = normalize_link(linkyaxes, :y, consistent_ylabels(aes), rowwise_consistent_ylabels(aes))
+    hidexdecorations = normalize_hide(hidexdecorations, linkxaxes, :x)
+    hideydecorations = normalize_hide(hideydecorations, linkyaxes, :y)
     return (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
 end
 
@@ -133,7 +112,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     isnothing(scale) && return
 
     # Link axes and hide decorations if appropriate
-    attr = clean_facet_attributes(aes, facet)
+    attr = clean_facet_attributes(aes; facet...)
     link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
     hideinnerdecorations!(aes; attr.hidexdecorations, attr.hideydecorations)
 
@@ -161,7 +140,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     all(isnothing, (row_scale, col_scale)) && return
 
     # Link axes and hide decorations if appropriate
-    attr = clean_facet_attributes(aes, facet)
+    attr = clean_facet_attributes(aes; facet...)
     link_axes!(aes; attr.linkxaxes, attr.linkyaxes)
     hideinnerdecorations!(aes; attr.hidexdecorations, attr.hideydecorations)
 
@@ -224,7 +203,7 @@ function link_axes!(aes; linkxaxes, linkyaxes)
     linkxaxes == :colwise && foreach(link_xaxes!, eachcol(aes))
 
     linkyaxes == :all && link_yaxes!(aes)
-    linkyaxes == :rowise && foreach(link_yaxes!, eachrow(aes))
+    linkyaxes == :rowwise && foreach(link_yaxes!, eachrow(aes))
 
     return aes
 end
