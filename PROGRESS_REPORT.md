@@ -14,9 +14,18 @@
     - weighted linear regression,
     - smooth regression.
 
+- Simplified and tested logic for facet layout (in [#336](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/336)):
+    - simplified faceting code (removed around 150 lines of code),
+    - tested processing of `linkxaxes, linkyaxes, hidexdecorations, hideydecorations` keywords,
+    - avoid silently ignoring misspelled attributes in `facet`,
+    - tested correct computation and placement of facet labels and spanned guide labels,
+    - tested correct linking behavior in facet wrap and grid, also in the presence of missing subplots,
+    - tested correct decoration hiding behavior in facet wrap and grid, also in the presence of missing subplots,
+    - fixed incorrect decoration hiding behavior in facet grid with missing subplot,
+    - fixed minor grid bug (issue [#325](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/issues/325)).
+
 - TODO: test logic from `ProcessedLayer` to plot
 - TODO: test legend construction
-- TODO: simplify and test logic for facet layout
 - TODO: unit tests for grouping machinery (esp. `_groupreduce`)
 - TODO: finalize and test wide and pregrouped APIs
 - TODO: optimize and test plotting for geometrical objects (GeoInterface)
