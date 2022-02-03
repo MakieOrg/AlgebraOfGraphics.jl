@@ -59,7 +59,7 @@ end
 @testset "facet labels" begin
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
     plt = data(df) * mapping(:x, :y, col=:i, row=:j)
-    fig = Figure();
+    fig = Figure()
     aes = compute_axes_grid(fig, plt)
     scales = first(aes).categoricalscales
     ax = first(aes).axis
@@ -92,7 +92,7 @@ end
 
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c", "d"], 100))
     plt = data(df) * mapping(:x, :y, layout=:i)
-    fig = Figure();
+    fig = Figure()
     aes = compute_axes_grid(fig, plt)
     scales = first(aes).categoricalscales
     ax = first(aes).axis
@@ -116,7 +116,7 @@ end
 @testset "spanned labels" begin
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
     plt = data(df) * mapping(:x => "xlabel", :y => "ylabel", col=:i, row=:j)
-    fig = Figure();
+    fig = Figure()
     aes = compute_axes_grid(fig, plt)
     ax = first(aes).axis
 
@@ -140,7 +140,7 @@ end
 @testset "linking" begin
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
     plt = data(df) * mapping(:x => "xlabel", :y => "ylabel", col=:i, row=:j)
-    fg = draw(plt; facet=(linkxaxes=:all, linkyaxes=:rowwise));
+    fg = draw(plt; facet=(linkxaxes=:all, linkyaxes=:rowwise))
     aes = fg.grid
     axs = [ae.axis for ae in aes]
     for c in CartesianIndices(axs)
@@ -172,7 +172,7 @@ end
 
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c", "d"], 100))
     plt = data(df) * mapping(:x, :y, layout=:i)
-    fg = draw(plt; facet=(linkxaxes=:all, linkyaxes=:rowwise));
+    fg = draw(plt; facet=(linkxaxes=:all, linkyaxes=:rowwise))
     aes = fg.grid
     axs = [ae.axis for ae in aes]
     for c in CartesianIndices(axs)
@@ -181,4 +181,17 @@ end
         @test ax.xaxislinks == setdiff(axs, [ax])
         @test ax.yaxislinks == setdiff(axs[i, :], [ax])
     end
+
+    df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c", "d", "e"], 100))
+    plt = data(df) * mapping(:x, :y, layout=:i)
+    fg = draw(plt; facet=(linkxaxes=:all, linkyaxes=:rowwise))
+    aes = fg.grid
+    axs = [ae.axis for ae in aes]
+    for c in CartesianIndices(axs)
+        i, j = Tuple(c)
+        ax = axs[i, j]
+        @test ax.xaxislinks == setdiff(axs, [ax])
+        @test ax.yaxislinks == setdiff(axs[i, :], [ax])
+    end
+    @test isempty(contents(fg.figure[2, 3]))
 end
