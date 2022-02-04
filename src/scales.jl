@@ -4,7 +4,7 @@ increment!(idx::Ref) = (idx[] += 1; idx[])
 
 function cycle(v::AbstractVector, i::Int)
     l = length(v)
-    l == 0 && throw(ArgumentError("Can not cycle empty vector."))
+    l == 0 && throw(ArgumentError("Vector must be non-empty."))
     return v[mod1(i, l)]
 end
 
