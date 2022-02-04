@@ -2,7 +2,11 @@
 
 increment!(idx::Ref) = (idx[] += 1; idx[])
 
-cycle(v::AbstractVector, i::Int) = v[mod1(i, length(v))]
+function cycle(v::AbstractVector, i::Int)
+    l = length(v)
+    l == 0 && throw(ArgumentError("Can not cycle empty vector."))
+    return v[mod1(i, l)]
+end
 
 function apply_palette(p::Union{AbstractVector, AbstractColorList}, uv)
     values, pairs = Any[], Pair[]
