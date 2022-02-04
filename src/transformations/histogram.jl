@@ -5,7 +5,7 @@ function compute_edges(intervals::Tuple, bins, closed)
     return map(intervals, bs) do (min, max), b
         b isa AbstractVector && return b
         b isa Integer && return histrange(float(min), float(max), b, closed)
-        msg = "Only AbstractVector and Integer or tuples thereof are accepted as bins."
+        msg = "Only AbstractVector and Integer or tuples thereof are accepted as bins"
         throw(ArgumentError(msg))
     end
 end

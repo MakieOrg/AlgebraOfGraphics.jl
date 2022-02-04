@@ -18,7 +18,7 @@ function to_geometry(shape)
     elseif type === :MultiPolygon
         return to_multipolygon(coords)
     else
-        msg = "Only `:Polygon` and `:MultiPolygon` are supported."
+        msg = "Only `:Polygon` and `:MultiPolygon` are supported"
         throw(ArgumentError(msg))
     end
 end
