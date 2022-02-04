@@ -21,7 +21,7 @@ end
 
 function assert_equal(a, b)
     if !isequal(a, b)
-        msg = "$a and $b must be equal"
+        msg = "$a and $b must be equal."
         throw(ArgumentError(msg))
     end
     return a

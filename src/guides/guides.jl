@@ -1,7 +1,7 @@
 function guides_position(fig::Figure, position)
     position = Symbol(position)
     supported = [:top, :bottom, :left, :right]
-    position ∉ supported && throw(ArgumentError("Legend position $position ∉ $supported"))
+    position ∉ supported && throw(ArgumentError("Legend position $position ∉ $supported."))
     
     if position == :bottom
         legs_pos = fig[end+1,:]
