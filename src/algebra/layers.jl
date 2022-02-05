@@ -109,8 +109,9 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
 
     axes_grid = compute_axes_grid(s; axis, palettes)
     sz = size(axes_grid)
-    if sz !== (1, 1) && fig isa Axis
-        error("You can only pass an `Axis` to `draw!`, if the calculated layout only contains one element. Elements: $(sz)")
+    if sz != (1, 1) && fig isa Axis
+        msg = "You can only pass an `Axis` to `draw!` if the calculated layout only contains one element. Elements: $(sz)"
+        throw(ArgumentError(msg))
     end
 
     return map(ae -> AxisEntries(ae, fig), axes_grid)
