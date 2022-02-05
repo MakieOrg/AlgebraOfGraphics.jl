@@ -240,7 +240,8 @@ end
     for c in CartesianIndices(axs)
         ax = axs[c]
         i, j = Tuple(c)
-        hidex = (i != 2) && !(i ==1 && j == 3) # above empty plot
+        aboveempty = i == 1 && j == 3 # subplot above an empty subplot
+        hidex = (i != 2) && !aboveempty
         hidey = false
         @test ax.xticklabelsvisible[] == !hidex
         @test ax.xticksvisible[] == !hidex
@@ -253,6 +254,9 @@ end
         @test ax.yminorticksvisible[] == !hidey
         @test ax.ygridvisible[] == true
         @test ax.yminorgridvisible[] == true
+
+        alignmode = aboveempty ? Mixed(bottom=Protrusion(0)) : Inside()
+        @test ax.alignmode[] == alignmode
     end
     @test isempty(contents(fg.figure[2, 3]))
 end
