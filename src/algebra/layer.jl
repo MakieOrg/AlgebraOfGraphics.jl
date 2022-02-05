@@ -98,7 +98,7 @@ to_label(labels::ArrayLike) = reduce(mergelabels, labels)
 function categoricalscales(processedlayer::ProcessedLayer, palettes)
     categoricals = MixedArguments()
     merge!(categoricals, processedlayer.primary)
-    merge!(categoricals, Dictionary(filter(iscategoricalcontainer, processedlayer.positional)))
+    merge!(categoricals, filter(iscategoricalcontainer, Dictionary(processedlayer.positional)))
     return map(keys(categoricals), categoricals) do key, val
         palette = key isa Integer ? automatic : get(palettes, key, automatic)
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
