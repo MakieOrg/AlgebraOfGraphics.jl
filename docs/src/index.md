@@ -11,6 +11,6 @@ This package can be installed typing
 ```julia
 julia> import Pkg; Pkg.add("AlgebraOfGraphics")
 ```
-in the julia REPL.
+in the Julia REPL.
 
 See the [Tutorial](@ref) to get started.
