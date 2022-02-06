@@ -118,7 +118,7 @@ end
 function continuousscales(processedlayer::ProcessedLayer)
     continuous = MixedArguments()
     merge!(continuous, filter(iscontinuous, processedlayer.named))
-    merge!(continuous, Dictionary(filter(iscontinuous, processedlayer.positional)))
+    merge!(continuous, filter(iscontinuous, Dictionary(processedlayer.positional)))
 
     continuousscales = map(keys(continuous), continuous) do key, val
         extrema = Makie.extrema_nan(val)
