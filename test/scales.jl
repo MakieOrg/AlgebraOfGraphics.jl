@@ -41,10 +41,14 @@ end
     @test_throws ArgumentError apply_palette(p, uv)
 
     p = [:dtriangle, :b => :utriangle, :a => :circle, :cross]
-    uv = [:a, :b, :c, :e, :f]
+    uv = [:a, :b, :c, :d, :e]
     @test apply_palette(p, uv) == [:circle, :utriangle, :dtriangle, :cross, :dtriangle]
 
     p = [:dtriangle, :b => :utriangle, :a => :circle]
-    uv = [:a, :b, :c, :e, :f]
+    uv = [:a, :b, :c, :d, :e]
     @test apply_palette(p, uv) == [:circle, :utriangle, :dtriangle, :dtriangle, :dtriangle]
+
+    p = cgrad(:Accent_3)
+    uv = [:a, :b, :c, :d, :e]
+    @test apply_palette(p, uv) == [p[1], p[2], p[3], p[1], p[2]]
 end
