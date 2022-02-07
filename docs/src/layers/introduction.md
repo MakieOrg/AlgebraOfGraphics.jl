@@ -1,6 +1,6 @@
 # Introduction
 
-Layers are the key building block of AlgebraOfGraphics.
+Layers are the key building blocks of AlgebraOfGraphics.
 Each layer is the product of the following elementary objects.
 
 - [Data](@ref) (encoding the dataset).
