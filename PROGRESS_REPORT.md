@@ -14,6 +14,8 @@
     - weighted linear regression,
     - smooth regression.
 
+- Added tests for categorical scales (in [#338](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/338)).
+
 - Simplified and tested logic for facet layout (in [#336](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/336)):
     - simplified faceting code (removed around 150 lines of code),
     - tested processing of `linkxaxes, linkyaxes, hidexdecorations, hideydecorations` keywords,

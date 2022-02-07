@@ -64,6 +64,13 @@ function compute_attributes(pl::ProcessedLayer)
     return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
 end
 
+function compute_palettes(palettes)
+    layout = Dictionary((layout=wrap,))
+    theme_palettes = map(to_value, Dictionary(Makie.current_default_theme()[:palette]))
+    user_palettes = Dictionary(palettes)
+    return foldl(merge!, (layout, theme_palettes, user_palettes), init=NamedArguments())
+end
+
 function compute_entries_continuousscales(pls_grid)
     # Here processed layers in `pls_grid` are "sliced",
     # the categorical scales have been applied, but not
@@ -122,8 +129,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
     layers::Layers = s
     processedlayers = map(ProcessedLayer, layers)
 
-    theme_palettes = NamedTuple(Makie.current_default_theme()[:palette])
-    palettes = merge((layout=wrap,), map(to_value, theme_palettes), palettes)
+    palettes = compute_palettes(palettes)
 
     categoricalscales = MixedArguments()
     for processedlayer in processedlayers

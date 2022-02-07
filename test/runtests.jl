@@ -3,6 +3,8 @@ using AlgebraOfGraphics, Makie, Random, Statistics, Test
 using AlgebraOfGraphics: Sorted
 using AlgebraOfGraphics: separate
 using AlgebraOfGraphics: midpoints
+using AlgebraOfGraphics: compute_palettes
+using AlgebraOfGraphics: categoricalscales, CategoricalScale, fitscale
 using AlgebraOfGraphics: get_layout
 using AlgebraOfGraphics: clean_facet_attributes
 using AlgebraOfGraphics: consistent_xlabels, consistent_ylabels, colwise_consistent_xlabels, rowwise_consistent_ylabels
@@ -25,6 +27,7 @@ Random.seed!(1234)
 include("utils.jl")
 include("algebra.jl")
 include("analyses.jl")
+include("scales.jl")
 include("helpers.jl")
 include("facet.jl")
 include("legend.jl")

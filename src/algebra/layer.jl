@@ -98,13 +98,16 @@ to_label(labels::ArrayLike) = reduce(mergelabels, labels)
 function categoricalscales(processedlayer::ProcessedLayer, palettes)
     categoricals = MixedArguments()
     merge!(categoricals, processedlayer.primary)
-    merge!(categoricals, Dictionary(filter(iscategoricalcontainer, processedlayer.positional)))
-    return map(keys(categoricals), categoricals) do key, val
+    merge!(categoricals, filter(iscategoricalcontainer, Dictionary(processedlayer.positional)))
+
+    categoricalscales = similar(keys(categoricals), CategoricalScale)
+    map!(categoricalscales, keys(categoricals), categoricals) do key, val
         palette = key isa Integer ? automatic : get(palettes, key, automatic)
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
         label = to_label(get(processedlayer.labels, key, ""))
         return CategoricalScale(datavalues, palette, label)
     end
+    return categoricalscales
 end
 
 function has_zcolor(pl::ProcessedLayer)
@@ -118,13 +121,15 @@ end
 function continuousscales(processedlayer::ProcessedLayer)
     continuous = MixedArguments()
     merge!(continuous, filter(iscontinuous, processedlayer.named))
-    merge!(continuous, Dictionary(filter(iscontinuous, processedlayer.positional)))
+    merge!(continuous, filter(iscontinuous, Dictionary(processedlayer.positional)))
 
-    continuousscales = map(keys(continuous), continuous) do key, val
+    continuousscales = similar(keys(continuous), ContinuousScale)
+    map!(continuousscales, keys(continuous), continuous) do key, val
         extrema = Makie.extrema_nan(val)
         label = to_label(get(processedlayer.labels, key, ""))
         return ContinuousScale(extrema, label)
     end
+
     # TODO: also encode colormap here
     if has_zcolor(processedlayer) && !haskey(continuousscales, :color)
         colorscale = get(continuousscales, 3, nothing)
