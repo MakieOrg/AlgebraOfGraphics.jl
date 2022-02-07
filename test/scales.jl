@@ -30,3 +30,9 @@
     @test scale.palette === automatic
     @test scale.plot == 1:2
 end
+
+@testset "palettes" begin
+    p = Any[:circle, :utriangle, :cross, :rect, :diamond, :dtriangle, :pentagon, :xcross, Pair{Any, Any}(:spike, :cross), Pair{Any, Any}(:seizure, :diamond)]
+    uv = ["seizure", :seizure, "something?!", :something, "spike"]
+    @test AlgebraOfGraphics.apply_palette(p, uv) == [:circle, :diamond, :utriangle, :cross, :rect]
+end

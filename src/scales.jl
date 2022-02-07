@@ -14,7 +14,7 @@ function apply_palette(p::Union{AbstractVector, AbstractColorList}, uv)
         target = ifelse(x isa Pair, pairs, values)
         push!(target, x)
     end
-    dict, idx = Dictionary(map(first, pairs), map(last, pairs)), Ref(0)
+    dict, idx = Dictionary{Any, Any}(map(first, pairs), map(last, pairs)), Ref(0)
     return [get(() -> cycle(values, increment!(idx)), dict, v) for v in uv]
 end
 
