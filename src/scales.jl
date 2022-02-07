@@ -1,11 +1,5 @@
 ## Categorical Scales
 
-function cycle(v::AbstractVector, i::Int)
-    l = length(v)
-    l == 0 && throw(ArgumentError("Vector must be non-empty"))
-    return v[mod1(i, l)]
-end
-
 mutable struct Cycler{K, V}
     keys::Vector{K}
     values::Vector{V}
@@ -21,7 +15,13 @@ end
 
 function (c::Cycler)(u)
     i = findfirst(isequal(u), c.keys)
-    return isnothing(i) ? cycle(c.defaults, c.idx += 1) : c.values[i]
+    return if isnothing(i)
+        l = length(c.defaults)
+        l == 0 && throw(ArgumentError("Key $(repr(u)) not found and no default values are present"))
+        c.defaults[mod1(c.idx += 1, l)]
+    else
+        c.values[i]
+    end
 end
 
 # Use `Iterators.map` as `map` does not guarantee order
