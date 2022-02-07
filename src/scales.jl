@@ -1,23 +1,31 @@
 ## Categorical Scales
 
-increment!(idx::Ref) = (idx[] += 1; idx[])
-
-function cycle(v::AbstractVector, i::Int)
-    l = length(v)
-    l == 0 && throw(ArgumentError("Vector must be non-empty"))
-    return v[mod1(i, l)]
+mutable struct Cycler{K, V}
+    keys::Vector{K}
+    values::Vector{V}
+    defaults::Vector{Any}
+    idx::Int
 end
 
-function apply_palette(p::Union{AbstractVector, AbstractColorList}, uv)
-    values, pairs = Any[], Pair[]
-    for x in p
-        target = ifelse(x isa Pair, pairs, values)
-        push!(target, x)
+function Cycler(p)
+    defaults = vec(collect(Any, p))
+    pairs = splice!(defaults, findall(val -> val isa Pair, defaults))
+    return Cycler(map(first, pairs), map(last, pairs), defaults, 0)
+end
+
+function (c::Cycler)(u)
+    i = findfirst(isequal(u), c.keys)
+    return if isnothing(i)
+        l = length(c.defaults)
+        l == 0 && throw(ArgumentError("Key $(repr(u)) not found and no default values are present"))
+        c.defaults[mod1(c.idx += 1, l)]
+    else
+        c.values[i]
     end
-    dict, idx = Dictionary(map(first, pairs), map(last, pairs)), Ref(0)
-    return [get(() -> cycle(values, increment!(idx)), dict, v) for v in uv]
 end
 
+# Use `Iterators.map` as `map` does not guarantee order
+apply_palette(p::Union{AbstractArray, AbstractColorList}, uv) = collect(Iterators.map(Cycler(p), uv))
 apply_palette(::Automatic, uv) = eachindex(uv)
 apply_palette(p, uv) = map(p, uv)
 
