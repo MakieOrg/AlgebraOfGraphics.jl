@@ -11,6 +11,7 @@ using AlgebraOfGraphics: compute_axes_grid
 using AlgebraOfGraphics: Arguments, MixedArguments, NamedArguments
 
 using Makie: automatic
+using GridLayoutBase: Protrusion
 
 using Dictionaries: Indices
 
