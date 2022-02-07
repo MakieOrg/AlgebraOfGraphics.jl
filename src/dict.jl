@@ -5,7 +5,7 @@ const NamedArguments = Dictionary{Symbol, Any}
 const MixedArguments = Dictionary{KeyType, Any}
 
 # make a copy with distinct keys
-set(d::AbstractDictionary, ps::Pair...) = merge(d, dictionary(ps))
+set(d::AbstractDictionary, ps::Pair...) = merge(d, Dictionary(map(first, ps), map(last, ps))
 
 function filterkeys(f, d::AbstractDictionary)
     idxs = findall(f, keys(d))
