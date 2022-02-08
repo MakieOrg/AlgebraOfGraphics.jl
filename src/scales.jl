@@ -9,7 +9,7 @@ end
 
 function Cycler(p)
     defaults = vec(collect(Any, p))
-    pairs = splice!(defaults, findall(val -> val isa Pair, defaults))
+    pairs = splice!(defaults, findall(ispair, defaults))
     return Cycler(map(first, pairs), map(last, pairs), defaults, 0)
 end
 
@@ -24,10 +24,38 @@ function (c::Cycler)(u)
     end
 end
 
-# Use `Iterators.map` as `map` does not guarantee order
-apply_palette(p::Union{AbstractArray, AbstractColorList}, uv) = collect(Iterators.map(Cycler(p), uv))
+"""
+    apply_palette(p, uniquevalues)
+
+Apply the palette `p` to the sorted vector `uniquevalues` of unique values of a
+categorical variable.
+
+For each `value` in `uniquevalues`, look for a pair in `p` of the form `value => output`.
+If that exists, match `value` to `output`.
+Otherwise, match `value` to the first unusued non-pair entry in `p`.
+If all non-pair entries in `p` are used, cycle.
+
+Return matches for all entries in `uniquevalues`.
+
+# Examples
+
+```jldoctest
+julia> AlgebraOfGraphics.apply_palette([:red, :blue, :a => :green], [:a, :b, :c, :d])
+4-element Vector{Symbol}:
+ :green
+ :red
+ :blue
+ :red
+```
+
+!!! note
+    It is possible to overload `apply_palette(p::CustomType, uniquevalues)` to
+    implement custom palette behaviors that cannot be achieved with a list
+    of values and pairs.
+"""
+apply_palette(p, uv) = collect(Iterators.map(Cycler(p), uv))
+
 apply_palette(::Automatic, uv) = eachindex(uv)
-apply_palette(p, uv) = map(p, uv)
 
 # TODO: add more customizations?
 struct Wrap end
