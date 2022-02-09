@@ -26,10 +26,10 @@
     - fixed incorrect decoration hiding behavior in facet grid with missing subplot,
     - fixed minor grid bug (issue [#325](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/issues/325)).
 
+- TODO: finalize and test wide and pregrouped APIs (see [#345](https://github.com/JuliaPlots/AlgebraOfGraphics.jl/discussions/345))
 - TODO: test logic from `ProcessedLayer` to plot
 - TODO: test legend construction
 - TODO: unit tests for grouping machinery (esp. `_groupreduce`)
-- TODO: finalize and test wide and pregrouped APIs
 - TODO: optimize and test plotting for geometrical objects (GeoInterface)
 
 ## Faceted plots
