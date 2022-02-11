@@ -134,7 +134,8 @@ as defined by the internal function `aog_theme` (inernal means not
 exported).
 
 To tweak the predefined theme, use the function `update_theme!`
-The change e.g. fontsize and default title, see the example below.
+The change e.g. default fontsize, title, and markersize,
+see the example below.
 
 For more information about setting themes, see the `theming`
 section of the `Makie.jl` docs.
@@ -143,6 +144,7 @@ section of the `Makie.jl` docs.
 ```jldoctest
 set_aog_theme!()                # Sets a prefedined theme
 update_theme!(fontsize=30,      # Tweaks the current theme
+    markersize=40,
     Axis = (title="MyDefaultTitle",)
 )
 ```
