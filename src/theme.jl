@@ -134,8 +134,8 @@ as defined by the internal function `aog_theme` (inernal means not
 exported).
 
 To tweak the predefined theme, use the function `update_theme!`
-
 The change e.g. fontsize and default title, see the example below.
+
 For more information about setting themes, see the `theming`
 section of the `Makie.jl` docs.
 
