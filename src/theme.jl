@@ -23,6 +23,12 @@ opensans(weight) = joinpath(font_folder, "OpenSans-$(weight).ttf")
 # Crameri, Fabio, Grace E. Shephard, and Philip J. Heron. "The misuse of colour in science communication." Nature communications 11.1 (2020): 1-10.
 # https://www.nature.com/articles/s41467-020-19160-7
 
+"""
+    aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
+
+Returns a `NamedTuple` of theme settings. Intended for internal use.
+The provided functionality is exposed to the user by the function `set_aog_theme!`.
+"""
 function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
     mediumfont = first(fonts)
     lightfont = last(fonts)
@@ -120,6 +126,27 @@ function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
     )
 end
 
+"""
+    set_aog_theme!(; kwargs...)
+
+Set the current theme to a predefined and opinionated theme,
+as defined by the internal function `aog_theme` (inernal means not
+exported).
+
+To tweak the predefined theme, use the function `update_theme!`
+
+The change e.g. fontsize and default title, see the example below.
+For more information about setting themes, see the `theming`
+section of the `Makie.jl` docs.
+
+# Examples
+```jldoctest
+set_aog_theme!()                # Sets a prefedined theme
+update_theme!(fontsize=30,      # Tweaks the current theme
+    Axis = (title="MyDefaultTitle",)
+)
+```
+"""
 function set_aog_theme!(; kwargs...)
     theme = aog_theme(; kwargs...)
     return set_theme!(; theme...)
