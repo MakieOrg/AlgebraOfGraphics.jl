@@ -1,7 +1,7 @@
 # ---
 # title: Figure tweaking
 # cover: assets/figure_tweaking.png
-# description: Setting figure attributes
+# description: Setting figure attributes.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

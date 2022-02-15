@@ -1,7 +1,7 @@
 # ---
 # title: Wide data
 # cover: assets/wide_data.png
-# description: Working with data in the wide format
+# description: Working with data in the wide format.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

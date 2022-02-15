@@ -1,7 +1,7 @@
 # ---
 # title: Density plots
 # cover: assets/density_plots.png
-# description: Visualizing kernel density estimation of data
+# description: Visualizing kernel density estimation of data.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

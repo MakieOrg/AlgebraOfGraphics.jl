@@ -1,7 +1,7 @@
 # ---
 # title: Discrete scales
 # cover: assets/discrete_scales.png
-# description: Sorting and renaming categorical variables
+# description: Sorting and renaming categorical variables.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

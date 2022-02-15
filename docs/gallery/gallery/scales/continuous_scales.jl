@@ -1,7 +1,7 @@
 # ---
 # title: Continuous scales
 # cover: assets/continuous_scales.png
-# description: Applying nonlinear transformations
+# description: Applying nonlinear transformations.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

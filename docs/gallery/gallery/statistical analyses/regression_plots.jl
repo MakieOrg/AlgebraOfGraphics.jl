@@ -1,7 +1,7 @@
 # ---
 # title: Regression plots
 # cover: assets/regression_plots.png
-# description: Linear and nonlinear regressions
+# description: Linear and nonlinear regressions.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 
