@@ -1,7 +1,7 @@
 # ---
 # title: Colorbar tweaking
 # cover: assets/colorbar_tweaking.png
-# description: Setting colorbar attributes
+# description: Setting colorbar attributes.
 # ---
 
 using AlgebraOfGraphics, CairoMakie

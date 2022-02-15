@@ -1,7 +1,7 @@
 # ---
 # title: Pre-scaled data
 # cover: assets/prescaled_data.png
-# description: Pass data to the plot as is
+# description: Pass data to the plot as is.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

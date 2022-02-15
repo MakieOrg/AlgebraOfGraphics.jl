@@ -1,7 +1,7 @@
 # ---
 # title: Legend merging
 # cover: assets/legend_merging.png
-# description: Multiple scales for the same variable
+# description: Multiple scales for the same variable.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

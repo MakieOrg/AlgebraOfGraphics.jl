@@ -1,7 +1,7 @@
 # ---
 # title: Geometries
 # cover: assets/geometries.png
-# description: Visualizing geometries
+# description: Visualizing geometries.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

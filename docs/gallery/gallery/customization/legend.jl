@@ -1,7 +1,7 @@
 # ---
 # title: Legend tweaking
 # cover: assets/legend_tweaking.png
-# description: Setting legend attributes
+# description: Setting legend attributes.
 # ---
 
 using AlgebraOfGraphics, CairoMakie
