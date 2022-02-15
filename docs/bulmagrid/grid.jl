@@ -1,41 +1,40 @@
-function DemoCards.cardtheme(::Val{:__AlgebraOfGraphics__})
+const bulma_grid_section_template = mt"""
+{{{description}}}
 
-    bulma_grid_section_template = mt"""
-    {{{description}}}
+```@raw html
+<div class="columns is-multiline">
+```
 
-    ```@raw html
-    <div class="columns is-multiline">
-    ```
+{{{cards}}}
 
-    {{{cards}}}
+```@raw html
+</div>
+```
+"""
 
-    ```@raw html
-    </div>
-    ```
-    """
-
-    bulma_grid_card_template = mt"""
-    ```@raw html
-    <div class="column is-half">
-        <div class="card">
-            <div class="card-image">
-    ```
-    [![card cover image]({{{coverpath}}})](@ref {{id}})
-    @raw```
-            </div>
-            <div class="card-content">
-                <h3 class="is-size-5">
-                    {{{title}}}
-                </h3>
-                <p class="is-size-6">
-                    {{{description}}}
-                </p>
-            </div>
+const bulma_grid_card_template = mt"""
+```@raw html
+<div class="column is-half">
+    <div class="card">
+        <div class="card-image">
+```
+[![card cover image]({{{coverpath}}})](@ref {{id}})
+```@raw html
+        </div>
+        <div class="card-content">
+            <h3 class="is-size-5">
+                {{{title}}}
+            </h3>
+            <p class="is-size-6">
+                {{{description}}}
+            </p>
         </div>
     </div>
-    ```
-    """
+</div>
+```
+"""
 
+function DemoCards.cardtheme(::Val{:__AlgebraOfGraphics__})
     templates = Dict(
         "card" => bulma_grid_card_template,
         "section" => bulma_grid_section_template
