@@ -132,9 +132,8 @@ end
 Set the current theme to a predefined and opinionated theme,
 as defined by the unexported internal function [`AlgebraOfGraphics.aog_theme`](@ref).
 
-To tweak the predefined theme, use the function `update_theme!`
-The change e.g. default fontsize, title, and markersize,
-see the example below.
+To tweak the predefined theme, use the function `Makie.update_theme!`.
+See the example below on how to change, e.g., default fontsize, title, and markersize.
 
 For more information about setting themes, see the `theming`
 section of the `Makie.jl` docs.
