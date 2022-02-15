@@ -26,7 +26,7 @@ opensans(weight) = joinpath(font_folder, "OpenSans-$(weight).ttf")
 """
     aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
 
-Returns a `NamedTuple` of theme settings. Intended for internal use.
+Return a `NamedTuple` of theme settings. Intended for internal use.
 The provided functionality is exposed to the user by the function `set_aog_theme!`.
 """
 function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
