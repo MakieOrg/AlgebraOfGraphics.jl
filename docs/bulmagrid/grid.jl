@@ -19,7 +19,7 @@ function DemoCards.cardtheme(::Val{:__AlgebraOfGraphics__})
     <div class="column is-half">
         <div class="card">
             <div class="card-image">
-                <img src={{{coverpath}}}>
+                <img src={{{coverpath}}} alt="card cover image">
             </div>
             <div class="card-content">
                 <h3 class="is-size-5">
