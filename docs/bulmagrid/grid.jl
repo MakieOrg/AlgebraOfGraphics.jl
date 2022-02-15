@@ -1,4 +1,5 @@
 function DemoCards.cardtheme(::Val{:__AlgebraOfGraphics__})
+
     bulma_grid_section_template = mt"""
     {{{description}}}
 
@@ -39,5 +40,6 @@ function DemoCards.cardtheme(::Val{:__AlgebraOfGraphics__})
         "card" => bulma_grid_card_template,
         "section" => bulma_grid_section_template
     )
+
     return templates, abspath(@__DIR__, "style.css")
 end
