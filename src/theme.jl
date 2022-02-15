@@ -141,9 +141,10 @@ section of the `Makie.jl` docs.
 # Examples
 ```jldoctest
 set_aog_theme!()                # Sets a prefedined theme
-update_theme!(fontsize=30,      # Tweaks the current theme
+update_theme!(                  # Tweaks the current theme
+    fontsize=30,
     markersize=40,
-    Axis = (title="MyDefaultTitle",)
+    Axis=(title="MyDefaultTitle",)
 )
 ```
 """
