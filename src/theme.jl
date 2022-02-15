@@ -135,7 +135,7 @@ as defined by the unexported internal function [`AlgebraOfGraphics.aog_theme`](@
 To tweak the predefined theme, use the function `Makie.update_theme!`.
 See the example below on how to change, e.g., default fontsize, title, and markersize.
 
-For more information about setting themes, see the `theming`
+For more information about setting themes, see the `Theming`
 section of the `Makie.jl` docs.
 
 # Examples
