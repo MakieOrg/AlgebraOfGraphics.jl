@@ -130,8 +130,7 @@ end
     set_aog_theme!(; kwargs...)
 
 Set the current theme to a predefined and opinionated theme,
-as defined by the internal function `aog_theme` (inernal means not
-exported).
+as defined by the unexported internal function [`AlgebraOfGraphics.aog_theme`](@ref).
 
 To tweak the predefined theme, use the function `update_theme!`
 The change e.g. default fontsize, title, and markersize,
