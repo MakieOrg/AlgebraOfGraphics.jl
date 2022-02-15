@@ -3,6 +3,9 @@ using Documenter
 using Literate, Glob
 using CairoMakie
 using DemoCards
+using DemoCards: @mt_str
+
+include("bulmagrid/grid.jl")
 
 CairoMakie.activate!(type="svg")
 
