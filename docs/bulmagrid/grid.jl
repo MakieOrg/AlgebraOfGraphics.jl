@@ -17,23 +17,21 @@ function DemoCards.cardtheme(::Val{:__AlgebraOfGraphics__})
     bulma_grid_card_template = mt"""
     ```@raw html
     <div class="column is-half">
-    ```
-    [@raw```
         <div class="card">
             <div class="card-image">
-                <img src={{{coverpath}}} alt="card cover image">
+    ```
+    [![card cover image]({{{coverpath}}})](@ref {{id}})
+    @raw```
             </div>
             <div class="card-content">
                 <h3 class="is-size-5">
-                    {{title}}
+                    {{{title}}}
                 </h3>
                 <p class="is-size-6">
-                    {{description}}
+                    {{{description}}}
                 </p>
             </div>
         </div>
-    ```](@ref {{id}})
-    @raw```
     </div>
     ```
     """
