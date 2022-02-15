@@ -22,9 +22,9 @@ function DemoCards.cardtheme(::Val{:__AlgebraOfGraphics__})
                 <img src={{{coverpath}}}>
             </div>
             <div class="card-content">
-                <p class="is-size-5">
+                <h3 class="is-size-5">
                     {{title}}
-                </p>
+                </h3>
                 <p class="is-size-6">
                     {{description}}
                 </p>
