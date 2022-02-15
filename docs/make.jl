@@ -3,7 +3,7 @@ using Documenter
 using Literate, Glob
 using CairoMakie
 using DemoCards
-using DemoCards: @mt_str
+using Mustache: @mt_str
 
 include("bulmagrid/grid.jl")
 
