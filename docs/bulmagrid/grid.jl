@@ -17,6 +17,8 @@ function DemoCards.cardtheme(::Val{:__AlgebraOfGraphics__})
     bulma_grid_card_template = mt"""
     ```@raw html
     <div class="column is-half">
+    ```
+    [@raw```
         <div class="card">
             <div class="card-image">
                 <img src={{{coverpath}}} alt="card cover image">
@@ -30,6 +32,8 @@ function DemoCards.cardtheme(::Val{:__AlgebraOfGraphics__})
                 </p>
             </div>
         </div>
+    ```](@ref {{id}})
+    @raw```
     </div>
     ```
     """
