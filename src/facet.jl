@@ -37,12 +37,13 @@ end
 ## Label computation and layout
 
 # facet labels
-function labels!(fig, aes, scale, dir)
+function facet_labels!(fig, aes, scale, dir)
     # reference axis to extract attributes
     ax = first(nonemptyaxes(aes))
     color = ax.titlecolor
     font = ax.titlefont
     textsize = ax.titlesize
+    visible = ax.titlevisible
 
     padding_index = dir == :row ? 1 : 3
     facetlabelpadding = lift(ax.titlegap) do gap
@@ -52,13 +53,14 @@ function labels!(fig, aes, scale, dir)
     return map(plotvalues(scale), datavalues(scale)) do index, label
         rotation = dir == :row ? -π/2 : 0.0 
         figpos = dir == :col ? fig[1, index, Top()] : dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]
-        Label(figpos, to_string(label); rotation, padding=facetlabelpadding, color, font, textsize)
+        Label(figpos, to_string(label);
+            rotation, padding=facetlabelpadding, color, font, textsize, visible)
     end
 end
 
-col_labels!(fig, aes, scale) = labels!(fig, aes, scale, :col)
-row_labels!(fig, aes, scale) = labels!(fig, aes, scale, :row)
-panel_labels!(fig, aes, scale) = labels!(fig, aes, scale, :layout)
+col_labels!(fig, aes, scale) = facet_labels!(fig, aes, scale, :col)
+row_labels!(fig, aes, scale) = facet_labels!(fig, aes, scale, :row)
+panel_labels!(fig, aes, scale) = facet_labels!(fig, aes, scale, :layout)
 
 # Consistent axis labels
 
