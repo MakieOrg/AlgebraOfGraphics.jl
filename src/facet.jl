@@ -37,28 +37,30 @@ end
 ## Label computation and layout
 
 # facet labels
-function labels!(fig, aes, scale, dir)
+function facet_labels!(fig, aes, scale, dir)
     # reference axis to extract attributes
     ax = first(nonemptyaxes(aes))
     color = ax.titlecolor
     font = ax.titlefont
     textsize = ax.titlesize
+    visible = ax.titlevisible
 
     padding_index = dir == :row ? 1 : 3
-    facetlabelpadding = lift(ax.titlegap) do gap
+    padding = lift(ax.titlegap) do gap
         return ntuple(i -> i == padding_index ? gap : 0f0, 4)
     end
 
     return map(plotvalues(scale), datavalues(scale)) do index, label
         rotation = dir == :row ? -π/2 : 0.0 
-        figpos = dir == :col ? fig[1, index, Top()] : dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]
-        Label(figpos, to_string(label); rotation, padding=facetlabelpadding, color, font, textsize)
+        figpos = dir == :col ? fig[1, index, Top()] :
+                 dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]
+        return Label(figpos, to_string(label); rotation, padding, color, font, textsize, visible)
     end
 end
 
-col_labels!(fig, aes, scale) = labels!(fig, aes, scale, :col)
-row_labels!(fig, aes, scale) = labels!(fig, aes, scale, :row)
-panel_labels!(fig, aes, scale) = labels!(fig, aes, scale, :layout)
+col_labels!(fig, aes, scale) = facet_labels!(fig, aes, scale, :col)
+row_labels!(fig, aes, scale) = facet_labels!(fig, aes, scale, :row)
+panel_labels!(fig, aes, scale) = facet_labels!(fig, aes, scale, :layout)
 
 # Consistent axis labels
 
@@ -86,7 +88,8 @@ function span_label!(fig, aes, var)
     pos = var == :x ? (size(aes, 1), :) : (:, 1)
     index, side, Side = var == :x ? (4, :bottom, Bottom) : (2, :left, Left)
 
-    padding = lift(getattr(ax, :labelpadding), (protrusionsobservable(ae.axis) for ae in aes[pos...])...) do p, xs...
+    protrusions = (protrusionsobservable(ae.axis) for ae in aes[pos...])
+    padding = lift(getattr(ax, :labelpadding), protrusions...) do p, xs...
         protrusion = maximum(x -> getproperty(x, side), xs)
         return ntuple(i -> i == index ? protrusion + p : 0f0, 4)
     end
@@ -211,7 +214,8 @@ end
 hide_xdecorations!(ax) = hidexdecorations!(ax; grid=false, minorgrid=false)
 hide_ydecorations!(ax) = hideydecorations!(ax; grid=false, minorgrid=false)
 
-function hideinnerdecorations!(aes::AbstractArray{AxisEntries}; hidexdecorations, hideydecorations, wrap)
+function hideinnerdecorations!(aes::AbstractArray{AxisEntries};
+                               hidexdecorations, hideydecorations, wrap)
     I, J = size(aes)
         
     if hideydecorations
@@ -223,7 +227,8 @@ function hideinnerdecorations!(aes::AbstractArray{AxisEntries}; hidexdecorations
     if hidexdecorations
         for i in 1:I-1, j in 1:J
             if wrap && isempty(aes[i+1,j].entries)
-                # In facet_wrap, don't hide x decorations if axis below is empty, but instead improve alignment.
+                # In facet_wrap, don't hide x decorations if axis below is empty,
+                # but instead improve alignment.
                 aes[i,j].axis.alignmode = Mixed(bottom=Protrusion(0))
             else
                 hide_xdecorations!(aes[i,j])
