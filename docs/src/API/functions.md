@@ -18,6 +18,13 @@ nonnumeric
 verbatim
 ```
 
+## Theming
+
+```@docs
+set_aog_theme!
+```
+
+
 ## Ticks helpers
 
 ```@docs
