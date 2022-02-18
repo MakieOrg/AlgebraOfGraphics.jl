@@ -140,12 +140,17 @@ section of the `Makie.jl` docs.
 
 # Examples
 ```jldoctest
-set_aog_theme!()                # Sets a prefedined theme
-update_theme!(                  # Tweaks the current theme
-    fontsize=30,
-    markersize=40,
-    Axis=(title="MyDefaultTitle",)
-)
+julia> using GLMakie
+
+julia> using AlgebraOfGraphics
+
+julia> set_aog_theme!()                # Sets a prefedined theme
+
+julia> update_theme!(                  # Tweaks the current theme
+           fontsize=30,                
+           markersize=40,
+           Axis=(title="MyDefaultTitle",)
+       )
 ```
 """
 function set_aog_theme!(; kwargs...)
