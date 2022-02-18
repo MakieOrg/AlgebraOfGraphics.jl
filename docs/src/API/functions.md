@@ -22,6 +22,7 @@ verbatim
 
 ```@docs
 set_aog_theme!
+Note that the function `update_theme!` is not defined by AlgebraOfGraphics.jl, but by whatever Makie backend you are using.
 ```
 
 
