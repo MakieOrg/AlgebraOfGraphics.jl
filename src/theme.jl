@@ -140,7 +140,7 @@ section of the `Makie.jl` docs.
 
 # Examples
 ```jldoctest
-julia> using GLMakie
+julia> using CairoMakie
 
 julia> using AlgebraOfGraphics
 
