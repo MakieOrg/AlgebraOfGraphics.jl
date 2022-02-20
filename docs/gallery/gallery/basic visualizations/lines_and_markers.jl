@@ -1,7 +1,7 @@
 # ---
 # title: Lines and markers
 # cover: assets/lines_and_markers.png
-# description: Basic linear and scatter plots
+# description: Basic linear and scatter plots.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

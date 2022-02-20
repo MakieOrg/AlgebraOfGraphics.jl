@@ -1,7 +1,7 @@
 # ---
 # title: Time series
 # cover: assets/time_series.png
-# description: Visualizing time series data
+# description: Visualizing time series data.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

@@ -75,6 +75,7 @@ end
         @test label.color == ax.titlecolor
         @test label.font == ax.titlefont
         @test label.textsize == ax.titlesize
+        @test label.visible == ax.titlevisible
     end
 
     labels = row_labels!(fig, aes, scales[:row])
@@ -88,6 +89,7 @@ end
         @test label.color == ax.titlecolor
         @test label.font == ax.titlefont
         @test label.textsize == ax.titlesize
+        @test label.visible == ax.titlevisible
     end
 
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c", "d"], 100))
@@ -110,6 +112,7 @@ end
         @test label.color == ax.titlecolor
         @test label.font == ax.titlefont
         @test label.textsize == ax.titlesize
+        @test label.visible == ax.titlevisible
     end
 end
 

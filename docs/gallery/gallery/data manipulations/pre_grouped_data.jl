@@ -1,7 +1,7 @@
 # ---
 # title: Pre-grouped data
 # cover: assets/pregrouped_data.png
-# description: Working with arrays of arrays
+# description: Working with arrays of arrays.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

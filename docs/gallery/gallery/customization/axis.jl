@@ -1,7 +1,7 @@
 # ---
 # title: Axis tweaking
 # cover: assets/axis_tweaking.png
-# description: Setting axis attributes
+# description: Setting axis attributes.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

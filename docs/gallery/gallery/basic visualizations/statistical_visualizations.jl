@@ -1,7 +1,7 @@
 # ---
 # title: Statistical visualizations
 # cover: assets/statistical_visualizations.png
-# description: Violin plot, boxplot, qqplot
+# description: Violin plot, boxplot, qqplot.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

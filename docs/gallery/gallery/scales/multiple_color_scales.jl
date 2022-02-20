@@ -1,7 +1,7 @@
 # ---
 # title: Multiple color scales
 # cover: assets/multiple_color_scales.png
-# description: Categorical and continuous color scales in the same plot
+# description: Categorical and continuous scales in the same plot.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 

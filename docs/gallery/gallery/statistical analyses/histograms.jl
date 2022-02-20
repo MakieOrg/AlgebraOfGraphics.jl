@@ -1,7 +1,7 @@
 # ---
 # title: Histograms
 # cover: assets/histograms.png
-# description: Computing 1- and 2-dimensional histograms
+# description: Computing 1- and 2-dimensional histograms.
 # author: "[Pietro Vertechi](https://github.com/piever)"
 # ---
 
