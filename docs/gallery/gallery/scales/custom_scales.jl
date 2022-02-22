@@ -9,9 +9,21 @@ using AlgebraOfGraphics, CairoMakie
 using Colors
 set_aog_theme!() #src
 
-# Sometimes, there is no default palettes for a specific attribute. In that
-# case, the user can pass their own. TODO: allow legend to use custom attribute
-# of plot, such as the arrowhead or the arrowcolor and pass correct legend symbol.
+# You can customize the color palette used by a discrete scale using `pallettes`
+# in a call to `draw`. To customize a continuous scale, use `colormap` in a call
+# to [Visual](@ref). Using `pallettes` for a discrete scale goes from being
+# optional to necessary when there is no default pallette for a particular scale
+# (e.g. arrowcolor). 
+
+# !!! note 
+#
+#    The reason discrete and continuous scales differ is because discrete scales
+#    require preprocessing by AlgebraOfGraphics. The `colormap` keyword comes
+#    directly from Makie, while `pallettes` is used by AlgebraOfGraphics
+#    machinery during preprocesssing.
+
+# TODO: allow legend to use custom attribute of plot, such as the arrowhead or
+# the arrowcolor and pass correct legend symbol.
 
 x=repeat(1:20, inner=20)
 y=repeat(1:20, outer=20)
