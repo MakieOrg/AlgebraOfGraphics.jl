@@ -222,3 +222,39 @@ function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categ
     end
     return pls_grid
 end
+
+## Attribute processing
+
+"""
+    compute_attributes(pl::ProcessedLayer)
+
+Process attributes of a `ProcessedLayer`.
+In particular, remove AlgebraOfGraphics-specific layout attributes, customize
+behavior of `color` (implementing alpha transparency) and bar `width`.
+Return computed attributes.
+"""
+function compute_attributes(pl::ProcessedLayer)
+    plottype, primary, named, attributes = pl.plottype, pl.primary, pl.named, pl.attributes
+
+    attrs = NamedArguments()
+    merge!(attrs, attributes)
+    merge!(attrs, primary)
+    merge!(attrs, named)
+
+    # implement alpha transparency
+    alpha = get(attrs, :alpha, automatic)
+    color = get(attrs, :color, automatic)
+    (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
+
+    # opt out of the default cycling mechanism
+    cycle = nothing
+
+    merge!(attrs, Dictionary(valid_options(; color, cycle)))
+
+    # avoid automatic bar width computation in Makie (issue #277)
+    # TODO: consider only implementing this when `x` is categorical
+    (plottype <: BarPlot) && !haskey(attrs, :width) && insert!(attrs, :width, 1)
+
+    # remove unnecessary information 
+    return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
+end

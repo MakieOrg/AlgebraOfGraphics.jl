@@ -37,40 +37,6 @@ function compute_processedlayers_grid(processedlayers, categoricalscales)
     return pls_grid
 end
 
-function compute_attributes(pl::ProcessedLayer)
-    plottype, primary, positional, named, attributes =
-        pl.plottype, pl.primary, pl.positional, pl.named, pl.attributes
-
-    attrs = NamedArguments()
-    merge!(attrs, attributes)
-    merge!(attrs, primary)
-    merge!(attrs, named)
-
-    # implement alpha transparency
-    alpha = get(attrs, :alpha, automatic)
-    color = get(attrs, :color, automatic)
-    (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
-
-    # opt out of the default cycling mechanism
-    cycle = nothing
-
-    merge!(attrs, Dictionary(valid_options(; color, cycle)))
-
-    # avoid automatic bar width computation in Makie (issue #277)
-    # TODO: consider only implementing this when `x` is categorical
-    (plottype <: BarPlot) && !haskey(attrs, :width) && insert!(attrs, :width, 1)
-
-    # remove unnecessary information 
-    return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
-end
-
-function compute_palettes(palettes)
-    layout = Dictionary((layout=wrap,))
-    theme_palettes = map(to_value, Dictionary(Makie.current_default_theme()[:palette]))
-    user_palettes = Dictionary(palettes)
-    return foldl(merge!, (layout, theme_palettes, user_palettes), init=NamedArguments())
-end
-
 function compute_entries_continuousscales(pls_grid)
     # Here processed layers in `pls_grid` are "sliced",
     # the categorical scales have been applied, but not
@@ -109,6 +75,13 @@ function compute_entries_continuousscales(pls_grid)
     end
 
     return entries_grid, continuousscales_grid, merged_continuousscales
+end
+
+function compute_palettes(palettes)
+    layout = Dictionary((layout=wrap,))
+    theme_palettes = map(to_value, Dictionary(Makie.current_default_theme()[:palette]))
+    user_palettes = Dictionary(palettes)
+    return foldl(merge!, (layout, theme_palettes, user_palettes), init=NamedArguments())
 end
 
 function compute_axes_grid(fig, s::OneOrMoreLayers;
