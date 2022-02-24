@@ -139,15 +139,13 @@ For more information about setting themes, see the `Theming`
 section of the `Makie.jl` docs.
 
 # Examples
-```jldoctest
-julia> using CairoMakie
-
-julia> using AlgebraOfGraphics
+```julia
+julia> using CairoMakie, AlgebraOfGraphics
 
 julia> set_aog_theme!()                # Sets a prefedined theme
 
 julia> update_theme!(                  # Tweaks the current theme
-           fontsize=30,                
+           fontsize=30,
            markersize=40,
            Axis=(title="MyDefaultTitle",)
        )
