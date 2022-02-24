@@ -9,21 +9,25 @@ using AlgebraOfGraphics, CairoMakie
 using Colors
 set_aog_theme!() #src
 
-# You can customize the color palette used by a discrete scale using `pallettes`
-# in a call to `draw`. To customize a continuous scale, use `colormap` in a call
-# to [Visual](@ref). Using `pallettes` for a discrete scale goes from being
-# optional to necessary when there is no default pallette for a particular scale
-# (e.g. arrowcolor). 
 
-# !!! note 
-#
-#    The reason discrete and continuous scales differ is because discrete scales
-#    require preprocessing by AlgebraOfGraphics. The `colormap` keyword comes
-#    directly from Makie, while `pallettes` is used by AlgebraOfGraphics
-#    machinery during preprocesssing.
+# A palette maps particular values to particular attribute specifications (e.g.
+# 1 maps to green, 2 maps to red). Sometimes, there is no default palettes for a
+# specific attribute, and you will need to specify it manually, but there are
+# sensible default palettes for many attributes. In either case you can always
+# manually specify the palette used for a particular attribute 
 
 # TODO: allow legend to use custom attribute of plot, such as the arrowhead or
 # the arrowcolor and pass correct legend symbol.
+
+# !!! note
+
+#    A related concept (from Makie) is a colormap, which maps a continuous space
+#    of numbers to a sequence of colors. For discrete colors you will want to
+#    employ a palette, not a colormap, because discrete values are mapped to
+#    colors within AlgebraOfGraphics. AlgebraOfGraphics doesn't directly handle
+#    continuous colors: this is a feature of the underlying Makie plots.
+#    Palettes and colormaps are also distinct in that a single colormap is
+#    defined for an entire figure, while palettes can vary by layer.
 
 x=repeat(1:20, inner=20)
 y=repeat(1:20, outer=20)
