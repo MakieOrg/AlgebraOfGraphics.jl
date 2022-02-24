@@ -11,7 +11,7 @@ set_aog_theme!() #src
 
 
 # A pallette maps particular values to particular attribute specifications (e.g.
-# 1 maps to green, 2 maps to red). Sometimes, there is no default pallettes for a
+# 1 maps to green, 2 maps to red). Sometimes, there is no default pallette for a
 # specific attribute, and you will need to specify it manually, but there are
 # sensible default pallettes for many attributes. In either case, you can always
 # manually specify the pallette used for a particular attribute.
