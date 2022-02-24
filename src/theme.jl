@@ -139,7 +139,7 @@ For more information about setting themes, see the `Theming`
 section of the `Makie.jl` docs.
 
 # Examples
-```jldoctest
+```julia
 julia> using CairoMakie
 
 julia> using AlgebraOfGraphics
