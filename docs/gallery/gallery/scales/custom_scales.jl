@@ -13,7 +13,7 @@ set_aog_theme!() #src
 # A pallette maps particular values to particular attribute specifications (e.g.
 # 1 maps to green, 2 maps to red). Sometimes, there is no default pallettes for a
 # specific attribute, and you will need to specify it manually, but there are
-# sensible default pallettes for many attributes. In either case you can always
+# sensible default pallettes for many attributes. In either case, you can always
 # manually specify the pallette used for a particular attribute.
 
 # TODO: allow legend to use custom attribute of plot, such as the arrowhead or
@@ -26,8 +26,6 @@ set_aog_theme!() #src
 #    employ a pallette, not a colormap, because discrete values are mapped to
 #    colors within AlgebraOfGraphics. AlgebraOfGraphics doesn't directly handle
 #    continuous colors: this is a feature of the underlying Makie plots.
-#    Pallettes and colormaps are also distinct in that a single colormap is
-#    defined for an entire figure, while pallettes can vary by layer.
 
 x=repeat(1:20, inner=20)
 y=repeat(1:20, outer=20)
