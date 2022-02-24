@@ -14,7 +14,7 @@ set_aog_theme!() #src
 # 1 maps to green, 2 maps to red). Sometimes, there is no default pallettes for a
 # specific attribute, and you will need to specify it manually, but there are
 # sensible default pallettes for many attributes. In either case you can always
-# manually specify the pallette used for a particular attribute 
+# manually specify the pallette used for a particular attribute.
 
 # TODO: allow legend to use custom attribute of plot, such as the arrowhead or
 # the arrowcolor and pass correct legend symbol.

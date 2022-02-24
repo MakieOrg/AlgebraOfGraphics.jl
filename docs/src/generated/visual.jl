@@ -16,7 +16,13 @@ df = (x=randn(1000), y=randn(1000))
 plt = data(df) * mapping(:x, :y) * AlgebraOfGraphics.density(npoints=50)
 draw(plt * visual(Heatmap)) # plot as heatmap (the default)
 
+# We can specify a different colormap using the underlying Makie keyword
+# `colormap`. 
 #
+# !!! note
+#    For discrete scales you should not use a `colormap`;
+#    you will want to instead use the related notion of a [pallette](@ref Custom
+#    Scales)
 
 draw(plt * visual(colormap=:viridis)) # set a different colormap
 
