@@ -10,11 +10,11 @@ using Colors
 set_aog_theme!() #src
 
 
-# A pallette maps particular values to particular attribute specifications (e.g.
-# 1 maps to green, 2 maps to red). Sometimes, there is no default pallette for a
+# A palette maps particular values to particular attribute specifications (e.g.
+# 1 maps to green, 2 maps to red). Sometimes, there is no default palette for a
 # specific attribute, and you will need to specify it manually, but there are
-# sensible default pallettes for many attributes. In either case, you can always
-# manually specify the pallette used for a particular attribute.
+# sensible default palettes for many attributes. In either case, you can always
+# manually specify the palette used for a particular attribute.
 
 # TODO: allow legend to use custom attribute of plot, such as the arrowhead or
 # the arrowcolor and pass correct legend symbol.
@@ -22,7 +22,7 @@ set_aog_theme!() #src
 # !!! note
 #    A related concept (from Makie) is a colormap, which maps a continuous space
 #    of numbers to a sequence of colors. For discrete colors you will want to
-#    employ a pallette, not a colormap, because discrete values are mapped to
+#    employ a palette, not a colormap, because discrete values are mapped to
 #    colors within AlgebraOfGraphics. AlgebraOfGraphics doesn't directly handle
 #    continuous colors: this is a feature of the underlying Makie plots.
 
