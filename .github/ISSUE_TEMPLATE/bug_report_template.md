@@ -5,7 +5,7 @@ about: Create a report to help us improve
 
 ## Bug description
 
-A clear and concise description of what the bug is.
+Please describe clearly and concisely what the bug is.
 Also mention the expected behavior (what you expected to happen but didn't).
 
 ## Steps to reproduce
