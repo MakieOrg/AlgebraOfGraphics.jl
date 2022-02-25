@@ -21,8 +21,8 @@ draw(plt * visual(Heatmap)) # plot as heatmap (the default)
 #
 # !!! note
 #    For discrete scales you should not use a `colormap`;
-#    you will want to instead use the related notion of a [pallette](@ref Custom
-#    Scales)
+#    you will want to instead use the related notion of a [palette](@ref Custom
+#    Scales).
 
 draw(plt * visual(colormap=:viridis)) # set a different colormap
 

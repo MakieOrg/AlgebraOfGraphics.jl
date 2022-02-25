@@ -20,7 +20,6 @@ set_aog_theme!() #src
 # the arrowcolor and pass correct legend symbol.
 
 # !!! note
-
 #    A related concept (from Makie) is a colormap, which maps a continuous space
 #    of numbers to a sequence of colors. For discrete colors you will want to
 #    employ a pallette, not a colormap, because discrete values are mapped to
