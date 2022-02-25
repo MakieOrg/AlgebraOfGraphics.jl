@@ -26,10 +26,10 @@ entirety of the stack trace.
 
 If applicable, add images of the plots you obtained to help explain your problem.
 
-## Version info (please complete the following information)
+## Version info
 
-Include the output of `versioninfo()` and `Pkg.status()` for the environment where
-the issue occurred.
+Please include the output of `versioninfo()` and `Pkg.status()` for the environment
+where the issue occurred.
 
 ## Before opening an issue
 
