@@ -125,7 +125,7 @@ function continuousscales(processedlayer::ProcessedLayer)
 
     continuousscales = similar(keys(continuous), ContinuousScale)
     map!(continuousscales, keys(continuous), continuous) do key, val
-        extrema = Makie.extrema_nan(val)
+        extrema = extrema_finite(val)
         label = to_label(get(processedlayer.labels, key, ""))
         return ContinuousScale(extrema, label)
     end

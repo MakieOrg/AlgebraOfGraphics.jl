@@ -194,18 +194,14 @@ iscategoricalcontainer(u) = any(el -> scientific_eltype(el) === categorical, u)
 iscontinuous(u) = scientific_eltype(u) === continuous
 
 extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
-extend_extrema(::Nothing, (l2, u2)) = (l2, u2)
 
-function compute_extrema(entries, key)
-    acc = nothing
-    for entry in entries
-        col = get(entry, key, nothing)
-        if scientific_eltype(col) === continuous
-            acc = extend_extrema(acc, Makie.extrema_nan(col))
-        end
-    end
-    return acc
+function extrema_finite(v::AbstractArray)
+    iter = Iterators.filter(isfinite, skipmissing(v))
+    init = typemax(eltype(iter)), typemin(eltype(iter))
+    return mapreduce(t -> (t, t), extend_extrema, iter; init)
 end
+
+nested_extrema_finite(iter) = mapreduce(extrema_finite, extend_extrema, iter)
 
 push_different!(v, val) = !isempty(v) && isequal(last(v), val) || push!(v, val)
 
