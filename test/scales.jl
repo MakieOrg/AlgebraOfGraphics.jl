@@ -31,6 +31,18 @@
     @test scale.plot == 1:2
 end
 
+@testset "extrema" begin
+    v = [1, missing, 2, NaN]
+    @test extrema_finite(v) == (1, 2)
+    v = rand(100)
+    @test extrema_finite(v) == extrema(v)
+
+    vs = [[1, missing, 2, NaN], [-3, 1, Inf], [0.4, -12]]
+    @test nested_extrema_finite(vs) == (-12, 2)
+    vs = [rand(100) for _ in 1:100]
+    @test nested_extrema_finite(vs) == extrema(Iterators.flatten(vs))
+end
+
 @testset "palettes" begin
     p = Any[:circle, :utriangle, :cross, :rect, :diamond, :dtriangle, :pentagon, :xcross, Pair{Any, Any}(:spike, :cross), Pair{Any, Any}(:seizure, :diamond)]
     uv = ["seizure", :seizure, "something?!", :something, "spike"]
