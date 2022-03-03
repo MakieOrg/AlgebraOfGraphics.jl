@@ -90,10 +90,10 @@ end
 
 ## Get scales from a `ProcessedLayer`
 
-uniquevalues(v::ArrayLike) = collect(uniquesorted(vec(v)))
+uniquevalues(v::AbstractArray) = collect(uniquesorted(vec(v)))
 
 to_label(label::AbstractString) = label
-to_label(labels::ArrayLike) = reduce(mergelabels, labels)
+to_label(labels::AbstractArray) = reduce(mergelabels, labels)
 
 function categoricalscales(processedlayer::ProcessedLayer, palettes)
     categoricals = MixedArguments()

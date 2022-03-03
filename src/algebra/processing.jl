@@ -15,7 +15,7 @@ allvariables(pl::ProcessedLayer) = concatenate_values(pl.primary, pl.positional,
 allvariables(l::Layer) = concatenate_values(l.positional, l.named)
 
 function shape(x::Union{ProcessedLayer, Layer})
-    arrays = map(var -> var isa ArrayLike ? var : fill(nothing), allvariables(x))
+    arrays = map(var -> var isa AbstractArray ? var : fill(nothing), allvariables(x))
     return Broadcast.combine_axes(arrays...)
 end
 
