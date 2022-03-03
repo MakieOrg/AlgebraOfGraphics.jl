@@ -1,7 +1,5 @@
 # helper types and functions for rescaling
 
-const StringLike = Union{AbstractString, Symbol}
-
 to_string(s) = string(s)
 to_string(s::AbstractString) = s
 

@@ -11,13 +11,6 @@
     @test AlgebraOfGraphics.extend_extrema(e1, e2) == (-5, 11)
 
     @test AlgebraOfGraphics.midpoints(1:10) == 1.5:9.5
-
-    s = Any[1, 2]
-    t = NamedArguments((a=3, b=4))
-    u = NamedArguments((b=5, c=6))
-    v = Any[]
-    w = AlgebraOfGraphics.concatenate_values(s, t, u)
-    @test w == Any[1, 2, 3, 4, 5, 6]
 end
 
 @testset "arguments" begin

@@ -12,7 +12,7 @@ end
 
 select(data, d::DimsSelector) = (d,) => identity => ""
 
-function select(data, name::StringLike)
+function select(data, name::Union{Symbol, AbstractString})
     v = getcolumn(data, Symbol(name))
     return (v,) => identity => to_string(name)
 end
@@ -24,7 +24,7 @@ end
 
 select(::Nothing, v::AbstractArray) = (v,) => identity => ""
 
-function select(data, x::Pair{<:Any, <:StringLike})
+function select(data, x::Pair{<:Any, <:Union{Symbol, AbstractString}})
     name, label = x
     vs, _ = select(data, name)
     return vs => identity => to_string(label)

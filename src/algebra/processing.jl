@@ -9,10 +9,8 @@ function permutation_ranges(cols)
     return sortperm(gp), collect(gp)
 end
 
-concatenate_values(args...) = mapreduce(values, append!, args, init=Any[])
-
-allvariables(pl::ProcessedLayer) = concatenate_values(pl.primary, pl.positional, pl.named)
-allvariables(l::Layer) = concatenate_values(l.positional, l.named)
+allvariables(pl::ProcessedLayer) = append!(Any[], pl.primary, pl.positional, pl.named)
+allvariables(l::Layer) = append!(Any[], l.positional, l.named)
 
 function shape(x::Union{ProcessedLayer, Layer})
     arrays = map(var -> var isa AbstractArray ? var : fill(nothing), allvariables(x))
@@ -47,8 +45,7 @@ function subgroups(vs, perm, rgs, axs)
 end
 
 shiftdims(v::AbstractArray) = reshape(v, 1, axes(v)...)
-shiftdims(v::Tuple) = shiftdims(collect(v))
-shiftdims(v) = v
+shiftdims(label::AbstractString) = label
 
 function group(processedlayer::ProcessedLayer)
     grouping = Tuple(only(v) for v in values(processedlayer.primary) if haszerodims(v))
