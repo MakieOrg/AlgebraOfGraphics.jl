@@ -62,3 +62,8 @@ end
     @test get_layout(pos) == pos
     @test get_layout(pos).parent == get_layout(fig)
 end
+
+@testset "shiftdims" begin
+    @test AlgebraOfGraphics.shiftdims("a") == "a"
+    @test AlgebraOfGraphics.shiftdims([1, 2]) == [1 2]
+end
