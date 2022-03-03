@@ -10,7 +10,7 @@ end
 _kde(data::NTuple{1, Any}; kwargs...) = kde(data...; kwargs...)
 _kde(data::Tuple; kwargs...) = kde(data; kwargs...)
 
-defaultdatalimits(positional) = map(v -> mapreduce(extrema, extend_extrema, v), Tuple(positional))
+defaultdatalimits(positional) = map(nested_extrema_finite, Tuple(positional))
 
 applydatalimits(f::Function, d) = map(f, d)
 applydatalimits(limits::Tuple, _) = limits
