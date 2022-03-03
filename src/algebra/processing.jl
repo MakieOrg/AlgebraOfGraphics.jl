@@ -9,12 +9,12 @@ function permutation_ranges(cols)
     return sortperm(gp), collect(gp)
 end
 
-allvariables(pl::ProcessedLayer) = append!(Any[], pl.primary, pl.positional, pl.named)
-allvariables(l::Layer) = append!(Any[], l.positional, l.named)
+shape(pl::ProcessedLayer) = Broadcast.combine_axes(pl.primary..., pl.positional..., pl.named...)
 
-function shape(x::Union{ProcessedLayer, Layer})
-    arrays = map(var -> var isa AbstractArray ? var : fill(nothing), allvariables(x))
-    return Broadcast.combine_axes(arrays...)
+function shape(l::Layer)
+    containers = (l.positional, l.named)
+    wrappedvars = (v isa AbstractArray ? v : fill(v) for vs in containers for v in vs)
+    return Broadcast.combine_axes(wrappedvars...)
 end
 
 function assert_equal(a, b)
