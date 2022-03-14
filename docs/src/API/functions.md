@@ -32,6 +32,12 @@ AlgebraOfGraphics.aog_theme
 datetimeticks
 ```
 
+## Scale helpers
+
+```@docs
+AlgebraOfGraphics.apply_palette
+```
+
 ## Internal functions
 
 ```@docs

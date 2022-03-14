@@ -6,6 +6,8 @@ const StringLike = Union{AbstractString, Symbol}
 to_string(s) = string(s)
 to_string(s::AbstractString) = s
 
+ispair(x) = x isa Pair
+
 struct Sorted{T}
     idx::UInt32
     value::T
@@ -80,7 +82,7 @@ Class Two
 ```
 """
 function renamer(arr::ArrayLike)
-    ispairs = all(x -> isa(x, Pair), arr)
+    ispairs = all(ispair, arr)
     k, v = ispairs ? (map(first, arr), map(last, arr)) : (nothing, arr)
     return Renamer(k, v)
 end
