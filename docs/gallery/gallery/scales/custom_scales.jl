@@ -3,6 +3,7 @@
 # cover: assets/custom_scales.png
 # description: Custom palettes and custom attributes
 # author: "[Pietro Vertechi](https://github.com/piever)"
+# id: custom_scales
 # ---
 
 using AlgebraOfGraphics, CairoMakie
