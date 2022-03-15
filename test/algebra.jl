@@ -27,6 +27,21 @@ end
     @test processedlayer.labels[:marker] == ""
 end
 
+@testset "shape" begin
+    df = (x=rand(1000), y=rand(1000), z=rand(1000), c=rand(["a", "b", "c"], 1000))
+    d = mapping(:x => exp, [:y, :z], color=:c, marker = dims(1) => renamer(["a", "b"]))
+    layer = data(df) * d
+    @test AlgebraOfGraphics.shape(layer) == (Base.OneTo(2),)
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test AlgebraOfGraphics.shape(processedlayer) == (Base.OneTo(2),)
+
+    d = mapping(:x => exp, (:y, :z) => +, color=:c)
+    layer = data(df) * d
+    @test AlgebraOfGraphics.shape(layer) == ()
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test AlgebraOfGraphics.shape(processedlayer) == ()
+end
+
 @testset "grouping" begin
     df = (x=rand(1000), y=rand(1000), z=rand(1000), w=rand(1000), c=rand(["a", "b", "c"], 1000))
     df.c[1:3] .= ["a", "b", "c"] # ensure all three values exist

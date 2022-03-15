@@ -187,8 +187,10 @@ end
 
 Determine whether `v` should be treated as a continuous, geometrical, or categorical array.
 """
-scientific_eltype(v::ArrayLike) = scientific_type(eltype(v))
-scientific_eltype(v) = categorical
+scientific_eltype(v::AbstractArray) = scientific_type(eltype(v))
+
+# TODO: Needed for pregrouped data, but ideally should be removed.
+scientific_eltype(::Any) = categorical
 
 iscategoricalcontainer(u) = any(el -> scientific_eltype(el) === categorical, u)
 iscontinuous(u) = scientific_eltype(u) === continuous

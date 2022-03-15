@@ -9,14 +9,12 @@ function permutation_ranges(cols)
     return sortperm(gp), collect(gp)
 end
 
-concatenate_values(args...) = mapreduce(values, append!, args, init=Any[])
+shape(pl::ProcessedLayer) = Broadcast.combine_axes(pl.primary..., pl.positional..., pl.named...)
 
-allvariables(pl::ProcessedLayer) = concatenate_values(pl.primary, pl.positional, pl.named)
-allvariables(l::Layer) = concatenate_values(l.positional, l.named)
-
-function shape(x::Union{ProcessedLayer, Layer})
-    arrays = map(var -> var isa ArrayLike ? var : fill(nothing), allvariables(x))
-    return Broadcast.combine_axes(arrays...)
+function shape(l::Layer)
+    containers = (l.positional, l.named)
+    wrappedvars = (v isa AbstractArray ? v : fill(v) for vs in containers for v in vs)
+    return Broadcast.combine_axes(wrappedvars...)
 end
 
 function assert_equal(a, b)
@@ -29,11 +27,6 @@ end
 
 getuniquevalue(v) = reduce(assert_equal, v)
 
-haszerodims(::AbstractArray) = false
-haszerodims(::AbstractArray{<:Any, 0}) = true
-haszerodims(::Ref) = true
-haszerodims(::Tuple) = false
-
 function getnewindex(u, c)
     v = Broadcast.broadcastable(u)
     return v[Broadcast.newindex(v, c)]
@@ -42,16 +35,17 @@ end
 function subgroups(vs, perm, rgs, axs)
     return map(Iterators.product(rgs, CartesianIndices(axs))) do (rg, c)
         v = getnewindex(vs, c)
-        return haszerodims(v) || rg === (:) ? v : view(v, perm[rg])
+        return ndims(v) == 0 || rg === (:) ? v : view(v, perm[rg])
     end
 end
 
-shiftdims(v::AbstractArray) = reshape(v, 1, axes(v)...)
-shiftdims(v::Tuple) = shiftdims(collect(v))
-shiftdims(v) = v
+function shiftdims(v)
+    w = Broadcast.broadcastable(v)
+    return ndims(w) == 0 ? w[] : reshape(w, 1, axes(w)...)
+end
 
 function group(processedlayer::ProcessedLayer)
-    grouping = Tuple(only(v) for v in values(processedlayer.primary) if haszerodims(v))
+    grouping = Tuple(only(v) for v in values(processedlayer.primary) if ndims(v) == 0)
     perm, rgs = permutation_ranges(grouping)
     axs = shape(processedlayer)
 

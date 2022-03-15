@@ -1,8 +1,5 @@
 # helper types and functions for rescaling
 
-const ArrayLike = Union{AbstractArray, Tuple}
-const StringLike = Union{AbstractString, Symbol}
-
 to_string(s) = string(s)
 to_string(s::AbstractString) = s
 
@@ -79,7 +76,7 @@ julia> println(r(2))
 Class Two
 ```
 """
-function renamer(arr::ArrayLike)
+function renamer(arr::Union{AbstractArray, Tuple})
     ispairs = all(x -> isa(x, Pair), arr)
     k, v = ispairs ? (map(first, arr), map(last, arr)) : (nothing, arr)
     return Renamer(k, v)
@@ -98,7 +95,7 @@ A vararg method `sorter("low", "medium", "high")` is also supported.
 `ks` should include all the unique values of the categorical variable.
 The order of `ks` is respected in the legend.
 """
-function sorter(ks::ArrayLike)
+function sorter(ks::Union{AbstractArray, Tuple})
     vs = map(to_string, ks)
     return Renamer(ks, vs)
 end
