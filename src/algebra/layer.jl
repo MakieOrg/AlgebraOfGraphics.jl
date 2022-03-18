@@ -226,7 +226,7 @@ end
 ## Attribute processing
 
 """
-    compute_attributes(pl::ProcessedLayer)
+    compute_attributes(pl::ProcessedLayer, categoricalscales, continuousscales_grid, continuousscales)
 
 Process attributes of a `ProcessedLayer`. In particular,
 - remove AlgebraOfGraphics-specific layout attributes,
@@ -235,7 +235,10 @@ Process attributes of a `ProcessedLayer`. In particular,
 - customize behavior of bar `width` (default to `1` when not specified).
 Return computed attributes.
 """
-function compute_attributes(pl::ProcessedLayer)
+function compute_attributes(pl::ProcessedLayer,
+                            categoricalscales::MixedArguments,
+                            continuousscales_grid::AbstractMatrix,
+                            continuousscales::MixedArguments)
     plottype, primary, named, attributes = pl.plottype, pl.primary, pl.named, pl.attributes
 
     attrs = NamedArguments()
@@ -254,8 +257,25 @@ function compute_attributes(pl::ProcessedLayer)
     merge!(attrs, Dictionary(valid_options(; color, cycle)))
 
     # avoid automatic bar width computation in Makie (issue #277)
-    # TODO: consider only implementing this when `x` is categorical
-    (plottype <: BarPlot) && !haskey(attrs, :width) && insert!(attrs, :width, 1)
+    # sensible default for dates (isse #369)
+    # TODO: consider only doing this for categorical scales or dates
+    if (plottype <: Union{BarPlot, BoxPlot, CrossBar, Violin}) && !haskey(attrs, :width)
+        xscale = get(continuousscales, 1, nothing)
+        width = if isnothing(xscale)
+            1
+        else
+            min, max = xscale.extrema
+            elementwise_rescale(oneunit(max - min))
+        end
+        insert!(attrs, :width, width)
+    end
+
+    # Match colorrange extrema
+    # TODO: respect user-passed colorrange
+    # TODO: might need to change to support temporal color scale
+    # TODO: maybe use plottype to infer whether this should be passed or not
+    colorscale = get(continuousscales, :color, nothing)
+    !isnothing(colorscale) && set!(attrs, :colorrange, colorscale.extrema)
 
     # remove unnecessary information 
     return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)

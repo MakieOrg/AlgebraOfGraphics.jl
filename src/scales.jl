@@ -73,15 +73,9 @@ getlabel(c::ContinuousScale) = something(c.label, "")
 
 # recentering hack to avoid Float32 conversion errors on recent dates
 # TODO: remove once Makie supports dates
-const time_offset = let startingdate = Date(2020, 01, 01)
-    ms:: Millisecond = DateTime(startingdate)
-    ms / Millisecond(1)
-end
-
-function datetime2float(x::TimeType)
-    ms::Millisecond = DateTime(x)
-    return ms / Millisecond(1) - time_offset
-end
+datetime2float(x::Union{DateTime, Date}) = datetime2float(DateTime(x) - DateTime(2020, 01, 01))
+datetime2float(x::Time) = datetime2float(x - Time(0))
+datetime2float(x::Period) = Millisecond(x) / Millisecond(1)
 
 """
     datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString})
@@ -104,7 +98,7 @@ function datetimeticks(f, datetimes::AbstractVector{<:TimeType})
 end
 
 # Rescaling methods that do not depend on context
-elementwise_rescale(value::TimeType) = datetime2float(value) 
+elementwise_rescale(value::Union{TimeType, Period}) = datetime2float(value) 
 elementwise_rescale(value::Verbatim) = value[]
 elementwise_rescale(value) = value
 
@@ -159,11 +153,33 @@ ticks(scale::ContinuousScale) = ticks(scale.extrema)
 
 ticks((min, max)::NTuple{2, Any}) = automatic
 
-function ticks((min, max)::NTuple{2, T}) where T<:TimeType
-    min_ms::Millisecond, max_ms::Millisecond = DateTime(min), DateTime(max)
-    min_pure, max_pure = min_ms / Millisecond(1), max_ms / Millisecond(1)
-    dates, labels = optimize_datetime_ticks(min_pure, max_pure)
-    return (dates .- time_offset, labels)
+temporal_resolutions(::Type{Date}) = (Year, Month, Day)
+temporal_resolutions(::Type{Time}) = (Hour, Minute, Second, Millisecond)
+temporal_resolutions(::Type{DateTime}) = (temporal_resolutions(Date)..., temporal_resolutions(Time)...)
+
+function optimal_datetime_range((x_min, x_max)::NTuple{2, T}; k_min=2, k_max=5) where {T<:TimeType}
+    local P, start, stop
+    for outer P in temporal_resolutions(T)
+        start, stop = trunc(x_min, P), trunc(x_max, P)
+        (start == x_min) || (start += P(1))
+        n = length(start:P(1):stop)
+        n ≥ k_min && return start:P(fld1(n, k_max)):stop
+    end
+    return start:P(1):stop
+end
+
+function format_datetimes(datetimes::AbstractVector{DateTime})
+    dates, times = Date.(datetimes), Time.(datetimes)
+    (dates == datetimes) && return string.(dates)
+    isequal(extrema(dates)...) && return string.(times)
+    return string.(datetimes)
+end
+
+format_datetimes(datetimes::AbstractVector) = string.(datetimes)
+
+function ticks(limits::NTuple{2, TimeType})
+    datetimes = optimal_datetime_range(limits)
+    return datetime2float.(datetimes), format_datetimes(datetimes)
 end
 
 @enum ScientificType categorical continuous geometrical
