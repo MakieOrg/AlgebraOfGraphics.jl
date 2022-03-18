@@ -30,6 +30,18 @@ plt = data(df) *
     visual(Lines)
 fg = draw(plt)
 
+#
+
+dates = Date(2022, 1, 1):Day(1):Date(2022, 1, 31)
+trend = cumsum(randn(31))
+df = map(1:2000) do _
+    idx = rand(1:31)
+    date = dates[idx]
+    observation = trend[idx] + 2 * rand()
+    return (; date, observation)
+end
+plt = data(df) * mapping(:date, :observation) * visual(BoxPlot)
+draw(plt)
 
 # save cover image #src
 mkpath("assets") #src

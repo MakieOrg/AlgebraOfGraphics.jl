@@ -258,10 +258,15 @@ function compute_attributes(pl::ProcessedLayer,
 
     # avoid automatic bar width computation in Makie (issue #277)
     # sensible default for dates (isse #369)
-    # TODO: consider only doing this for categorical scale or dates
+    # TODO: consider only doing this for categorical scales or dates
     if (plottype <: Union{BarPlot, BoxPlot, CrossBar, Violin}) && !haskey(attrs, :width)
         xscale = get(continuousscales, 1, nothing)
-        width = isnothing(xscale) ? 1 : oneunit(last(xscale.extrema) - first(xscale.extrema))
+        width = if isnothing(xscale)
+            1
+        else
+            @show min, max = xscale.extrema
+            elementwise_rescale(oneunit(max - min))
+        end
         insert!(attrs, :width, width)
     end
 

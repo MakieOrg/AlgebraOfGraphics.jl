@@ -78,6 +78,11 @@ const time_offset = let startingdate = Date(2020, 01, 01)
     ms / Millisecond(1)
 end
 
+function datetime2float(x::Period)
+    ms:: Millisecond = x
+    return ms / Millisecond(1)
+end
+
 function datetime2float(x::TimeType)
     ms::Millisecond = DateTime(x)
     return ms / Millisecond(1) - time_offset
@@ -104,7 +109,7 @@ function datetimeticks(f, datetimes::AbstractVector{<:TimeType})
 end
 
 # Rescaling methods that do not depend on context
-elementwise_rescale(value::TimeType) = datetime2float(value) 
+elementwise_rescale(value::Union{TimeType, Period}) = datetime2float(value) 
 elementwise_rescale(value::Verbatim) = value[]
 elementwise_rescale(value) = value
 
