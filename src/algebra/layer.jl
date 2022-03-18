@@ -273,6 +273,7 @@ function compute_attributes(pl::ProcessedLayer,
     # Match colorrange extrema
     # TODO: respect user-passed colorrange
     # TODO: might need to change to support temporal color scale
+    # TODO: maybe use plottype to infer whether this should be passed or not
     colorscale = get(continuousscales, :color, nothing)
     !isnothing(colorscale) && set!(attrs, :colorrange, colorscale.extrema)
 
