@@ -77,6 +77,15 @@ end
     full_labels = ["2022-01-02T02:00:00", "2022-01-02T05:00:00", "2022-01-02T08:00:00", "2022-01-02T11:00:00", "2022-01-02T14:00:00"]
     @test labels == ["02:00:00", "05:00:00", "08:00:00", "11:00:00", "14:00:00"]
     @test floats == datetime2float.(DateTime.(full_labels))
+    
+    floats, labels = AlgebraOfGraphics.ticks((DateTime(2022, 1, 2, 1, 1, 5), DateTime(2022, 1, 2, 1, 1, 5)))
+    full_labels = ["2022-01-02T01:01:05"]
+    @test labels == ["01:01:05"]
+    @test floats == datetime2float.(DateTime.(full_labels))
+
+    floats, labels = AlgebraOfGraphics.ticks((Time(1, 1, 5), Time(16, 4, 28)))
+    @test labels == ["02:00:00", "05:00:00", "08:00:00", "11:00:00", "14:00:00"]
+    @test floats == datetime2float.(Time.(labels))
 
     floats, labels = AlgebraOfGraphics.ticks((DateTime(2022, 1, 2, 1, 1, 5), DateTime(2022, 1, 3, 16, 4, 28)))
     @test labels == ["2022-01-02T02:00:00", "2022-01-02T10:00:00", "2022-01-02T18:00:00", "2022-01-03T02:00:00", "2022-01-03T10:00:00"]

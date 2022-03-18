@@ -157,7 +157,7 @@ temporal_resolutions(::Type{Date}) = (Year, Month, Day)
 temporal_resolutions(::Type{Time}) = (Hour, Minute, Second, Millisecond)
 temporal_resolutions(::Type{DateTime}) = (temporal_resolutions(Date)..., temporal_resolutions(Time)...)
 
-function optimal_datetime_range((x_min, x_max)::NTuple{2, T}; k_min=2, k_max=5) where {T}
+function optimal_datetime_range((x_min, x_max)::NTuple{2, T}; k_min=2, k_max=5) where {T<:TimeType}
     local P, start, stop
     for outer P in temporal_resolutions(T)
         start, stop = trunc(x_min, P), trunc(x_max, P)
@@ -168,12 +168,17 @@ function optimal_datetime_range((x_min, x_max)::NTuple{2, T}; k_min=2, k_max=5) 
     return start:P(1):stop
 end
 
+function format_datetimes(datetimes::AbstractVector{DateTime})
+    dates = Date.(datetimes)
+    timetype = dates == datetimes ? Date : isequal(extrema(dates)...) ? Time : DateTime
+    return string.(timetype.(datetimes))
+end
+
+format_datetimes(datetimes::AbstractVector) = string.(datetimes)
+
 function ticks(limits::NTuple{2, TimeType})
     datetimes = optimal_datetime_range(limits)
-    dates = map(Date, datetimes)
-    timetype = dates == datetimes ? Date : isequal(extrema(dates)...) ? Time : DateTime
-    labels = string.(timetype.(datetimes))
-    return datetime2float.(datetimes), labels
+    return datetime2float.(datetimes), format_datetimes(datetimes)
 end
 
 @enum ScientificType categorical continuous geometrical
