@@ -7,7 +7,7 @@ using StructArrays: StructArrays, components, uniquesorted, GroupPerm, StructArr
 using GeometryBasics: AbstractGeometry, Polygon, MultiPolygon
 using GeoInterface: coordinates, geotype
 using Colors: RGB, RGBA, red, green, blue, Color
-using PlotUtils: optimize_datetime_ticks, AbstractColorList
+using PlotUtils: AbstractColorList
 using Makie
 using Makie: current_default_theme, to_value, automatic, Automatic, PlotFunc, ATTRIBUTES
 import Makie.MakieLayout: hidexdecorations!,

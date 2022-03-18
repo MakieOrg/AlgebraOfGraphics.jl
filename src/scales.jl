@@ -152,12 +152,23 @@ ticks(scale::ContinuousScale) = ticks(scale.extrema)
 
 ticks((min, max)::NTuple{2, Any}) = automatic
 
-function ticks((min, max)::NTuple{2, T}) where T<:TimeType
-    min_ms::Millisecond, max_ms::Millisecond = DateTime(min), DateTime(max)
-    min_pure, max_pure = min_ms / Millisecond(1), max_ms / Millisecond(1)
-    dates_pure, labels = optimize_datetime_ticks(min_pure, max_pure)
-    dates = convert.(DateTime, Millisecond.(dates_pure))
-    return datetime2float.(dates), labels
+function optimal_datetime_ticks(x_min::DateTime, x_max::DateTime; k_min=2, k_max=5)
+    local P, start, stop, n
+    for outer P in (Year, Month, Day, Hour, Minute, Second)
+        start, stop = ceil(x_min, P), floor(x_max, P)
+        n = length(start:P(1):stop)
+        n ≥ k_min && break
+    end
+    step = P(fld1(n, k_max))
+    datetimes = start:step:stop
+    sameday = all(isequal(Date(start))∘Date, datetimes)
+    timetype = P <: DatePeriod ? Date : sameday ? Time : DateTime
+    return datetimes, string.(timetype.(datetimes))
+end
+
+function ticks((min, max)::NTuple{2, TimeType})
+    datetimes, labels = optimal_datetime_ticks(DateTime(min), DateTime(max))
+    return datetime2float.(datetimes), labels
 end
 
 @enum ScientificType categorical continuous geometrical

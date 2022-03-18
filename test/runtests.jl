@@ -4,7 +4,7 @@ using AlgebraOfGraphics: Sorted
 using AlgebraOfGraphics: separate
 using AlgebraOfGraphics: midpoints
 using AlgebraOfGraphics: compute_palettes, apply_palette
-using AlgebraOfGraphics: categoricalscales, CategoricalScale, fitscale
+using AlgebraOfGraphics: categoricalscales, CategoricalScale, fitscale, datetime2float, datetimeticks
 using AlgebraOfGraphics: extrema_finite, nested_extrema_finite
 using AlgebraOfGraphics: get_layout
 using AlgebraOfGraphics: clean_facet_attributes
