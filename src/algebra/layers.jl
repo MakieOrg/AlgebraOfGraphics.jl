@@ -37,12 +37,12 @@ function compute_processedlayers_grid(processedlayers, categoricalscales)
     return pls_grid
 end
 
-function compute_entries_continuousscales(pls_grid)
+function compute_entries_continuousscales(pls_grid, categoricalscales)
     # Here processed layers in `pls_grid` are "sliced",
     # the categorical scales have been applied, but not
     # the continuous scales
 
-    entries_grid = map(_ -> Entry[], pls_grid)
+    rescaled_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
     continuousscales_grid = map(_ -> MixedArguments(), pls_grid)
 
     for idx in eachindex(pls_grid), pl in pls_grid[idx]
@@ -55,24 +55,18 @@ function compute_entries_continuousscales(pls_grid)
         continuousscales = AlgebraOfGraphics.continuousscales(ProcessedLayer(pl; plottype))
         mergewith!(mergescales, continuousscales_grid[idx], continuousscales)
 
-        # Compute `Entry` with rescaled columns
-        attrs = compute_attributes(ProcessedLayer(pl; plottype, positional, named))
-        entry = Entry(plottype, positional, attrs)
-        push!(entries_grid[idx], entry)
+        # Compute `ProcessedLayer` with rescaled columns
+        push!(rescaled_pls_grid[idx], ProcessedLayer(pl; plottype, positional, named))
     end
 
     # Compute merged continuous scales, as it may be needed to use global extrema
     merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=MixedArguments())
 
-    colorscale = get(merged_continuousscales, :color, nothing)
-    if !isnothing(colorscale)
-        # TODO: might need to change to support temporal color scale
-        colorrange = colorscale.extrema
-        for entries in entries_grid, entry in entries
-            # Safe to do, as each entry has a separate `named` dictionary
-            set!(entry.named, :colorrange, colorrange)
-        end
+    to_entry = function (pl)
+        attrs = compute_attributes(pl, categoricalscales, continuousscales_grid, merged_continuousscales)
+        return Entry(pl.plottype, pl.positional, attrs)
     end
+    entries_grid = map(pls -> map(to_entry, pls), rescaled_pls_grid)
 
     return entries_grid, continuousscales_grid, merged_continuousscales
 end
@@ -117,7 +111,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
 
     pls_grid = compute_processedlayers_grid(processedlayers, categoricalscales)
     entries_grid, continuousscales_grid, merged_continuousscales =
-        compute_entries_continuousscales(pls_grid)
+        compute_entries_continuousscales(pls_grid, categoricalscales)
 
     indices = CartesianIndices(pls_grid)
     axes_grid = map(indices) do c
