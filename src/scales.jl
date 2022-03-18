@@ -73,20 +73,8 @@ getlabel(c::ContinuousScale) = something(c.label, "")
 
 # recentering hack to avoid Float32 conversion errors on recent dates
 # TODO: remove once Makie supports dates
-const time_offset = let startingdate = Date(2020, 01, 01)
-    ms:: Millisecond = DateTime(startingdate)
-    ms / Millisecond(1)
-end
-
-function datetime2float(x::Period)
-    ms:: Millisecond = x
-    return ms / Millisecond(1)
-end
-
-function datetime2float(x::TimeType)
-    ms::Millisecond = DateTime(x)
-    return ms / Millisecond(1) - time_offset
-end
+datetime2float(x::TimeType) = datetime2float(DateTime(x) - DateTime(2020, 01, 01))
+datetime2float(x::Period) = Millisecond(x) / Millisecond(1)
 
 """
     datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString})
@@ -167,8 +155,9 @@ ticks((min, max)::NTuple{2, Any}) = automatic
 function ticks((min, max)::NTuple{2, T}) where T<:TimeType
     min_ms::Millisecond, max_ms::Millisecond = DateTime(min), DateTime(max)
     min_pure, max_pure = min_ms / Millisecond(1), max_ms / Millisecond(1)
-    dates, labels = optimize_datetime_ticks(min_pure, max_pure)
-    return (dates .- time_offset, labels)
+    dates_pure, labels = optimize_datetime_ticks(min_pure, max_pure)
+    dates = convert.(DateTime, Millisecond.(dates_pure))
+    return datetime2float.(dates), labels
 end
 
 @enum ScientificType categorical continuous geometrical

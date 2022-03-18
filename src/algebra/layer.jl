@@ -264,7 +264,7 @@ function compute_attributes(pl::ProcessedLayer,
         width = if isnothing(xscale)
             1
         else
-            @show min, max = xscale.extrema
+            min, max = xscale.extrema
             elementwise_rescale(oneunit(max - min))
         end
         insert!(attrs, :width, width)
