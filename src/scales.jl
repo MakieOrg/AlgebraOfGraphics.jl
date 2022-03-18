@@ -169,9 +169,10 @@ function optimal_datetime_range((x_min, x_max)::NTuple{2, T}; k_min=2, k_max=5) 
 end
 
 function format_datetimes(datetimes::AbstractVector{DateTime})
-    dates = Date.(datetimes)
-    timetype = dates == datetimes ? Date : isequal(extrema(dates)...) ? Time : DateTime
-    return string.(timetype.(datetimes))
+    dates, times = Date.(datetimes), Time.(datetimes)
+    (dates == datetimes) && return string.(dates)
+    isequal(extrema(dates)...) && return string.(times)
+    return string.(datetimes)
 end
 
 format_datetimes(datetimes::AbstractVector) = string.(datetimes)
