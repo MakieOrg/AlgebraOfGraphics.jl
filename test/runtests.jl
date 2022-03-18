@@ -1,4 +1,4 @@
-using AlgebraOfGraphics, Makie, Random, Statistics, Test
+using AlgebraOfGraphics, Makie, Random, Statistics, Test, Dates
 
 using AlgebraOfGraphics: Sorted
 using AlgebraOfGraphics: separate

@@ -73,7 +73,8 @@ getlabel(c::ContinuousScale) = something(c.label, "")
 
 # recentering hack to avoid Float32 conversion errors on recent dates
 # TODO: remove once Makie supports dates
-datetime2float(x::TimeType) = datetime2float(DateTime(x) - DateTime(2020, 01, 01))
+datetime2float(x::Union{DateTime, Date}) = datetime2float(DateTime(x) - DateTime(2020, 01, 01))
+datetime2float(x::Time) = datetime2float(x - Time(0))
 datetime2float(x::Period) = Millisecond(x) / Millisecond(1)
 
 """
@@ -152,22 +153,26 @@ ticks(scale::ContinuousScale) = ticks(scale.extrema)
 
 ticks((min, max)::NTuple{2, Any}) = automatic
 
-function optimal_datetime_ticks(x_min::DateTime, x_max::DateTime; k_min=2, k_max=5)
-    local P, start, stop, n
-    for outer P in (Year, Month, Day, Hour, Minute, Second)
-        start, stop = ceil(x_min, P), floor(x_max, P)
+temporal_resolutions(::Type{Date}) = (Year, Month, Day)
+temporal_resolutions(::Type{Time}) = (Hour, Minute, Second, Millisecond)
+temporal_resolutions(::Type{DateTime}) = (temporal_resolutions(Date)..., temporal_resolutions(Time)...)
+
+function optimal_datetime_range((x_min, x_max)::NTuple{2, T}; k_min=2, k_max=5) where {T}
+    local P, start, stop
+    for outer P in temporal_resolutions(T)
+        start, stop = trunc(x_min, P), trunc(x_max, P)
+        (start == x_min) || (start += P(1))
         n = length(start:P(1):stop)
-        n ≥ k_min && break
+        n ≥ k_min && return start:P(fld1(n, k_max)):stop
     end
-    step = P(fld1(n, k_max))
-    datetimes = start:step:stop
-    sameday = all(isequal(Date(start))∘Date, datetimes)
-    timetype = P <: DatePeriod ? Date : sameday ? Time : DateTime
-    return datetimes, string.(timetype.(datetimes))
+    return start:P(1):stop
 end
 
-function ticks((min, max)::NTuple{2, TimeType})
-    datetimes, labels = optimal_datetime_ticks(DateTime(min), DateTime(max))
+function ticks(limits::NTuple{2, TimeType})
+    datetimes = optimal_datetime_range(limits)
+    dates = map(Date, datetimes)
+    timetype = dates == datetimes ? Date : isequal(extrema(dates)...) ? Time : DateTime
+    labels = string.(timetype.(datetimes))
     return datetime2float.(datetimes), labels
 end
 
