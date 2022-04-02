@@ -9,7 +9,7 @@
 using AlgebraOfGraphics, CairoMakie
 set_aog_theme!()
 
-df = (x=randn(1000), y=randn(1000), z=rand(["a", "b", "c"], 1000))
+df = (x=randn(5000), y=randn(5000), z=rand(["a", "b", "c"], 5000))
 specs = data(df) * mapping(:x, layout=:z) * histogram(bins=range(-2, 2, length=15))
 draw(specs)
 
@@ -25,6 +25,13 @@ draw(specs)
 
 #
 
+specs = data(df) *
+    mapping((:x, :z) => ((x, z) -> x + 5 * (z == "b")) => "new x", col=:z) *
+    histogram(datalimits=extrema, bins=20)
+draw(specs, facet=(linkxaxes=:minimal,))
+
+#
+
 data(df) * mapping(:x, :y, layout=:z) * histogram(bins=15) |> draw
 
 # ## Density
@@ -34,10 +41,16 @@ data(df) * mapping(:x, :y, layout=:z) * histogram(bins=15) |> draw
 # ```
 
 df = (x=randn(5000), y=randn(5000), z=rand(["a", "b", "c", "d"], 5000))
-datalimits = ((-2.5, 2.5),)
-xz = data(df) * mapping(:x, layout=:z) * AlgebraOfGraphics.density(; datalimits)
-axis = (; ylabel="")
-draw(xz; axis)
+specs = data(df) * mapping(:x, layout=:z) * AlgebraOfGraphics.density(datalimits=((-2.5, 2.5),))
+
+draw(specs)
+
+#
+
+specs = data(df) *
+    mapping((:x, :z) => ((x, z) -> x + 5 * (z ∈ ["b", "d"])) => "new x", layout=:z) *
+    AlgebraOfGraphics.density(datalimits=extrema)
+draw(specs, facet=(linkxaxes=:minimal,))
 
 #
 
