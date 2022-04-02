@@ -17,7 +17,7 @@ draw(plt)
 
 fg = draw(plt, colorbar=(position=:top, size=25))
 
- # To change the colormap, pass it  tweak the position and appearance of the colorbar, simply use the `colorbar` keyword when plotting. For example
+# To change the colormap, pass the `colormap` keyword to `visual`. For example
 
 plt = visual(Scatter, colormap=:thermal) * data(df) * mapping(:x, :y, color=:z)
 draw(plt)
