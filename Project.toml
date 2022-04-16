@@ -1,6 +1,6 @@
 name = "AlgebraOfGraphics"
 uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
-authors = ["Pietro Vertechi <pietro.vertechi@veos.digital>"]
+authors = ["Pietro Vertechi"]
 version = "0.6.6"
 
 [deps]
