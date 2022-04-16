@@ -24,8 +24,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         x̂ = range(extrema(x)..., length=l.npoints)
         pred = GLM.predict(lin_model, add_intercept_column(x̂); interval, l.level)
         return if !isnothing(interval)
-            # TODO: fix this in GLM https://github.com/JuliaStats/GLM.jl/pull/467
-            ŷ, lower, upper = map(vec, pred) # GLM prediction returns matrices
+            ŷ, lower, upper = pred
             (x̂, ŷ), (; lower, upper)
         else
             ŷ = pred
