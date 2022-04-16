@@ -19,7 +19,7 @@ gallery, postprocess_cb, gallery_assets = makedemos("gallery")
 
 makedocs(;
     modules=[AlgebraOfGraphics],
-    authors="Pietro Vertechi <pietro.vertechi@veos.digital>",
+    authors="Pietro Vertechi",
     repo="https://github.com/JuliaPlots/AlgebraOfGraphics.jl/blob/{commit}{path}#{line}",
     sitename="Algebra of Graphics",
     format=Documenter.HTML(;
