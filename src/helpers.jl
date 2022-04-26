@@ -121,11 +121,10 @@ end
     sorter(ks)
 
 Utility to reorder a categorical variable, as in `sorter(["low", "medium", "high"])`. A
-vararg method `sorter("low", "medium", "high")` is also supported. `ks` should include all
-the unique values of the categorical variable. The order of `ks` is respected in the legend.
-The sorter need not specify all values (e.g. `sorter(["low", "medium"])` will work for an
-array that includes "high"); the unspecified values will be sorted after the specified
-values in the order returned by `unique`.
+vararg method `sorter("low", "medium", "high")` is also supported. The order of `ks` is
+respected in the legend. The sorter need not specify all values (e.g. `sorter(["low",
+"medium"])` will work for an array that includes "high"); the unspecified values will be
+sorted after the specified values and will occur in the order returned by `unique`.
 
 """
 function sorter(ks::Union{AbstractArray, Tuple})
