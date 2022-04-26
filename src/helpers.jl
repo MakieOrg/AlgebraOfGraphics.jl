@@ -36,15 +36,45 @@ function (r::Renamer)(x)
     throw(KeyError(x))
 end
 
+function Base.map(renamer::ComposedFunction{typeof(fill), <:Renamer}, array::AbstractArray)
+    map(fill ∘ preprocess(renamer.inner, array), array)
+end
+
+function Base.map(renamer::Renamer, array::AbstractArray)
+    renamer_ = preprocess(renamer, array)
+    map(x -> renamer_(x), array)
+end
+
+mycat(x, y) = vcat(x, y)
+mycat(x::Tuple, y::Tuple) = (x..., y...)
+
+function preprocess(renamer::Renamer, data) 
+    unspecified = setdiff(unique(data), renamer.uniquevalues)
+    return Renamer(mycat(renamer.uniquevalues, unspecified), 
+                   mycat(renamer.labels, map(to_string, unspecified)))
+end
+
+function preprocess(renamer::Renamer{Nothing}, data) 
+    unspecified = setdiff(unique(data), eachindex(LinearIndices(r.labels)))
+    labels = mycat(renamer.labels, map(to_string, unspecified))
+    if all(x -> x isa Integer && x > 0, unspecified)
+        return Renamer(nothing, labels)
+    else
+        return Renamer(vcat(eachindex(LinearIndices(r.labels)), unspecified), labels)
+    end
+end
+
 renamer(args::Pair...) = renamer(args)
 
 """
     renamer(arr::Union{AbstractArray, Tuple})
 
-Utility to rename a categorical variable, as in `renamer([value1 => label1, value2 => label2])`.
-The keys of all pairs should be all the unique values of the categorical variable and
-the values should be the corresponding labels. The order of `arr` is respected in
-the legend.
+Utility to rename a categorical variable, as in `renamer([value1 => label1, value2 =>
+label2])`. The keys of all pairs should be all the unique values of the categorical variable
+and the values should be the corresponding labels. The order of `arr` is respected in the
+legend. The renamer need not specify all values of the sequence it renames: if the renamer
+is missing one of the values from a sequence it is applied to, the unspecified values follow
+those that are specified (in the order returned by `unique`).
 
 # Examples
 ```jldoctest
@@ -64,8 +94,8 @@ Class One
 ```
 
 If `arr` does not contain `Pair`s, elements of `arr` are assumed to be labels, and the
-unique values of the categorical variable are taken to be the indices of the array.
-This is particularly useful for `dims` mappings.
+unique values of the categorical variable are taken to be the indices of the array. This is
+particularly useful for `dims` mappings.
 
 # Examples
 ```jldoctest
@@ -90,14 +120,17 @@ end
 """
     sorter(ks)
 
-Utility to reorder a categorical variable, as in `sorter(["low", "medium", "high"])`.
-A vararg method `sorter("low", "medium", "high")` is also supported.
-`ks` should include all the unique values of the categorical variable.
-The order of `ks` is respected in the legend.
+Utility to reorder a categorical variable, as in `sorter(["low", "medium", "high"])`. A
+vararg method `sorter("low", "medium", "high")` is also supported. `ks` should include all
+the unique values of the categorical variable. The order of `ks` is respected in the legend.
+The sorter need not specify all values (e.g. `sorter(["low", "medium"])` will work for an
+array that includes "high"); the unspecified values will be sorted after the specified
+values in the order returned by `unique`.
+
 """
 function sorter(ks::Union{AbstractArray, Tuple})
     vs = map(to_string, ks)
-    return Renamer(ks, vs)
+    return Labels(ks, vs)
 end
 
 struct NonNumeric{T}

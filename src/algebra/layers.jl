@@ -96,7 +96,6 @@ function compute_axes_grid(s::OneOrMoreLayers;
     layers::Layers = s
     processedlayers = map(ProcessedLayer, layers)
 
-    # TODO: here is where I need to change how palettes are handled
     palettes = compute_palettes(palettes)
 
     categoricalscales = MixedArguments()
