@@ -61,7 +61,6 @@ function preprocess(r::Renamer, data)
 end
 
 function preprocess(r::Renamer{Nothing}, data) 
-    @infiltrate
     unspecified = setdiff(LinearIndices(unique(data)), LinearIndices(r.labels))
     labels = mycat(r.labels, map(to_string, unspecified))
     if all(x -> x isa Integer && x > 0, unspecified)
