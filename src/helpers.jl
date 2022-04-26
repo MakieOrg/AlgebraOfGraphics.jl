@@ -41,8 +41,7 @@ function Base.map(r::ComposedFunction{typeof(fill), <:Renamer}, array::AbstractA
 end
 
 function Base.map(r::Renamer, array::AbstractArray)
-    r_ = preprocess(r, array)
-    map(r_, array)
+    map(preprocess(r, array), array)
 end
 
 mycat(x, y) = vcat(x, y)
