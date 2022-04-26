@@ -75,11 +75,10 @@ renamer(args::Pair...) = renamer(args)
     renamer(arr::Union{AbstractArray, Tuple})
 
 Utility to rename a categorical variable, as in `renamer([value1 => label1, value2 =>
-label2])`. The keys of all pairs should be all the unique values of the categorical variable
-and the values should be the corresponding labels. The order of `arr` is respected in the
-legend. The renamer need not specify all values of the sequence it renames: if the renamer
-is missing one of the values from a sequence it is applied to, the unspecified values follow
-those that are specified (in the order returned by `unique`).
+label2])`. The order of `arr` is respected in the legend. The renamer need not specify all
+values of the sequence it renames: if the renamer is missing one of the values from a
+sequence it is applied to, the unspecified values are sorted after those that are specified (in the
+order returned by `unique`) and are not renamed.
 
 # Examples
 ```jldoctest
