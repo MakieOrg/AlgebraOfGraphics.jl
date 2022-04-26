@@ -36,31 +36,38 @@ function (r::Renamer)(x)
     throw(KeyError(x))
 end
 
-function Base.map(renamer::ComposedFunction{typeof(fill), <:Renamer}, array::AbstractArray)
-    map(fill ∘ preprocess(renamer.inner, array), array)
+function Base.map(r::ComposedFunction{typeof(fill), <:Renamer}, array::AbstractArray)
+    map(fill ∘ preprocess(r.inner, array), array)
 end
 
-function Base.map(renamer::Renamer, array::AbstractArray)
-    renamer_ = preprocess(renamer, array)
-    map(x -> renamer_(x), array)
+function Base.map(r::Renamer, array::AbstractArray)
+    r_ = preprocess(r, array)
+    map(r_, array)
 end
 
 mycat(x, y) = vcat(x, y)
-mycat(x::Tuple, y::Tuple) = (x..., y...)
+mycat(x::Tuple, y) = (x..., y...)
 
-function preprocess(renamer::Renamer, data) 
-    unspecified = setdiff(unique(data), renamer.uniquevalues)
-    return Renamer(mycat(renamer.uniquevalues, unspecified), 
-                   mycat(renamer.labels, map(to_string, unspecified)))
+# wrapper type avoids stackoverflow when calling map
+struct Preprocessed{R}
+    renamer::R
+end
+(pr::Preprocessed)(x) = pr.renamer(x)
+
+function preprocess(r::Renamer, data) 
+    unspecified = setdiff(unique(data), r.uniquevalues)
+    return Preprocessed(Renamer(mycat(r.uniquevalues, unspecified), 
+                        mycat(r.labels, map(to_string, unspecified))))
 end
 
-function preprocess(renamer::Renamer{Nothing}, data) 
-    unspecified = setdiff(unique(data), eachindex(LinearIndices(r.labels)))
-    labels = mycat(renamer.labels, map(to_string, unspecified))
+function preprocess(r::Renamer{Nothing}, data) 
+    @infiltrate
+    unspecified = setdiff(LinearIndices(unique(data)), LinearIndices(r.labels))
+    labels = mycat(r.labels, map(to_string, unspecified))
     if all(x -> x isa Integer && x > 0, unspecified)
-        return Renamer(nothing, labels)
+        return Preprocessed(Renamer(nothing, labels))
     else
-        return Renamer(vcat(eachindex(LinearIndices(r.labels)), unspecified), labels)
+        return Preprocessed(Renamer(vcat(eachindex(LinearIndices(r.labels)), unspecified), labels))
     end
 end
 
@@ -123,13 +130,13 @@ end
 Utility to reorder a categorical variable, as in `sorter(["low", "medium", "high"])`. A
 vararg method `sorter("low", "medium", "high")` is also supported. The order of `ks` is
 respected in the legend. The sorter need not specify all values (e.g. `sorter(["low",
-"medium"])` will work for an array that includes "high"); the unspecified values will be
+"medium"])` will work for an array that includes `"high"``); the unspecified values will be
 sorted after the specified values and will occur in the order returned by `unique`.
 
 """
 function sorter(ks::Union{AbstractArray, Tuple})
     vs = map(to_string, ks)
-    return Labels(ks, vs)
+    return Renamer(ks, vs)
 end
 
 struct NonNumeric{T}
