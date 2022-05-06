@@ -37,6 +37,10 @@ export draw, draw!
 export facet!, colorbar!, legend!
 export set_aog_theme!
 
+# Minor piracy to fix Makie issues
+convert_for_attribute(t::Type{Makie.FreeTypeAbstraction.FTFont}, x::Makie.FreeTypeAbstraction.FTFont) = to_font(x)
+
+
 include("dict.jl")
 include("theme.jl")
 include("helpers.jl")
