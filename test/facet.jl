@@ -84,7 +84,7 @@ end
     @test labels[3].text[] == "f"
     for (i, label) in enumerate(labels)
         @test label in contents(fig[i, 3, Right()])
-        @test label.rotation[] == -π/2
+        @test label.rotation[] == Float32(-π/2)
         @test label.padding[] == (ax.titlegap[], 0, 0, 0)
         @test label.color[] == ax.titlecolor[]
         @test label.font[] == ax.titlefont[]
