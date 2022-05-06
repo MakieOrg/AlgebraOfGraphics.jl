@@ -72,10 +72,10 @@ end
         @test label in contents(fig[1, i, Top()])
         @test label.rotation[] == 0
         @test label.padding[] == (0, 0, ax.titlegap[], 0)
-        @test label.color == ax.titlecolor
-        @test label.font == ax.titlefont
-        @test label.textsize == ax.titlesize
-        @test label.visible == ax.titlevisible
+        @test label.color[] == ax.titlecolor[]
+        @test label.font[] == ax.titlefont[]
+        @test label.textsize[] == ax.titlesize[]
+        @test label.visible[] == ax.titlevisible[]
     end
 
     labels = row_labels!(fig, aes, scales[:row])
@@ -86,10 +86,10 @@ end
         @test label in contents(fig[i, 3, Right()])
         @test label.rotation[] == -π/2
         @test label.padding[] == (ax.titlegap[], 0, 0, 0)
-        @test label.color == ax.titlecolor
-        @test label.font == ax.titlefont
-        @test label.textsize == ax.titlesize
-        @test label.visible == ax.titlevisible
+        @test label.color[] == ax.titlecolor[]
+        @test label.font[] == ax.titlefont[]
+        @test label.textsize[] == ax.titlesize[]
+        @test label.visible[] == ax.titlevisible[]
     end
 
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c", "d"], 100))
@@ -109,10 +109,10 @@ end
         @test label in contents(fig[i, j, Top()])
         @test label.rotation[] == 0
         @test label.padding[] == (0, 0, ax.titlegap[], 0)
-        @test label.color == ax.titlecolor
-        @test label.font == ax.titlefont
-        @test label.textsize == ax.titlesize
-        @test label.visible == ax.titlevisible
+        @test label.color[] == ax.titlecolor[]
+        @test label.font[] == ax.titlefont[]
+        @test label.textsize[] == ax.titlesize[]
+        @test label.visible[] == ax.titlevisible[]
     end
 end
 
@@ -125,17 +125,17 @@ end
 
     label = span_xlabel!(fig, aes)
     @test label.rotation[] == 0.0
-    @test label.color == ax.xlabelcolor
-    @test label.font == ax.xlabelfont
-    @test label.textsize == ax.xlabelsize
+    @test label.color[] == ax.xlabelcolor[]
+    @test label.font[] == ax.xlabelfont[]
+    @test label.textsize[] == ax.xlabelsize[]
     @test label.text[] == "xlabel"
     @test label in contents(fig[3, :, Bottom()])
 
     label = span_ylabel!(fig, aes)
     @test label.rotation[] == π/2
-    @test label.color == ax.ylabelcolor
-    @test label.font == ax.ylabelfont
-    @test label.textsize == ax.ylabelsize
+    @test label.color[] == ax.ylabelcolor[]
+    @test label.font[] == ax.ylabelfont[]
+    @test label.textsize[] == ax.ylabelsize[]
     @test label.text[] == "ylabel"
     @test label in contents(fig[:, 1, Left()])
 end
