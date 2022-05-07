@@ -132,7 +132,7 @@ end
     @test label in contents(fig[3, :, Bottom()])
 
     label = span_ylabel!(fig, aes)
-    @test label.rotation[] == π/2
+    @test label.rotation[] == Float32(π/2)
     @test label.color[] == ax.ylabelcolor[]
     @test label.font[] == ax.ylabelfont[]
     @test label.textsize[] == ax.ylabelsize[]
