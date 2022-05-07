@@ -3,17 +3,34 @@
 to_string(s) = string(s)
 to_string(s::AbstractString) = s
 
-struct Sorted{T}
+struct Renamed{S, T}
     idx::UInt32
-    value::T
+    original::S
+    value::Union{T, Nothing}
 end
-Sorted(idx::Integer, value) = Sorted(convert(UInt32, idx), value)
+Renamed(idx::Integer, original, value) = Renamed(convert(UInt32, idx), original, value)
+value(x::Renamed) = isnothing(x.value) ? x.original : s.value
 
-Base.hash(s::Sorted, h::UInt) = hash(s.value, hash(s.idx, hash(:Sorted, h)))
-Base.:(==)(s1::Sorted, s2::Sorted) = isequal(s1.idx, s2.idx) && isequal(s1.value, s2.value)
+Base.hash(s::Renamed, h::UInt) = hash(value(s), hash(s.idx, hash(:Renamed, h)))
+function Base.:(==)(s1::Renamed, s2::Renamed) 
+    val_equal = isequal(s1.idx, s2.idx) && isequal(s1.value, s2.value) 
+    if val_equal && isnothing(s1.value)
+        return s1.original == s2.original
+    else
+        return val_equal
+    end
+end
 
-Base.print(io::IO, s::Sorted) = print(io, s.value)
-Base.isless(s1::Sorted, s2::Sorted) = isless((s1.idx, s1.value), (s2.idx, s2.value))
+Base.print(io::IO, s::Renamed) = print(io, value(s))
+function Base.isless(s1::Renamed, s2::Renamed)
+    if isnothing(s1.value) == isnothing(s1.value)
+        return isless((s1.idx, value(s1)), (s2.idx, value(s2)))
+    else
+        # sort any renamed values before values that keep
+        # their original value
+        return isless(!isnothing(s1.value), !isnothing(s2.value))
+    end
+end
 
 struct Renamer{U, L}
     uniquevalues::U
@@ -22,7 +39,7 @@ end
 
 function (r::Renamer{Nothing})(x)
     i = LinearIndices(r.labels)[x]
-    return Sorted(i, r.labels[i])
+    return Renamed(i, x, r.labels[i])
 end
 
 function (r::Renamer)(x)
@@ -30,43 +47,10 @@ function (r::Renamer)(x)
         cand = @inbounds r.uniquevalues[i]
         if isequal(cand, x)
             label = r.labels[i]
-            return Sorted(i, label)
+            return Renamed(i, x, label)
         end
     end
     throw(KeyError(x))
-end
-
-function Base.map(r::ComposedFunction{typeof(fill), <:Renamer}, array::AbstractArray)
-    map(fill ∘ preprocess(r.inner, array), array)
-end
-
-function Base.map(r::Renamer, array::AbstractArray)
-    map(preprocess(r, array), array)
-end
-
-mycat(x, y) = vcat(x, y)
-mycat(x::Tuple, y) = (x..., y...)
-
-# wrapper type avoids stackoverflow when calling map
-struct Preprocessed{R}
-    renamer::R
-end
-(pr::Preprocessed)(x) = pr.renamer(x)
-
-function preprocess(r::Renamer, data) 
-    unspecified = setdiff(unique(data), r.uniquevalues)
-    return Preprocessed(Renamer(mycat(r.uniquevalues, unspecified), 
-                        mycat(r.labels, map(to_string, unspecified))))
-end
-
-function preprocess(r::Renamer{Nothing}, data) 
-    unspecified = setdiff(LinearIndices(unique(data)), LinearIndices(r.labels))
-    labels = mycat(r.labels, map(to_string, unspecified))
-    if all(x -> x isa Integer && x > 0, unspecified)
-        return Preprocessed(Renamer(nothing, labels))
-    else
-        return Preprocessed(Renamer(vcat(eachindex(LinearIndices(r.labels)), unspecified), labels))
-    end
 end
 
 renamer(args::Pair...) = renamer(args)

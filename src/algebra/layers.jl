@@ -32,9 +32,9 @@ function compute_processedlayers_grid(processedlayers, categoricalscales)
     indices = CartesianIndices(compute_grid_positions(categoricalscales))
     pls_grid = map(_ -> ProcessedLayer[], indices)
     for processedlayer in processedlayers
-        append_processedlayers!(pls_grid, processedlayer, categoricalscales)
+        categoricalscales = append_processedlayers!(pls_grid, processedlayer, categoricalscales)
     end
-    return pls_grid
+    return pls_grid, categoricalscales
 end
 
 function compute_entries_continuousscales(pls_grid, categoricalscales)
@@ -109,7 +109,7 @@ function compute_axes_grid(s::OneOrMoreLayers;
     # fit categorical scales (compute plot values using all data values)
     map!(fitscale, categoricalscales, categoricalscales)
 
-    pls_grid = compute_processedlayers_grid(processedlayers, categoricalscales)
+    pls_grid, categoricalscales = compute_processedlayers_grid(processedlayers, categoricalscales)
     entries_grid, continuousscales_grid, merged_continuousscales =
         compute_entries_continuousscales(pls_grid, categoricalscales)
 

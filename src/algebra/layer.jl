@@ -159,11 +159,17 @@ end
 function rescale(p::ProcessedLayer, categoricalscales::MixedArguments)
     primary = map(keys(p.primary), p.primary) do key, values
         scale = get(categoricalscales, key, nothing)
-        return rescale(values, scale)
+        result, scale = rescale(values, scale)
+        categoricalscales = set(categoricalscales, key => scale)
+        return result
     end
     positional = map(keys(p.positional), p.positional) do key, values
         scale = get(categoricalscales, key, nothing)
-        return rescale.(values, Ref(scale))
+        return map(values) do value
+            value, scale = rescale(value, scale)
+            categoricalscales = set(categoricalscales, key => scale)
+            return value
+        end
     end
 
     # compute dodging information
@@ -201,7 +207,7 @@ function concatenate(pls::AbstractVector{ProcessedLayer})
 end
 
 function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::MixedArguments)
-    processedlayer = rescale(processedlayer, categoricalscales)
+    processedlayer, categoricalscales = rescale(processedlayer, categoricalscales)
     tmp_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
     for c in CartesianIndices(shape(processedlayer))
         pl = slice(processedlayer, c)
