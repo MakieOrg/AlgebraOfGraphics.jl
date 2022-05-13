@@ -84,7 +84,7 @@ end
     @test labels[3].text[] == "f"
     for (i, label) in enumerate(labels)
         @test label in contents(fig[i, 3, Right()])
-        @test label.rotation[] == Float32(-π/2)
+        @test label.rotation[] ≈ -π/2
         @test label.padding[] == (ax.titlegap[], 0, 0, 0)
         @test label.color[] == ax.titlecolor[]
         @test label.font[] == ax.titlefont[]
@@ -124,7 +124,7 @@ end
     ax = first(aes).axis
 
     label = span_xlabel!(fig, aes)
-    @test label.rotation[] == 0.0
+    @test label.rotation[] == 0
     @test label.color[] == ax.xlabelcolor[]
     @test label.font[] == ax.xlabelfont[]
     @test label.textsize[] == ax.xlabelsize[]
@@ -132,7 +132,7 @@ end
     @test label in contents(fig[3, :, Bottom()])
 
     label = span_ylabel!(fig, aes)
-    @test label.rotation[] == Float32(π/2)
+    @test label.rotation[] ≈ π/2
     @test label.color[] == ax.ylabelcolor[]
     @test label.font[] == ax.ylabelfont[]
     @test label.textsize[] == ax.ylabelsize[]
