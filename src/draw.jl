@@ -1,6 +1,6 @@
 get_layout(gl::GridLayout) = gl
 get_layout(f::Union{Figure, GridPosition}) = f.layout
-get_layout(l::Union{MakieLayout.Layoutable, GridSubposition}) = get_layout(l.parent)
+get_layout(l::Union{MakieLayout.Block, GridSubposition}) = get_layout(l.parent)
 
 # Wrap layout updates in an update block to avoid triggering multiple updates
 function update(f, fig)
