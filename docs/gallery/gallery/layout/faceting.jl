@@ -51,6 +51,10 @@ draw(plt)
 
 draw(plt, facet = (; linkxaxes = :none, linkyaxes = :none))
 
+# ## Facet wrap with specified layout for rows and cols
+
+draw(plt, palettes = (layout=[(1, 1), (1, 2), (2, 1), (2, 2), (3, 1)],))
+
 # ## Adding traces to only some subplots
 
 df1 = (x=rand(100), y=rand(100), i=rand(["a", "b", "c"], 100), j=rand(["d", "e", "f"], 100))
