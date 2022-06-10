@@ -33,7 +33,7 @@ function to_geometry(transf, shape)
     end
 end
 
-function geodata(t)
+function geodata(featuretable)
     @warn(
         """
         `geodata` has been deprecated.
