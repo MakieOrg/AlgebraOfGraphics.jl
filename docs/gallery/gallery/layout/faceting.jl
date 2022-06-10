@@ -63,6 +63,7 @@ layers = data(df1) * visual(Scatter) + data(df2) * visual(Lines)
 fg = draw(layers * mapping(:x, :y, col=:i, row=:j))
 
 # ## Caveats
+#
 # The faceting variable must be non-numeric. If the source is numeric, you can convert it with `nonnumeric`.
 
 df = (x=rand(100), y=rand(100), l=rand([1, 2, 3, 4, 5], 100))
