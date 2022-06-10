@@ -6,7 +6,6 @@ Base.@kwdef struct DensityAnalysis{D, K, B}
 end
 
 # Work around lack of length 1 tuple method
-# TODO: also add weights support here
 _kde(data::NTuple{1, Any}; kwargs...) = kde(data...; kwargs...)
 _kde(data::Tuple; kwargs...) = kde(data; kwargs...)
 
@@ -43,8 +42,14 @@ end
     density(; datalimits=automatic, kernel=automatic, bandwidth=automatic, npoints=200)
 
 Fit a kernel density estimation of `data`.
-Here, `datalimits` specifies the range for which the density should be calculated,
-and `kernel` and `bandwidth` are forwarded to `KernelDensity.kde`.
+
+Here, `datalimits` specifies the range for which the density should be calculated
+(it defaults to the extrema of the whole data).
+The keyword argument `datalimits` can be a tuple of two values, e.g. `datalimits=(0, 10)`,
+or a function to be applied group by group, e.g. `datalimits=extrema`.
+The keyword arguments `kernel` and `bandwidth` are forwarded to `KernelDensity.kde`.
 `npoints` is the number of points used by Makie to draw the line
+
+Weighted data is supported via the keyword `weights` (passed to `mapping`).
 """
 density(; options...) = transformation(DensityAnalysis(; options...))

@@ -48,5 +48,7 @@ Use `interval = nothing` to only compute the line fit, without any uncertainty e
 By default, this analysis errors on singular (collinear) data. To avoid that,
 it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.
+
+Weighted data is supported via the keyword `weights` (passed to `mapping`).
 """
 linear(; options...) = transformation(LinearAnalysis(; options...))
