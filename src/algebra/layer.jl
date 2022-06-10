@@ -138,8 +138,8 @@ function continuousscales(processedlayer::ProcessedLayer)
 
     colorrange = get(processedlayer.attributes, :colorrange, nothing)
     if !isnothing(colorrange)
-        manualscale = ContinuousScale(colorrange, "", force=true)
-        merge!(mergescales, continuousscales, Dictionary((color=manualscale,)))
+        manualcolorscale = ContinuousScale(colorrange, "", force=true)
+        merge!(mergescales, continuousscales, Dictionary((color=manualcolorscale,)))
     end
 
     return continuousscales
