@@ -135,6 +135,13 @@ function continuousscales(processedlayer::ProcessedLayer)
         colorscale = get(continuousscales, 3, nothing)
         isnothing(colorscale) || insert!(continuousscales, :color, colorscale)
     end
+
+    colorrange = get(processedlayer.attributes, :colorrange, nothing)
+    if !isnothing(colorrange)
+        manualscale = ContinuousScale(colorrange, "", force=true)
+        merge!(mergescales, continuousscales, Dictionary((color=manualscale,)))
+    end
+
     return continuousscales
 end
 
@@ -232,7 +239,8 @@ Process attributes of a `ProcessedLayer`. In particular,
 - remove AlgebraOfGraphics-specific layout attributes,
 - opt out of Makie cycling mechanism,
 - customize behavior of `color` (implementing `alpha` transparency),
-- customize behavior of bar `width` (default to `1` when not specified).
+- set correct `colorrange`,
+- customize behavior of bar `width` (default to one unit when not specified).
 Return computed attributes.
 """
 function compute_attributes(pl::ProcessedLayer,
@@ -271,7 +279,6 @@ function compute_attributes(pl::ProcessedLayer,
     end
 
     # Match colorrange extrema
-    # TODO: respect user-passed colorrange
     # TODO: might need to change to support temporal color scale
     # TODO: maybe use plottype to infer whether this should be passed or not
     colorscale = get(continuousscales, :color, nothing)

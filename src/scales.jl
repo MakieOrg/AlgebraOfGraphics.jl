@@ -67,7 +67,10 @@ getlabel(c::CategoricalScale) = something(c.label, "")
 struct ContinuousScale{T}
     extrema::NTuple{2, T}
     label::Union{AbstractString, Nothing}
+    force::Bool
 end
+
+ContinuousScale(extrema, label; force=false) = ContinuousScale(extrema, label, force)
 
 getlabel(c::ContinuousScale) = something(c.label, "")
 
@@ -137,9 +140,12 @@ function mergescales(c1::CategoricalScale, c2::CategoricalScale)
 end
 
 function mergescales(c1::ContinuousScale, c2::ContinuousScale)
-    extrema = extend_extrema(c1.extrema, c2.extrema)
+    c1.force && c2.force && assert_equal(c1.extrema, c2.extrema)
+    i = findfirst((c1.force, c2.force))
+    force = !isnothing(i)
+    extrema = force ? (c1.extrema, c2.extrema)[i] : extend_extrema(c1.extrema, c2.extrema)
     label = mergelabels(c1.label, c2.label)
-    return ContinuousScale(extrema, label)
+    return ContinuousScale(extrema, label, force)
 end
 
 # Logic to create ticks from a scale
