@@ -23,6 +23,8 @@ using StatsBase: fit, histrange, Histogram, weights
 using GLM: GLM
 using Loess: Loess
 
+import Shapefile, GeometryBasics
+
 Random.seed!(1234)
 
 include("utils.jl")
@@ -32,3 +34,4 @@ include("scales.jl")
 include("helpers.jl")
 include("facet.jl")
 include("legend.jl")
+include("geometry.jl")

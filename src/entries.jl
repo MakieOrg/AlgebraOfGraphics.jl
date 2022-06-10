@@ -101,7 +101,5 @@ function FileIO.save(file::FileIO.Formatted, fg::FigureGrid; kwargs...)
     return FileIO.save(file, fg.figure; kwargs...)
 end
 
-to_tuple(fg) = (fg.figure, fg.grid)
-
-Base.iterate(fg::FigureGrid) = iterate(to_tuple(fg))
-Base.iterate(fg::FigureGrid, i) = iterate(to_tuple(fg), i)
+Base.iterate(fg::FigureGrid) = iterate((fg.figure, fg.grid))
+Base.iterate(fg::FigureGrid, i) = iterate((fg.figure, fg.grid), i)

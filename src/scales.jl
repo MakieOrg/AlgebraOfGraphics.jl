@@ -195,6 +195,7 @@ function scientific_type(::Type{T}) where T
     T <: Verbatim && return geometrical
     T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return geometrical
     T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return geometrical
+    isgeometry(T) && return geometrical
     return categorical
 end
 

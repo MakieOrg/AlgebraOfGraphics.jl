@@ -1,5 +1,5 @@
 """
-    linesfill(xs, ys; lower, upper, kwargs...)
+    linesfill(xs, ys; lower, upper, attributes...)
 
 Line plot with a shaded area between `lower` and `upper`. If `lower` and `upper`
 are not given, shaded area is between `0` and `ys`.

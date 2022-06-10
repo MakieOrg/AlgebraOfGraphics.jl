@@ -27,7 +27,7 @@ Colors = "0.12"
 Dictionaries = "0.3"
 FileIO = "1.1"
 GLM = "1.7"
-GeoInterface = "0.5"
+GeoInterface = "1"
 GeometryBasics = "0.4.1"
 GridLayoutBase = "0.6, 0.7"
 KernelDensity = "0.6"
@@ -43,8 +43,9 @@ julia = "1.6"
 
 [extras]
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Shapefile = "8e980c4a-a4fe-5da2-b3a7-4b4b0353a2f4"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Random", "Statistics", "Test"]
+test = ["Random", "Shapefile", "Statistics", "Test"]

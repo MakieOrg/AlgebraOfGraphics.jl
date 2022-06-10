@@ -5,7 +5,7 @@ using Dates
 using Tables: rows, columns, getcolumn, columnnames
 using StructArrays: StructArrays, components, uniquesorted, GroupPerm, StructArray
 using GeometryBasics: AbstractGeometry, Polygon, MultiPolygon
-using GeoInterface: coordinates, geotype
+using GeoInterface: coordinates, isgeometry, geomtrait, PolygonTrait, MultiPolygonTrait
 using Colors: RGB, RGBA, red, green, blue, Color
 using PlotUtils: AbstractColorList
 using Makie
@@ -43,11 +43,11 @@ include("helpers.jl")
 include("scales.jl")
 include("entries.jl")
 include("facet.jl")
-include("geometry.jl")
 include("algebra/layer.jl")
 include("algebra/layers.jl")
 include("algebra/select.jl")
 include("algebra/processing.jl")
+include("recipes/choropleth.jl")
 include("recipes/linesfill.jl")
 include("transformations/visual.jl")
 include("transformations/linear.jl")
