@@ -65,8 +65,6 @@ df = (x=rand(100), y=rand(100), l=rand([1, 2, 3, 4, 5], 100))
 plt = data(df) * mapping(:x, :y, layout=:l => nonnumeric)
 draw(plt)
 
-# `plt = data(df) * mapping(:x, :y, layout=:l)` would ignore the layout argument.
-
 # save cover image #src
 mkpath("assets") #src
 save("assets/faceting.png", fg) #src
