@@ -35,11 +35,11 @@ draw(plt)
 
 # ## Facet grid with minimal axes linking needed to remove ticks
 
-draw(plt, facet = (; linkxaxes = :minimal, linkyaxes = :minimal))
+draw(plt, facet=(; linkxaxes=:minimal, linkyaxes=:minimal))
 
 # ## Facet grid with unlinked x-axes
 
-draw(plt, facet = (; linkxaxes = :none))
+draw(plt, facet=(; linkxaxes=:none))
 
 # ## Facet wrap
 
@@ -49,11 +49,11 @@ draw(plt)
 
 # ## Facet wrap with unlinked axes
 
-draw(plt, facet = (; linkxaxes = :none, linkyaxes = :none))
+draw(plt, facet=(; linkxaxes=:none, linkyaxes=:none))
 
 # ## Facet wrap with specified layout for rows and cols
 
-draw(plt, palettes = (layout=[(1, 1), (1, 2), (2, 1), (2, 2), (3, 1)],))
+draw(plt, palettes=(layout=[(1, 1), (1, 2), (2, 1), (2, 2), (3, 1)],))
 
 # ## Adding traces to only some subplots
 
