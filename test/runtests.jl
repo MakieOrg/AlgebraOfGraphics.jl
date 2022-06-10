@@ -23,7 +23,7 @@ using StatsBase: fit, histrange, Histogram, weights
 using GLM: GLM
 using Loess: Loess
 
-import Shapefile
+import Shapefile, GeometryBasics
 
 Random.seed!(1234)
 
