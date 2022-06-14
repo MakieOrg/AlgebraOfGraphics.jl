@@ -56,6 +56,12 @@ end
 Choropleth map, where regions are defined by `geometries`.
 Use `transformation` to transform coordinates
 (see [Proj.jl](https://github.com/JuliaGeo/Proj.jl) for more information).
+
+!!! warning
+
+    The `transformation` keyword argument is experimental and could be deprecated
+    (even in a non-breaking release) in favor of a different syntax.
+
 ## Attributes
 $(ATTRIBUTES)
 """
