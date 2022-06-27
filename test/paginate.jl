@@ -25,6 +25,7 @@ _to_layers(l::Layer) = Layers([l])
         d = repeat(ds, inner = 10)
     )
 
+    # test both Layer and Layers
     for vis in [visual(Scatter), visual(Scatter) + visual(Lines)]
         spec = data(d) * mapping(:a, :b, layout = :c) * vis
         pag = paginate(spec)
