@@ -13,6 +13,7 @@ using AlgebraOfGraphics: col_labels!, row_labels!, panel_labels!, span_xlabel!, 
 using AlgebraOfGraphics: compute_axes_grid
 using AlgebraOfGraphics: Arguments, MixedArguments, NamedArguments
 using AlgebraOfGraphics: FigureGrid
+using AlgebraOfGraphics: Layer, Layers
 
 using Makie: automatic
 using GridLayoutBase: Protrusion
