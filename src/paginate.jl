@@ -41,7 +41,6 @@ function paginator(layer::Layer, data, spec, limiter)
     layers = map(sets) do set
         return Layer(layer.transformation, func(set)..., layer.named)
     end
-    Main.@infiltrate
     return Paginate(layers)
 end
 
@@ -63,7 +62,6 @@ function paginator(layer::Layer, data, (row, col)::Tuple, (rows, columns)::Tuple
             layer.named,
         )
     end
-    Main.@infiltrate
     return Paginate(vec(layers))
 end
 
