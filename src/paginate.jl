@@ -1,10 +1,24 @@
 # Dispatcher type for `draw` usage.
-struct Paginate
+struct PaginatedLayers
     each::Vector
+    limit::Union{Nothing, Int}
+    rows::Union{Nothing, Int}
+    columns::Union{Nothing, Int}
 end
 
-draw(p::Paginate; kws...) = draw.(p.each; kws...)
-draw(p::Paginate, i::Int; kws...) = draw(p.each[i]; kws...)
+Base.length(p::PaginatedLayers) = length(p.each)
+
+function show(io::IO, p::PaginatedLayers)
+    _info = filter(
+        !isnothing ∘ last,
+        [key => getfield(p, key) for key in (:limit, :rows, :columns)]
+    )
+    _info_str = join(("$key = $value" for (key, value) in _info), ", ")
+    print(io, "PaginatedLayers with $(length(p)) entries ($_info_str)")
+end
+
+draw(p::PaginatedLayers; kws...) = draw.(p.each; kws...)
+draw(p::PaginatedLayers, i::Int; kws...) = draw(p.each[i]; kws...)
 
 function getsets(layer, data, column, by)
     func(column::Tuple) = sort!(unique(Iterators.product((getcolumn(data, c) for c in column)...)))
@@ -25,7 +39,7 @@ colname(name) = name
 getcols(row, name) = getcolumn(row, name)
 getcols(row, name::Tuple) = map(n -> getcolumn(row, n), name)
 
-function paginator(layer::Layer, data, spec, limiter)
+function paginate_layer(layer::Layer, data, spec, limiter)
     name = colname(spec)
     sets = getsets(layer, data, name, limiter)
 
@@ -41,10 +55,10 @@ function paginator(layer::Layer, data, spec, limiter)
     layers = map(sets) do set
         return Layer(layer.transformation, func(set)..., layer.named)
     end
-    return Paginate(layers)
+    return layers
 end
 
-function paginator(layer::Layer, data, (row, col)::Tuple, (rows, columns)::Tuple)
+function paginate_layer(layer::Layer, data, (row, col)::Tuple, (rows, columns)::Tuple)
     row_name = colname(row)
     col_name = colname(col)
     row_sets = getsets(layer, data, row_name, rows)
@@ -62,12 +76,12 @@ function paginator(layer::Layer, data, (row, col)::Tuple, (rows, columns)::Tuple
             layer.named,
         )
     end
-    return Paginate(vec(layers))
+    return vec(layers)
 end
 
 """
     paginate(layers; limit, rows, columns)
-Paginate the layer objects created by an `AlgebraOfGraphics` spec to create a
+PaginatedLayers the layer objects created by an `AlgebraOfGraphics` spec to create a
 vector of layers that each operate on a subset of the input data. Can be passed
 through to `draw` which will return a `Vector` of figures rather than a single
 figure.
@@ -93,17 +107,18 @@ function paginate(
 
     valid(a, b) = !isnothing(a) && !isnothing(b)
 
-    if valid(layout, limit)
-        return paginator(layer, data, layout, limit)
+    layers = if valid(layout, limit)
+        paginate_layer(layer, data, layout, limit)
     elseif valid(row, rows) && valid(col, columns)
-        return paginator(layer, data, (row, col), (rows, columns))
+        paginate_layer(layer, data, (row, col), (rows, columns))
     elseif valid(row, rows)
-        return paginator(layer, data, row, rows)
+        paginate_layer(layer, data, row, rows)
     elseif valid(col, columns)
-        return paginator(layer, data, col, columns)
+        paginate_layer(layer, data, col, columns)
     else
-        return Paginate([layer])
+        [layer]
     end
+    PaginatedLayers(layers, layout, rows, columns)
 end
 
 function paginate(
@@ -113,7 +128,8 @@ function paginate(
         columns = nothing,
     )
     inverted = [paginate(layer; limit, rows, columns).each for layer in layers]
-    return Paginate(Layers.(invert(inverted)))
+    layers = map(Layers, invert(inverted))
+    return PaginatedLayers(layers, limit, rows, columns)
 end
 
 
