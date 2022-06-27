@@ -1,6 +1,6 @@
 # Dispatcher type for `draw` usage.
 struct PaginatedLayers
-    each::Vector
+    each::Vector{Layers}
     layout::Union{Nothing, Int}
     row::Union{Nothing, Int}
     col::Union{Nothing, Int}
@@ -21,7 +21,7 @@ function Base.show(io::IO, p::PaginatedLayers)
 end
 
 """
-    draw(p::PaginatedLayerskws...)
+    draw(p::PaginatedLayers; kws...)
 
 Draw each element of `PaginatedLayers` `p` and return a `Vector{FigureGrid}`.
 Keywords `kws` are passed to the underlying `draw` calls.
@@ -56,6 +56,30 @@ colname(name) = name
 
 getcols(row, name) = getcolumn(row, name)
 getcols(row, name::Tuple) = map(n -> getcolumn(row, n), name)
+
+function paginate_layer(layer::Layer; layout = nothing, row = nothing, col = nothing)
+    named = layer.named
+    data = layer.data
+
+    layoutspec = get(named, :layout, nothing)
+    rowspec = get(named, :row, nothing)
+    colspec = get(named, :col, nothing)
+
+    valid(a, b) = !isnothing(a) && !isnothing(b)
+
+    layers = if valid(layoutspec, layout)
+        paginate_layer(layer, data, layoutspec, layout)
+    elseif valid(rowspec, row) && valid(colspec, col)
+        paginate_layer(layer, data, (rowspec, colspec), (row, col))
+    elseif valid(rowspec, row)
+        paginate_layer(layer, data, rowspec, row)
+    elseif valid(col, col)
+        paginate_layer(layer, data, col, col)
+    else
+        [layer]
+    end
+    return layers
+end
 
 function paginate_layer(layer::Layer, data, spec, limiter)
     name = colname(spec)
@@ -98,9 +122,9 @@ function paginate_layer(layer::Layer, data, (row, col)::Tuple, (rows, columns)::
 end
 
 """
-    paginate(layers; layout, row, col)
+    paginate(l; layout = nothing, row = nothing, col = nothing)
 
-Paginate the `Layer` or `Layers` object created by an `AlgebraOfGraphics` spec to create a
+Paginate `l`, the `Layer` or `Layers` object created by an `AlgebraOfGraphics` spec, to create a
 `PaginatedLayers` object.
 This contains a vector of layers where each layer operates on a subset of the input data.
 
@@ -132,44 +156,14 @@ paginated_2 = paginate(layer_2, row = 4, col = 3)
 figuregrid = draw(paginated_2, 1) # draw only the first grid
 ```
 """
-function paginate end
-
 function paginate(
-        layer::Layer;
+        l::Union{Layer, Layers};
         layout = nothing,
         row = nothing,
         col = nothing,
     )
-    named = layer.named
-    data = layer.data
-
-    layoutspec = get(named, :layout, nothing)
-    rowspec = get(named, :row, nothing)
-    colspec = get(named, :col, nothing)
-
-    valid(a, b) = !isnothing(a) && !isnothing(b)
-
-    layers = if valid(layoutspec, layout)
-        paginate_layer(layer, data, layoutspec, layout)
-    elseif valid(rowspec, row) && valid(colspec, col)
-        paginate_layer(layer, data, (rowspec, colspec), (row, col))
-    elseif valid(rowspec, row)
-        paginate_layer(layer, data, rowspec, row)
-    elseif valid(col, col)
-        paginate_layer(layer, data, col, col)
-    else
-        [layer]
-    end
-    PaginatedLayers(layers, layout, row, col)
-end
-
-function paginate(
-        layers::Layers;
-        layout = nothing,
-        row = nothing,
-        col = nothing,
-    )
-    inverted = [paginate(layer; layout, row, col).each for layer in layers]
+    layers = l isa Layer ? Layers([l]) : l
+    inverted = [paginate_layer(layer; layout, row, col) for layer in layers]
     layers = map(Layers, invert(inverted))
     return PaginatedLayers(layers, layout, row, col)
 end
