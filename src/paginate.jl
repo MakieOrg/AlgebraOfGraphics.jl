@@ -36,7 +36,12 @@ Keywords `kws` are passed to the underlying `draw` call.
 
 You can retrieve the number of elements using `length(p)`.
 """
-draw(p::PaginatedLayers, i::Int; kws...) = draw(p.each[i]; kws...)
+function draw(p::PaginatedLayers, i::Int; kws...)
+    if i ∉ 1:length(p)
+        throw(ArgumentError("Invalid index $i for PaginatedLayers with $(length(p)) entries."))
+    end
+    draw(p.each[i]; kws...)
+end
 
 function getsets(layer, data, column, by)
     func(column::Tuple) = sort!(unique(Iterators.product((getcolumn(data, c) for c in column)...)))
