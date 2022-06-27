@@ -85,7 +85,7 @@ figuregrids = draw(pag)
 
 # You can either extract single figures from this vector...
 
-figuregrid[1]
+figuregrids[1]
 
 # or use `draw` with an optional second argument specifying the index of the page to draw.
 
