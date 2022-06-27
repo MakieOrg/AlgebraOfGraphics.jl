@@ -13,10 +13,11 @@ function Base.show(io::IO, p::PaginatedLayers)
         !isnothing ∘ last,
         [key => getfield(p, key) for key in (:layout, :row, :col)]
     )
-    _info_str = join(("$key = $value" for (key, value) in _info), ", ")
+    _info_str = isempty(_info) ? "no limits set" :
+        join(("$key = $value" for (key, value) in _info), ", ")
     n = length(p)
     entry_str = n == 1 ? "1 entry" : "$n entries"
-    print(io, "PaginatedLayers with $entry_str ($(isempty(_info_str) ? "no limits set" : _info_str))")
+    print(io, "PaginatedLayers with $entry_str ($_info_str)")
 end
 
 """
