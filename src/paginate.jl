@@ -8,16 +8,33 @@ end
 
 Base.length(p::PaginatedLayers) = length(p.each)
 
-function show(io::IO, p::PaginatedLayers)
+function Base.show(io::IO, p::PaginatedLayers)
     _info = filter(
         !isnothing ∘ last,
         [key => getfield(p, key) for key in (:layout, :row, :col)]
     )
     _info_str = join(("$key = $value" for (key, value) in _info), ", ")
-    print(io, "PaginatedLayers with $(length(p)) entries ($(isempty(_info_str) ? "no limits" : _info_str))")
+    n = length(p)
+    entry_str = n == 1 ? "1 entry" : "$n entries"
+    print(io, "PaginatedLayers with $entry_str ($(isempty(_info_str) ? "no limits set" : _info_str))")
 end
 
+"""
+    draw(p::PaginatedLayerskws...)
+
+Draw each element of `PaginatedLayers` `p` and return a `Vector{FigureGrid}`.
+Keywords `kws` are passed to the underlying `draw` calls.
+"""
 draw(p::PaginatedLayers; kws...) = draw.(p.each; kws...)
+
+"""
+    draw(p::PaginatedLayers, i::Int; kws...)
+
+Draw the ith element of `PaginatedLayers` `p` and return a `FigureGrid`.
+Keywords `kws` are passed to the underlying `draw` call.
+
+You can retrieve the number of elements using `length(p)`.
+"""
 draw(p::PaginatedLayers, i::Int; kws...) = draw(p.each[i]; kws...)
 
 function getsets(layer, data, column, by)
@@ -110,7 +127,7 @@ function paginate(
     layers = if valid(layoutspec, layout)
         paginate_layer(layer, data, layoutspec, layout)
     elseif valid(rowspec, row) && valid(colspec, col)
-        paginate_layer(layer, data, (rowspec, col), (rowspec, col))
+        paginate_layer(layer, data, (rowspec, colspec), (row, col))
     elseif valid(rowspec, row)
         paginate_layer(layer, data, rowspec, row)
     elseif valid(col, col)
