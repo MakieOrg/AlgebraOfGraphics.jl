@@ -79,7 +79,7 @@ function paginate_layer(layer::Layer; layout = nothing, row = nothing, col = not
     elseif valid(rowspec, row)
         paginate_layer(layer, data, rowspec, row)
     elseif valid(col, col)
-        paginate_layer(layer, data, col, col)
+        paginate_layer(layer, data, colspec, col)
     else
         [layer]
     end

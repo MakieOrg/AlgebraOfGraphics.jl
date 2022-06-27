@@ -37,9 +37,13 @@
         @test length(pag) == 10
         pag = paginate(spec, row = 10, col = 1)
         @test length(pag) == 10
-        pag = paginate(spec, row = 3, col = 3)
-        @test length(pag) == 16
         pag = paginate(spec, row = 10, col = 10)
         @test length(pag) == 1
+        pag = paginate(spec, row = 3, col = 3)
+        @test length(pag) == 16
+        pag = paginate(spec, row = 5)
+        @test length(pag) == 2
+        pag = paginate(spec, col = 5)
+        @test length(pag) == 2
     end
 end
