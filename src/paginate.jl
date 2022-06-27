@@ -113,7 +113,40 @@ function paginate(
         columns = nothing,
     )
     inverted = [paginate(layer; limit, rows, columns).each for layer in layers]
-    return Paginate(Layers.(SplitApplyCombine.invert(inverted)))
+    return Paginate(Layers.(invert(inverted)))
+end
+
+
+# copied from SplitApplyCombine.jl to avoid full dependency 
+function invert(a::AbstractArray{T}) where {T <: AbstractArray}
+    f = first(a)
+    innersize = size(a)
+    outersize = size(f)
+    innerkeys = keys(a)
+    outerkeys = keys(f)
+
+    @boundscheck for x in a
+        if size(x) != outersize
+            error("keys don't match")
+        end
+    end
+
+    out = Array{Array{eltype(T),length(innersize)}}(undef, outersize)
+    @inbounds for i in outerkeys
+        out[i] = Array{eltype(T)}(undef, innersize)
+    end
+
+    return _invert!(out, a, innerkeys, outerkeys)
+end
+
+function _invert!(out, a, innerkeys, outerkeys)
+    @inbounds for i ∈ innerkeys
+        tmp = a[i]
+        for j ∈ outerkeys
+            out[j][i] = tmp[j]
+        end
+    end
+    return out
 end
 
 # Reshape the vector `v` to `N` axes.
