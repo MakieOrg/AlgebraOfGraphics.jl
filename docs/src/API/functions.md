@@ -7,6 +7,7 @@ draw
 draw!
 colorbar!
 legend!
+paginate
 ```
 
 ## Mapping helpers
