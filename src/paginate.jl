@@ -97,15 +97,39 @@ function paginate_layer(layer::Layer, data, (row, col)::Tuple, (rows, columns)::
 end
 
 """
-    paginate(layers; limit, rows, columns)
-PaginatedLayers the layer objects created by an `AlgebraOfGraphics` spec to create a
-vector of layers that each operate on a subset of the input data. Can be passed
-through to `draw` which will return a `Vector` of figures rather than a single
-figure.
-The following keywords must be combined to create suitable paginations:
-  - `limit` and `layout` or,
-  - `rows` and `row` and/or,
-  - `columns` and `col`
+    paginate(layers; layout, row, col)
+
+Paginate the `Layer` or `Layers` object created by an `AlgebraOfGraphics` spec to create a
+`PaginatedLayers` object.
+This contains a vector of layers where each layer operates on a subset of the input data.
+
+The `PaginatedLayers` object can be passed to `draw` which will return a `Vector{FigureGrid}`
+rather than a single figure.
+
+The keywords that limit the number of subplots on each page are the same that are used
+to specify facets in `mapping`:
+  - `layout`: Maximum number of subplots in a wrapped linear layout.
+  - `row`: Maximum number of rows in a 2D layout.
+  - `col`: Maximum number of columns in a 2D layout.
+
+## Example
+
+```
+d = data((
+    x = rand(1000),
+    y = rand(1000),
+    group1 = rand(string.('a':'i'), 1000),
+    group2 = rand(string.('j':'r'), 1000),
+))
+
+layer_1 = d * mapping(:x, :y, layout = :group1) * visual(Scatter)
+paginated_1 = paginate(layer_1, layout = 9)
+figuregrids = draw(paginated_1)
+
+layer_2 = d * mapping(:x, :y, row = :group1, col = :group2) * visual(Scatter)
+paginated_2 = paginate(layer_2, row = 4, col = 3)
+figuregrid = draw(paginated_2, 1) # draw only the first grid
+```
 """
 function paginate end
 
