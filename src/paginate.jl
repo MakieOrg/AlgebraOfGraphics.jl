@@ -1,9 +1,9 @@
 # Dispatcher type for `draw` usage.
 struct PaginatedLayers
     each::Vector
-    limit::Union{Nothing, Int}
-    rows::Union{Nothing, Int}
-    columns::Union{Nothing, Int}
+    layout::Union{Nothing, Int}
+    row::Union{Nothing, Int}
+    col::Union{Nothing, Int}
 end
 
 Base.length(p::PaginatedLayers) = length(p.each)
@@ -11,10 +11,10 @@ Base.length(p::PaginatedLayers) = length(p.each)
 function show(io::IO, p::PaginatedLayers)
     _info = filter(
         !isnothing ∘ last,
-        [key => getfield(p, key) for key in (:limit, :rows, :columns)]
+        [key => getfield(p, key) for key in (:layout, :row, :col)]
     )
     _info_str = join(("$key = $value" for (key, value) in _info), ", ")
-    print(io, "PaginatedLayers with $(length(p)) entries ($_info_str)")
+    print(io, "PaginatedLayers with $(length(p)) entries ($(isempty(_info_str) ? "no limits" : _info_str))")
 end
 
 draw(p::PaginatedLayers; kws...) = draw.(p.each; kws...)
@@ -94,44 +94,43 @@ function paginate end
 
 function paginate(
         layer::Layer;
-        limit = nothing,
-        rows = nothing,
-        columns = nothing,
+        layout = nothing,
+        row = nothing,
+        col = nothing,
     )
     named = layer.named
     data = layer.data
 
-    layout = get(named, :layout, nothing)
-    row = get(named, :row, nothing)
-    col = get(named, :col, nothing)
+    layoutspec = get(named, :layout, nothing)
+    rowspec = get(named, :row, nothing)
+    colspec = get(named, :col, nothing)
 
     valid(a, b) = !isnothing(a) && !isnothing(b)
 
-    layers = if valid(layout, limit)
-        paginate_layer(layer, data, layout, limit)
-    elseif valid(row, rows) && valid(col, columns)
-        paginate_layer(layer, data, (row, col), (rows, columns))
-    elseif valid(row, rows)
-        paginate_layer(layer, data, row, rows)
-    elseif valid(col, columns)
-        paginate_layer(layer, data, col, columns)
+    layers = if valid(layoutspec, layout)
+        paginate_layer(layer, data, layoutspec, layout)
+    elseif valid(rowspec, row) && valid(colspec, col)
+        paginate_layer(layer, data, (rowspec, col), (rowspec, col))
+    elseif valid(rowspec, row)
+        paginate_layer(layer, data, rowspec, row)
+    elseif valid(col, col)
+        paginate_layer(layer, data, col, col)
     else
         [layer]
     end
-    PaginatedLayers(layers, layout, rows, columns)
+    PaginatedLayers(layers, layout, row, col)
 end
 
 function paginate(
         layers::Layers;
-        limit = nothing,
-        rows = nothing,
-        columns = nothing,
+        layout = nothing,
+        row = nothing,
+        col = nothing,
     )
-    inverted = [paginate(layer; limit, rows, columns).each for layer in layers]
+    inverted = [paginate(layer; layout, row, col).each for layer in layers]
     layers = map(Layers, invert(inverted))
-    return PaginatedLayers(layers, limit, rows, columns)
+    return PaginatedLayers(layers, layout, row, col)
 end
-
 
 # copied from SplitApplyCombine.jl to avoid full dependency 
 function invert(a::AbstractArray{T}) where {T <: AbstractArray}
