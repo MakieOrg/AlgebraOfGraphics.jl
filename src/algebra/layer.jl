@@ -239,8 +239,8 @@ Process attributes of a `ProcessedLayer`. In particular,
 - remove AlgebraOfGraphics-specific layout attributes,
 - opt out of Makie cycling mechanism,
 - customize behavior of `color` (implementing `alpha` transparency),
-- set correct `colorrange`,
-- customize behavior of bar `width` (default to one unit when not specified).
+- customize behavior of bar `width` (default to one unit when not specified),
+- set correct `colorrange`.
 Return computed attributes.
 """
 function compute_attributes(pl::ProcessedLayer,
