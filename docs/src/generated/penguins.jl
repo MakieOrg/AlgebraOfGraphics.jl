@@ -156,9 +156,10 @@ using AlgebraOfGraphics: density
 plt = penguin_bill * density(npoints=50) * mapping(col = :species)
 draw(plt; axis)
 
-# The default colormap is multi-hue, but it is possible to pass single-hue colormaps as well:
+# The default colormap is multi-hue, but it is possible to pass single-hue colormaps as well.
+# The color range is inferred from the data by default, but it can also be passed manually.
 
-plt *= visual(colormap = :grayC)
+plt *= visual(colormap = :grayC, colorrange = (0, 6))
 draw(plt; axis)
 
 # A `Heatmap` (the default visualization for a 2D density) is a bit unfortunate if
