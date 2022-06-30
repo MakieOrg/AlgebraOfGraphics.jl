@@ -183,7 +183,3 @@ function _invert!(out, a, innerkeys, outerkeys)
     end
     return out
 end
-
-# Reshape the vector `v` to `N` axes.
-withshape(::Val{N}, v::AbstractVector) where N = reshape(v, ntuple(n -> ifelse(n < N, 1, length(v)), N))
-withshape(::AbstractArray{T,N}, v::AbstractVector) where {T,N} = withshape(Val{N}(), v)
