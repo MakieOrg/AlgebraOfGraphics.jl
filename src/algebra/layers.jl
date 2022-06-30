@@ -78,7 +78,7 @@ function compute_palettes(palettes)
     return foldl(merge!, (layout, theme_palettes, user_palettes), init=NamedArguments())
 end
 
-function compute_axes_grid(fig, s::OneOrMoreLayers;
+function compute_axes_grid(fig, s::Union{OneOrMoreLayers, ProcessedLayers};
                            axis=NamedTuple(), palettes=NamedTuple())
 
     axes_grid = compute_axes_grid(s; axis, palettes)
@@ -92,12 +92,18 @@ function compute_axes_grid(fig, s::OneOrMoreLayers;
 end
 
 function compute_axes_grid(s::OneOrMoreLayers;
-                           axis=NamedTuple(), palettes=NamedTuple())
-    layers::Layers = s
-    processedlayers = map(ProcessedLayer, layers)
+    axis=NamedTuple(), palettes=NamedTuple())
 
+    layers::Layers = s
+    processedlayers = ProcessedLayers(map(ProcessedLayer, layers))
+    compute_axes_grid(processedlayers; axis, palettes)
+end
+
+function compute_axes_grid(p::ProcessedLayers;
+                           axis=NamedTuple(), palettes=NamedTuple())
     palettes = compute_palettes(palettes)
 
+    processedlayers = p.layers
     categoricalscales = MixedArguments()
     for processedlayer in processedlayers
         mergewith!(
