@@ -60,7 +60,7 @@ colname(name) = name
 getcols(row, name) = getcolumn(row, name)
 getcols(row, name::Tuple) = map(n -> getcolumn(row, n), name)
 
-function paginate_layer(layer::ProcessedLayer; layout = nothing, row = nothing, col = nothing)
+function paginate_layer(layer::ProcessedLayer; layout=nothing, row=nothing, col=nothing)
     primary = layer.primary
 
     layout_data = get(primary, :layout, nothing)
@@ -105,7 +105,7 @@ function paginate_layer(layer::ProcessedLayer, data_limiter_pairs::Pair...)
 end
 
 """
-    paginate(l; layout = nothing, row = nothing, col = nothing)
+    paginate(l; layout=nothing, row=nothing, col=nothing)
 
 Paginate `l`, the `Layer` or `Layers` object created by an `AlgebraOfGraphics` spec, to create a
 `PaginatedLayers` object.
