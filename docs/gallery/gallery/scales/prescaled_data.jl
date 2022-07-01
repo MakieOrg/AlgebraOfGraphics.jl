@@ -6,6 +6,7 @@
 # ---
 
 using AlgebraOfGraphics, CairoMakie
+using CairoMakie.Makie
 using Colors
 set_aog_theme!() #src
 
@@ -16,13 +17,13 @@ df = (; x, y, z)
 plt = data(df) * mapping(:x, :y, color=:z => verbatim)
 draw(plt)
 
-#
+# Plotting labels instead of markers
 
 x = rand(100)
 y = rand(100)
 label = rand(["a", "b"], 100)
 df = (; x, y, label)
-plt = data(df) * mapping(:label => verbatim, (:x, :y) => Point) * visual(Annotations)
+plt = data(df) * mapping(:x, :y, text = :label => verbatim) * visual(Makie.Text)
 fg = draw(plt)
 
 
