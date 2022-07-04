@@ -6,7 +6,6 @@
 # ---
 
 using AlgebraOfGraphics, CairoMakie
-using CairoMakie.Makie
 using Colors
 set_aog_theme!() #src
 
