@@ -22,7 +22,7 @@ x = rand(100)
 y = rand(100)
 label = rand(["a", "b"], 100)
 df = (; x, y, label)
-plt = data(df) * mapping(:x, :y, text = :label => verbatim) * visual(Makie.Text)
+plt = data(df) * mapping(:x, :y, text=:label => verbatim) * visual(Makie.Text)
 fg = draw(plt)
 
 
