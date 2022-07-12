@@ -55,7 +55,7 @@ draw(penguin_frequency; axis)
 plt = penguin_frequency * mapping(color = :island)
 draw(plt; axis)
 
-# Ups! The bars are in the same spot and are hiding each other. We need to specify
+# Oops! The bars are in the same spot and are hiding each other. We need to specify
 # how we want to fix this. Bars can either `dodge` each other, or be `stack`ed on top
 # of each other.
 
