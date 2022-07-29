@@ -149,8 +149,8 @@ end
     for c in CartesianIndices(axs)
         i, j = Tuple(c)
         ax = axs[i, j]
-        @test ax.xaxislinks == setdiff(axs, [ax])
-        @test ax.yaxislinks == setdiff(axs[i, :], [ax])
+        @test issetequal(ax.xaxislinks, setdiff(axs, [ax]))
+        @test issetequal(ax.yaxislinks, setdiff(axs[i, :], [ax]))
     end
 
     fg = draw(plt; facet=(linkxaxes=:colwise, linkyaxes=:all))
@@ -159,8 +159,8 @@ end
     for c in CartesianIndices(axs)
         i, j = Tuple(c)
         ax = axs[i, j]
-        @test ax.xaxislinks == setdiff(axs[:, j], [ax])
-        @test ax.yaxislinks == setdiff(axs, [ax])
+        @test issetequal(ax.xaxislinks, setdiff(axs[:, j], [ax]))
+        @test issetequal(ax.yaxislinks, setdiff(axs, [ax]))
     end
 
     fg = draw(plt; facet=(linkxaxes=false, linkyaxes=false))
@@ -181,8 +181,8 @@ end
     for c in CartesianIndices(axs)
         i, j = Tuple(c)
         ax = axs[i, j]
-        @test ax.xaxislinks == setdiff(axs, [ax])
-        @test ax.yaxislinks == setdiff(axs[i, :], [ax])
+        @test issetequal(ax.xaxislinks, setdiff(axs, [ax]))
+        @test issetequal(ax.yaxislinks, setdiff(axs[i, :], [ax]))
     end
 
     df = (x=rand(100), y=rand(100), i=rand(["a", "b", "c", "d", "e"], 100))
@@ -193,8 +193,8 @@ end
     for c in CartesianIndices(axs)
         i, j = Tuple(c)
         ax = axs[i, j]
-        @test ax.xaxislinks == setdiff(axs, [ax])
-        @test ax.yaxislinks == setdiff(axs[i, :], [ax])
+        @test issetequal(ax.xaxislinks, setdiff(axs, [ax]))
+        @test issetequal(ax.yaxislinks, setdiff(axs[i, :], [ax]))
     end
     @test isempty(contents(fg.figure[2, 3]))
 end
