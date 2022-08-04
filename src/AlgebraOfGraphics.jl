@@ -25,7 +25,6 @@ using StatsBase: fit, histrange, Histogram, normalize, sturges, StatsBase
 import GLM, Loess
 import FileIO
 import RelocatableFolders
-import TableOperations
 
 export hideinnerdecorations!, deleteemptyaxes!
 export Layer, ProcessedLayer
