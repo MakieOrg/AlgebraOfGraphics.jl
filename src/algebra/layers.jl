@@ -92,7 +92,7 @@ function compute_axes_grid(fig, s::Union{OneOrMoreLayers, ProcessedLayers};
 end
 
 function compute_axes_grid(s::OneOrMoreLayers;
-    axis=NamedTuple(), palettes=NamedTuple())
+                           axis=NamedTuple(), palettes=NamedTuple())
 
     layers::Layers = s
     processedlayers = ProcessedLayers(map(ProcessedLayer, layers))
