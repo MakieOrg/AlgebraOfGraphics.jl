@@ -13,7 +13,7 @@ function update(f, fig)
     return output
 end
 
-function Makie.plot!(fig, s::OneOrMoreLayers;
+function Makie.plot!(fig, s::Union{OneOrMoreLayers, ProcessedLayers};
                      axis=NamedTuple(), palettes=NamedTuple())
     if isa(fig, Union{Axis, Axis3}) && !isempty(axis)
         @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $axis.")
@@ -23,7 +23,7 @@ function Makie.plot!(fig, s::OneOrMoreLayers;
     return grid
 end
 
-function Makie.plot(s::OneOrMoreLayers;
+function Makie.plot(s::Union{OneOrMoreLayers, ProcessedLayers};
                     axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
     fig = Figure(; figure...)
     grid = plot!(fig, s; axis, palettes)
@@ -39,7 +39,7 @@ to `figure`, or custom palettes to `palettes`.
 Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@ref),
 [`legend!`](@ref), and [`colorbar!`](@ref) independently.
 """
-function draw(s::OneOrMoreLayers;
+function draw(s::Union{OneOrMoreLayers, ProcessedLayers};
               axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple(),
               facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple())
     return update(Figure(; figure...)) do f
@@ -61,7 +61,7 @@ Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) o
 The output can be customized by giving axis attributes to `axis` or custom palettes
 to `palettes`.  
 """
-function draw!(fig, s::OneOrMoreLayers;
+function draw!(fig, s::Union{OneOrMoreLayers, ProcessedLayers};
                axis=NamedTuple(), palettes=NamedTuple(), facet=NamedTuple())
     return update(fig) do f
         ag = plot!(f, s; axis, palettes)

@@ -12,6 +12,8 @@ using AlgebraOfGraphics: consistent_xlabels, consistent_ylabels, colwise_consist
 using AlgebraOfGraphics: col_labels!, row_labels!, panel_labels!, span_xlabel!, span_ylabel!
 using AlgebraOfGraphics: compute_axes_grid
 using AlgebraOfGraphics: Arguments, MixedArguments, NamedArguments
+using AlgebraOfGraphics: FigureGrid
+using AlgebraOfGraphics: Layer, Layers, ProcessedLayer, ProcessedLayers
 
 using Makie: automatic
 using GridLayoutBase: Protrusion
@@ -35,3 +37,4 @@ include("helpers.jl")
 include("facet.jl")
 include("legend.jl")
 include("geometry.jl")
+include("paginate.jl")

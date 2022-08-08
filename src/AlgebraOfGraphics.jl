@@ -2,7 +2,7 @@ module AlgebraOfGraphics
 
 using Base: front, tail
 using Dates
-using Tables: rows, columns, getcolumn, columnnames
+using Tables: rows, columns, getcolumn, columnnames, columntable
 using StructArrays: StructArrays, components, uniquesorted, GroupPerm, StructArray
 using GeometryBasics: AbstractGeometry, Polygon, MultiPolygon
 using GeoInterface: coordinates, isgeometry, geomtrait, PolygonTrait, MultiPolygonTrait
@@ -36,6 +36,7 @@ export datetimeticks
 export draw, draw!
 export facet!, colorbar!, legend!
 export set_aog_theme!
+export paginate
 
 include("dict.jl")
 include("theme.jl")
@@ -62,5 +63,6 @@ include("guides/legendelements.jl")
 include("guides/legend.jl")
 include("guides/colorbar.jl")
 include("draw.jl")
+include("paginate.jl")
 
 end

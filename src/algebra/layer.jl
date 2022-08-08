@@ -40,6 +40,10 @@ Base.@kwdef struct ProcessedLayer
     attributes::NamedArguments=NamedArguments()
 end
 
+struct ProcessedLayers
+    layers::Vector{ProcessedLayer}
+end
+
 function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
     nt = (;
         processedlayer.plottype,

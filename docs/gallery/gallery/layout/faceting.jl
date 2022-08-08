@@ -70,6 +70,32 @@ df = (x=rand(100), y=rand(100), l=rand([1, 2, 3, 4, 5], 100))
 plt = data(df) * mapping(:x, :y, layout=:l => nonnumeric)
 draw(plt)
 
+# ## Pagination
+#
+# If you have too many facets for one figure, you can use `paginate` to split the data into several subsets
+# given a maximum number of plots per layout, row or column.
+
+# Note that pagination is considered an experimental feature.
+# In the current implementation, scales and layouts are not synchronized across pages.
+# This means that, e.g., linked limits on one page are not influenced by limits of other pages.
+# The exact synchronization behavior can be subject to change in non-breaking versions.
+
+df = (x=rand(500), y=rand(500), l=rand(["a", "b", "c", "d", "e", "f", "g", "h"], 500))
+plt = data(df) * mapping(:x, :y, layout=:l)
+pag = paginate(plt, layout = 4)
+
+# The object returned from `draw` will be a `Vector{FigureGrid}`.
+
+figuregrids = draw(pag)
+
+# You can either extract single figures from this vector...
+
+figuregrids[1]
+
+# or use `draw` with an optional second argument specifying the index of the page to draw.
+
+draw(pag, 2)
+
 # save cover image #src
 mkpath("assets") #src
 save("assets/faceting.png", fg) #src
