@@ -24,7 +24,7 @@ function Base.append!(e1::Entry, e2::Entry)
     return Entry(plottype, positional, named)
 end
 
-# Use technique from https://github.com/JuliaPlots/AlgebraOfGraphics.jl/pull/289
+# Use technique from https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/289
 # to encode all axis information without creating the axis.
 struct AxisSpec
     type::Union{Type{Axis}, Type{Axis3}}

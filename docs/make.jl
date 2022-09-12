@@ -20,7 +20,7 @@ gallery, postprocess_cb, gallery_assets = makedemos("gallery")
 makedocs(;
     modules=[AlgebraOfGraphics],
     authors="Pietro Vertechi",
-    repo="https://github.com/JuliaPlots/AlgebraOfGraphics.jl/blob/{commit}{path}#{line}",
+    repo="https://github.com/MakieOrg/AlgebraOfGraphics.jl/blob/{commit}{path}#{line}",
     sitename="Algebra of Graphics",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
@@ -57,6 +57,6 @@ makedocs(;
 postprocess_cb() # redirect url for DemoCards generated files
 
 deploydocs(;
-    repo="github.com/JuliaPlots/AlgebraOfGraphics.jl",
+    repo="github.com/MakieOrg/AlgebraOfGraphics.jl",
     push_preview=true,
 )
