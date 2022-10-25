@@ -27,7 +27,7 @@ import FileIO
 import RelocatableFolders
 
 export hideinnerdecorations!, deleteemptyaxes!
-export Layer, ProcessedLayer
+export Layer, Layers, ProcessedLayer
 export Entry, AxisEntries
 export renamer, sorter, nonnumeric, verbatim
 export density, histogram, linear, smooth, expectation, frequency
