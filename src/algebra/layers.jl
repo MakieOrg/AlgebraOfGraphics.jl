@@ -8,28 +8,28 @@ struct Layers
     layers::Vector{Layer}
 end
 
-Base.convert(::Type{Layers}, s::Layer) = Layers([s])
+Base.convert(::Type{Layers}, l::Layer) = Layers([l])
 
-Base.getindex(v::Layers, i::Int) = v.layers[i]
-Base.length(v::Layers) = length(v.layers)
+Base.getindex(layers::Layers, i::Int) = layers.layers[i]
+Base.length(layers::Layers) = length(layers.layers)
 Base.eltype(::Type{Layers}) = Layer
-Base.iterate(v::Layers, args...) = iterate(v.layers, args...)
+Base.iterate(layers::Layers, args...) = iterate(layers.layers, args...)
 
 const OneOrMoreLayers = Union{Layers, Layer}
 
-function Base.:+(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
-    l1::Layers, l2::Layers = s1, s2
-    return Layers(vcat(l1.layers, l2.layers))
+function Base.:+(l::OneOrMoreLayers, l′::OneOrMoreLayers)
+    layers::Layers, layers′::Layers = l, l′
+    return Layers(vcat(layers.layers, layers′.layers))
 end
 
-function Base.:*(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
-    l1::Layers, l2::Layers = s1, s2
-    return Layers([el1 * el2 for el1 in l1 for el2 in l2])
+function Base.:*(l::OneOrMoreLayers, l′::OneOrMoreLayers)
+    layers::Layers, layers′::Layers = l, l′
+    return Layers([layer * layer′ for layer in layers for layer′ in layers′])
 end
 
-function ProcessedLayers(s::OneOrMoreLayers)
-    l::Layers = s
-    return ProcessedLayers(map(ProcessedLayer, l))
+function ProcessedLayers(l::OneOrMoreLayers)
+    layers::Layers = l
+    return ProcessedLayers(map(ProcessedLayer, layers))
 end
 
 function compute_processedlayers_grid(processedlayers, categoricalscales)
@@ -82,10 +82,10 @@ function compute_palettes(palettes)
     return foldl(merge!, (layout, theme_palettes, user_palettes), init=NamedArguments())
 end
 
-function compute_axes_grid(fig, s::Union{OneOrMoreLayers, ProcessedLayers};
+function compute_axes_grid(fig, l::Union{OneOrMoreLayers, ProcessedLayers};
                            axis=NamedTuple(), palettes=NamedTuple())
 
-    axes_grid = compute_axes_grid(s; axis, palettes)
+    axes_grid = compute_axes_grid(l; axis, palettes)
     sz = size(axes_grid)
     if sz != (1, 1) && fig isa Axis
         msg = "You can only pass an `Axis` to `draw!` if the calculated layout only contains one element. Elements: $(sz)"
@@ -95,10 +95,10 @@ function compute_axes_grid(fig, s::Union{OneOrMoreLayers, ProcessedLayers};
     return map(ae -> AxisEntries(ae, fig), axes_grid)
 end
 
-function compute_axes_grid(s::OneOrMoreLayers;
+function compute_axes_grid(l::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
 
-    processedlayers = ProcessedLayers(s)
+    processedlayers = ProcessedLayers(l)
     compute_axes_grid(processedlayers; axis, palettes)
 end
 

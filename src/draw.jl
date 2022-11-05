@@ -13,37 +13,37 @@ function update(f, fig)
     return output
 end
 
-function Makie.plot!(fig, s::Union{OneOrMoreLayers, ProcessedLayers};
+function Makie.plot!(fig, l::Union{OneOrMoreLayers, ProcessedLayers};
                      axis=NamedTuple(), palettes=NamedTuple())
     if isa(fig, Union{Axis, Axis3}) && !isempty(axis)
         @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $axis.")
     end
-    grid = update(f -> compute_axes_grid(f, s; axis, palettes), fig)
+    grid = update(f -> compute_axes_grid(f, l; axis, palettes), fig)
     foreach(plot!, grid)
     return grid
 end
 
-function Makie.plot(s::Union{OneOrMoreLayers, ProcessedLayers};
+function Makie.plot(l::Union{OneOrMoreLayers, ProcessedLayers};
                     axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple())
     fig = Figure(; figure...)
-    grid = plot!(fig, s; axis, palettes)
+    grid = plot!(fig, l; axis, palettes)
     return FigureGrid(fig, grid)
 end
 
 """
-    draw(s; axis=NamedTuple(), figure=NamedTuple, palettes=NamedTuple())
+    draw(l; axis=NamedTuple(), figure=NamedTuple, palettes=NamedTuple())
 
-Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object `s`.
+Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object `l`.
 The output can be customized by giving axis attributes to `axis`, figure attributes
 to `figure`, or custom palettes to `palettes`.
 Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@ref),
 [`legend!`](@ref), and [`colorbar!`](@ref) independently.
 """
-function draw(s::Union{OneOrMoreLayers, ProcessedLayers};
+function draw(l::Union{OneOrMoreLayers, ProcessedLayers};
               axis=NamedTuple(), figure=NamedTuple(), palettes=NamedTuple(),
               facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple())
     return update(Figure(; figure...)) do f
-        grid = plot!(f, s; axis, palettes)
+        grid = plot!(f, l; axis, palettes)
         fg = FigureGrid(f, grid)
         facet!(fg; facet)
         colorbar!(fg; colorbar...)
@@ -54,17 +54,17 @@ function draw(s::Union{OneOrMoreLayers, ProcessedLayers};
 end
 
 """
-    draw!(fig, s; axis=NamedTuple(), palettes=NamedTuple())
+    draw!(fig, l; axis=NamedTuple(), palettes=NamedTuple())
 
-Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object `s` on `fig`.
-`fig` can be a figure, a position in a layout, or an axis if `s` has no facet specification.
+Draw a [`AlgebraOfGraphics.Layer`](@ref) or [`AlgebraOfGraphics.Layers`](@ref) object `l` on `fig`.
+`fig` can be a figure, a position in a layout, or an axis if `l` has no facet specification.
 The output can be customized by giving axis attributes to `axis` or custom palettes
 to `palettes`.  
 """
-function draw!(fig, s::Union{OneOrMoreLayers, ProcessedLayers};
+function draw!(fig, l::Union{OneOrMoreLayers, ProcessedLayers};
                axis=NamedTuple(), palettes=NamedTuple(), facet=NamedTuple())
     return update(fig) do f
-        ag = plot!(f, s; axis, palettes)
+        ag = plot!(f, l; axis, palettes)
         facet!(f, ag; facet)
         return ag
     end
