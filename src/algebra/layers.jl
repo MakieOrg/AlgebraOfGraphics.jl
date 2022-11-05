@@ -9,7 +9,6 @@ struct Layers
 end
 
 Base.convert(::Type{Layers}, s::Layer) = Layers([s])
-Base.convert(::Type{Layers}, s::Layers) = s
 
 Base.getindex(v::Layers, i::Int) = v.layers[i]
 Base.length(v::Layers) = length(v.layers)
@@ -26,6 +25,11 @@ end
 function Base.:*(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
     l1::Layers, l2::Layers = s1, s2
     return Layers([el1 * el2 for el1 in l1 for el2 in l2])
+end
+
+function ProcessedLayers(s::OneOrMoreLayers)
+    l::Layers = s
+    return ProcessedLayers(map(ProcessedLayer, l))
 end
 
 function compute_processedlayers_grid(processedlayers, categoricalscales)
@@ -94,8 +98,7 @@ end
 function compute_axes_grid(s::OneOrMoreLayers;
                            axis=NamedTuple(), palettes=NamedTuple())
 
-    layers::Layers = s
-    processedlayers = ProcessedLayers(map(ProcessedLayer, layers))
+    processedlayers = ProcessedLayers(s)
     compute_axes_grid(processedlayers; axis, palettes)
 end
 
