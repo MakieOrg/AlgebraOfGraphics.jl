@@ -65,4 +65,6 @@ include("guides/colorbar.jl")
 include("draw.jl")
 include("paginate.jl")
 
+include("precompiles.jl")
+
 end
