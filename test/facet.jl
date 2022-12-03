@@ -74,7 +74,7 @@ end
         @test label.padding[] == (0, 0, ax.titlegap[], 0)
         @test label.color[] == ax.titlecolor[]
         @test label.font[] == ax.titlefont[]
-        @test label.textsize[] == ax.titlesize[]
+        @test label.fontsize[] == ax.titlesize[]
         @test label.visible[] == ax.titlevisible[]
     end
 
@@ -88,7 +88,7 @@ end
         @test label.padding[] == (ax.titlegap[], 0, 0, 0)
         @test label.color[] == ax.titlecolor[]
         @test label.font[] == ax.titlefont[]
-        @test label.textsize[] == ax.titlesize[]
+        @test label.fontsize[] == ax.titlesize[]
         @test label.visible[] == ax.titlevisible[]
     end
 
@@ -111,7 +111,7 @@ end
         @test label.padding[] == (0, 0, ax.titlegap[], 0)
         @test label.color[] == ax.titlecolor[]
         @test label.font[] == ax.titlefont[]
-        @test label.textsize[] == ax.titlesize[]
+        @test label.fontsize[] == ax.titlesize[]
         @test label.visible[] == ax.titlevisible[]
     end
 end
@@ -127,7 +127,7 @@ end
     @test label.rotation[] == 0
     @test label.color[] == ax.xlabelcolor[]
     @test label.font[] == ax.xlabelfont[]
-    @test label.textsize[] == ax.xlabelsize[]
+    @test label.fontsize[] == ax.xlabelsize[]
     @test label.text[] == "xlabel"
     @test label in contents(fig[3, :, Bottom()])
 
@@ -135,7 +135,7 @@ end
     @test label.rotation[] ≈ π/2
     @test label.color[] == ax.ylabelcolor[]
     @test label.font[] == ax.ylabelfont[]
-    @test label.textsize[] == ax.ylabelsize[]
+    @test label.fontsize[] == ax.ylabelsize[]
     @test label.text[] == "ylabel"
     @test label in contents(fig[:, 1, Left()])
 end

@@ -42,7 +42,7 @@ function facet_labels!(fig, aes, scale, dir)
     ax = first(nonemptyaxes(aes))
     color = ax.titlecolor
     font = ax.titlefont
-    textsize = ax.titlesize
+    fontsize = ax.titlesize
     visible = ax.titlevisible
 
     padding_index = dir == :row ? 1 : 3
@@ -51,10 +51,10 @@ function facet_labels!(fig, aes, scale, dir)
     end
 
     return map(plotvalues(scale), datavalues(scale)) do index, label
-        rotation = dir == :row ? -π/2 : 0.0 
+        rotation = dir == :row ? -π/2 : 0.0
         figpos = dir == :col ? fig[1, index, Top()] :
                  dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]
-        return Label(figpos, to_string(label); rotation, padding, color, font, textsize, visible)
+        return Label(figpos, to_string(label); rotation, padding, color, font, fontsize, visible)
     end
 end
 
@@ -98,8 +98,8 @@ function span_label!(fig, aes, var)
     rotation = var == :x ? 0.0 : π/2
     color = getattr(ax, :labelcolor)
     font = getattr(ax, :labelfont)
-    textsize = getattr(ax, :labelsize)
-    return Label(fig[pos..., Side()], label; rotation, padding, color, font, textsize)
+    fontsize = getattr(ax, :labelsize)
+    return Label(fig[pos..., Side()], label; rotation, padding, color, font, fontsize)
 end
 
 span_xlabel!(fig, aes) = span_label!(fig, aes, :x)
@@ -217,7 +217,7 @@ hide_ydecorations!(ax) = hideydecorations!(ax; grid=false, minorgrid=false)
 function hideinnerdecorations!(aes::AbstractArray{AxisEntries};
                                hidexdecorations, hideydecorations, wrap)
     I, J = size(aes)
-        
+
     if hideydecorations
         for i in 1:I, j in 2:J
             hide_ydecorations!(aes[i,j])
