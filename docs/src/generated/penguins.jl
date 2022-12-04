@@ -31,10 +31,9 @@ first(penguins, 6)
 using AlgebraOfGraphics, CairoMakie
 set_aog_theme!()
 
-axis = (width = 225, height = 225)
 penguin_frequency = data(penguins) * frequency() * mapping(:species)
 
-draw(penguin_frequency; axis)
+draw(penguin_frequency; axis=(; width = 225, height = 225))
 
 # ### Small intermezzo: saving the plot
 #
