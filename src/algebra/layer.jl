@@ -195,6 +195,8 @@ function mergeable(processedlayer::ProcessedLayer)
     plottype <: Violin && return true
     # merge stacked barplots
     plottype <: BarPlot && haskey(primary, :stack) && return true
+    # merge waterfall plots
+    plottype <: Waterfall && return true
     # do not merge by default
     return false
 end
