@@ -9,13 +9,18 @@ using GeoInterface: coordinates, isgeometry, geomtrait, PolygonTrait, MultiPolyg
 using Colors: RGB, RGBA, red, green, blue, Color
 using PlotUtils: AbstractColorList
 using Makie
-using Makie: current_default_theme, to_value, automatic, Automatic, PlotFunc, ATTRIBUTES
-import Makie.MakieLayout: hidexdecorations!,
-                          hideydecorations!,
-                          hidedecorations!,
-                          linkaxes!,
-                          linkxaxes!,
-                          linkyaxes!
+using Makie: current_default_theme,
+             to_value,
+             automatic,
+             Automatic,
+             PlotFunc,
+             ATTRIBUTES,
+             hidexdecorations!,
+             hideydecorations!,
+             hidedecorations!,
+             linkaxes!,
+             linkxaxes!,
+             linkyaxes!
 using GridLayoutBase: update!, Protrusion, protrusionsobservable
 using PooledArrays: PooledArray
 using Dictionaries: AbstractDictionary, Dictionary, Indices, getindices, set!
