@@ -31,9 +31,10 @@ first(penguins, 6)
 using AlgebraOfGraphics, CairoMakie
 set_aog_theme!()
 
+axis = (width = 225, height = 225)
 penguin_frequency = data(penguins) * frequency() * mapping(:species)
 
-draw(penguin_frequency; axis=(; width = 225, height = 225))
+draw(penguin_frequency; axis=axis)
 
 # ### Small intermezzo: saving the plot
 #
@@ -43,7 +44,7 @@ draw(penguin_frequency; axis=(; width = 225, height = 225))
 # inspect it in the file explorer.
 #
 # ```julia
-# fg = draw(penguin_frequency; axis=(; width = 225, height = 225))
+# fg = draw(penguin_frequency; axis=axis)
 # save("figure.png", fg, px_per_unit = 3) # save high-resolution png
 # ```
 #
@@ -52,14 +53,14 @@ draw(penguin_frequency; axis=(; width = 225, height = 225))
 # Next, let us see whether the distribution is the same across islands.
 
 plt = penguin_frequency * mapping(color = :island)
-draw(plt; axis=(; width = 225, height = 225))
+draw(plt; axis=axis)
 
 # Oops! The bars are in the same spot and are hiding each other. We need to specify
 # how we want to fix this. Bars can either `dodge` each other, or be `stack`ed on top
 # of each other.
 
 plt = penguin_frequency * mapping(color = :island, dodge = :island)
-draw(plt; axis=(; width = 225, height = 225))
+draw(plt; axis=axis)
 
 # This is our first finding. `Adelie` is the only species of penguins that can be
 # found on all three islands. To be able to see both which species is more numerous
@@ -67,16 +68,15 @@ draw(plt; axis=(; width = 225, height = 225))
 # we could have used `stack`.
 
 plt = penguin_frequency * mapping(color = :island, stack = :island)
-draw(plt; axis=(; width = 225, height = 225))
+draw(plt; axis=axis)
 
 # ## Correlating two variables
 #
 # Now that we have understood the distribution of these three penguin species, we can
 # start analyzing their features.
 
-ax = (; width = 225, height = 225)
 penguin_bill = data(penguins) * mapping(:bill_length_mm, :bill_depth_mm)
-draw(penguin_bill; axis=ax)
+draw(penguin_bill; axis=axis)
 
 # We would actually prefer to visualize these measures in centimeters, and to have
 # cleaner axes labels. As we want this setting to be preserved in all of our `bill`
@@ -87,7 +87,7 @@ penguin_bill = data(penguins) * mapping(
     :bill_length_mm => (t -> t / 10) => "bill length (cm)",
     :bill_depth_mm => (t -> t / 10) => "bill depth (cm)",
 )
-draw(penguin_bill; axis=ax)
+draw(penguin_bill; axis=axis)
 
 # Much better! Note the parentheses around the function `t -> t / 10`. They are
 # necessary to specify that the function maps `t` to `t / 10`, and not to
@@ -97,32 +97,32 @@ draw(penguin_bill; axis=ax)
 # is odd. Maybe dividing the data by species will help.
 
 plt = penguin_bill * mapping(color = :species)
-draw(plt; axis=ax)
+draw(plt; axis=axis)
 
 # Ha! Within each species, penguins with a longer bill also have a deeper bill.
 # We can confirm that with a linear regression
 
 plt = penguin_bill * linear() * mapping(color = :species)
-draw(plt; axis=ax)
+draw(plt; axis=axis)
 
 # This unfortunately no longer shows our data!
 # We can use `+` to plot both things on top of each other:
 
 plt = penguin_bill * linear() * mapping(color = :species) + penguin_bill * mapping(color = :species)
-draw(plt; axis=ax)
+draw(plt; axis=axis)
 
 # Note that the above expression seems a bit redundant, as we wrote the same thing twice.
 # We can "factor it out" as follows
 
 plt = penguin_bill * (linear() + mapping()) * mapping(color = :species)
-draw(plt; axis=ax)
+draw(plt; axis=axis)
 
 # where `mapping()` is a neutral multiplicative element.
 # Of course, the above could be refactored as
 
 layers = linear() + mapping()
 plt = penguin_bill * layers * mapping(color = :species)
-draw(plt; axis=ax)
+draw(plt; axis=axis)
 
 # We could actually take advantage of the spare `mapping()` and use it to pass some
 # extra info to the scatter, while still using all the species members to compute
@@ -130,14 +130,14 @@ draw(plt; axis=ax)
 
 layers = linear() + mapping(marker = :sex)
 plt = penguin_bill * layers * mapping(color = :species)
-draw(plt; axis=ax)
+draw(plt; axis=axis)
 
 # This plot is getting a little bit crowded. We could instead show female and
 # male penguins in separate subplots.
 
 layers = linear() + mapping(col = :sex)
 plt = penguin_bill * layers * mapping(color = :species)
-draw(plt; axis=ax)
+draw(plt; axis=axis)
 
 # See how both plots show the same fit, because the `sex` mapping is not applied
 # to `linear()`. The following on the other hand produces a separate fit for
@@ -145,7 +145,7 @@ draw(plt; axis=ax)
 
 layers = linear() + mapping()
 plt = penguin_bill * layers * mapping(color = :species, col = :sex)
-draw(plt; axis=ax)
+draw(plt; axis=axis)
 
 # ## Smooth density plots
 #
@@ -154,13 +154,13 @@ draw(plt; axis=ax)
 
 using AlgebraOfGraphics: density
 plt = penguin_bill * density(npoints=50) * mapping(col = :species)
-draw(plt; axis=ax)
+draw(plt; axis=axis)
 
 # The default colormap is multi-hue, but it is possible to pass single-hue colormaps as well.
 # The color range is inferred from the data by default, but it can also be passed manually.
 
 plt *= visual(colormap = :grayC, colorrange = (0, 6))
-draw(plt; axis=ax)
+draw(plt; axis=axis)
 
 # A `Heatmap` (the default visualization for a 2D density) is a bit unfortunate if
 # we want to mark species by color. In that case, one can use `visual` to change
