@@ -28,3 +28,20 @@ draw(plt)
 # save cover image #src
 mkpath("assets") #src
 save("assets/legend_tweaking.png", fg) #src
+
+
+# Adding a plot to a pre-existing figure with `draw!` will not draw the legend
+# automatically.  In this case, one must use `legend!` and specify the axis to
+# which it should be added.
+#
+# The `tellheight = false, tellwidth = false` arguments are useful to avoid
+# changing the dimensions of the axis.
+
+makie_fig = Figure()
+ax_scatter = Axis(makie_fig[1, 1])
+
+grid = draw!(ax_scatter, plt)
+
+legend!(makie_fig[1, 1], grid; tellheight=false, tellwidth=false, halign=:right, valign=:top)
+
+makie_fig
