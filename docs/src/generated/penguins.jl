@@ -44,7 +44,7 @@ draw(penguin_frequency; axis=(; width = 225, height = 225))
 #
 # ```julia
 # fg = draw(penguin_frequency; axis=(; width = 225, height = 225))
-# save("figure.svg", fg)
+# save("figure.png", fg, px_per_unit = 3) # save high-resolution png
 # ```
 #
 # ### Styling by categorical variables
