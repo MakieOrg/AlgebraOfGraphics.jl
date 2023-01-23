@@ -10,7 +10,7 @@ using Colors: RGB, RGBA, red, green, blue, Color
 using PlotUtils: AbstractColorList
 using Makie
 using Makie: current_default_theme, to_value, automatic, Automatic, PlotFunc, ATTRIBUTES
-import Makie.MakieLayout: hidexdecorations!,
+import Makie: hidexdecorations!,
                           hideydecorations!,
                           hidedecorations!,
                           linkaxes!,
