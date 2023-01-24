@@ -7,7 +7,7 @@
 
 using AlgebraOfGraphics, CairoMakie
 using Shapefile, ZipFile
-using Downloads: download
+using Downloads
 set_aog_theme!() #src
 
 # Antarctic coastline. Data from the SCAR Antarctic Digital Database[^1].
@@ -16,8 +16,8 @@ set_aog_theme!() #src
 
 ## Download, extract, and load shapefile
 t = mktempdir() do dir
-    url = "https://data.bas.ac.uk/download/7be3ab29-7caa-46b8-a355-2e3233796e86"
-    r = ZipFile.Reader(seekstart(download(url, IOBuffer())))
+    url = "https://ramadda.data.bas.ac.uk/repository/entry/get/add_coastline_medium_res_polygon_v7_4.zip?entryid=synth%3Ae747e63e-9d93-49c2-bafc-cf3d3f8e5afa%3AL2FkZF9jb2FzdGxpbmVfbWVkaXVtX3Jlc19wb2x5Z29uX3Y3XzQuemlw"
+    r = ZipFile.Reader(seekstart(Downloads.download(url, IOBuffer())))
     for f in r.files
         open(joinpath(dir, f.name), write = true) do io
             write(io, read(f, String));
