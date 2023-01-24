@@ -36,8 +36,8 @@ struct ProcessedLayers <: AbstractDrawable
     layers::Vector{ProcessedLayer}
 end
 
-function ProcessedLayers(l::AbstractAlgebraic)
-    layers::Layers = l
+function ProcessedLayers(a::AbstractAlgebraic)
+    layers::Layers = a
     return ProcessedLayers(map(process, layers))
 end
 
