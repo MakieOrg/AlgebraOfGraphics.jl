@@ -94,3 +94,10 @@ function process_mappings(layer::Layer)
     primary, named = separate(iscategoricalcontainer, named)
     return ProcessedLayer(; primary, positional, named, labels)
 end
+
+function process(layer::Layer)
+    processedlayer = process_mappings(layer)
+    grouped_entry = isnothing(layer.data) ? processedlayer : group(processedlayer)
+    primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
+    return layer.transformation(ProcessedLayer(grouped_entry; primary))
+end

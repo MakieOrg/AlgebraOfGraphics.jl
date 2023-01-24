@@ -1,4 +1,18 @@
 """
+    AbstractDrawable
+
+Abstract type encoding objects that can be drawn via [`AlgebraOfGraphics.draw`](@ref).
+"""
+abstract type AbstractDrawable end
+
+"""
+    AbstractAlgebraic  <: AbstractDrawable
+
+Abstract type encoding objects that can be combined together using `+` and `*`.
+"""
+abstract type AbstractAlgebraic <: AbstractDrawable end
+
+"""
     Layer(transformation, data, positional::AbstractVector, named::AbstractDictionary)
 
 Algebraic object encoding a single layer of a visualization. It is composed of a dataset,
@@ -6,7 +20,7 @@ positional and named arguments, as well as a transformation to be applied to tho
 `Layer` objects can be multiplied, yielding a novel `Layer` object, or added,
 yielding a [`AlgebraOfGraphics.Layers`](@ref) object.
 """
-Base.@kwdef struct Layer
+Base.@kwdef struct Layer <: AbstractAlgebraic
     transformation::Any=identity
     data::Any=nothing
     positional::Arguments=Arguments()
@@ -21,27 +35,23 @@ mapping(args...; kwargs...) = Layer(positional=collect(Any, args), named=NamedAr
 
 ⨟(f, g) = f === identity ? g : g === identity ? f : g ∘ f
 
-function Base.:*(l1::Layer, l2::Layer)
-    transformation = l1.transformation ⨟ l2.transformation
-    data = isnothing(l2.data) ? l1.data : l2.data
-    positional = vcat(l1.positional, l2.positional)
-    named = merge(l1.named, l2.named)
+function Base.:*(l::Layer, l′::Layer)
+    transformation = l.transformation ⨟ l′.transformation
+    data = isnothing(l′.data) ? l.data : l′.data
+    positional = vcat(l.positional, l′.positional)
+    named = merge(l.named, l′.named)
     return Layer(; transformation, data, positional, named)
 end
 
 ## Format for layer after processing
 
-Base.@kwdef struct ProcessedLayer
+Base.@kwdef struct ProcessedLayer <: AbstractDrawable
     plottype::PlotFunc=Any
     primary::NamedArguments=NamedArguments()
     positional::Arguments=Arguments()
     named::NamedArguments=NamedArguments()
     labels::MixedArguments=MixedArguments()
     attributes::NamedArguments=NamedArguments()
-end
-
-struct ProcessedLayers
-    layers::Vector{ProcessedLayer}
 end
 
 function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
@@ -59,14 +69,14 @@ end
 """
     ProcessedLayer(layer::Layer)
 
-Convert `layer` to equivalent processed layer.
+Output of processing a `layer`. A `ProcessedLayer` encodes
+- plot type,
+- grouping arguments,
+- positional and named arguments for the plot,
+- labeling information,
+- visual attributes.
 """
-function ProcessedLayer(layer::Layer)
-    processedlayer = process_mappings(layer)
-    grouped_entry = isnothing(layer.data) ? processedlayer : group(processedlayer)
-    primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
-    return layer.transformation(ProcessedLayer(grouped_entry; primary))
-end
+ProcessedLayer(layer::Layer) = process(layer)
 
 unnest(vs::AbstractArray, indices) = map(k -> [el[k] for el in vs], indices)
 
