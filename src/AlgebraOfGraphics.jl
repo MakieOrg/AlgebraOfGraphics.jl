@@ -11,11 +11,11 @@ using PlotUtils: AbstractColorList
 using Makie
 using Makie: current_default_theme, to_value, automatic, Automatic, PlotFunc, ATTRIBUTES
 import Makie: hidexdecorations!,
-                          hideydecorations!,
-                          hidedecorations!,
-                          linkaxes!,
-                          linkxaxes!,
-                          linkyaxes!
+              hideydecorations!,
+              hidedecorations!,
+              linkaxes!,
+              linkxaxes!,
+              linkyaxes!
 using GridLayoutBase: update!, Protrusion, protrusionsobservable
 using PooledArrays: PooledArray
 using Dictionaries: AbstractDictionary, Dictionary, Indices, getindices, set!
