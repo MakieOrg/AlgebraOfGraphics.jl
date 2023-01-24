@@ -38,7 +38,7 @@ end
 
 function ProcessedLayers(l::AbstractAlgebraic)
     layers::Layers = l
-    return ProcessedLayers(map(ProcessedLayer, layers))
+    return ProcessedLayers(map(process, layers))
 end
 
 ProcessedLayers(p::ProcessedLayer) = ProcessedLayers([p])
@@ -111,8 +111,7 @@ function compute_axes_grid(d::AbstractDrawable;
                            axis=NamedTuple(), palettes=NamedTuple())
     palettes = compute_palettes(palettes)
 
-    p = ProcessedLayers(d)
-    processedlayers = p.layers
+    processedlayers = ProcessedLayers(d).layers
     categoricalscales = MixedArguments()
     for processedlayer in processedlayers
         mergewith!(
