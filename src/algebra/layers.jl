@@ -4,29 +4,45 @@
 Algebraic object encoding a list of [`AlgebraOfGraphics.Layer`](@ref) objects.
 `Layers` objects can be added or multiplied, yielding a novel `Layers` object.
 """
-struct Layers
+struct Layers <: AbstractAlgebraic
     layers::Vector{Layer}
 end
 
-Base.convert(::Type{Layers}, s::Layer) = Layers([s])
-Base.convert(::Type{Layers}, s::Layers) = s
+Base.convert(::Type{Layers}, l::Layer) = Layers([l])
 
-Base.getindex(v::Layers, i::Int) = v.layers[i]
-Base.length(v::Layers) = length(v.layers)
+Base.getindex(layers::Layers, i::Int) = layers.layers[i]
+Base.length(layers::Layers) = length(layers.layers)
 Base.eltype(::Type{Layers}) = Layer
-Base.iterate(v::Layers, args...) = iterate(v.layers, args...)
+Base.iterate(layers::Layers, args...) = iterate(layers.layers, args...)
 
-const OneOrMoreLayers = Union{Layers, Layer}
-
-function Base.:+(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
-    l1::Layers, l2::Layers = s1, s2
-    return Layers(vcat(l1.layers, l2.layers))
+function Base.:+(a::AbstractAlgebraic, a′::AbstractAlgebraic)
+    layers::Layers, layers′::Layers = a, a′
+    return Layers(vcat(layers.layers, layers′.layers))
 end
 
-function Base.:*(s1::OneOrMoreLayers, s2::OneOrMoreLayers)
-    l1::Layers, l2::Layers = s1, s2
-    return Layers([el1 * el2 for el1 in l1 for el2 in l2])
+function Base.:*(a::AbstractAlgebraic, a′::AbstractAlgebraic)
+    layers::Layers, layers′::Layers = a, a′
+    return Layers([layer * layer′ for layer in layers for layer′ in layers′])
 end
+
+"""
+    ProcessedLayers(layers::Vector{ProcessedLayer})
+
+Object encoding a list of [`AlgebraOfGraphics.ProcessedLayer`](@ref) objects.
+`ProcessedLayers` objects are the output of the processing pipeline and can be
+drawn without further processing.
+"""
+struct ProcessedLayers <: AbstractDrawable
+    layers::Vector{ProcessedLayer}
+end
+
+function ProcessedLayers(a::AbstractAlgebraic)
+    layers::Layers = a
+    return ProcessedLayers(map(process, layers))
+end
+
+ProcessedLayers(p::ProcessedLayer) = ProcessedLayers([p])
+ProcessedLayers(p::ProcessedLayers) = p
 
 function compute_processedlayers_grid(processedlayers, categoricalscales)
     indices = CartesianIndices(compute_grid_positions(categoricalscales))
@@ -78,10 +94,10 @@ function compute_palettes(palettes)
     return foldl(merge!, (layout, theme_palettes, user_palettes), init=NamedArguments())
 end
 
-function compute_axes_grid(fig, s::Union{OneOrMoreLayers, ProcessedLayers};
+function compute_axes_grid(fig, d::AbstractDrawable;
                            axis=NamedTuple(), palettes=NamedTuple())
 
-    axes_grid = compute_axes_grid(s; axis, palettes)
+    axes_grid = compute_axes_grid(d; axis, palettes)
     sz = size(axes_grid)
     if sz != (1, 1) && fig isa Axis
         msg = "You can only pass an `Axis` to `draw!` if the calculated layout only contains one element. Elements: $(sz)"
@@ -91,19 +107,11 @@ function compute_axes_grid(fig, s::Union{OneOrMoreLayers, ProcessedLayers};
     return map(ae -> AxisEntries(ae, fig), axes_grid)
 end
 
-function compute_axes_grid(s::OneOrMoreLayers;
-                           axis=NamedTuple(), palettes=NamedTuple())
-
-    layers::Layers = s
-    processedlayers = ProcessedLayers(map(ProcessedLayer, layers))
-    compute_axes_grid(processedlayers; axis, palettes)
-end
-
-function compute_axes_grid(p::ProcessedLayers;
+function compute_axes_grid(d::AbstractDrawable;
                            axis=NamedTuple(), palettes=NamedTuple())
     palettes = compute_palettes(palettes)
 
-    processedlayers = p.layers
+    processedlayers = ProcessedLayers(d).layers
     categoricalscales = MixedArguments()
     for processedlayer in processedlayers
         mergewith!(

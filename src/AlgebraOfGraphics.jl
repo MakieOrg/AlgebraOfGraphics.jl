@@ -9,7 +9,7 @@ using GeoInterface: coordinates, isgeometry, geomtrait, PolygonTrait, MultiPolyg
 using Colors: RGB, RGBA, red, green, blue, Color
 using PlotUtils: AbstractColorList
 using Makie
-using Makie: current_default_theme, to_value, automatic, Automatic, PlotFunc, ATTRIBUTES
+using Makie: current_default_theme, to_value, automatic, Automatic, PlotFunc, Block, ATTRIBUTES
 import Makie: hidexdecorations!,
               hideydecorations!,
               hidedecorations!,
@@ -27,7 +27,7 @@ import FileIO
 import RelocatableFolders
 
 export hideinnerdecorations!, deleteemptyaxes!
-export Layer, Layers, ProcessedLayer
+export Layer, Layers, ProcessedLayer, ProcessedLayers
 export Entry, AxisEntries
 export renamer, sorter, nonnumeric, verbatim
 export density, histogram, linear, smooth, expectation, frequency

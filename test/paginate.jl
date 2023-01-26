@@ -11,9 +11,6 @@ function _equal(l1::ProcessedLayers, l2::ProcessedLayers)
     end
 end
 
-_to_processed_layers(l::Layers) = ProcessedLayers(map(ProcessedLayer, l.layers))
-_to_processed_layers(l::Layer) = ProcessedLayers([ProcessedLayer(l)])
-
 @testset "paginate" begin
     cs = string.(0:9)
     ds = string.('a':'j')
@@ -80,7 +77,7 @@ _to_processed_layers(l::Layer) = ProcessedLayers([ProcessedLayer(l)])
                 # filter out all data not on the current page
                 subset = (a = d.a[idcs], b = d.b[idcs], c = d.c[idcs], d = d.d[idcs])
                 manual_pagination = data(subset) * mapping(:a, :b, row = :c, col = :d) * vis
-                manual_pagination = _to_processed_layers(manual_pagination)
+                manual_pagination = ProcessedLayers(manual_pagination)
                 i = ic + length(c_parts) * (id - 1)
                 @test _equal(manual_pagination, pag.each[i])
             end
@@ -97,7 +94,7 @@ _to_processed_layers(l::Layer) = ProcessedLayers([ProcessedLayer(l)])
             # filter out all data not on the current page
             subset = (a = d.a[idcs], b = d.b[idcs], c = d.c[idcs], d = d.d[idcs])
             manual_pagination = data(subset) * mapping(:a, :b, layout = :c) * vis
-            manual_pagination = _to_processed_layers(manual_pagination)
+            manual_pagination = ProcessedLayers(manual_pagination)
             @test _equal(manual_pagination, pag.each[ic])
         end
     end
