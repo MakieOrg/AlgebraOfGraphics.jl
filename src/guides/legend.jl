@@ -58,6 +58,8 @@ function compute_legend(grid::Matrix{AxisEntries})
 
     plottypes, attributes = plottypes_attributes(entries(grid))
 
+    push!(attributes[1], :alpha)
+
     labels = Vector{AbstractString}[]
     elements_list = Vector{Vector{LegendElement}}[]
 
@@ -70,7 +72,7 @@ function compute_legend(grid::Matrix{AxisEntries})
                 shared_attrs = attrs ∩ label_attrs
                 isempty(shared_attrs) && continue
                 options = [attr => plotvalues(scales[attr])[idx] for attr in shared_attrs]
-                append!(elements, legend_elements(P; options...))
+                append!(elements, _legend_elements(P; options...))
             end
             return elements
         end

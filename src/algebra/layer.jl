@@ -118,6 +118,13 @@ function categoricalscales(processedlayer::ProcessedLayer, palettes)
     map!(categoricalscales, keys(categoricals), categoricals) do key, val
         palette = key isa Integer ? automatic : get(palettes, key, automatic)
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
+        # special treatment for alpha
+        # similar for markersize, linewidth
+        if key == :alpha && palette === automatic
+            n = length(datavalues)
+            step = 0.8 * 1/(n-1)
+            palette = 0.1:step:0.9 |> collect
+        end
         label = to_label(get(processedlayer.labels, key, ""))
         return CategoricalScale(datavalues, palette, label)
     end
@@ -273,7 +280,14 @@ function compute_attributes(pl::ProcessedLayer,
     # implement alpha transparency
     alpha = get(attrs, :alpha, automatic)
     color = get(attrs, :color, automatic)
-    (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
+
+    #	@info attrs
+    if (color !== automatic) && (alpha !== automatic)
+        color = tuple.(color, alpha)
+    elseif alpha !== automatic
+    # TODO: use color from palette or keep automatic
+    color = tuple.(:black, alpha)
+    end
 
     # opt out of the default cycling mechanism
     cycle = nothing
