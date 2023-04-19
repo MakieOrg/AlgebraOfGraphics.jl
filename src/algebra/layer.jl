@@ -93,6 +93,18 @@ function slice(processedlayer::ProcessedLayer, c)
     return ProcessedLayer(processedlayer; labels, primary, positional, named)
 end
 
+"""
+    map(f, processedlayer::ProcessedLayer)
+
+Apply function `f` to every group within the `processedlayer` and recombine
+the output into a new `ProcessedLayer` object.
+
+`f` can be any function taking as input `f(positional, named)`, where
+`positional` is a tuple and `named` is a named tuple. `f` should return
+`p, n` where again `p` is a tuple and `n` a named tuple.
+
+TODO: add example 
+"""
 function Base.map(f, processedlayer::ProcessedLayer)
     axs = shape(processedlayer)
     outputs = map(CartesianIndices(axs)) do c
