@@ -1,6 +1,6 @@
-using SnoopPrecompile
+using PrecompileTools
 
-@precompile_setup begin
+@setup_workload begin
     df1 = (
         x = rand(40),
         y = rand(40),
@@ -10,7 +10,7 @@ using SnoopPrecompile
                 repeat(["c"], 10); repeat(["d"], 10)]
     )
 
-    @precompile_all_calls begin
+    @compile_workload begin
         dta = data(df1)
 
         dta * mapping(
