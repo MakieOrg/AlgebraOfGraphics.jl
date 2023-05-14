@@ -29,25 +29,30 @@ end
 struct UserAnalysis
     groupcomputation
     custom_attributes
-    labels
-    attributes
-    plottype
+    layercomputation
+end
+
+function UserAnalysis(groupcomputation, custom_attributes, labels, attributes, plottype)
+    function layercomputation(pl)
+        pl.labels = merge(pl.labels, labels)
+        pl.attributes = merge(pl.attributes, attributes)
+        pl.plottype = Makie.plottype(pl.plottype, plottype)
+        return pl
+    end
+    return UserAnalysis(groupcomputation, custom_attributes, layercomputation)
 end
 
 function (ua::UserAnalysis)(input::ProcessedLayer)
     scales = defaultdatalimits(input.positional)
     output = map(input) do positional, named
-        return ua.f(positional, named; scales, ua.custom_attributes)
+        return ua.groupcomputation(positional, named; scales, ua.custom_attributes...)
     end
-    output.labels = merge(output.labels, ua.labels)
-    output.attributes = merge(output.attributes, ua.attributes)
-    output.plottype = Makie.plottype(output.plottype, ua.plottype)
-    return output
+    return ua.layercomputation(output)
 end
 
 ### The developer does it
 
-function histogram_computation(positional, named; scales, custom_attributes)
+function histogram_computation(positional, named, scales; bins=automatic)
     # The user creates the function
     bins = range(scales, 200)
     hist = _histogram(positional...; bins=bins)
@@ -56,15 +61,14 @@ function histogram_computation(positional, named; scales, custom_attributes)
     return map(midpoints, edges)..., weights), named 
 end
 
-function myhistogram(; custom_attributes)
+function myhistogram(; custom_attributes...)
     labels = ["count"]
     attributes = (dodge_gap = 0, x_gap = 0)
     plottype = BarPlot
     return UserAnalysis(histogram_computation, custom_attributes, labels, attributes, plottype)
 end
 
-analysis = UserAnalysis(histogram_computation, labels="")
-
+@analysis histogram_computation labels = ["count"] attributes = (dodge_gap = 0, x_gap = 0) plottype = BarPlot
 ### The end user does it
 
 myhistogram(normalization=:none)
