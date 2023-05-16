@@ -13,6 +13,15 @@ function legend_elements(::Union{Type{Lines}, Type{VLines}, Type{ABLines}};
     return [LineElement(; linecolor=color, kwargs...)]
 end
 
+function legend_elements(::Type{ScatterLines};
+                         marker=from_default_theme(:marker),
+                         markerpoints=[Point2f(0.5, 0.5)],
+                         color=from_default_theme(:markercolor),
+                         kwargs...)
+
+    return [MarkerElement(; marker, markerpoints, markercolor=color, kwargs...), LineElement(; linecolor=color, kwargs...)]
+end
+
 function legend_elements(::Type{Contour};
                          color=from_default_theme(:linecolor), kwargs...)
     return [LineElement(; linecolor=color, kwargs...)]
