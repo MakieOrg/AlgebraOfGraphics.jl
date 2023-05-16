@@ -8,7 +8,7 @@ function legend_elements(::Type{Scatter};
     return [MarkerElement(; marker, markerpoints, markercolor=color, kwargs...)]
 end
 
-function legend_elements(::Type{Lines};
+function legend_elements(::Union{Type{Lines}, Type{VLines}, Type{ABLines}};
                          color=from_default_theme(:linecolor), kwargs...)
     return [LineElement(; linecolor=color, kwargs...)]
 end
