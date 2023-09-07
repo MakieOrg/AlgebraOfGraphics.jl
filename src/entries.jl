@@ -72,7 +72,8 @@ end
 function Makie.plot!(ae::AxisEntries)
     axis, entries = ae.axis, ae.entries
     for entry in entries
-        plot!(entry.plottype, axis, entry.positional...; pairs(entry.named)...)
+        plot = entry.plottype((entry.positional...,), Dict{Symbol,Any}(pairs(entry.named)))
+        plot!(axis, plot)
     end
     return ae
 end
