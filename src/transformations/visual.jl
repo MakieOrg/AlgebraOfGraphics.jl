@@ -2,7 +2,7 @@ struct Visual
     plottype::PlotType
     attributes::NamedArguments
 end
-Visual(plottype::PlotType=Plot{Any}; kwargs...) = Visual(plottype, NamedArguments(kwargs))
+Visual(plottype::PlotType=Plot{plot}; kwargs...) = Visual(plottype, NamedArguments(kwargs))
 
 function (v::Visual)(input::ProcessedLayer)
     plottype = Makie.plottype(v.plottype, input.plottype)
@@ -10,6 +10,8 @@ function (v::Visual)(input::ProcessedLayer)
     return ProcessedLayer(input; plottype, attributes)
 end
 
-visual(plottype::PlotType=Plot{Any}; kwargs...) = transformation(Visual(plottype; kwargs...))
+# In the future, consider switching from `visual(Plot{T})` to `visual(T)`.
+visual(plottype::PlotType=Plot{plot}; kwargs...) = transformation(Visual(plottype; kwargs...))
 
-@deprecate visual(::Type{Any}; kwargs...) visual(Plot{Any}; kwargs...)
+# For backward compatibility, still allow `visual(Any)`.
+@deprecate visual(::Type{Any}; kwargs...) visual(; kwargs...)
