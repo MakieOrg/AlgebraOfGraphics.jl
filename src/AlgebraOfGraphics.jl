@@ -9,7 +9,7 @@ using GeoInterface: coordinates, isgeometry, geomtrait, PolygonTrait, MultiPolyg
 using Colors: RGB, RGBA, red, green, blue, Color
 using PlotUtils: AbstractColorList
 using Makie
-using Makie: current_default_theme, to_value, automatic, Automatic, PlotFunc, Block, ATTRIBUTES
+using Makie: current_default_theme, to_value, automatic, Automatic, Block, ATTRIBUTES
 import Makie: hidexdecorations!,
               hideydecorations!,
               hidedecorations!,

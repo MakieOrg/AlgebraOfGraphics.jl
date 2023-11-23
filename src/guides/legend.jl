@@ -23,7 +23,7 @@ Return plottypes and relative attributes, as two vectors of the same length,
 for the given `entries`.
 """
 function plottypes_attributes(entries)
-    plottypes = PlotFunc[]
+    plottypes = PlotType[]
     attributes = Vector{Symbol}[]
     for entry in entries
         plottype = entry.plottype

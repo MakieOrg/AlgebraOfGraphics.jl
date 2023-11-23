@@ -1,10 +1,12 @@
+const PlotType = Type{<:Plot}
+
 """
-    Entry(plottype::PlotFunc, positional::Arguments, named::NamedArguments)
+    Entry(plottype::PlotType, positional::Arguments, named::NamedArguments)
 
 Define plottype as well as positional and named arguments for a single plot.
 """
 struct Entry
-    plottype::PlotFunc
+    plottype::PlotType
     positional::Arguments
     named::NamedArguments
 end
@@ -65,14 +67,14 @@ function AxisEntries(ae::AxisSpecEntries, fig)
     AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales)
 end
 
-function AxisEntries(ae::AxisSpecEntries, ax::Union{Axis,Axis3})
+function AxisEntries(ae::AxisSpecEntries, ax::Union{Axis, Axis3})
     AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales)
 end
 
 function Makie.plot!(ae::AxisEntries)
     axis, entries = ae.axis, ae.entries
     for entry in entries
-        plot = entry.plottype((entry.positional...,), Dict{Symbol,Any}(pairs(entry.named)))
+        plot = entry.plottype(Tuple(entry.positional), Dict{Symbol, Any}(pairs(entry.named)))
         plot!(axis, plot)
     end
     return ae
