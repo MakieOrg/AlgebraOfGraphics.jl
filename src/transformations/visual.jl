@@ -1,8 +1,8 @@
 struct Visual
-    plottype::PlotFunc
+    plottype::PlotType
     attributes::NamedArguments
 end
-Visual(plottype=Any; kwargs...) = Visual(plottype, NamedArguments(kwargs))
+Visual(plottype=Plot{Any}; kwargs...) = Visual(plottype, NamedArguments(kwargs))
 
 function (v::Visual)(input::ProcessedLayer)
     plottype = Makie.plottype(v.plottype, input.plottype)
@@ -10,4 +10,4 @@ function (v::Visual)(input::ProcessedLayer)
     return ProcessedLayer(input; plottype, attributes)
 end
 
-visual(plottype=Any; kwargs...) = transformation(Visual(plottype; kwargs...))
+visual(plottype=Plot{Any}; kwargs...) = transformation(Visual(plottype; kwargs...))

@@ -74,5 +74,5 @@ Makie.used_attributes(::Type{<:Choropleth}, v::AbstractVector) = (:transformatio
 function Makie.convert_arguments(::Type{<:Choropleth}, v::AbstractVector;
                                  transformation=trivialtransformation)
     geometries = map(Base.Fix1(to_geometry, transformation), v)
-    return PlotSpec{Poly}(geometries)
+    return PlotSpec(:poly, geometries)
 end

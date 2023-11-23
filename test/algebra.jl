@@ -57,7 +57,7 @@ end
     end
     @test length(processedlayers) == 6
     for i in 1: 6
-        @test processedlayers[i].plottype === Any
+        @test processedlayers[i].plottype === Plot{Any}
         @test isempty(processedlayers[i].attributes)
         @test processedlayers[i].labels[1] == "x"
         @test processedlayers[i].labels[2] == (i ≤ 3 ? "y" : "z")
