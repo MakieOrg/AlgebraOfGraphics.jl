@@ -46,7 +46,7 @@ end
 ## Format for layer after processing
 
 Base.@kwdef struct ProcessedLayer <: AbstractDrawable
-    plottype::PlotType=Plot{Any}
+    plottype::PlotType=Plot{plot}
     primary::NamedArguments=NamedArguments()
     positional::Arguments=Arguments()
     named::NamedArguments=NamedArguments()
