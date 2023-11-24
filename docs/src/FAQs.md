@@ -89,7 +89,7 @@ be used by `AlgebraOfGraphics`, e.g.
 ```@example combined-1
 using AlgebraOfGraphics, CairoMakie #hide
 
-f, a, p = lines(0..2pi, sin; figure = (resolution = (600, 400),))
+f, a, p = lines(0..2pi, sin; figure = (size = (600, 400),))
 
 df = (x = exp.(rand(1000)),)
 hist1 = data(df) * mapping(:x => log => "log(x)") * histogram()
@@ -107,7 +107,7 @@ using AlgebraOfGraphics, CairoMakie #hide
 
 df = (x = exp.(rand(1000)),)
 hist2 = data(df) * mapping(:x => log => "log(x)") * histogram()
-fg = draw(hist2; figure = (resolution = (600, 400),))
+fg = draw(hist2; figure = (size = (600, 400),))
 
 lines(fg.figure[1, 2], 0..2pi, cos)
 

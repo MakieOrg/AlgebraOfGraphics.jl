@@ -16,8 +16,7 @@
 using AlgebraOfGraphics, CairoMakie
 using AlgebraOfGraphics: CategoricalScale, ContinuousScale, fitscale
 using AlgebraOfGraphics: NamedArguments, MixedArguments
-resolution = (600, 600)
-fig = Figure(; resolution)
+fig = Figure(; size=(600, 600))
 N = 11
 rg = range(1, 2, length=N)
 markerpalette = [:circle, :utriangle, :dtriangle, :rect]

@@ -17,7 +17,7 @@ plt = xyc * layers
 fg = draw(
     plt,
     axis=(aspect=1,),
-    figure=(figure_padding=10, backgroundcolor=:gray80, resolution=(800, 400))
+    figure=(figure_padding=10, backgroundcolor=:gray80, size=(800, 400))
 )
 
 # save cover image #src
