@@ -12,8 +12,7 @@ set_aog_theme!() #src
 # of the figure is managed by vanilla Makie.
 # For example
 
-resolution = (800, 600)
-fig = Figure(; resolution)
+fig = Figure(; size=(800, 600))
 ax = Axis(fig[1, 1], title="Some plot")
 
 df = (
@@ -36,8 +35,7 @@ fig
 
 # The above also works in more nested situations.
 
-resolution = (800, 600)
-f = Figure(; resolution)
+f = Figure(; size=(800, 600))
 ax = Axis(f[1, 1], title="Some plot")
 subfig = f[1, 2]
 ax2 = Axis(subfig[1, 1])
@@ -54,8 +52,7 @@ f
 
 # It is also possible to let Makie control the axis and plot directly on top of it.
 
-resolution = (800, 300)
-f = Figure(; resolution)
+f = Figure(; size=(800, 300))
 ax1 = Axis(f[1, 1])
 ax2 = Axis(f[1, 2])
 
