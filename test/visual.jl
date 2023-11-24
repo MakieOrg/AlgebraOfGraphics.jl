@@ -4,10 +4,10 @@
     v = visual(Any, color="blue", linewidth=2)
     pl′ = v.transformation(pl)
     @test pl′.plottype === Plot{plot}
-    collect(keys(pl′.attributes)) == [:color, :marker, :linewidth]
-    pl′.attributes[:color] == "blue"
-    pl′.attributes[:marker] == :circle
-    pl′.attributes[:linewidth] == 2
+    @test collect(keys(pl′.attributes)) == [:color, :marker, :linewidth]
+    @test pl′.attributes[:color] == "blue"
+    @test pl′.attributes[:marker] == :circle
+    @test pl′.attributes[:linewidth] == 2
 end
 
 @testset "visual plottype" begin
