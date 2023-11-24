@@ -30,6 +30,7 @@ import Shapefile, GeometryBasics
 Random.seed!(1234)
 
 include("utils.jl")
+include("visual.jl")
 include("algebra.jl")
 include("analyses.jl")
 include("scales.jl")
