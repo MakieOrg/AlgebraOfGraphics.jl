@@ -81,8 +81,9 @@ ProcessedLayer(layer::Layer) = process(layer)
 unnest(vs::AbstractArray, indices) = map(k -> [el[k] for el in vs], indices)
 
 unnest_arrays(vs) = unnest(vs, keys(first(vs)))
-unnest_dictionaries(vs) = Dictionary(unnest(vs, collect(keys(first(vs)))))
-
+function unnest_dictionaries(vs)
+    return Dictionary(Dict((k => [el[k] for el in vs] for k in collect(keys(first(vs))))))
+end
 slice(v, c) = map(el -> getnewindex(el, c), v)
 
 function slice(processedlayer::ProcessedLayer, c)
