@@ -81,8 +81,9 @@ ProcessedLayer(layer::Layer) = process(layer)
 unnest(vs::AbstractArray, indices) = map(k -> [el[k] for el in vs], indices)
 
 unnest_arrays(vs) = unnest(vs, keys(first(vs)))
-unnest_dictionaries(vs) = unnest(vs, Indices(keys(first(vs))))
-
+function unnest_dictionaries(vs)
+    return Dictionary(Dict((k => [el[k] for el in vs] for k in collect(keys(first(vs))))))
+end
 slice(v, c) = map(el -> getnewindex(el, c), v)
 
 function slice(processedlayer::ProcessedLayer, c)
@@ -198,7 +199,7 @@ function rescale(p::ProcessedLayer, categoricalscales::MixedArguments)
     return ProcessedLayer(p; primary, positional, attributes)
 end
 
-# Determine whether entries from a `ProcessedLayer` should be merged 
+# Determine whether entries from a `ProcessedLayer` should be merged
 function mergeable(processedlayer::ProcessedLayer)
     plottype, primary = processedlayer.plottype, processedlayer.primary
     # merge violins for correct renormalization
@@ -300,6 +301,6 @@ function compute_attributes(pl::ProcessedLayer,
     colorscale = get(continuousscales, :color, nothing)
     !isnothing(colorscale) && set!(attrs, :colorrange, colorscale.extrema)
 
-    # remove unnecessary information 
+    # remove unnecessary information
     return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
 end
