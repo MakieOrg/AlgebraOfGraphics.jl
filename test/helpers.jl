@@ -10,6 +10,8 @@
     @test r("a") < r("b") < r("c")
     @test r("a") == r("a")
     @test r("a") != r("b")
+    @test map(r, ["a", "a", "b", "c", "d"]) == [Sorted(1, "A"), Sorted(1, "A"), Sorted(2, "B"), Sorted(3, "C"), Sorted(4, "d")]
+
     r̂ = renamer(["a" => "A", "b" => "B", "c" => "C"])
     @test r̂("a") == Sorted(1, "A")
     @test r̂("b") == Sorted(2, "B")
@@ -33,6 +35,8 @@
     @test s("b") < s("c") < s("a")
     @test s("a") == s("a")
     @test s("a") != s("b")
+    @test map(s, ["a", "b", "c", "d"]) == [Sorted(3, "a"), Sorted(1, "b"), Sorted(2, "c"), Sorted(4, "d")]
+    
     ŝ = sorter(["b", "c", "a"])
     @test ŝ("a") == Sorted(3, "a")
     @test ŝ("b") == Sorted(1, "b")

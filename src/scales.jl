@@ -61,6 +61,9 @@ end
 datavalues(c::CategoricalScale) = c.data
 plotvalues(c::CategoricalScale) = c.plot
 getlabel(c::CategoricalScale) = something(c.label, "")
+function addvalue(c::CategoricalScale, values)
+    return CategoricalScale(vcat(c.data, values), c.plot, c.palette, c.label)
+end
 
 ## Continuous Scales
 
@@ -107,13 +110,14 @@ elementwise_rescale(value) = value
 
 contextfree_rescale(values) = map(elementwise_rescale, values)
 
-rescale(values, ::Nothing) = values
+rescale(values, ::Nothing) = values, nothing
 
 function rescale(values, c::CategoricalScale)
     # Do not rescale continuous data with categorical scale
     scientific_eltype(values) === categorical || return values
-    idxs = indexin(values, datavalues(c))
-    return plotvalues(c)[idxs]
+    scalevalues = vcat(datavalues(c), setdiff(values, datavalues(c)))
+    idxs = indexin(values, scalevalues)
+    return plotvalues(c)[idxs], addvalues(c, scalevalues)
 end
 
 Base.length(c::CategoricalScale) = length(datavalues(c))

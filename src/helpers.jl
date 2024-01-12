@@ -3,17 +3,34 @@
 to_string(s) = string(s)
 to_string(s::AbstractString) = s
 
-struct Sorted{T}
+struct Renamed{S, T}
     idx::UInt32
-    value::T
+    original::S
+    value::Union{T, Nothing}
 end
-Sorted(idx::Integer, value) = Sorted(convert(UInt32, idx), value)
+Renamed(idx::Integer, original, value) = Renamed(convert(UInt32, idx), original, value)
+value(x::Renamed) = isnothing(x.value) ? x.original : s.value
 
-Base.hash(s::Sorted, h::UInt) = hash(s.value, hash(s.idx, hash(:Sorted, h)))
-Base.:(==)(s1::Sorted, s2::Sorted) = isequal(s1.idx, s2.idx) && isequal(s1.value, s2.value)
+Base.hash(s::Renamed, h::UInt) = hash(value(s), hash(s.idx, hash(:Renamed, h)))
+function Base.:(==)(s1::Renamed, s2::Renamed) 
+    val_equal = isequal(s1.idx, s2.idx) && isequal(s1.value, s2.value) 
+    if val_equal && isnothing(s1.value)
+        return s1.original == s2.original
+    else
+        return val_equal
+    end
+end
 
-Base.print(io::IO, s::Sorted) = print(io, s.value)
-Base.isless(s1::Sorted, s2::Sorted) = isless((s1.idx, s1.value), (s2.idx, s2.value))
+Base.print(io::IO, s::Renamed) = print(io, value(s))
+function Base.isless(s1::Renamed, s2::Renamed)
+    if isnothing(s1.value) == isnothing(s1.value)
+        return isless((s1.idx, value(s1)), (s2.idx, value(s2)))
+    else
+        # sort any renamed values before values that keep
+        # their original value
+        return isless(!isnothing(s1.value), !isnothing(s2.value))
+    end
+end
 
 struct Renamer{U, L}
     uniquevalues::U
@@ -22,7 +39,7 @@ end
 
 function (r::Renamer{Nothing})(x)
     i = LinearIndices(r.labels)[x]
-    return Sorted(i, r.labels[i])
+    return Renamed(i, x, r.labels[i])
 end
 
 function (r::Renamer)(x)
@@ -30,7 +47,7 @@ function (r::Renamer)(x)
         cand = @inbounds r.uniquevalues[i]
         if isequal(cand, x)
             label = r.labels[i]
-            return Sorted(i, label)
+            return Renamed(i, x, label)
         end
     end
     throw(KeyError(x))
@@ -41,10 +58,11 @@ renamer(args::Pair...) = renamer(args)
 """
     renamer(arr::Union{AbstractArray, Tuple})
 
-Utility to rename a categorical variable, as in `renamer([value1 => label1, value2 => label2])`.
-The keys of all pairs should be all the unique values of the categorical variable and
-the values should be the corresponding labels. The order of `arr` is respected in
-the legend.
+Utility to rename a categorical variable, as in `renamer([value1 => label1, value2 =>
+label2])`. The order of `arr` is respected in the legend. The renamer need not specify all
+values of the sequence it renames: if the renamer is missing one of the values from a
+sequence it is applied to, the unspecified values are sorted after those that are specified (in the
+order returned by `unique`) and are not renamed.
 
 # Examples
 ```jldoctest
@@ -64,8 +82,8 @@ Class One
 ```
 
 If `arr` does not contain `Pair`s, elements of `arr` are assumed to be labels, and the
-unique values of the categorical variable are taken to be the indices of the array.
-This is particularly useful for `dims` mappings.
+unique values of the categorical variable are taken to be the indices of the array. This is
+particularly useful for `dims` mappings.
 
 # Examples
 ```jldoctest
@@ -90,10 +108,12 @@ end
 """
     sorter(ks)
 
-Utility to reorder a categorical variable, as in `sorter(["low", "medium", "high"])`.
-A vararg method `sorter("low", "medium", "high")` is also supported.
-`ks` should include all the unique values of the categorical variable.
-The order of `ks` is respected in the legend.
+Utility to reorder a categorical variable, as in `sorter(["low", "medium", "high"])`. A
+vararg method `sorter("low", "medium", "high")` is also supported. The order of `ks` is
+respected in the legend. The sorter need not specify all values (e.g. `sorter(["low",
+"medium"])` will work for an array that includes `"high"``); the unspecified values will be
+sorted after the specified values and will occur in the order returned by `unique`.
+
 """
 function sorter(ks::Union{AbstractArray, Tuple})
     vs = map(to_string, ks)
