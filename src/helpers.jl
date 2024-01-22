@@ -46,6 +46,8 @@ The keys of all pairs should be all the unique values of the categorical variabl
 the values should be the corresponding labels. The order of `arr` is respected in
 the legend.
 
+If you are trying to convert numbers to sorted catagorical variables, see [`nonnumeric`](@ref).
+
 # Examples
 ```jldoctest
 julia> r = renamer(["class 1" => "Class One", "class 2" => "Class Two"])
