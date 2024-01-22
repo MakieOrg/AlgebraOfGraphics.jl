@@ -110,6 +110,11 @@ end
     nonnumeric(x)
 
 Transform `x` into a non numeric type that is printed and sorted in the same way.
+
+# Example
+```
+    mapping(color = :n_children => nonnumeric => "Number of Children")
+```
 """
 nonnumeric(x) = NonNumeric(x)
 
