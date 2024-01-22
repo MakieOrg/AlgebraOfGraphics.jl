@@ -46,8 +46,6 @@ The keys of all pairs should be all the unique values of the categorical variabl
 the values should be the corresponding labels. The order of `arr` is respected in
 the legend.
 
-If you are trying to convert numbers to sorted catagorical variables, see [`nonnumeric`](@ref).
-
 # Examples
 ```jldoctest
 julia> r = renamer(["class 1" => "Class One", "class 2" => "Class Two"])
@@ -91,11 +89,20 @@ end
 
 """
     sorter(ks)
+    sorter(ks...)
 
 Utility to reorder a categorical variable, as in `sorter(["low", "medium", "high"])`.
 A vararg method `sorter("low", "medium", "high")` is also supported.
 `ks` should include all the unique values of the categorical variable.
 The order of `ks` is respected in the legend.
+
+If you are trying to convert numbers to sorted catagorical variables, see [`nonnumeric`](@ref).
+
+#Example
+```jldoctest
+julia> mapping(color = :income=>sorter("low", "medium", "high")=>"Income")
+Layer(identity, nothing, Any[], {:color = :income => (AlgebraOfGraphics.Renamer{Tuple{String, String, String}, Tuple{String, String, String}}(("low", "medium", "high"), ("low", "medium", "high")) => "Income")})
+```
 """
 function sorter(ks::Union{AbstractArray, Tuple})
     vs = map(to_string, ks)
@@ -112,8 +119,9 @@ end
 Transform `x` into a non numeric type that is printed and sorted in the same way.
 
 # Example
-```
-    mapping(color = :n_children => nonnumeric => "Number of Children")
+```jldoctest
+julia> mapping(color = :n_children=>nonnumeric=>"Number of Children")
+Layer(identity, nothing, Any[], {:color = :n_children => (AlgebraOfGraphics.nonnumeric => "Number of Children")})
 ```
 """
 nonnumeric(x) = NonNumeric(x)
