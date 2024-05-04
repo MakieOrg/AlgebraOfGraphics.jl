@@ -52,7 +52,7 @@ makedocs(;
         "FAQs.md",
         "philosophy.md",
     ],
-    strict=true,
+    warnonly=false,
 )
 postprocess_cb() # redirect url for DemoCards generated files
 
