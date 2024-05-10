@@ -52,6 +52,9 @@ Base.@kwdef struct ProcessedLayer <: AbstractDrawable
     named::NamedArguments=NamedArguments()
     labels::MixedArguments=MixedArguments()
     attributes::NamedArguments=NamedArguments()
+    # specifies which output dimensions the positional arguments are mapped to, for example
+    # a horizontal barplot would have 1 mapped to 2 and 2 mapped to 1
+    positional_mapping::Dictionary{Union{Int,Symbol},Union{Int,Symbol}}=Dictionary()
 end
 
 function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
@@ -61,7 +64,8 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
         processedlayer.positional,
         processedlayer.named,
         processedlayer.labels,
-        processedlayer.attributes
+        processedlayer.attributes,
+        processedlayer.positional_mapping,
     )
     return ProcessedLayer(; merge(nt, values(kwargs))...)
 end
