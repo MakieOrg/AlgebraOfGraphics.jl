@@ -36,6 +36,9 @@ mandatory_attributes(::Type{Violin}) = dictionary([:orientation => :vertical])
 # The default assumption of x, y, [z] does not hold for many plot objects
 function get_positional_mapping end
 
+# TODO: should we have this fallback or not?
+get_positional_mapping(any, attributes) = Dictionary{Union{Int,Symbol},Union{Int,Symbol}}()
+
 function get_positional_mapping(::Type{BarPlot}, attributes)
     dir = attributes[:direction]
     if dir === :x
@@ -57,3 +60,5 @@ function get_positional_mapping(::Type{Violin}, attributes)
         throw(ArgumentError("Invalid orientation $dir for Violin"))
     end
 end
+
+get_positional_mapping(::Type{HLines}, attributes) = dictionary([1 => 2])
