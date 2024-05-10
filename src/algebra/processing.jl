@@ -88,6 +88,8 @@ function extract_values!(pairs, labels)
 end
 
 function process_mappings(layer::Layer)
+    # the labels extracted here are directly related to their positional or named arguments
+    # but some may later be remapped using `positional_mapping`
     labels = MixedArguments()
     positional = extract_values!(map(v -> getlabeledarray(layer, v), layer.positional), labels)
     named = extract_values!(map(v -> getlabeledarray(layer, v), layer.named), labels)

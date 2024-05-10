@@ -139,7 +139,8 @@ function categoricalscales(processedlayer::ProcessedLayer, palettes)
     map!(categoricalscales, keys(categoricals), categoricals) do key, val
         palette = key isa Integer ? automatic : get(palettes, key, automatic)
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
-        label = to_label(get(processedlayer.labels, key, ""))
+        possibly_remapped_key = get(processedlayer.positional_mapping, key, key)
+        label = to_label(get(processedlayer.labels, possibly_remapped_key, ""))
         return CategoricalScale(datavalues, palette, label)
     end
     return categoricalscales
@@ -165,7 +166,8 @@ function continuousscales(processedlayer::ProcessedLayer)
     continuousscales = similar(keys(continuous), ContinuousScale)
     map!(continuousscales, keys(continuous), continuous) do key, val
         extrema = extrema_finite(val)
-        label = to_label(get(processedlayer.labels, key, ""))
+        possibly_remapped_key = get(processedlayer.positional_mapping, key, key)
+        label = to_label(get(processedlayer.labels, possibly_remapped_key, ""))
         return ContinuousScale(extrema, label)
     end
 
