@@ -27,6 +27,8 @@ visual(plottype::PlotType=Plot{plot}; kwargs...) = transformation(Visual(plottyp
 # which are required to some known value, unless overridden by the user. Usually, that should
 # be the same value that the plot type also sets in its default theme.
 mandatory_attributes(T) = NamedArguments()
+mandatory_attributes(::Type{BarPlot}) = dictionary([:direction => :y])
+mandatory_attributes(::Type{Violin}) = dictionary([:orientation => :vertical])
 
 # this function needs to be defined for any plot type that should work with AoG, because it tells
 # AoG how its positional arguments can be understood in terms of the dimensions of the plot for
@@ -42,5 +44,16 @@ function get_positional_mapping(::Type{BarPlot}, attributes)
         dictionary([1 => 1, 2 => 2])
     else
         throw(ArgumentError("Invalid direction $dir for BarPlot"))
+    end
+end
+
+function get_positional_mapping(::Type{Violin}, attributes)
+    dir = attributes[:orientation]
+    if dir === :horizontal
+        dictionary([1 => 2, 2 => 1])
+    elseif dir === :vertical
+        dictionary([1 => 1, 2 => 2])
+    else
+        throw(ArgumentError("Invalid orientation $dir for Violin"))
     end
 end
