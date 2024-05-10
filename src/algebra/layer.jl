@@ -114,10 +114,26 @@ uniquevalues(v::AbstractArray) = collect(uniquesorted(vec(v)))
 to_label(label::AbstractString) = label
 to_label(labels::AbstractArray) = reduce(mergelabels, labels)
 
+# merge dict2 into dict but translate keys first using remapdict
+function merge_with_key_remap!(dict, dict2, remapdict)
+    for (key, value) in pairs(dict2)
+        if haskey(remapdict, key)
+            insert!(dict, remapdict[key], value)
+        else
+            insert!(dict, key, value)
+        end
+    end
+    return dict
+end
+
 function categoricalscales(processedlayer::ProcessedLayer, palettes)
     categoricals = MixedArguments()
     merge!(categoricals, processedlayer.primary)
-    merge!(categoricals, filter(iscategoricalcontainer, Dictionary(processedlayer.positional)))
+    merge_with_key_remap!(
+        categoricals,
+        filter(iscategoricalcontainer, Dictionary(processedlayer.positional)),
+        processedlayer.positional_mapping,
+    )
 
     categoricalscales = similar(keys(categoricals), CategoricalScale)
     map!(categoricalscales, keys(categoricals), categoricals) do key, val
@@ -140,7 +156,11 @@ end
 function continuousscales(processedlayer::ProcessedLayer)
     continuous = MixedArguments()
     merge!(continuous, filter(iscontinuous, processedlayer.named))
-    merge!(continuous, filter(iscontinuous, Dictionary(processedlayer.positional)))
+    merge_with_key_remap!(
+        continuous,
+        filter(iscontinuous, Dictionary(processedlayer.positional)),
+        processedlayer.positional_mapping,
+    )
 
     continuousscales = similar(keys(continuous), ContinuousScale)
     map!(continuousscales, keys(continuous), continuous) do key, val
@@ -188,7 +208,8 @@ function rescale(p::ProcessedLayer, categoricalscales::MixedArguments)
         return rescale(values, scale)
     end
     positional = map(keys(p.positional), p.positional) do key, values
-        scale = get(categoricalscales, key, nothing)
+        possibly_remapped_key = get(p.positional_mapping, key, key)
+        scale = get(categoricalscales, possibly_remapped_key, nothing)
         return rescale.(values, Ref(scale))
     end
 
