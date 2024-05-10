@@ -37,9 +37,9 @@ function get_positional_mapping end
 function get_positional_mapping(::Type{BarPlot}, attributes)
     dir = attributes[:direction]
     if dir === :x
-        Dictionary(1 => 2, 2 => 1)
+        dictionary([1 => 2, 2 => 1])
     elseif dir === :y
-        Dictionary(1 => 1, 2 => 2)
+        dictionary([1 => 1, 2 => 2])
     else
         throw(ArgumentError("Invalid direction $dir for BarPlot"))
     end

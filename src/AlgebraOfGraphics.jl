@@ -18,7 +18,7 @@ import Makie: hidexdecorations!,
               linkyaxes!
 using GridLayoutBase: update!, Protrusion, protrusionsobservable
 using PooledArrays: PooledArray
-using Dictionaries: AbstractDictionary, Dictionary, Indices, getindices, set!
+using Dictionaries: AbstractDictionary, Dictionary, Indices, getindices, set!, dictionary
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, normalize, sturges, StatsBase
 
