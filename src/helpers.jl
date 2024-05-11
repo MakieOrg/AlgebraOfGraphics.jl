@@ -115,8 +115,8 @@ Base.print(io::IO, n::NonNumeric) = print(io, n.x)
 Base.isless(n1::NonNumeric, n2::NonNumeric) = isless(n1.x, n2.x)
 Base.isless(n1::NonNumeric, n2) = isless(n1.x, n2)
 Base.isless(n1, n2::NonNumeric) = isless(n1, n2.x)
-Base.typemax(::Type{NonNumeric{T}}) = typemax(T)
-Base.typemin(::Type{NonNumeric{T}}) = typemin(T)
+Base.typemax(::Type{NonNumeric{T}}) where T = typemax(T)
+Base.typemin(::Type{NonNumeric{T}}) where T = typemin(T)
 
 struct Verbatim{T}
     x::T
