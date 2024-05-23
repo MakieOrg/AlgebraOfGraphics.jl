@@ -302,5 +302,5 @@ function compute_attributes(pl::ProcessedLayer,
     !isnothing(colorscale) && set!(attrs, :colorrange, colorscale.extrema)
 
     # remove unnecessary information
-    return filterkeys(!in((:col, :row, :layout, :alpha)), attrs)
+    return filterkeys(!in((:col, :row, :layout, :alpha, :group)), attrs)
 end
