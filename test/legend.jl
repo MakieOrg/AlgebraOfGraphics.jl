@@ -4,5 +4,5 @@
     plt = data(mwe_data) *
         mapping("t", ["y1", "y2"] .=> "y"; color = dims(1) => (i -> mwe_names[i]), marker=dims(1)) *
         (visual(Lines) + visual(Scatter))
-    @test_throws ArgumentError draw(plt)
+    @test_throws Makie.MakieCore.InvalidAttributeError draw(plt)
 end
