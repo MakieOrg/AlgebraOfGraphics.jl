@@ -167,15 +167,16 @@ function compute_axes_grid(d::AbstractDrawable;
     # Axis labels and ticks
     for ae in axes_grid
         ndims = isaxis2d(ae) ? 2 : 3
-        for (i, var) in zip(1:ndims, (:x, :y, :z))
-            scale = get(ae.categoricalscales, i) do
-                return get(ae.continuousscales, i, nothing)
+        vis_scales = [XScale, YScale, ZScale]
+        for (vis_scale, var) in zip(vis_scales[1:ndims], (:x, :y, :z))
+            scale = get(ae.categoricalscales, vis_scale) do
+                return get(ae.continuousscales, vis_scale, nothing)
             end
             isnothing(scale) && continue
             label = getlabel(scale)
             # Use global scales for ticks for now
             # TODO: requires a nicer mechanism that takes into account axis linking
-            (scale isa ContinuousScale) && (scale = merged_continuousscales[i])
+            (scale isa ContinuousScale) && (scale = merged_continuousscales[vis_scale])
             for (k, v) in pairs((label=to_string(label), ticks=ticks(scale)))
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand

@@ -4,6 +4,7 @@ abstract type VisualScale end
 
 struct XScale <: VisualScale end
 struct YScale <: VisualScale end
+struct ZScale <: VisualScale end
 struct LayoutScale <: VisualScale end
 struct RowScale <: VisualScale end
 struct ColScale <: VisualScale end
