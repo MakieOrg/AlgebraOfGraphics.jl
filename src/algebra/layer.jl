@@ -196,7 +196,7 @@ function compute_grid_positions(categoricalscales, primary=NamedArguments())
     end
 end
 
-function rescale(p::ProcessedLayer, categoricalscales::Dictionary{Type{<:Aesthetic},CategoricalScale})
+function rescale(p::ProcessedLayer, categoricalscales::MultiAesScaleDict{CategoricalScale})
     aes_mapping = aesthetic_mapping(p)
     
     primary = map(keys(p.primary), p.primary) do key, values
@@ -244,7 +244,7 @@ function concatenate(pls::AbstractVector{ProcessedLayer})
     return ProcessedLayer(pl; primary, positional, named)
 end
 
-function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::Dictionary{Type{<:Aesthetic},CategoricalScale})
+function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::MultiAesScaleDict{CategoricalScale})
     processedlayer = rescale(processedlayer, categoricalscales)
     tmp_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
     for c in CartesianIndices(shape(processedlayer))
@@ -283,7 +283,7 @@ Return computed attributes.
 function compute_attributes(pl::ProcessedLayer,
                             categoricalscales,
                             continuousscales_grid::AbstractMatrix,
-                            continuousscales::Dictionary{Type{<:Aesthetic},ContinuousScale})
+                            continuousscales::MultiAesScaleDict{ContinuousScale})
     plottype, primary, named, attributes = pl.plottype, pl.primary, pl.named, pl.attributes
 
     attrs = NamedArguments()

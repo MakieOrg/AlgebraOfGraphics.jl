@@ -41,11 +41,13 @@ function AxisSpec(position, options)
     return AxisSpec(type, Tuple(position), attributes)
 end
 
+const MultiAesScaleDict{T} = Dictionary{Type{<:Aesthetic},T}
+
 struct AxisSpecEntries
     axis::AxisSpec
     entries::Vector{Entry}
-    categoricalscales::Dictionary{Type{<:Aesthetic}, CategoricalScale}
-    continuousscales::Dictionary{Type{<:Aesthetic}, ContinuousScale}
+    categoricalscales::MultiAesScaleDict{CategoricalScale}
+    continuousscales::MultiAesScaleDict{ContinuousScale}
 end
 
 """
@@ -58,8 +60,8 @@ scale should be a `ContinuousScale`.
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
-    categoricalscales::Dictionary{Type{<:Aesthetic}, CategoricalScale}
-    continuousscales::Dictionary{Type{<:Aesthetic}, ContinuousScale}
+    categoricalscales::MultiAesScaleDict{CategoricalScale}
+    continuousscales::MultiAesScaleDict{ContinuousScale}
 end
 
 function AxisEntries(ae::AxisSpecEntries, fig)

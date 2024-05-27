@@ -59,7 +59,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
     # the continuous scales
 
     rescaled_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
-    continuousscales_grid = map(_ -> Dictionary{Type{<:Aesthetic},ContinuousScale}(), pls_grid)
+    continuousscales_grid = map(_ -> MultiAesScaleDict{ContinuousScale}(), pls_grid)
 
     for idx in eachindex(pls_grid), pl in pls_grid[idx]
         # Apply continuous transformations
@@ -87,7 +87,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
     end
 
     # Compute merged continuous scales, as it may be needed to use global extrema
-    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=Dictionary{Type{<:Aesthetic},ContinuousScale}())
+    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=MultiAesScaleDict{ContinuousScale}())
 
     to_entry = function (pl)
         attrs = compute_attributes(pl, categoricalscales, continuousscales_grid, merged_continuousscales)
@@ -138,7 +138,7 @@ function compute_axes_grid(d::AbstractDrawable;
 
     processedlayers = ProcessedLayers(d).layers
 
-    categoricalscales = Dictionary{Type{<:Aesthetic},CategoricalScale}()
+    categoricalscales = MultiAesScaleDict{CategoricalScale}()
     
     for processedlayer in processedlayers
         catscales = AlgebraOfGraphics.categoricalscales(processedlayer, palettes)
