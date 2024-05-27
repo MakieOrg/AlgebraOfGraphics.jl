@@ -43,9 +43,11 @@ compute_legend(fg::FigureGrid) = compute_legend(fg.grid)
 
 # ignore positional scales and keywords that don't support legends
 function legendable_scales(scales)
-    invalid_keys = [:col, :row, :layout, :stack, :dodge, :group]
-    return filterkeys(k -> k isa Symbol && k ∉ invalid_keys, scales)
+    return filterkeys(scale_is_legendable, scales)
 end
+
+scale_is_legendable(_) = false
+scale_is_legendable(::Type{ColorScale}) = true
 
 function compute_legend(grid::Matrix{AxisEntries})
     # gather valid named scales
