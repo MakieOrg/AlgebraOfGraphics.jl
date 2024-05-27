@@ -1,4 +1,4 @@
-## Visual Scales
+## Aesthetics
 
 abstract type Aesthetic end
 

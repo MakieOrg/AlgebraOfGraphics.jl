@@ -36,7 +36,7 @@ function aesthetic_mapping end
 
 aesthetic_mapping(p::ProcessedLayer) = aesthetic_mapping(p.plottype, p.attributes)
 
-aesthetic_mapping(plottype, attributes)::Dictionary{Union{Int,Symbol},Type{<:Aesthetic}} = _aesthetic_mapping(plottype, attributes)
+aesthetic_mapping(plottype, attributes)::AestheticMapping = _aesthetic_mapping(plottype, attributes)
 
 _aesthetic_mapping(::Type{Lines}, attributes) = dictionary([1 => AesX, 2 => AesY])
 

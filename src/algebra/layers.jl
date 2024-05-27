@@ -126,7 +126,9 @@ function hardcoded_visual_scale(key)
     nothing
 end
 
-function hardcoded_or_mapped_visual_scale(key::Union{Int,Symbol}, aes_mapping::Dictionary{Union{Int,Symbol},Type{<:Aesthetic}})
+const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
+
+function hardcoded_or_mapped_visual_scale(key::Union{Int,Symbol}, aes_mapping::AestheticMapping)
     @something hardcoded_visual_scale(key) aes_mapping[key]
 end
 
