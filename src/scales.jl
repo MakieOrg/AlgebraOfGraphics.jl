@@ -1,3 +1,14 @@
+## Visual Scales
+
+abstract type VisualScale end
+
+struct XScale <: VisualScale end
+struct YScale <: VisualScale end
+struct LayoutScale <: VisualScale end
+struct RowScale <: VisualScale end
+struct ColScale <: VisualScale end
+struct GroupScale <: VisualScale end
+
 ## Categorical Scales
 
 mutable struct Cycler{K, V}

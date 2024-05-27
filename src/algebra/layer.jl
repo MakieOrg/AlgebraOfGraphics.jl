@@ -125,18 +125,16 @@ end
 function categoricalscales(processedlayer::ProcessedLayer, palettes)
     categoricals = MixedArguments()
     merge!(categoricals, processedlayer.primary)
-    merge_with_key_remap!(
+    merge!(
         categoricals,
         filter(iscategoricalcontainer, Dictionary(processedlayer.positional)),
-        processedlayer.positional_mapping,
     )
 
     categoricalscales = similar(keys(categoricals), CategoricalScale)
     map!(categoricalscales, keys(categoricals), categoricals) do key, val
         palette = key isa Integer ? automatic : get(palettes, key, automatic)
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
-        possibly_remapped_key = get(processedlayer.positional_mapping, key, key)
-        label = to_label(get(processedlayer.labels, possibly_remapped_key, ""))
+        label = to_label(get(processedlayer.labels, key, ""))
         return CategoricalScale(datavalues, palette, label)
     end
     return categoricalscales
@@ -153,17 +151,15 @@ end
 function continuousscales(processedlayer::ProcessedLayer)
     continuous = MixedArguments()
     merge!(continuous, filter(iscontinuous, processedlayer.named))
-    merge_with_key_remap!(
+    merge!(
         continuous,
         filter(iscontinuous, Dictionary(processedlayer.positional)),
-        processedlayer.positional_mapping,
     )
 
     continuousscales = similar(keys(continuous), ContinuousScale)
     map!(continuousscales, keys(continuous), continuous) do key, val
         extrema = extrema_finite(val)
-        possibly_remapped_key = get(processedlayer.positional_mapping, key, key)
-        label = to_label(get(processedlayer.labels, possibly_remapped_key, ""))
+        label = to_label(get(processedlayer.labels, key, ""))
         return ContinuousScale(extrema, label)
     end
 
@@ -185,9 +181,9 @@ end
 ## Machinery to convert a `ProcessedLayer` to a grid of slices of `ProcessedLayer`s
 
 function compute_grid_positions(categoricalscales, primary=NamedArguments())
-    return map((:row, :col), (first, last)) do sym, f
+    return map((RowScale, ColScale), (first, last)) do sym, f
         scale = get(categoricalscales, sym, nothing)
-        lscale = get(categoricalscales, :layout, nothing)
+        lscale = get(categoricalscales, LayoutScale, nothing)
         return if !isnothing(scale)
             rg = Base.OneTo(maximum(plotvalues(scale)))
             haskey(primary, sym) ? fill(primary[sym]) : rg
@@ -200,14 +196,15 @@ function compute_grid_positions(categoricalscales, primary=NamedArguments())
     end
 end
 
-function rescale(p::ProcessedLayer, categoricalscales::MixedArguments)
+function rescale(p::ProcessedLayer, categoricalscales::Dictionary{Type{<:VisualScale},CategoricalScale})
+    vis_scale_mapping = visual_scale_mapping(p)
+    
     primary = map(keys(p.primary), p.primary) do key, values
-        scale = get(categoricalscales, key, nothing)
+        scale = get(categoricalscales, vis_scale_mapping[key], nothing)
         return rescale(values, scale)
     end
     positional = map(keys(p.positional), p.positional) do key, values
-        possibly_remapped_key = get(p.positional_mapping, key, key)
-        scale = get(categoricalscales, possibly_remapped_key, nothing)
+        scale = get(categoricalscales, vis_scale_mapping[key], nothing)
         return rescale.(values, Ref(scale))
     end
 
@@ -247,7 +244,7 @@ function concatenate(pls::AbstractVector{ProcessedLayer})
     return ProcessedLayer(pl; primary, positional, named)
 end
 
-function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::MixedArguments)
+function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::Dictionary{Type{<:VisualScale},CategoricalScale})
     processedlayer = rescale(processedlayer, categoricalscales)
     tmp_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
     for c in CartesianIndices(shape(processedlayer))
@@ -284,9 +281,9 @@ Process attributes of a `ProcessedLayer`. In particular,
 Return computed attributes.
 """
 function compute_attributes(pl::ProcessedLayer,
-                            categoricalscales::MixedArguments,
+                            categoricalscales,
                             continuousscales_grid::AbstractMatrix,
-                            continuousscales::MixedArguments)
+                            continuousscales::Dictionary{Type{<:VisualScale},ContinuousScale})
     plottype, primary, named, attributes = pl.plottype, pl.primary, pl.named, pl.attributes
 
     attrs = NamedArguments()

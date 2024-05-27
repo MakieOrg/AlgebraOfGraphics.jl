@@ -59,7 +59,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
     # the continuous scales
 
     rescaled_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
-    continuousscales_grid = map(_ -> MixedArguments(), pls_grid)
+    continuousscales_grid = map(_ -> Dictionary{Type{<:VisualScale},ContinuousScale}(), pls_grid)
 
     for idx in eachindex(pls_grid), pl in pls_grid[idx]
         # Apply continuous transformations
@@ -67,16 +67,27 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
         named = map(contextfree_rescale, pl.named)
         plottype = Makie.plottype(pl.plottype, positional...)
 
+        vis_scale_mapping = visual_scale_mapping(plottype, pl.attributes)
+
         # Compute continuous scales with correct plottype, to figure out role of color
         continuousscales = AlgebraOfGraphics.continuousscales(ProcessedLayer(pl; plottype))
-        mergewith!(mergescales, continuousscales_grid[idx], continuousscales)
+
+        for (key, scale) in pairs(continuousscales)
+            visual_scale = vis_scale_mapping[key]
+            scaledict = continuousscales_grid[idx]
+            if !haskey(scaledict, visual_scale)
+                insert!(scaledict, visual_scale, scale)
+            else
+                scaledict[visual_scale] = mergescales(scaledict[visual_scale], scale)
+            end
+        end
 
         # Compute `ProcessedLayer` with rescaled columns
         push!(rescaled_pls_grid[idx], ProcessedLayer(pl; plottype, positional, named))
     end
 
     # Compute merged continuous scales, as it may be needed to use global extrema
-    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=MixedArguments())
+    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=Dictionary{Type{<:VisualScale},ContinuousScale}())
 
     to_entry = function (pl)
         attrs = compute_attributes(pl, categoricalscales, continuousscales_grid, merged_continuousscales)
@@ -107,18 +118,34 @@ function compute_axes_grid(fig, d::AbstractDrawable;
     return map(ae -> AxisEntries(ae, fig), axes_grid)
 end
 
+function hardcoded_visual_scale(key)
+    key === :layout ? LayoutScale :
+    key === :row ? RowScale :
+    key === :col ? ColScale :
+    key === :group ? GroupScale :
+    nothing
+end
+
 function compute_axes_grid(d::AbstractDrawable;
                            axis=NamedTuple(), palettes=NamedTuple())
     palettes = compute_palettes(palettes)
 
     processedlayers = ProcessedLayers(d).layers
-    categoricalscales = MixedArguments()
+
+    categoricalscales = Dictionary{Type{<:VisualScale},CategoricalScale}()
+    
     for processedlayer in processedlayers
-        mergewith!(
-            mergescales,
-            categoricalscales,
-            AlgebraOfGraphics.categoricalscales(processedlayer, palettes)
-        )
+        catscales = AlgebraOfGraphics.categoricalscales(processedlayer, palettes)
+        vis_scale_mapping = visual_scale_mapping(processedlayer)
+
+        for (key, scale) in pairs(catscales)
+            visual_scale = @something hardcoded_visual_scale(key) vis_scale_mapping[key]
+            if !haskey(categoricalscales, visual_scale)
+                insert!(categoricalscales, visual_scale, scale)
+            else
+                categoricalscales[visual_scale] = mergescales(categoricalscales[visual_scale], scale)
+            end
+        end
     end
     # fit categorical scales (compute plot values using all data values)
     map!(fitscale, categoricalscales, categoricalscales)
