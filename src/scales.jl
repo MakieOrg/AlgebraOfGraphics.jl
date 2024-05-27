@@ -9,6 +9,7 @@ struct LayoutScale <: VisualScale end
 struct RowScale <: VisualScale end
 struct ColScale <: VisualScale end
 struct GroupScale <: VisualScale end
+struct ColorScale <: VisualScale end
 
 ## Categorical Scales
 

@@ -36,20 +36,24 @@ function visual_scale_mapping end
 
 visual_scale_mapping(p::ProcessedLayer) = visual_scale_mapping(p.plottype, p.attributes)
 
-visual_scale_mapping(::Type{Lines}, attributes) = dictionary([1 => XScale, 2 => YScale])
+visual_scale_mapping(plottype, attributes)::Dictionary{Union{Int,Symbol},Type{<:VisualScale}} = _visual_scale_mapping(plottype, attributes)
 
-function visual_scale_mapping(::Type{BarPlot}, attributes)
+_visual_scale_mapping(::Type{Lines}, attributes) = dictionary([1 => XScale, 2 => YScale])
+
+function _visual_scale_mapping(::Type{BarPlot}, attributes)
     dir = attributes[:direction]
-    if dir === :x
+    keywords = dictionary([:color => ColorScale])
+    positionals = if dir === :x
         dictionary([1 => YScale, 2 => XScale])
     elseif dir === :y
         dictionary([1 => XScale, 2 => YScale])
     else
         throw(ArgumentError("Invalid direction $dir for BarPlot"))
     end
+    merge(positionals, keywords)
 end
 
-function visual_scale_mapping(::Type{Violin}, attributes)
+function _visual_scale_mapping(::Type{Violin}, attributes)
     dir = attributes[:orientation]
     if dir === :horizontal
         dictionary([1 => YScale, 2 => XScale])
@@ -60,4 +64,4 @@ function visual_scale_mapping(::Type{Violin}, attributes)
     end
 end
 
-visual_scale_mapping(::Type{HLines}, attributes) = dictionary([1 => YScale])
+_visual_scale_mapping(::Type{HLines}, attributes) = dictionary([1 => YScale])
