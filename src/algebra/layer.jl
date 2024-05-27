@@ -181,12 +181,12 @@ end
 ## Machinery to convert a `ProcessedLayer` to a grid of slices of `ProcessedLayer`s
 
 function compute_grid_positions(categoricalscales, primary=NamedArguments())
-    return map((RowScale, ColScale), (first, last)) do sym, f
-        scale = get(categoricalscales, sym, nothing)
+    return map((RowScale, ColScale), (first, last)) do scaletype, f
+        scale = get(categoricalscales, scaletype, nothing)
         lscale = get(categoricalscales, LayoutScale, nothing)
         return if !isnothing(scale)
             rg = Base.OneTo(maximum(plotvalues(scale)))
-            haskey(primary, sym) ? fill(primary[sym]) : rg
+            haskey(primary, scaletype) ? fill(primary[scaletype]) : rg
         elseif !isnothing(lscale)
             rg = Base.OneTo(maximum(f, plotvalues(lscale)))
             haskey(primary, :layout) ? fill(f(primary[:layout])) : rg
@@ -200,11 +200,11 @@ function rescale(p::ProcessedLayer, categoricalscales::Dictionary{Type{<:VisualS
     vis_scale_mapping = visual_scale_mapping(p)
     
     primary = map(keys(p.primary), p.primary) do key, values
-        scale = get(categoricalscales, vis_scale_mapping[key], nothing)
+        scale = get(categoricalscales, hardcoded_or_mapped_visual_scale(key, vis_scale_mapping), nothing)
         return rescale(values, scale)
     end
     positional = map(keys(p.positional), p.positional) do key, values
-        scale = get(categoricalscales, vis_scale_mapping[key], nothing)
+        scale = get(categoricalscales, hardcoded_or_mapped_visual_scale(key, vis_scale_mapping), nothing)
         return rescale.(values, Ref(scale))
     end
 

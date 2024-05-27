@@ -126,6 +126,10 @@ function hardcoded_visual_scale(key)
     nothing
 end
 
+function hardcoded_or_mapped_visual_scale(key::Union{Int,Symbol}, vis_scale_mapping::Dictionary{Union{Int,Symbol},Type{<:VisualScale}})
+    @something hardcoded_visual_scale(key) vis_scale_mapping[key]
+end
+
 function compute_axes_grid(d::AbstractDrawable;
                            axis=NamedTuple(), palettes=NamedTuple())
     palettes = compute_palettes(palettes)
@@ -139,7 +143,7 @@ function compute_axes_grid(d::AbstractDrawable;
         vis_scale_mapping = visual_scale_mapping(processedlayer)
 
         for (key, scale) in pairs(catscales)
-            visual_scale = @something hardcoded_visual_scale(key) vis_scale_mapping[key]
+            visual_scale = hardcoded_or_mapped_visual_scale(key, vis_scale_mapping)
             if !haskey(categoricalscales, visual_scale)
                 insert!(categoricalscales, visual_scale, scale)
             else
