@@ -44,8 +44,8 @@ end
 struct AxisSpecEntries
     axis::AxisSpec
     entries::Vector{Entry}
-    categoricalscales::Dictionary{Type{<:VisualScale}, CategoricalScale}
-    continuousscales::Dictionary{Type{<:VisualScale}, ContinuousScale}
+    categoricalscales::Dictionary{Type{<:Aesthetic}, CategoricalScale}
+    continuousscales::Dictionary{Type{<:Aesthetic}, ContinuousScale}
 end
 
 """
@@ -58,8 +58,8 @@ scale should be a `ContinuousScale`.
 struct AxisEntries
     axis::Union{Axis, Axis3}
     entries::Vector{Entry}
-    categoricalscales::Dictionary{Type{<:VisualScale}, CategoricalScale}
-    continuousscales::Dictionary{Type{<:VisualScale}, ContinuousScale}
+    categoricalscales::Dictionary{Type{<:Aesthetic}, CategoricalScale}
+    continuousscales::Dictionary{Type{<:Aesthetic}, ContinuousScale}
 end
 
 function AxisEntries(ae::AxisSpecEntries, fig)

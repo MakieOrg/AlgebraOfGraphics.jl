@@ -18,7 +18,7 @@ end
 
 compute_colorbar(fg::FigureGrid) = compute_colorbar(fg.grid)
 function compute_colorbar(grid::Matrix{AxisEntries})
-    colorscales = filter(!isnothing, [get(ae.continuousscales, ColorScale, nothing) for ae in grid])
+    colorscales = filter(!isnothing, [get(ae.continuousscales, AesColor, nothing) for ae in grid])
     isempty(colorscales) && return
     colorscale = reduce(mergescales, colorscales)
     label = getlabel(colorscale)

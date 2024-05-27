@@ -1,15 +1,15 @@
 ## Visual Scales
 
-abstract type VisualScale end
+abstract type Aesthetic end
 
-struct XScale <: VisualScale end
-struct YScale <: VisualScale end
-struct ZScale <: VisualScale end
-struct LayoutScale <: VisualScale end
-struct RowScale <: VisualScale end
-struct ColScale <: VisualScale end
-struct GroupScale <: VisualScale end
-struct ColorScale <: VisualScale end
+struct AesX <: Aesthetic end
+struct AesY <: Aesthetic end
+struct AesZ <: Aesthetic end
+struct AesLayout <: Aesthetic end
+struct AesRow <: Aesthetic end
+struct AesCol <: Aesthetic end
+struct AesGroup <: Aesthetic end
+struct AesColor <: Aesthetic end
 
 ## Categorical Scales
 

@@ -47,7 +47,7 @@ function legendable_scales(scales)
 end
 
 scale_is_legendable(_) = false
-scale_is_legendable(::Type{ColorScale}) = true
+scale_is_legendable(::Type{AesColor}) = true
 
 function compute_legend(grid::Matrix{AxisEntries})
     # gather valid named scales

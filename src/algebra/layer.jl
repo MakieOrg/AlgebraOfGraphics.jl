@@ -181,12 +181,12 @@ end
 ## Machinery to convert a `ProcessedLayer` to a grid of slices of `ProcessedLayer`s
 
 function compute_grid_positions(categoricalscales, primary=NamedArguments())
-    return map((RowScale, ColScale), (first, last)) do scaletype, f
-        scale = get(categoricalscales, scaletype, nothing)
-        lscale = get(categoricalscales, LayoutScale, nothing)
+    return map((AesRow, AesCol), (first, last)) do aes, f
+        scale = get(categoricalscales, aes, nothing)
+        lscale = get(categoricalscales, AesLayout, nothing)
         return if !isnothing(scale)
             rg = Base.OneTo(maximum(plotvalues(scale)))
-            haskey(primary, scaletype) ? fill(primary[scaletype]) : rg
+            haskey(primary, aes) ? fill(primary[aes]) : rg
         elseif !isnothing(lscale)
             rg = Base.OneTo(maximum(f, plotvalues(lscale)))
             haskey(primary, :layout) ? fill(f(primary[:layout])) : rg
@@ -196,15 +196,15 @@ function compute_grid_positions(categoricalscales, primary=NamedArguments())
     end
 end
 
-function rescale(p::ProcessedLayer, categoricalscales::Dictionary{Type{<:VisualScale},CategoricalScale})
-    vis_scale_mapping = visual_scale_mapping(p)
+function rescale(p::ProcessedLayer, categoricalscales::Dictionary{Type{<:Aesthetic},CategoricalScale})
+    aes_mapping = aesthetic_mapping(p)
     
     primary = map(keys(p.primary), p.primary) do key, values
-        scale = get(categoricalscales, hardcoded_or_mapped_visual_scale(key, vis_scale_mapping), nothing)
+        scale = get(categoricalscales, hardcoded_or_mapped_visual_scale(key, aes_mapping), nothing)
         return rescale(values, scale)
     end
     positional = map(keys(p.positional), p.positional) do key, values
-        scale = get(categoricalscales, hardcoded_or_mapped_visual_scale(key, vis_scale_mapping), nothing)
+        scale = get(categoricalscales, hardcoded_or_mapped_visual_scale(key, aes_mapping), nothing)
         return rescale.(values, Ref(scale))
     end
 
@@ -244,7 +244,7 @@ function concatenate(pls::AbstractVector{ProcessedLayer})
     return ProcessedLayer(pl; primary, positional, named)
 end
 
-function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::Dictionary{Type{<:VisualScale},CategoricalScale})
+function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::Dictionary{Type{<:Aesthetic},CategoricalScale})
     processedlayer = rescale(processedlayer, categoricalscales)
     tmp_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
     for c in CartesianIndices(shape(processedlayer))
@@ -283,7 +283,7 @@ Return computed attributes.
 function compute_attributes(pl::ProcessedLayer,
                             categoricalscales,
                             continuousscales_grid::AbstractMatrix,
-                            continuousscales::Dictionary{Type{<:VisualScale},ContinuousScale})
+                            continuousscales::Dictionary{Type{<:Aesthetic},ContinuousScale})
     plottype, primary, named, attributes = pl.plottype, pl.primary, pl.named, pl.attributes
 
     attrs = NamedArguments()

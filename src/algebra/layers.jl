@@ -59,7 +59,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
     # the continuous scales
 
     rescaled_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
-    continuousscales_grid = map(_ -> Dictionary{Type{<:VisualScale},ContinuousScale}(), pls_grid)
+    continuousscales_grid = map(_ -> Dictionary{Type{<:Aesthetic},ContinuousScale}(), pls_grid)
 
     for idx in eachindex(pls_grid), pl in pls_grid[idx]
         # Apply continuous transformations
@@ -67,18 +67,18 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
         named = map(contextfree_rescale, pl.named)
         plottype = Makie.plottype(pl.plottype, positional...)
 
-        vis_scale_mapping = visual_scale_mapping(plottype, pl.attributes)
+        aes_mapping = aesthetic_mapping(plottype, pl.attributes)
 
         # Compute continuous scales with correct plottype, to figure out role of color
         continuousscales = AlgebraOfGraphics.continuousscales(ProcessedLayer(pl; plottype))
 
         for (key, scale) in pairs(continuousscales)
-            visual_scale = vis_scale_mapping[key]
+            aes = aes_mapping[key]
             scaledict = continuousscales_grid[idx]
-            if !haskey(scaledict, visual_scale)
-                insert!(scaledict, visual_scale, scale)
+            if !haskey(scaledict, aes)
+                insert!(scaledict, aes, scale)
             else
-                scaledict[visual_scale] = mergescales(scaledict[visual_scale], scale)
+                scaledict[aes] = mergescales(scaledict[aes], scale)
             end
         end
 
@@ -87,7 +87,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
     end
 
     # Compute merged continuous scales, as it may be needed to use global extrema
-    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=Dictionary{Type{<:VisualScale},ContinuousScale}())
+    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=Dictionary{Type{<:Aesthetic},ContinuousScale}())
 
     to_entry = function (pl)
         attrs = compute_attributes(pl, categoricalscales, continuousscales_grid, merged_continuousscales)
@@ -119,15 +119,15 @@ function compute_axes_grid(fig, d::AbstractDrawable;
 end
 
 function hardcoded_visual_scale(key)
-    key === :layout ? LayoutScale :
-    key === :row ? RowScale :
-    key === :col ? ColScale :
-    key === :group ? GroupScale :
+    key === :layout ? AesLayout :
+    key === :row ? AesRow :
+    key === :col ? AesCol :
+    key === :group ? AesGroup :
     nothing
 end
 
-function hardcoded_or_mapped_visual_scale(key::Union{Int,Symbol}, vis_scale_mapping::Dictionary{Union{Int,Symbol},Type{<:VisualScale}})
-    @something hardcoded_visual_scale(key) vis_scale_mapping[key]
+function hardcoded_or_mapped_visual_scale(key::Union{Int,Symbol}, aes_mapping::Dictionary{Union{Int,Symbol},Type{<:Aesthetic}})
+    @something hardcoded_visual_scale(key) aes_mapping[key]
 end
 
 function compute_axes_grid(d::AbstractDrawable;
@@ -136,18 +136,18 @@ function compute_axes_grid(d::AbstractDrawable;
 
     processedlayers = ProcessedLayers(d).layers
 
-    categoricalscales = Dictionary{Type{<:VisualScale},CategoricalScale}()
+    categoricalscales = Dictionary{Type{<:Aesthetic},CategoricalScale}()
     
     for processedlayer in processedlayers
         catscales = AlgebraOfGraphics.categoricalscales(processedlayer, palettes)
-        vis_scale_mapping = visual_scale_mapping(processedlayer)
+        aes_mapping = aesthetic_mapping(processedlayer)
 
         for (key, scale) in pairs(catscales)
-            visual_scale = hardcoded_or_mapped_visual_scale(key, vis_scale_mapping)
-            if !haskey(categoricalscales, visual_scale)
-                insert!(categoricalscales, visual_scale, scale)
+            aes = hardcoded_or_mapped_visual_scale(key, aes_mapping)
+            if !haskey(categoricalscales, aes)
+                insert!(categoricalscales, aes, scale)
             else
-                categoricalscales[visual_scale] = mergescales(categoricalscales[visual_scale], scale)
+                categoricalscales[aes] = mergescales(categoricalscales[aes], scale)
             end
         end
     end
@@ -171,16 +171,16 @@ function compute_axes_grid(d::AbstractDrawable;
     # Axis labels and ticks
     for ae in axes_grid
         ndims = isaxis2d(ae) ? 2 : 3
-        vis_scales = [XScale, YScale, ZScale]
-        for (vis_scale, var) in zip(vis_scales[1:ndims], (:x, :y, :z))
-            scale = get(ae.categoricalscales, vis_scale) do
-                return get(ae.continuousscales, vis_scale, nothing)
+        aesthetics = [AesX, AesY, AesZ]
+        for (aes, var) in zip(aesthetics[1:ndims], (:x, :y, :z)[1:ndims])
+            scale = get(ae.categoricalscales, aes) do
+                return get(ae.continuousscales, aes, nothing)
             end
             isnothing(scale) && continue
             label = getlabel(scale)
             # Use global scales for ticks for now
             # TODO: requires a nicer mechanism that takes into account axis linking
-            (scale isa ContinuousScale) && (scale = merged_continuousscales[vis_scale])
+            (scale isa ContinuousScale) && (scale = merged_continuousscales[aes])
             for (k, v) in pairs((label=to_string(label), ticks=ticks(scale)))
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand
