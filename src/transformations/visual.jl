@@ -42,26 +42,22 @@ _visual_scale_mapping(::Type{Lines}, attributes) = dictionary([1 => XScale, 2 =>
 
 function _visual_scale_mapping(::Type{BarPlot}, attributes)
     dir = attributes[:direction]
-    keywords = dictionary([:color => ColorScale])
-    positionals = if dir === :x
-        dictionary([1 => YScale, 2 => XScale])
-    elseif dir === :y
-        dictionary([1 => XScale, 2 => YScale])
-    else
-        throw(ArgumentError("Invalid direction $dir for BarPlot"))
-    end
-    merge(positionals, keywords)
+    dir in (:x, :y) || throw(ArgumentError("Invalid direction $dir for BarPlot"))
+    dictionary([
+        1 => dir == :y ? XScale : YScale,
+        2 => dir == :y ? YScale : XScale,
+        :color => ColorScale,
+    ])
 end
 
 function _visual_scale_mapping(::Type{Violin}, attributes)
     dir = attributes[:orientation]
-    if dir === :horizontal
-        dictionary([1 => YScale, 2 => XScale])
-    elseif dir === :vertical
-        dictionary([1 => XScale, 2 => YScale])
-    else
-        throw(ArgumentError("Invalid orientation $dir for Violin"))
-    end
+    dir in (:horizontal, :vertical) || throw(ArgumentError("Invalid direction $dir for Violin"))
+    dictionary([
+        1 => dir == :horizontal ? XScale : YScale,
+        2 => dir == :horizontal ? YScale : XScale,
+        :color => ColorScale,
+    ])
 end
 
 _visual_scale_mapping(::Type{HLines}, attributes) = dictionary([1 => YScale])
