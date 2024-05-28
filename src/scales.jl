@@ -11,6 +11,11 @@ struct AesCol <: Aesthetic end
 struct AesGroup <: Aesthetic end
 struct AesColor <: Aesthetic end
 
+# helper to dissociate scales belonging to the same Aesthetic type
+struct ScaleID
+    id::Symbol
+end
+
 ## Categorical Scales
 
 mutable struct Cycler{K, V}

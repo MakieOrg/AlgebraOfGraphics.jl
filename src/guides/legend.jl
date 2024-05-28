@@ -56,22 +56,30 @@ function compute_legend(grid::Matrix{AxisEntries})
     # if no legendable scale is present, return nothing
     isempty(scales) && return nothing
 
-    titles = unique!(collect(map(getlabel, scales)))
-
     plottypes, attributes = plottypes_attributes(entries(grid))
+
+    # turn dict of dicts into single-level dict
+    scales_flattened = Dictionary{Pair{Type{<:Aesthetic},Union{Nothing,Symbol}},CategoricalScale}()
+    for (aes, scaledict) in pairs(scales)
+        for (scale_id, scale) in pairs(scaledict)
+            insert!(scales_flattened, aes => scale_id, scale)
+        end
+    end
+
+    titles = unique!(collect(map(getlabel, scales_flattened)))
 
     labels = Vector{AbstractString}[]
     elements_list = Vector{Vector{LegendElement}}[]
 
     for title in titles
-        label_attrs = [key for (key, val) in pairs(scales) if getlabel(val) == title]
-        uniquevalues = mapreduce(k -> datavalues(scales[k]), assert_equal, label_attrs)
+        label_attrs = [key for (key, val) in pairs(scales_flattened) if getlabel(val) == title]
+        uniquevalues = mapreduce(k -> datavalues(scales_flattened[k]), assert_equal, label_attrs)
         elements = map(eachindex(uniquevalues)) do idx
             local elements = LegendElement[]
             for (P, attrs) in zip(plottypes, attributes)
                 shared_attrs = attrs ∩ label_attrs
                 isempty(shared_attrs) && continue
-                options = [attr => plotvalues(scales[attr])[idx] for attr in shared_attrs]
+                options = [attr => plotvalues(scales_flattened[attr])[idx] for attr in shared_attrs]
                 append!(elements, legend_elements(P; options...))
             end
             return elements

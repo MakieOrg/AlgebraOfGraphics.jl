@@ -61,25 +61,27 @@ function getlabeledarray(layer::Layer, s)
     data, axs = layer.data, shape(layer)
     isdims = s isa DimsSelector || s isa Pair && first(s) isa DimsSelector
     if isdims
-        vs, (f, label) = select(data, s)
+        vs, (f, (label, scaleid)) = select(data, s)
         d = only(vs) # multiple dims selectors in the same mapping are disallowed
         sz = ntuple(length(axs)) do n
             return n in d.dims ? length(axs[n]) : 1
         end
         arr = map(fill∘f, CartesianIndices(sz))
     elseif isnothing(data)
-        vs, (f, label) = select(data, s)
+        vs, (f, (label, scaleid)) = select(data, s)
         isprim = any(iscategoricalcontainer, vs)
         arr = isprim ? map(fill∘f, vs...) : map(x -> map(f, x...), zip(vs...)) 
     else
         selector = s isa AbstractArray ? s : fill(s)
         labeled_arr = map(selector) do s
-            local vs, (f, label) = select(data, s)
-            return label, map(f, vs...)
+            local vs, (f, (label, scaleid)) = select(data, s)
+            return label, scaleid, map(f, vs...)
         end
-        label, arr = map(first, labeled_arr), map(last, labeled_arr)
+        label = map(first, labeled_arr)
+        scaleid = map(x -> x[2], labeled_arr)
+        arr = map(last, labeled_arr)
     end
-    return label, arr
+    return label, scaleid, arr
 end
 
 function extract_values!(pairs, labels)
@@ -91,10 +93,31 @@ function process_mappings(layer::Layer)
     # the labels extracted here are directly related to their positional or named arguments
     # but some may later be remapped using `positional_mapping`
     labels = MixedArguments()
-    positional = extract_values!(map(v -> getlabeledarray(layer, v), layer.positional), labels)
-    named = extract_values!(map(v -> getlabeledarray(layer, v), layer.named), labels)
+
+    label_scaleid_positional = map(v -> getlabeledarray(layer, v), layer.positional)
+    pos_labels = map(first, label_scaleid_positional)
+    pos_scaleids = map(x -> x[2], label_scaleid_positional) 
+    positional = map(last, label_scaleid_positional)
+
+    label_scaleid_named = map(v -> getlabeledarray(layer, v), layer.named)
+    nam_labels = map(first, label_scaleid_named)
+    nam_scaleids = map(x -> x[2], label_scaleid_named) 
+    named = map(last, label_scaleid_named)
+
+    labels = merge(Dictionary(pos_labels), nam_labels)
+    scaleids = merge(Dictionary(pos_scaleids), nam_scaleids)
+
+    scale_mapping = map(
+        scaleid -> scaleid.id,
+        filter(
+            x -> x isa ScaleID,
+            map(x -> x[], scaleids)
+        )
+    )
+
     primary, named = separate(iscategoricalcontainer, named)
-    return ProcessedLayer(; primary, positional, named, labels)
+
+    return ProcessedLayer(; primary, positional, named, labels, scale_mapping)
 end
 
 function process(layer::Layer)

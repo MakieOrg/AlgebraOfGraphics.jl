@@ -41,7 +41,10 @@ function AxisSpec(position, options)
     return AxisSpec(type, Tuple(position), attributes)
 end
 
-const MultiAesScaleDict{T} = Dictionary{Type{<:Aesthetic},T}
+# each Aesthetic can (potentially) have multiple separate scales associated with it, for example
+# two different color scales. For some aesthetics like AesX or AesLayout it doesn't make sense to have more than one.
+# Those should trigger meaningful error messages if they are used with multiple scales
+const MultiAesScaleDict{T} = Dictionary{Type{<:Aesthetic},Dictionary{Union{Nothing,Symbol},T}}
 
 struct AxisSpecEntries
     axis::AxisSpec

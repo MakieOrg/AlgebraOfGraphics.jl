@@ -52,6 +52,7 @@ Base.@kwdef struct ProcessedLayer <: AbstractDrawable
     named::NamedArguments=NamedArguments()
     labels::MixedArguments=MixedArguments()
     attributes::NamedArguments=NamedArguments()
+    scale_mapping::Dictionary{KeyType,Symbol}=Dictionary{KeyType,Symbol}() # maps mapping entries to scale ids for use of additional scales
 end
 
 function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
@@ -62,6 +63,7 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
         processedlayer.named,
         processedlayer.labels,
         processedlayer.attributes,
+        processedlayer.scale_mapping,
     )
     return ProcessedLayer(; merge(nt, values(kwargs))...)
 end
@@ -200,11 +202,17 @@ function rescale(p::ProcessedLayer, categoricalscales::MultiAesScaleDict{Categor
     aes_mapping = aesthetic_mapping(p)
     
     primary = map(keys(p.primary), p.primary) do key, values
-        scale = get(categoricalscales, hardcoded_or_mapped_visual_scale(key, aes_mapping), nothing)
+        aes = hardcoded_or_mapped_aes(key, aes_mapping)
+        scale_id = get(p.scale_mapping, key, nothing)
+        scale_dict = get(categoricalscales, aes, nothing)
+        scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)
         return rescale(values, scale)
     end
     positional = map(keys(p.positional), p.positional) do key, values
-        scale = get(categoricalscales, hardcoded_or_mapped_visual_scale(key, aes_mapping), nothing)
+        aes = hardcoded_or_mapped_aes(key, aes_mapping)
+        scale_id = get(p.scale_mapping, key, nothing)
+        scale_dict = get(categoricalscales, aes, nothing)
+        scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)
         return rescale.(values, Ref(scale))
     end
 

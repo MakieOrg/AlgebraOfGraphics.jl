@@ -10,11 +10,11 @@ function (d::DimsSelector)(c::CartesianIndex{N}) where N
     return CartesianIndex(t)
 end
 
-select(data, d::DimsSelector) = (d,) => identity => ""
+select(data, d::DimsSelector) = (d,) => identity => "" => nothing
 
 function select(data, name::Union{Symbol, AbstractString})
     v = getcolumn(data, Symbol(name))
-    return (v,) => identity => to_string(name)
+    return (v,) => identity => to_string(name) => nothing
 end
 
 function select(data, idx::Integer)
@@ -22,12 +22,12 @@ function select(data, idx::Integer)
     return select(data, name)
 end
 
-select(::Nothing, v::AbstractArray) = (v,) => identity => ""
+select(::Nothing, v::AbstractArray) = (v,) => identity => "" => nothing
 
 function select(data, x::Pair{<:Any, <:Union{Symbol, AbstractString}})
     name, label = x
     vs, _ = select(data, name)
-    return vs => identity => to_string(label)
+    return vs => identity => to_string(label) => nothing
 end
 
 function select(data, x::Pair{<:Any, <:Any})
@@ -38,7 +38,7 @@ function select(data, x::Pair{<:Any, <:Any})
     else
         vs, (_, label) = select(data, name)
     end
-    return vs => transformation => label
+    return vs => transformation => label => nothing
 end
 
 function select(data, x::Pair{<:Any, <:Pair})
@@ -46,5 +46,10 @@ function select(data, x::Pair{<:Any, <:Pair})
     transformation, label = transformation_label
     names = name isa Tuple ? name : (name,)
     vs = map(n -> only(first(select(data, n))), names)
-    return vs => transformation => label
+    return vs => transformation => label => nothing
+end
+
+function select(data, x::Pair{<:Any, ScaleID})
+    (vs, (transf, (label, _))) = select(data, x[1])
+    return vs => transf => label => x[2]
 end
