@@ -60,4 +60,12 @@ function _aesthetic_mapping(::Type{Violin}, attributes)
     ])
 end
 
+function _aesthetic_mapping(::Type{Scatter}, attributes)
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        :color => AesColor,
+    ])
+end
+
 _aesthetic_mapping(::Type{HLines}, attributes) = dictionary([1 => AesY])
