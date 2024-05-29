@@ -184,9 +184,22 @@ end
 ## Machinery to convert a `ProcessedLayer` to a grid of slices of `ProcessedLayer`s
 
 function compute_grid_positions(categoricalscales, primary=NamedArguments())
+
+    function extract_single(aes, dict)
+        !haskey(dict, aes) && return nothing
+        subdict = dict[aes]
+        if length(subdict) == 0
+            return nothing
+        elseif length(subdict) > 1
+            error("Found more than one scale for aesthetic $aes for which only one scale is allowed")
+        else
+            return only(values(subdict))
+        end
+    end
+
     return map((AesRow, AesCol), (first, last)) do aes, f
-        scale = get(categoricalscales, aes, nothing)
-        lscale = get(categoricalscales, AesLayout, nothing)
+        scale = extract_single(aes, categoricalscales)
+        lscale = extract_single(AesLayout, categoricalscales)
         return if !isnothing(scale)
             rg = Base.OneTo(maximum(plotvalues(scale)))
             haskey(primary, aes) ? fill(primary[aes]) : rg

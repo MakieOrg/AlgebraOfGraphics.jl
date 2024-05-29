@@ -91,8 +91,19 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
         push!(rescaled_pls_grid[idx], ProcessedLayer(pl; plottype, positional, named))
     end
 
+    function merge_nested_scaledict!(dict1, dict2)
+        for (key, subdict) in pairs(dict2)
+            if !haskey(dict1, key)
+                insert!(dict1, key, subdict)
+            else
+                mergewith!(mergescales, dict1[key], subdict)
+            end
+        end
+        return dict1
+    end
+
     # Compute merged continuous scales, as it may be needed to use global extrema
-    merged_continuousscales = reduce(mergewith!(mergescales), continuousscales_grid, init=MultiAesScaleDict{ContinuousScale}())
+    merged_continuousscales = reduce(merge_nested_scaledict!, continuousscales_grid, init=MultiAesScaleDict{ContinuousScale}())
 
     to_entry = function (pl)
         attrs = compute_attributes(pl, categoricalscales, continuousscales_grid, merged_continuousscales)
