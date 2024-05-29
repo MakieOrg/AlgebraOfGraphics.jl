@@ -76,8 +76,6 @@ function compute_legend(grid::Matrix{AxisEntries})
         for (scale_id, scale) in pairs(scaledict)
             push!(titles, getlabel(scale))
 
-            display(scale)
-
             datavals = datavalues(scale)
             plotvals = plotvalues(scale)
 
