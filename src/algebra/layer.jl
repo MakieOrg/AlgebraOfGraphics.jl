@@ -197,12 +197,16 @@ function compute_grid_positions(categoricalscales, primary=NamedArguments())
         end
     end
 
+    aes_keyword(::Type{AesRow}) = :row
+    aes_keyword(::Type{AesCol}) = :col
+
     return map((AesRow, AesCol), (first, last)) do aes, f
         scale = extract_single(aes, categoricalscales)
         lscale = extract_single(AesLayout, categoricalscales)
         return if !isnothing(scale)
             rg = Base.OneTo(maximum(plotvalues(scale)))
-            haskey(primary, aes) ? fill(primary[aes]) : rg
+            aeskw = aes_keyword(aes)
+            haskey(primary, aeskw) ? fill(primary[aeskw]) : rg
         elseif !isnothing(lscale)
             rg = Base.OneTo(maximum(f, plotvalues(lscale)))
             haskey(primary, :layout) ? fill(f(primary[:layout])) : rg
