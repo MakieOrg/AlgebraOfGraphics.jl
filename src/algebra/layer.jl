@@ -44,6 +44,7 @@ function Base.:*(l::Layer, l′::Layer)
 end
 
 ## Format for layer after processing
+const PlotType = Type{<:Plot}
 
 Base.@kwdef struct ProcessedLayer <: AbstractDrawable
     plottype::PlotType=Plot{plot}
@@ -198,18 +199,20 @@ function compute_grid_positions(categoricalscales, primary=NamedArguments())
     end
 end
 
+const MultiAesScaleDict{T} = Dictionary{Type{<:Aesthetic},Dictionary{Union{Nothing,Symbol},T}}
+
 function rescale(p::ProcessedLayer, categoricalscales::MultiAesScaleDict{CategoricalScale})
     aes_mapping = aesthetic_mapping(p)
     
     primary = map(keys(p.primary), p.primary) do key, values
-        aes = hardcoded_or_mapped_aes(key, aes_mapping)
+        aes = hardcoded_or_mapped_aes(p, key, aes_mapping)
         scale_id = get(p.scale_mapping, key, nothing)
         scale_dict = get(categoricalscales, aes, nothing)
         scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)
         return rescale(values, scale)
     end
     positional = map(keys(p.positional), p.positional) do key, values
-        aes = hardcoded_or_mapped_aes(key, aes_mapping)
+        aes = hardcoded_or_mapped_aes(p, key, aes_mapping)
         scale_id = get(p.scale_mapping, key, nothing)
         scale_dict = get(categoricalscales, aes, nothing)
         scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)

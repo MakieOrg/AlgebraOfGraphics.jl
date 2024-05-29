@@ -133,8 +133,13 @@ end
 
 const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
 
-function hardcoded_or_mapped_aes(key::Union{Int,Symbol}, aes_mapping::AestheticMapping)
-    @something hardcoded_visual_scale(key) aes_mapping[key]
+function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_mapping::AestheticMapping)
+    hardcoded = hardcoded_visual_scale(key)
+    hardcoded !== nothing && return hardcoded
+    if !haskey(aes_mapping, key)
+        throw(ArgumentError("ProcessedLayer with plot type $(processedlayer.plottype) did not have $key in its AestheticMapping. The mapping was $aes_mapping"))
+    end
+    return aes_mapping[key]
 end
 
 function compute_axes_grid(d::AbstractDrawable;
@@ -151,7 +156,7 @@ function compute_axes_grid(d::AbstractDrawable;
 
         for (key, scale) in pairs(catscales)
             scale_id = get(processedlayer.scale_mapping, key, nothing)
-            aes = hardcoded_or_mapped_aes(key, aes_mapping)
+            aes = hardcoded_or_mapped_aes(processedlayer, key, aes_mapping)
             if !haskey(categoricalscales, aes)
                 insert!(categoricalscales, aes, eltype(categoricalscales)())
             end
@@ -178,7 +183,8 @@ function compute_axes_grid(d::AbstractDrawable;
             AxisSpec(c, axis),
             entries_grid[c],
             categoricalscales,
-            continuousscales_grid[c]
+            continuousscales_grid[c],
+            pls_grid[c],
         )
     end
 

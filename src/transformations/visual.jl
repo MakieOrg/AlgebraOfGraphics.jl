@@ -65,7 +65,13 @@ function _aesthetic_mapping(::Type{Scatter}, attributes)
         1 => AesX,
         2 => AesY,
         :color => AesColor,
+        :strokecolor => AesColor,
     ])
 end
 
-_aesthetic_mapping(::Type{HLines}, attributes) = dictionary([1 => AesY])
+function _aesthetic_mapping(::Type{HLines}, attributes)
+    dictionary([
+        1 => AesY,
+        :color => AesColor,
+    ])
+end

@@ -1,5 +1,3 @@
-const PlotType = Type{<:Plot}
-
 """
     Entry(plottype::PlotType, positional::Arguments, named::NamedArguments)
 
@@ -44,13 +42,13 @@ end
 # each Aesthetic can (potentially) have multiple separate scales associated with it, for example
 # two different color scales. For some aesthetics like AesX or AesLayout it doesn't make sense to have more than one.
 # Those should trigger meaningful error messages if they are used with multiple scales
-const MultiAesScaleDict{T} = Dictionary{Type{<:Aesthetic},Dictionary{Union{Nothing,Symbol},T}}
 
 struct AxisSpecEntries
     axis::AxisSpec
     entries::Vector{Entry}
     categoricalscales::MultiAesScaleDict{CategoricalScale}
     continuousscales::MultiAesScaleDict{ContinuousScale}
+    processedlayers::Vector{ProcessedLayer} # the layers that were used to create the entries, for legend purposes
 end
 
 """
@@ -65,15 +63,16 @@ struct AxisEntries
     entries::Vector{Entry}
     categoricalscales::MultiAesScaleDict{CategoricalScale}
     continuousscales::MultiAesScaleDict{ContinuousScale}
+    processedlayers::Vector{ProcessedLayer} # the layers that were used to create the entries, for legend purposes
 end
 
 function AxisEntries(ae::AxisSpecEntries, fig)
     ax = ae.axis.type(fig[ae.axis.position...]; pairs(ae.axis.attributes)...)
-    AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales)
+    AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales, ae.processedlayers)
 end
 
 function AxisEntries(ae::AxisSpecEntries, ax::Union{Axis, Axis3})
-    AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales)
+    AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales, ae.processedlayers)
 end
 
 function Makie.plot!(ae::AxisEntries)
