@@ -134,7 +134,7 @@ function legend_elements(::Type{Scatter}, scale_args::MixedArguments)
     )]
 end
 
-function legend_elements(::Type{BarPlot}, scale_args::MixedArguments)
+function legend_elements(::Union{Type{BarPlot},Type{Violin}}, scale_args::MixedArguments)
     [PolyElement(
         color = haskey(scale_args, :color) ? scale_args[:color] : Makie.current_default_theme()[:patchcolor],
     )]
