@@ -21,8 +21,11 @@ function compute_colorbar(grid::Matrix{AxisEntries})
     colorscales = filter(!isnothing, [get(ae.continuousscales, AesColor, nothing) for ae in grid])
     isempty(colorscales) && return
     colorscale = reduce(mergescales, colorscales)
-    label = getlabel(colorscale)
-    limits = colorscale.extrema
+    if length(colorscale) > 1
+        error("Cannot yet handle multiple colorscales, found $colorscale")
+    end
+    label = getlabel(only(values(colorscale)))
+    limits = only(values(colorscale)).extrema
     colormap = current_default_theme().colormap[]
     # FIXME: handle separate colorbars
     for entry in entries(grid)
