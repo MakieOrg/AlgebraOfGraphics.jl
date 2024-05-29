@@ -74,12 +74,12 @@ function compute_legend(grid::Matrix{AxisEntries})
 
     for (aes, scaledict) in pairs(scales)
         for (scale_id, scale) in pairs(scaledict)
-            push!(titles, @show(getlabel(scale)))
+            push!(titles, getlabel(scale))
 
             display(scale)
 
-            datavals = @show datavalues(scale)
-            plotvals = @show plotvalues(scale)
+            datavals = datavalues(scale)
+            plotvals = plotvalues(scale)
 
             legend_els = [LegendElement[] for _ in datavals]
 
