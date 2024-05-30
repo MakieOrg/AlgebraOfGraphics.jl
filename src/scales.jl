@@ -16,6 +16,7 @@ struct AesMarker <: Aesthetic end
 struct ScaleID
     id::Symbol
 end
+scale(id::Symbol) = ScaleID(id)
 
 ## Categorical Scales
 

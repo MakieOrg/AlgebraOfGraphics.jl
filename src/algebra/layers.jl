@@ -114,7 +114,16 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
     return entries_grid, continuousscales_grid, merged_continuousscales
 end
 
-function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales::AbstractVector)
+function hardcoded_aesthetic(sym::Symbol)
+    sym === :color ? AesColor :
+    sym === :marker ? AesMarker :
+    sym === :layout ? AesLayout :
+    sym === :row ? AesRow :
+    sym === :col ? AesCol :
+    nothing
+end
+
+function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales)
 
     # allow specifying named scales just by symbol, we can find out what aesthetic that maps
     # to by checking the processed layers
@@ -128,7 +137,9 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
             if existing_aes !== nothing && existing_aes !== aes
                 error("Found two different aesthetics for scale key $key, $aes and $existing_aes")
             end
-            insert!(named_scales, symbol, aes)
+            if existing_aes === nothing
+                insert!(named_scales, symbol, aes)
+            end
         end
     end
 
@@ -138,8 +149,19 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
     fn(value::Pair{<:Tuple{<:Type,Symbol},<:Any}) = value[1][2], value[1][1], value[2]
     fn(value::Pair{Symbol,<:Any}) = value[1], named_scales[value[1]], value[2]
 
-    for value in scales
-        scale_id, aes, object = fn(value)
+    for (sym, value) in pairs(scales)
+
+        aes = hardcoded_aesthetic(sym)
+        if aes === nothing
+            if !haskey(named_scales, sym)
+                error("Got scale $(repr(sym)) in scale properties but it is neither a hardcoded scale, nor does it exist in the named scales $(keys(named_scales))")
+            end
+            aes = named_scales[sym]
+            scale_id = sym
+        else
+            scale_id = nothing
+        end
+    
         if !haskey(dict, aes)
             insert!(dict, aes, Dictionary{Union{Nothing,Symbol},Any}())
         end
@@ -147,7 +169,7 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
         if haskey(subdict, scale_id)
             error("Found more than one scale for aesthetic $aes and scale id $scale_id")
         end
-        insert!(subdict, scale_id, object)
+        insert!(subdict, scale_id, value)
     end
 
     # layout = Dictionary((layout=wrap,))

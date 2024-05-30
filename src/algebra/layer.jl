@@ -128,6 +128,7 @@ end
 # TODO: thread this in from the outside instead like `palettes` before
 _default_categorical_palette(::Type{<:Union{AesX,AesY}}) = Makie.automatic
 _default_categorical_palette(::Type{AesColor}) = to_value(Makie.current_default_theme()[:palette][:color])
+_default_categorical_palette(::Type{AesMarker}) = to_value(Makie.current_default_theme()[:palette][:marker])
 _default_categorical_palette(::Type{AesLayout}) = wrap
 _default_categorical_palette(::Type{<:Union{AesRow,AesCol}}) = Makie.automatic
 
@@ -136,7 +137,7 @@ function get_categorical_palette(scale_props, aestype, scale_id)
     subdict = scale_props[aestype]
     haskey(subdict, scale_id) || return _default_categorical_palette(aestype)
     object = subdict[scale_id]
-    get_categorical_palette(aestype, object)
+    get_categorical_palette(aestype, object[:palette])
 end
 
 get_categorical_palette(::Type{AesColor}, colormap::AbstractVector) = colormap
