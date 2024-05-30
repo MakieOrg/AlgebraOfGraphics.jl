@@ -48,6 +48,7 @@ end
 
 scale_is_legendable(_) = false
 scale_is_legendable(::Type{AesColor}) = true
+scale_is_legendable(::Type{AesMarker}) = true
 
 function compute_legend(grid::Matrix{AxisEntries})
     # gather valid named scales
@@ -128,7 +129,7 @@ function legend_elements(::Type{Scatter}, scale_args::MixedArguments)
     [MarkerElement(
         color = haskey(scale_args, :color) ? scale_args[:color] : Makie.current_default_theme()[:markercolor],
         markerpoints = [Point2f(0.5, 0.5)],
-        marker = Makie.current_default_theme()[:marker],
+        marker = haskey(scale_args, :marker) ? scale_args[:marker] : Makie.current_default_theme()[:marker],
     )]
 end
 

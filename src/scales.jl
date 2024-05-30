@@ -10,6 +10,7 @@ struct AesRow <: Aesthetic end
 struct AesCol <: Aesthetic end
 struct AesGroup <: Aesthetic end
 struct AesColor <: Aesthetic end
+struct AesMarker <: Aesthetic end
 
 # helper to dissociate scales belonging to the same Aesthetic type
 struct ScaleID

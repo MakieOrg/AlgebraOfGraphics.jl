@@ -66,6 +66,7 @@ function _aesthetic_mapping(::Type{Scatter}, attributes)
         2 => AesY,
         :color => AesColor,
         :strokecolor => AesColor,
+        :marker => AesMarker,
     ])
 end
 
