@@ -114,11 +114,29 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
     return entries_grid, continuousscales_grid, merged_continuousscales
 end
 
-function compute_scale_properties(scales::AbstractVector)
+function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales::AbstractVector)
+
+    # allow specifying named scales just by symbol, we can find out what aesthetic that maps
+    # to by checking the processed layers
+    named_scales = Dictionary{Symbol,Type{<:Aesthetic}}()
+
+    for processedlayer in processedlayers
+        aes_mapping = aesthetic_mapping(processedlayer)
+        for (key, symbol) in pairs(processedlayer.scale_mapping)
+            existing_aes = get(named_scales, symbol, nothing)
+            aes = aes_mapping[key]
+            if existing_aes !== nothing && existing_aes !== aes
+                error("Found two different aesthetics for scale key $key, $aes and $existing_aes")
+            end
+            insert!(named_scales, symbol, aes)
+        end
+    end
+
     dict = MultiAesScaleDict{Any}()
 
     fn(value::Pair{<:Type,<:Any}) = nothing, value[1], value[2]
     fn(value::Pair{<:Tuple{<:Type,Symbol},<:Any}) = value[1][2], value[1][1], value[2]
+    fn(value::Pair{Symbol,<:Any}) = value[1], named_scales[value[1]], value[2]
 
     for value in scales
         scale_id, aes, object = fn(value)
@@ -172,9 +190,10 @@ end
 
 function compute_axes_grid(d::AbstractDrawable;
                            axis=NamedTuple(), scales=[])
-    scale_props = compute_scale_properties(scales)
 
     processedlayers = ProcessedLayers(d).layers
+
+    scale_props = compute_scale_properties(processedlayers, scales)
 
     categoricalscales = MultiAesScaleDict{CategoricalScale}()
     
