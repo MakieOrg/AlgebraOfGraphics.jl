@@ -139,9 +139,10 @@ function legend_elements(::Union{Type{BarPlot},Type{Violin}}, scale_args::MixedA
     )]
 end
 
-function legend_elements(::Type{HLines}, scale_args::MixedArguments)
+function legend_elements(T::Type{<:Union{HLines,VLines,Lines,LineSegments}}, scale_args::MixedArguments)
     [LineElement(
         color = haskey(scale_args, :color) ? scale_args[:color] : Makie.current_default_theme()[:linecolor],
+        linepoints = T === VLines ? [Point2f(0.5, 0), Point2f(0.5, 1)] : [Point2f(0, 0.5), Point2f(1, 0.5)]
     )]
 end
 

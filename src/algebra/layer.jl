@@ -125,7 +125,27 @@ function merge_with_key_remap!(dict, dict2, remapdict)
     return dict
 end
 
-function categoricalscales(processedlayer::ProcessedLayer, palettes)
+# TODO: thread this in from the outside instead like `palettes` before
+_default_categorical_palette(::Type{<:Union{AesX,AesY}}) = Makie.automatic
+_default_categorical_palette(::Type{AesColor}) = to_value(Makie.current_default_theme()[:palette][:color])
+_default_categorical_palette(::Type{AesLayout}) = wrap
+_default_categorical_palette(::Type{<:Union{AesRow,AesCol}}) = Makie.automatic
+
+function get_categorical_palette(scale_props, aestype, scale_id)
+    haskey(scale_props, aestype) || return _default_categorical_palette(aestype)
+    subdict = scale_props[aestype]
+    haskey(subdict, scale_id) || return _default_categorical_palette(aestype)
+    object = subdict[scale_id]
+    get_categorical_palette(aestype, object)
+end
+
+get_categorical_palette(::Type{AesColor}, colormap::AbstractVector) = colormap
+get_categorical_palette(::Type{AesColor}, colormap::Symbol) = Makie.to_colormap(colormap)
+# get_categorical_palette(::Type{<:Union{AesX,AesY}}, a::Makie.Automatic) = a
+
+const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
+
+function categoricalscales(processedlayer::ProcessedLayer, scale_props, aes_mapping::AestheticMapping)
     categoricals = MixedArguments()
     merge!(categoricals, processedlayer.primary)
     merge!(
@@ -134,8 +154,10 @@ function categoricalscales(processedlayer::ProcessedLayer, palettes)
     )
 
     categoricalscales = similar(keys(categoricals), CategoricalScale)
-    map!(categoricalscales, keys(categoricals), categoricals) do key, val
-        palette = key isa Integer ? automatic : get(palettes, key, automatic)
+    map!(categoricalscales, pairs(categoricals)) do (key, val)
+        aestype = hardcoded_or_mapped_aes(processedlayer, key, aes_mapping)
+        scale_id = get(processedlayer.scale_mapping, key, nothing)
+        palette = get_categorical_palette(scale_props, aestype, scale_id)
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
         label = to_label(get(processedlayer.labels, key, ""))
         return CategoricalScale(datavalues, palette, label)

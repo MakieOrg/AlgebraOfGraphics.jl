@@ -114,17 +114,36 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
     return entries_grid, continuousscales_grid, merged_continuousscales
 end
 
-function compute_palettes(palettes)
-    layout = Dictionary((layout=wrap,))
-    theme_palettes = map(to_value, Dictionary(Makie.current_default_theme()[:palette]))
-    user_palettes = Dictionary(palettes)
-    return foldl(merge!, (layout, theme_palettes, user_palettes), init=NamedArguments())
+function compute_scale_properties(scales::AbstractVector)
+    dict = MultiAesScaleDict{Any}()
+
+    fn(value::Pair{<:Type,<:Any}) = nothing, value[1], value[2]
+    fn(value::Pair{<:Tuple{<:Type,Symbol},<:Any}) = value[1][2], value[1][1], value[2]
+
+    for value in scales
+        scale_id, aes, object = fn(value)
+        if !haskey(dict, aes)
+            insert!(dict, aes, Dictionary{Union{Nothing,Symbol},Any}())
+        end
+        subdict = dict[aes]
+        if haskey(subdict, scale_id)
+            error("Found more than one scale for aesthetic $aes and scale id $scale_id")
+        end
+        insert!(subdict, scale_id, object)
+    end
+
+    # layout = Dictionary((layout=wrap,))
+    # theme_palettes = map(to_value, Dictionary(Makie.current_default_theme()[:palette]))
+    # user_palettes = Dictionary(palettes)
+    # return foldl(merge!, (layout, theme_palettes, user_palettes), init=NamedArguments())
+
+    return dict
 end
 
 function compute_axes_grid(fig, d::AbstractDrawable;
-                           axis=NamedTuple(), palettes=NamedTuple())
+                           axis=NamedTuple(), scales=[])
 
-    axes_grid = compute_axes_grid(d; axis, palettes)
+    axes_grid = compute_axes_grid(d; axis, scales)
     sz = size(axes_grid)
     if sz != (1, 1) && fig isa Axis
         msg = "You can only pass an `Axis` to `draw!` if the calculated layout only contains one element. Elements: $(sz)"
@@ -142,8 +161,6 @@ function hardcoded_visual_scale(key)
     nothing
 end
 
-const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
-
 function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_mapping::AestheticMapping)
     hardcoded = hardcoded_visual_scale(key)
     hardcoded !== nothing && return hardcoded
@@ -154,16 +171,16 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_map
 end
 
 function compute_axes_grid(d::AbstractDrawable;
-                           axis=NamedTuple(), palettes=NamedTuple())
-    palettes = compute_palettes(palettes)
+                           axis=NamedTuple(), scales=[])
+    scale_props = compute_scale_properties(scales)
 
     processedlayers = ProcessedLayers(d).layers
 
     categoricalscales = MultiAesScaleDict{CategoricalScale}()
     
     for processedlayer in processedlayers
-        catscales = AlgebraOfGraphics.categoricalscales(processedlayer, palettes)
         aes_mapping = aesthetic_mapping(processedlayer)
+        catscales = AlgebraOfGraphics.categoricalscales(processedlayer, scale_props, aes_mapping)
 
         for (key, scale) in pairs(catscales)
             scale_id = get(processedlayer.scale_mapping, key, nothing)

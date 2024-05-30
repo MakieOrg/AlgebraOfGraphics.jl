@@ -38,7 +38,7 @@ aesthetic_mapping(p::ProcessedLayer) = aesthetic_mapping(p.plottype, p.attribute
 
 aesthetic_mapping(plottype, attributes)::AestheticMapping = _aesthetic_mapping(plottype, attributes)
 
-_aesthetic_mapping(::Type{Lines}, attributes) = dictionary([1 => AesX, 2 => AesY])
+_aesthetic_mapping(::Type{Lines}, attributes) = dictionary([1 => AesX, 2 => AesY, :color => AesColor])
 
 function _aesthetic_mapping(::Type{BarPlot}, attributes)
     dir = attributes[:direction]
@@ -73,6 +73,13 @@ end
 function _aesthetic_mapping(::Type{HLines}, attributes)
     dictionary([
         1 => AesY,
+        :color => AesColor,
+    ])
+end
+
+function _aesthetic_mapping(::Type{VLines}, attributes)
+    dictionary([
+        1 => AesX,
         :color => AesColor,
     ])
 end

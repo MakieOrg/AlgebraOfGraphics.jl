@@ -49,6 +49,11 @@ function select(data, x::Pair{<:Any, <:Pair})
     return vs => transformation => label => nothing
 end
 
+function select(data, x::Pair{<:Any, <:Pair{<:Any, ScaleID}})
+    (vs, (transf, (label, _))) = select(data, x[1] => x[2][1])
+    return vs => transf => label => x[2][2]
+end
+
 function select(data, x::Pair{<:Any, ScaleID})
     (vs, (transf, (label, _))) = select(data, x[1])
     return vs => transf => label => x[2]
