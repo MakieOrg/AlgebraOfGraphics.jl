@@ -50,6 +50,20 @@ scale_is_legendable(_) = false
 scale_is_legendable(::Type{AesColor}) = true
 scale_is_legendable(::Type{AesMarker}) = true
 
+function unique_by(f, collection)
+    T = Base._return_type(f, Tuple{eltype(collection)})
+    s = Set{T}()
+    v = Vector{eltype(collection)}()
+    for el in collection
+        by = f(el)
+        if by ∉ s
+            push!(s, by)
+            push!(v, el)
+        end
+    end
+    return v
+end
+
 function compute_legend(grid::Matrix{AxisEntries})
     # gather valid named scales
     scales = legendable_scales(first(grid).categoricalscales)
@@ -73,6 +87,11 @@ function compute_legend(grid::Matrix{AxisEntries})
     labels = Vector{AbstractString}[]
     elements_list = Vector{Vector{LegendElement}}[]
 
+    # we can't loop over all processedlayers here because one layer can be sliced into multiple processedlayers
+    unique_processedlayers = unique_by(processedlayers) do pl
+        (pl.plottype, pl.attributes)
+    end
+
     for (aes, scaledict) in pairs(scales)
         for (scale_id, scale) in pairs(scaledict)
             push!(titles, getlabel(scale))
@@ -82,9 +101,9 @@ function compute_legend(grid::Matrix{AxisEntries})
 
             legend_els = [LegendElement[] for _ in datavals]
 
-            for processedlayer in processedlayers
+            for processedlayer in unique_processedlayers
                 aes_mapping = aesthetic_mapping(processedlayer)
-                ProcessedLayer
+
                 matching_keys = filter(keys(merge(dictionary(processedlayer.positional), processedlayer.primary, processedlayer.named))) do key
                     get(aes_mapping, key, nothing) === aes &&
                         get(processedlayer.scale_mapping, key, nothing) === scale_id
@@ -98,22 +117,6 @@ function compute_legend(grid::Matrix{AxisEntries})
 
             end
 
-            # label_attrs = [key for (key, val) in pairs(scales_flattened) if getlabel(val) == title]
-            # @show label_attrs
-            # uniquevalues = mapreduce(k -> datavalues(scales_flattened[k]), assert_equal, label_attrs)
-            # @show uniquevalues
-            # elements = map(eachindex(uniquevalues)) do idx
-            #     local elements = LegendElement[]
-            #     for (P, attrs) in zip(plottypes, attributes)
-            #         shared_attrs = attrs ∩ label_attrs
-            #         isempty(shared_attrs) && continue
-            #         options = [attr => plotvalues(scales_flattened[attr])[idx] for attr in shared_attrs]
-            #         append!(elements, legend_elements(P; options...))
-            #     end
-            #     return elements
-            # end
-            # push!(labels, map(to_string, uniquevalues))
-            # push!(elements_list, elements)
             push!(labels, string.(datavals))
             push!(elements_list, legend_els)
         end
@@ -122,24 +125,37 @@ function compute_legend(grid::Matrix{AxisEntries})
 end
 
 function legend_elements(p::ProcessedLayer, scale_args::MixedArguments)
-    legend_elements(p.plottype, scale_args)
+    legend_elements(p.plottype, p.attributes, scale_args)
 end
 
-function legend_elements(::Type{Scatter}, scale_args::MixedArguments)
+function _get(scale_args, attributes, key, fallback)
+    get(scale_args, key) do
+        get(attributes, key) do 
+            Makie.current_default_theme()[fallback]
+        end
+    end
+end
+
+function legend_elements(::Type{Scatter}, attributes, scale_args::MixedArguments)
     [MarkerElement(
-        color = haskey(scale_args, :color) ? scale_args[:color] : Makie.current_default_theme()[:markercolor],
+        color = _get(scale_args, attributes, :color, :markercolor),
         markerpoints = [Point2f(0.5, 0.5)],
-        marker = haskey(scale_args, :marker) ? scale_args[:marker] : Makie.current_default_theme()[:marker],
+        marker = _get(scale_args, attributes, :marker, :marker),
+        markerstrokewidth = _get(scale_args, attributes, :strokewidth, :markerstrokewidth),
+        markersize = _get(scale_args, attributes, :markersize, :markersize),
+        markerstrokecolor = _get(scale_args, attributes, :strokecolor, :linecolor),
     )]
 end
 
-function legend_elements(::Union{Type{BarPlot},Type{Violin}}, scale_args::MixedArguments)
+function legend_elements(::Union{Type{BarPlot},Type{Violin}}, attributes, scale_args::MixedArguments)
     [PolyElement(
-        color = haskey(scale_args, :color) ? scale_args[:color] : Makie.current_default_theme()[:patchcolor],
+        color = _get(scale_args, attributes, :color, :patchcolor),
+        polystrokecolor = _get(scale_args, attributes, :strokecolor, :linecolor),
+        polystrokewidth = _get(scale_args, attributes, :strokewidth, :linewidth),
     )]
 end
 
-function legend_elements(T::Type{<:Union{HLines,VLines,Lines,LineSegments}}, scale_args::MixedArguments)
+function legend_elements(T::Type{<:Union{HLines,VLines,Lines,LineSegments}}, attributes, scale_args::MixedArguments)
     [LineElement(
         color = haskey(scale_args, :color) ? scale_args[:color] : Makie.current_default_theme()[:linecolor],
         linepoints = T === VLines ? [Point2f(0.5, 0), Point2f(0.5, 1)] : [Point2f(0, 0.5), Point2f(1, 0.5)]

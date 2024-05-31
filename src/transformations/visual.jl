@@ -55,6 +55,10 @@ function aesthetic_mapping(plottype, attributes)::AestheticMapping
     return mapping
 end
 
+function aesthetic_mapping(T::Type{<:Plot})
+    error("No aesthetic mapping defined yet for plot type $T. AlgebraOfGraphics can only use plot types if it is told which attributes and input arguments map to which aesthetics like color, markersize or linewidth for example.")
+end
+
 function aesthetic_mapping(::Type{Lines})
     dictionary([
         1 => AesX,
@@ -62,7 +66,6 @@ function aesthetic_mapping(::Type{Lines})
         :color => AesColor
     ])
 end
-
 
 function aesthetic_mapping(::Type{BarPlot})
     dictionary([
