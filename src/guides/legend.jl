@@ -155,9 +155,17 @@ function legend_elements(T::Union{Type{BarPlot},Type{Violin}}, attributes, scale
     )]
 end
 
+function legend_elements(T::Type{RainClouds}, attributes, scale_args::MixedArguments)
+    [PolyElement(
+        color = _get(T, scale_args, attributes, :color),
+    )]
+end
+
 function legend_elements(T::Type{<:Union{HLines,VLines,Lines,LineSegments}}, attributes, scale_args::MixedArguments)
     [LineElement(
-        color = haskey(scale_args, :color) ? scale_args[:color] : Makie.current_default_theme()[:linecolor],
+        color = _get(T, scale_args, attributes, :color),
+        linestyle = _get(T, scale_args, attributes, :linestyle),
+        linewidth = _get(T, scale_args, attributes, :linewidth),
         linepoints = T === VLines ? [Point2f(0.5, 0), Point2f(0.5, 1)] : [Point2f(0, 0.5), Point2f(1, 0.5)]
     )]
 end

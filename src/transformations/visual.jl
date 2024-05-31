@@ -27,6 +27,7 @@ visual(plottype::PlotType=Plot{plot}; kwargs...) = transformation(Visual(plottyp
 mandatory_attributes(T) = NamedArguments()
 mandatory_attributes(::Type{BarPlot}) = dictionary([:direction => :y])
 mandatory_attributes(::Type{Violin}) = dictionary([:orientation => :vertical])
+mandatory_attributes(::Type{RainClouds}) = dictionary([:orientation => :vertical])
 
 # this function needs to be defined for any plot type that should work with AoG, because it tells
 # AoG how its positional arguments can be understood in terms of the dimensions of the plot for
@@ -115,6 +116,20 @@ end
 function aesthetic_mapping(::Type{VLines})
     dictionary([
         1 => AesX,
+        :color => AesColor,
+    ])
+end
+
+function aesthetic_mapping(::Type{RainClouds})
+    dictionary([
+        1 => :orientation => dictionary([
+            :horizontal => AesY,
+            :vertical => AesX,
+        ]),
+        2 => :orientation => dictionary([
+            :horizontal => AesX,
+            :vertical => AesY,
+        ]),
         :color => AesColor,
     ])
 end
