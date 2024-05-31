@@ -128,30 +128,30 @@ function legend_elements(p::ProcessedLayer, scale_args::MixedArguments)
     legend_elements(p.plottype, p.attributes, scale_args)
 end
 
-function _get(scale_args, attributes, key, fallback)
+function _get(plottype, scale_args, attributes, key)
     get(scale_args, key) do
         get(attributes, key) do 
-            Makie.current_default_theme()[fallback]
+            to_value(Makie.default_theme(nothing, plottype)[key])
         end
     end
 end
 
-function legend_elements(::Type{Scatter}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Type{Scatter}, attributes, scale_args::MixedArguments)
     [MarkerElement(
-        color = _get(scale_args, attributes, :color, :markercolor),
+        color = _get(T, scale_args, attributes, :color),
         markerpoints = [Point2f(0.5, 0.5)],
-        marker = _get(scale_args, attributes, :marker, :marker),
-        markerstrokewidth = _get(scale_args, attributes, :strokewidth, :markerstrokewidth),
-        markersize = _get(scale_args, attributes, :markersize, :markersize),
-        markerstrokecolor = _get(scale_args, attributes, :strokecolor, :linecolor),
+        marker = _get(T, scale_args, attributes, :marker),
+        markerstrokewidth = _get(T, scale_args, attributes, :strokewidth),
+        markersize = _get(T, scale_args, attributes, :markersize),
+        markerstrokecolor = _get(T, scale_args, attributes, :strokecolor),
     )]
 end
 
-function legend_elements(::Union{Type{BarPlot},Type{Violin}}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Union{Type{BarPlot},Type{Violin}}, attributes, scale_args::MixedArguments)
     [PolyElement(
-        color = _get(scale_args, attributes, :color, :patchcolor),
-        polystrokecolor = _get(scale_args, attributes, :strokecolor, :linecolor),
-        polystrokewidth = _get(scale_args, attributes, :strokewidth, :linewidth),
+        color = _get(T, scale_args, attributes, :color),
+        polystrokecolor = _get(T, scale_args, attributes, :strokecolor),
+        polystrokewidth = _get(T, scale_args, attributes, :strokewidth),
     )]
 end
 
