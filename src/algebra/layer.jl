@@ -131,6 +131,7 @@ _default_categorical_palette(::Type{AesColor}) = to_value(Makie.current_default_
 _default_categorical_palette(::Type{AesMarker}) = to_value(Makie.current_default_theme()[:palette][:marker])
 _default_categorical_palette(::Type{AesLayout}) = wrap
 _default_categorical_palette(::Type{<:Union{AesRow,AesCol}}) = Makie.automatic
+_default_categorical_palette(::Type{AesGroup}) = Makie.automatic
 
 function get_categorical_palette(scale_props, aestype, scale_id)
     haskey(scale_props, aestype) || return _default_categorical_palette(aestype)
