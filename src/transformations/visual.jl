@@ -36,31 +36,63 @@ function aesthetic_mapping end
 
 aesthetic_mapping(p::ProcessedLayer) = aesthetic_mapping(p.plottype, p.attributes)
 
-aesthetic_mapping(plottype, attributes)::AestheticMapping = _aesthetic_mapping(plottype, attributes)
+function aesthetic_mapping(plottype, attributes)::AestheticMapping
+    mapping = aesthetic_mapping(plottype)
+    for (key, value) in pairs(mapping)
+        if value isa Pair
+            attrkey, dict = value
+            if !haskey(attributes, attrkey)
+                error("Aesthetic mapping lookup for $plottype failed with key $(repr(key)), could not find $(repr(attrkey)) in plot attributes")
+            end
+            attrvalue = attributes[attrkey]
+            if !haskey(dict, attrvalue)
+                error("Aesthetic mapping lookup for $plottype failed with key $(repr(key)), no entry for attribute $(repr(attrkey)) with value $(attrvalue). Existing variants are $(dict)")
+            end
+            aes = dict[attrvalue]
+            mapping[key] = aes
+        end
+    end
+    return mapping
+end
 
-_aesthetic_mapping(::Type{Lines}, attributes) = dictionary([1 => AesX, 2 => AesY, :color => AesColor])
-
-function _aesthetic_mapping(::Type{BarPlot}, attributes)
-    dir = attributes[:direction]
-    dir in (:x, :y) || throw(ArgumentError("Invalid direction $dir for BarPlot"))
+function aesthetic_mapping(::Type{Lines})
     dictionary([
-        1 => dir == :y ? AesX : AesY,
-        2 => dir == :y ? AesY : AesX,
+        1 => AesX,
+        2 => AesY,
+        :color => AesColor
+    ])
+end
+
+
+function aesthetic_mapping(::Type{BarPlot})
+    dictionary([
+        1 => :direction => dictionary([
+            :y => AesX,
+            :x => AesY,
+        ]),
+        2 => :direction => dictionary([
+            :y => AesY,
+            :x => AesX,
+        ]),
         :color => AesColor,
     ])
 end
 
-function _aesthetic_mapping(::Type{Violin}, attributes)
-    dir = attributes[:orientation]
-    dir in (:horizontal, :vertical) || throw(ArgumentError("Invalid direction $dir for Violin"))
+function aesthetic_mapping(::Type{Violin})
     dictionary([
-        1 => dir == :horizontal ? AesX : AesY,
-        2 => dir == :horizontal ? AesY : AesX,
+        1 => :orientation => dictionary([
+            :horizontal => AesX,
+            :vertical => AesY,
+        ]),
+        2 => :orientation => dictionary([
+            :horizontal => AesY,
+            :vertical => AesX,
+        ]),
         :color => AesColor,
     ])
 end
 
-function _aesthetic_mapping(::Type{Scatter}, attributes)
+function aesthetic_mapping(::Type{Scatter})
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -70,14 +102,14 @@ function _aesthetic_mapping(::Type{Scatter}, attributes)
     ])
 end
 
-function _aesthetic_mapping(::Type{HLines}, attributes)
+function aesthetic_mapping(::Type{HLines})
     dictionary([
         1 => AesY,
         :color => AesColor,
     ])
 end
 
-function _aesthetic_mapping(::Type{VLines}, attributes)
+function aesthetic_mapping(::Type{VLines})
     dictionary([
         1 => AesX,
         :color => AesColor,
