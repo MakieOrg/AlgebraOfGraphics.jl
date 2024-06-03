@@ -133,3 +133,11 @@ function aesthetic_mapping(::Type{RainClouds})
         :color => AesColor,
     ])
 end
+
+function aesthetic_mapping(::Type{Heatmap})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        3 => AesColor,
+    ])
+end

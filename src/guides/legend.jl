@@ -161,6 +161,12 @@ function legend_elements(T::Type{RainClouds}, attributes, scale_args::MixedArgum
     )]
 end
 
+function legend_elements(T::Type{Heatmap}, attributes, scale_args::MixedArguments)
+    [PolyElement(
+        color = _get(T, scale_args, attributes, 3),
+    )]
+end
+
 function legend_elements(T::Type{<:Union{HLines,VLines,Lines,LineSegments}}, attributes, scale_args::MixedArguments)
     [LineElement(
         color = _get(T, scale_args, attributes, :color),
