@@ -104,7 +104,7 @@ function compute_legend(grid::Matrix{AxisEntries})
             for processedlayer in unique_processedlayers
                 aes_mapping = aesthetic_mapping(processedlayer)
 
-                matching_keys = filter(keys(merge(dictionary(processedlayer.positional), processedlayer.primary, processedlayer.named))) do key
+                matching_keys = filter(keys(merge(Dictionary(processedlayer.positional), processedlayer.primary, processedlayer.named))) do key
                     get(aes_mapping, key, nothing) === aes &&
                         get(processedlayer.scale_mapping, key, nothing) === scale_id
                 end
