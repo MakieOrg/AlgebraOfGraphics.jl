@@ -109,7 +109,7 @@ span_ylabel!(fig, aes) = span_label!(fig, aes, :y)
 
 function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
 
-    scale = get(aes[1].categoricalscales, :layout, nothing)
+    scale = extract_single(AesLayout, aes[1].categoricalscales)
     isnothing(scale) && return
 
     # Link axes and hide decorations if appropriate
@@ -137,7 +137,8 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
 end
 
 function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
-    row_scale, col_scale = map(sym -> get(aes[1].categoricalscales, sym, nothing), (:row, :col))
+    row_scale = extract_single(AesRow, aes[1].categoricalscales)
+    col_scale = extract_single(AesCol, aes[1].categoricalscales)
     all(isnothing, (row_scale, col_scale)) && return
 
     # link axes and hide decorations if appropriate

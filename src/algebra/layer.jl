@@ -190,36 +190,38 @@ function continuousscales(processedlayer::ProcessedLayer)
         return ContinuousScale(extrema, label)
     end
 
-    # TODO: also encode colormap here
-    if has_zcolor(processedlayer) && !haskey(continuousscales, :color)
-        colorscale = get(continuousscales, 3, nothing)
-        isnothing(colorscale) || insert!(continuousscales, :color, colorscale)
-    end
+    # this is now handled via aesthetic mapping plus custom Entry functions per plot type
 
-    colorrange = get(processedlayer.attributes, :colorrange, nothing)
-    if !isnothing(colorrange)
-        manualcolorscale = ContinuousScale(colorrange, "", force=true)
-        merge!(mergescales, continuousscales, Dictionary((color=manualcolorscale,)))
-    end
+    # # TODO: also encode colormap here
+    # if has_zcolor(processedlayer) && !haskey(continuousscales, :color)
+    #     colorscale = get(continuousscales, 3, nothing)
+    #     isnothing(colorscale) || insert!(continuousscales, :color, colorscale)
+    # end
+
+    # colorrange = get(processedlayer.attributes, :colorrange, nothing)
+    # if !isnothing(colorrange)
+    #     manualcolorscale = ContinuousScale(colorrange, "", force=true)
+    #     merge!(mergescales, continuousscales, Dictionary((color=manualcolorscale,)))
+    # end
 
     return continuousscales
+end
+
+function extract_single(aes, dict)
+    !haskey(dict, aes) && return nothing
+    subdict = dict[aes]
+    if length(subdict) == 0
+        return nothing
+    elseif length(subdict) > 1
+        error("Found more than one scale for aesthetic $aes for which only one scale is allowed")
+    else
+        return only(values(subdict))
+    end
 end
 
 ## Machinery to convert a `ProcessedLayer` to a grid of slices of `ProcessedLayer`s
 
 function compute_grid_positions(categoricalscales, primary=NamedArguments())
-
-    function extract_single(aes, dict)
-        !haskey(dict, aes) && return nothing
-        subdict = dict[aes]
-        if length(subdict) == 0
-            return nothing
-        elseif length(subdict) > 1
-            error("Found more than one scale for aesthetic $aes for which only one scale is allowed")
-        else
-            return only(values(subdict))
-        end
-    end
 
     aes_keyword(::Type{AesRow}) = :row
     aes_keyword(::Type{AesCol}) = :col
@@ -242,33 +244,53 @@ end
 
 const MultiAesScaleDict{T} = Dictionary{Type{<:Aesthetic},Dictionary{Union{Nothing,Symbol},T}}
 
+# function rescale(p::ProcessedLayer, categoricalscales::MultiAesScaleDict{CategoricalScale})
+#     aes_mapping = aesthetic_mapping(p)
+    
+#     primary = map(keys(p.primary), p.primary) do key, values
+#         aes = hardcoded_or_mapped_aes(p, key, aes_mapping)
+#         scale_id = get(p.scale_mapping, key, nothing)
+#         scale_dict = get(categoricalscales, aes, nothing)
+#         scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)
+#         return rescale(values, scale)
+#     end
+#     positional = map(keys(p.positional), p.positional) do key, values
+#         aes = hardcoded_or_mapped_aes(p, key, aes_mapping)
+#         scale_id = get(p.scale_mapping, key, nothing)
+#         scale_dict = get(categoricalscales, aes, nothing)
+#         scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)
+#         return rescale.(values, Ref(scale))
+#     end
+
+#     # compute dodging information
+#     dodge = get(categoricalscales, :dodge, nothing)
+#     attributes = if isa(dodge, CategoricalScale)
+#         set(p.attributes, :n_dodge => maximum(plotvalues(dodge)))
+#     else
+#         p.attributes
+#     end
+
+#     return ProcessedLayer(p; primary, positional, attributes)
+# end
+
 function rescale(p::ProcessedLayer, categoricalscales::MultiAesScaleDict{CategoricalScale})
     aes_mapping = aesthetic_mapping(p)
     
     primary = map(keys(p.primary), p.primary) do key, values
         aes = hardcoded_or_mapped_aes(p, key, aes_mapping)
-        scale_id = get(p.scale_mapping, key, nothing)
-        scale_dict = get(categoricalscales, aes, nothing)
-        scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)
-        return rescale(values, scale)
-    end
-    positional = map(keys(p.positional), p.positional) do key, values
-        aes = hardcoded_or_mapped_aes(p, key, aes_mapping)
-        scale_id = get(p.scale_mapping, key, nothing)
-        scale_dict = get(categoricalscales, aes, nothing)
-        scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)
-        return rescale.(values, Ref(scale))
-    end
-
-    # compute dodging information
-    dodge = get(categoricalscales, :dodge, nothing)
-    attributes = if isa(dodge, CategoricalScale)
-        set(p.attributes, :n_dodge => maximum(plotvalues(dodge)))
-    else
-        p.attributes
+        # we only rescale those columns early that are not used in the plot objects
+        # and so will never need any special plot-dependent logic
+        if aes <: Union{AesCol,AesRow,AesGroup,AesLayout}
+            scale_id = get(p.scale_mapping, key, nothing)
+            scale_dict = get(categoricalscales, aes, nothing)
+            scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)
+            return rescale(values, scale)
+        else
+            return values
+        end
     end
 
-    return ProcessedLayer(p; primary, positional, attributes)
+    return ProcessedLayer(p; primary, p.positional, p.attributes)
 end
 
 # Determine whether entries from a `ProcessedLayer` should be merged

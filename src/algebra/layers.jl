@@ -105,11 +105,11 @@ function compute_entries_continuousscales(pls_grid, categoricalscales)
     # Compute merged continuous scales, as it may be needed to use global extrema
     merged_continuousscales = reduce(merge_nested_scaledict!, continuousscales_grid, init=MultiAesScaleDict{ContinuousScale}())
 
-    to_entry = function (pl)
-        attrs = compute_attributes(pl, categoricalscales, continuousscales_grid, merged_continuousscales)
-        return Entry(pl.plottype, pl.positional, attrs)
+    entries_grid = map(rescaled_pls_grid, CartesianIndices(rescaled_pls_grid)) do processedlayers, idx
+        map(processedlayers) do processedlayer
+            to_entry(processedlayer, categoricalscales, continuousscales_grid[idx])
+        end
     end
-    entries_grid = map(pls -> map(to_entry, pls), rescaled_pls_grid)
 
     return entries_grid, continuousscales_grid, merged_continuousscales
 end
@@ -290,4 +290,97 @@ function compute_axes_grid(d::AbstractDrawable;
     end
 
     return axes_grid
+end
+
+function to_entry(p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
+    entry = to_entry(p.plottype, p, categoricalscales, continuousscales)
+    insert!(entry.named, :cycle, nothing)
+    for key in (:group, :layout, :row, :col)
+        if haskey(entry.named, key)
+            delete!(entry.named, key)
+        end
+    end
+    return entry
+end
+
+function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
+    aes_mapping = aesthetic_mapping(p)
+    scale_mapping = p.scale_mapping
+
+    positional = map(eachindex(p.positional)) do i
+        full_rescale(p.positional[i], i, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    end
+    named = map(pairs(p.named)) do (key, value)
+        full_rescale(value, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    end
+    primary = map(pairs(p.primary)) do (key, values)
+        if key in (:group, :layout, :col, :row)
+            return values
+        end
+        # seems that there can be vectors here for concatenated layers, but for unconcatenated these should
+        # be scalars
+        if values isa AbstractVector
+            full_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+        else
+            values = [values]
+            rescaled = full_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+            rescaled[]
+        end
+    end
+
+    Entry(P, positional, merge(p.attributes, named, primary))
+end
+
+function get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    aes = aes_mapping[key]
+    scale_id = get(scale_mapping, key, nothing)
+
+    if haskey(categoricalscales, aes) && haskey(categoricalscales[aes], scale_id)
+        categoricalscales[aes][scale_id]
+    else
+        continuousscales[aes][scale_id]
+    end
+end
+
+function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    scale = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    full_rescale(data, scale)
+end
+
+full_rescale(data, scale::CategoricalScale) = rescale(data, scale)
+full_rescale(data, scale::ContinuousScale) = data # is this correct?
+
+function numerical_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    scale = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    
+    if scale isa ContinuousScale
+        return values, scale
+    end
+    indices = Int.(indexin(values, datavalues(scale)))
+    return indices, scale
+end
+
+function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
+    aes_mapping = aesthetic_mapping(p)
+    scale_mapping = p.scale_mapping
+
+    z_indices, scale = numerical_rescale(p.positional[3], 3, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+
+    if scale isa CategoricalScale
+        colormap = plotvalues(scale)
+        colorrange = (1, length(colormap))
+    else
+        colormap = :plasma
+        colorrange = scale.extrema
+    end
+
+    positional = Any[
+        full_rescale(p.positional[1], 1, aes_mapping, scale_mapping, categoricalscales, continuousscales),
+        full_rescale(p.positional[2], 2, aes_mapping, scale_mapping, categoricalscales, continuousscales),
+        z_indices,
+    ]
+
+    color_attributes = dictionary([:colormap => colormap, :colorrange => colorrange])
+    
+    Entry(P, positional, merge(p.named, p.primary, p.attributes, color_attributes))
 end
