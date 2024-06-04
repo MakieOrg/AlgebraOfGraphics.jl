@@ -107,7 +107,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
 
     entries_grid = map(rescaled_pls_grid, CartesianIndices(rescaled_pls_grid)) do processedlayers, idx
         map(processedlayers) do processedlayer
-            to_entry(processedlayer, categoricalscales, continuousscales_grid[idx], scale_props)
+            to_entry(processedlayer, categoricalscales, continuousscales_grid[idx])
         end
     end
 
@@ -292,8 +292,8 @@ function compute_axes_grid(d::AbstractDrawable;
     return axes_grid
 end
 
-function to_entry(p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary, scale_props)
-    entry = to_entry(p.plottype, p, categoricalscales, continuousscales, scale_props)
+function to_entry(p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
+    entry = to_entry(p.plottype, p, categoricalscales, continuousscales)
     insert!(entry.named, :cycle, nothing)
     for key in (:group, :layout, :row, :col)
         if haskey(entry.named, key)
@@ -303,15 +303,15 @@ function to_entry(p::ProcessedLayer, categoricalscales::Dictionary, continuoussc
     return entry
 end
 
-function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary, scale_props)
+function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
     aes_mapping = aesthetic_mapping(p)
     scale_mapping = p.scale_mapping
 
     positional = map(eachindex(p.positional)) do i
-        full_rescale(p.positional[i], i, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props)
+        full_rescale(p.positional[i], i, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     end
     named = map(pairs(p.named)) do (key, value)
-        full_rescale(value, key, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props)
+        full_rescale(value, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     end
     primary = map(pairs(p.primary)) do (key, values)
         if key in (:group, :layout, :col, :row)
@@ -320,10 +320,10 @@ function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuou
         # seems that there can be vectors here for concatenated layers, but for unconcatenated these should
         # be scalars
         if values isa AbstractVector
-            full_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props)
+            full_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
         else
             values = [values]
-            rescaled = full_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props)
+            rescaled = full_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
             rescaled[]
         end
     end
@@ -331,57 +331,50 @@ function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuou
     Entry(P, positional, merge(p.attributes, named, primary))
 end
 
-function get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props)
+function get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     aes = aes_mapping[key]
     scale_id = get(scale_mapping, key, nothing)
-    scaledict = get(scale_props, aes, nothing)
-    props = if scaledict !== nothing
-        props = get(Dictionary{Symbol,Any}, scaledict, scale_id)
-    else
-        Dictionary{Symbol,Any}()
-    end
-
     scale = if haskey(categoricalscales, aes) && haskey(categoricalscales[aes], scale_id)
         categoricalscales[aes][scale_id]
     else
         continuousscales[aes][scale_id]
     end
-    return scale, props
+    return scale
 end
 
-function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props)
-    scale, props = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props)
-    full_rescale(data, aes_mapping[key], scale, props)
+function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    scale = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    full_rescale(data, aes_mapping[key], scale)
 end
 
-full_rescale(data, aes, scale::CategoricalScale, props) = rescale(data, scale)
-function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale, props)
-    colormap = Makie.to_colormap(get(props, :colormap, :viridis))
-    colorrange = Makie.Vec2(get(props, :colorrange, scale.extrema))
-    lowclip = Makie.to_color(get(props, :lowclip, first(colormap)))
-    highclip = Makie.to_color(get(props, :highclip, last(colormap)))
-    nan_color = Makie.to_color(get(props, :nan_color, RGBAf(0, 0, 0, 0)))
+full_rescale(data, aes, scale::CategoricalScale) = rescale(data, scale)
+function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
+    colormap = Makie.to_colormap(get(scale.props, :colormap, :viridis))
+    colorrange = Makie.Vec2(get(scale.props, :colorrange, scale.extrema))
+    lowclip = Makie.to_color(get(scale.props, :lowclip, first(colormap)))
+    highclip = Makie.to_color(get(scale.props, :highclip, last(colormap)))
+    nan_color = Makie.to_color(get(scale.props, :nan_color, RGBAf(0, 0, 0, 0)))
     Makie.numbers_to_colors(data, colormap, identity, colorrange, lowclip, highclip, nan_color)
 end
-function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ}}, scale::ContinuousScale, props)
+function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ}}, scale::ContinuousScale)
     return data
 end
 
-function numerical_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props)
-    scale, props = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props)
+function numerical_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    scale = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     
     if scale isa ContinuousScale
-        return values, scale, props
+        return values, scale
     end
     indices = Int.(indexin(values, datavalues(scale)))
-    return indices, scale, props
+    return indices, scale
 end
 
-function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary, scale_props)
+function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
     aes_mapping = aesthetic_mapping(p)
     scale_mapping = p.scale_mapping
 
-    z_indices, scale, props = numerical_rescale(p.positional[3], 3, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props)
+    z_indices, scale = numerical_rescale(p.positional[3], 3, aes_mapping, scale_mapping, categoricalscales, continuousscales)
 
     if scale isa CategoricalScale
         colormap = plotvalues(scale)
@@ -392,17 +385,17 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
         ])
     else
         color_attributes = dictionary([
-            :colormap => get(props, :colormap, :viridis),
-            :colorrange => get(props, :colorrange, scale.extrema),
-            :nan_color => get(props, :nan_color, :transparent),
-            :lowclip => get(props, :lowclip, Makie.automatic),
-            :highclip => get(props, :highclip, Makie.automatic),
+            :colormap => get(scale.props, :colormap, :viridis),
+            :colorrange => get(scale.props, :colorrange, scale.extrema),
+            :nan_color => get(scale.props, :nan_color, :transparent),
+            :lowclip => get(scale.props, :lowclip, Makie.automatic),
+            :highclip => get(scale.props, :highclip, Makie.automatic),
         ])
     end
 
     positional = Any[
-        full_rescale(p.positional[1], 1, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props),
-        full_rescale(p.positional[2], 2, aes_mapping, scale_mapping, categoricalscales, continuousscales, scale_props),
+        full_rescale(p.positional[1], 1, aes_mapping, scale_mapping, categoricalscales, continuousscales),
+        full_rescale(p.positional[2], 2, aes_mapping, scale_mapping, categoricalscales, continuousscales),
         z_indices,
     ]
     
