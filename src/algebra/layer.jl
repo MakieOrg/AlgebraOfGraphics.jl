@@ -147,6 +147,17 @@ get_categorical_palette(::Type{AesColor}, colormap::Symbol) = Makie.to_colormap(
 
 const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
 
+function get_scale_props(scale_props, aes::Type{<:Aesthetic}, scale_id::Union{Symbol,Nothing})::Dictionary{Symbol,Any}
+    if !haskey(scale_props, aes)
+        return Dictionary{Symbol,Any}()
+    end
+    props_dict = scale_props[aes]
+    if !haskey(props_dict, scale_id)
+        return Dictionary{Symbol,Any}()
+    end
+    return Dictionary{Symbol,Any}(pairs(props_dict[scale_id]))
+end
+
 function categoricalscales(processedlayer::ProcessedLayer, scale_props, aes_mapping::AestheticMapping)
     categoricals = MixedArguments()
     merge!(categoricals, processedlayer.primary)
@@ -162,7 +173,8 @@ function categoricalscales(processedlayer::ProcessedLayer, scale_props, aes_mapp
         palette = get_categorical_palette(scale_props, aestype, scale_id)
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
         label = to_label(get(processedlayer.labels, key, ""))
-        return CategoricalScale(datavalues, palette, label)
+        props = get_scale_props(scale_props, aestype, scale_id)
+        return CategoricalScale(datavalues, palette, label, props)
     end
     return categoricalscales
 end
@@ -175,7 +187,7 @@ function has_zcolor(pl::ProcessedLayer)
 end
 
 # This method works on a "sliced" `ProcessedLayer`
-function continuousscales(processedlayer::ProcessedLayer)
+function continuousscales(processedlayer::ProcessedLayer, scale_props)
     continuous = MixedArguments()
     merge!(continuous, filter(iscontinuous, processedlayer.named))
     merge!(
@@ -183,11 +195,16 @@ function continuousscales(processedlayer::ProcessedLayer)
         filter(iscontinuous, Dictionary(processedlayer.positional)),
     )
 
+    aes_mapping = aesthetic_mapping(processedlayer)
+
     continuousscales = similar(keys(continuous), ContinuousScale)
     map!(continuousscales, keys(continuous), continuous) do key, val
+        aes = aes_mapping[key]
+        scale_id = get(processedlayer.scale_mapping, key, nothing)
+        props = get_scale_props(scale_props, aes, scale_id)
         extrema = extrema_finite(val)
         label = to_label(get(processedlayer.labels, key, ""))
-        return ContinuousScale(extrema, label)
+        return ContinuousScale(extrema, label, props)
     end
 
     # this is now handled via aesthetic mapping plus custom Entry functions per plot type

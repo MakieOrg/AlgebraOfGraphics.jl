@@ -64,10 +64,11 @@ struct CategoricalScale{S, T, U}
     plot::T
     palette::U
     label::Union{AbstractString, Nothing}
+    props::Dictionary{Symbol,Any}
 end
 
-function CategoricalScale(data, palette, label::Union{AbstractString, Nothing})
-    return CategoricalScale(data, nothing, palette, label)
+function CategoricalScale(data, palette, label::Union{AbstractString, Nothing}, props)
+    return CategoricalScale(data, nothing, palette, label, props)
 end
 
 # Final processing step of a categorical scale
@@ -75,7 +76,7 @@ function fitscale(c::CategoricalScale)
     data = c.data
     palette = c.palette
     plot = apply_palette(c.palette, c.data)
-    return CategoricalScale(data, plot, palette, c.label)
+    return CategoricalScale(data, plot, palette, c.label, c.props)
 end
 
 datavalues(c::CategoricalScale) = c.data
@@ -88,9 +89,10 @@ struct ContinuousScale{T}
     extrema::NTuple{2, T}
     label::Union{AbstractString, Nothing}
     force::Bool
+    props::Dictionary{Symbol,Any}
 end
 
-ContinuousScale(extrema, label; force=false) = ContinuousScale(extrema, label, force)
+ContinuousScale(extrema, label, props; force=false) = ContinuousScale(extrema, label, force, props)
 
 getlabel(c::ContinuousScale) = something(c.label, "")
 
@@ -156,7 +158,10 @@ function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     data = mergesorted(c1.data, c2.data)
     palette = assert_equal(c1.palette, c2.palette)
     label = mergelabels(c1.label, c2.label)
-    return CategoricalScale(data, palette, label)
+    if c1.props != c2.props
+        error("Expected props of merging categorical scales to match, got $(c1.props) and $(c2.props)")
+    end
+    return CategoricalScale(data, palette, label, c1.props)
 end
 
 function mergescales(c1::ContinuousScale, c2::ContinuousScale)
@@ -165,7 +170,10 @@ function mergescales(c1::ContinuousScale, c2::ContinuousScale)
     force = !isnothing(i)
     extrema = force ? (c1.extrema, c2.extrema)[i] : extend_extrema(c1.extrema, c2.extrema)
     label = mergelabels(c1.label, c2.label)
-    return ContinuousScale(extrema, label, force)
+    if c1.props != c2.props
+        error("Expected props of merging continuous scales to match, got $(c1.props) and $(c2.props)")
+    end
+    return ContinuousScale(extrema, label, force, c1.props)
 end
 
 # Logic to create ticks from a scale

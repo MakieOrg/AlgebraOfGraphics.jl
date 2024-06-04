@@ -70,7 +70,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
         aes_mapping = aesthetic_mapping(plottype, pl.attributes)
 
         # Compute continuous scales with correct plottype, to figure out role of color
-        continuousscales = AlgebraOfGraphics.continuousscales(ProcessedLayer(pl; plottype))
+        continuousscales = AlgebraOfGraphics.continuousscales(ProcessedLayer(pl; plottype), scale_props)
 
         for (key, scale) in pairs(continuousscales)
             aes = aes_mapping[key]
