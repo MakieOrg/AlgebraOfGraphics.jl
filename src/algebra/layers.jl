@@ -205,7 +205,7 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_map
     hardcoded = hardcoded_visual_scale(key)
     hardcoded !== nothing && return hardcoded
     if !haskey(aes_mapping, key)
-        throw(ArgumentError("ProcessedLayer with plot type $(processedlayer.plottype) did not have $key in its AestheticMapping. The mapping was $aes_mapping"))
+        throw(ArgumentError("ProcessedLayer with plot type $(processedlayer.plottype) did not have $(repr(key)) in its AestheticMapping. The mapping was $aes_mapping"))
     end
     return aes_mapping[key]
 end

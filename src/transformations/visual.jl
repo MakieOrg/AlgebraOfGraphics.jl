@@ -83,6 +83,8 @@ function aesthetic_mapping(::Type{BarPlot})
             :y => AesDeltaX,
             :x => AesDeltaY,
         ]),
+        :dodge => AesDodge,
+        :stack => AesStack,
     ])
 end
 
