@@ -28,5 +28,10 @@ function groupreduce(agg, input::ProcessedLayer)
     end
     default_plottype = categoricalplottypes[length(summaries)]
     plottype = Makie.plottype(output.plottype, default_plottype)
-    return ProcessedLayer(output; plottype)
+    attributes = if plottype === BarPlot
+        merge(dictionary([:direction => :y]), input.attributes)
+    else
+        input.attributes
+    end
+    return ProcessedLayer(output; plottype, attributes)
 end
