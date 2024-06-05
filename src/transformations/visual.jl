@@ -141,3 +141,13 @@ function aesthetic_mapping(::Type{Heatmap})
         3 => AesColor,
     ])
 end
+
+function aesthetic_mapping(::Type{LinesFill})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        :lower => AesY,
+        :upper => AesY,
+        :color => AesColor,
+    ])
+end
