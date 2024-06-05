@@ -124,5 +124,7 @@ function process(layer::Layer)
     processedlayer = process_mappings(layer)
     grouped_entry = isnothing(layer.data) ? processedlayer : group(processedlayer)
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
-    return layer.transformation(ProcessedLayer(grouped_entry; primary))
+    transformed_processlayer = layer.transformation(ProcessedLayer(grouped_entry; primary))
+    attributes = merge(mandatory_attributes(transformed_processlayer.plottype), transformed_processlayer.attributes)
+    return ProcessedLayer(transformed_processlayer; attributes)
 end

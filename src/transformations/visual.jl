@@ -6,9 +6,7 @@ Visual(plottype::PlotType=Plot{plot}; kwargs...) = Visual(plottype, NamedArgumen
 
 function (v::Visual)(input::ProcessedLayer)
     plottype = Makie.plottype(v.plottype, input.plottype)
-    default_attrs = mandatory_attributes(plottype)
-    attributes = merge(default_attrs, input.attributes, v.attributes)
-
+    attributes = merge(input.attributes, v.attributes)
     return ProcessedLayer(input; plottype, attributes)
 end
 
