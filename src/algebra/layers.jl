@@ -348,9 +348,13 @@ function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, 
     full_rescale(data, aes_mapping[key], scale)
 end
 
+function default_colormap()
+    Makie.current_default_theme().colormap[]
+end
+
 full_rescale(data, aes, scale::CategoricalScale) = rescale(data, scale)
 function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
-    colormap = Makie.to_colormap(get(scale.props, :colormap, :viridis))
+    colormap = Makie.to_colormap(get(default_colormap, scale.props, :colormap))
     colorrange = Makie.Vec2(get(scale.props, :colorrange, scale.extrema))
     lowclip = Makie.to_color(get(scale.props, :lowclip, first(colormap)))
     highclip = Makie.to_color(get(scale.props, :highclip, last(colormap)))
@@ -386,7 +390,7 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
         ])
     else
         color_attributes = dictionary([
-            :colormap => get(scale.props, :colormap, :viridis),
+            :colormap => get(default_colormap, scale.props, :colormap),
             :colorrange => get(scale.props, :colorrange, scale.extrema),
             :nan_color => get(scale.props, :nan_color, :transparent),
             :lowclip => get(scale.props, :lowclip, Makie.automatic),
