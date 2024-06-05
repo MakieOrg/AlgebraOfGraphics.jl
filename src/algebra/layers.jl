@@ -356,7 +356,7 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     nan_color = Makie.to_color(get(scale.props, :nan_color, RGBAf(0, 0, 0, 0)))
     Makie.numbers_to_colors(data, colormap, identity, colorrange, lowclip, highclip, nan_color)
 end
-function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ}}, scale::ContinuousScale)
+function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ,AesDeltaX,AesDeltaY,AesDeltaZ}}, scale::ContinuousScale)
     return data
 end
 

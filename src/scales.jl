@@ -5,6 +5,9 @@ abstract type Aesthetic end
 struct AesX <: Aesthetic end
 struct AesY <: Aesthetic end
 struct AesZ <: Aesthetic end
+struct AesDeltaX <: Aesthetic end
+struct AesDeltaY <: Aesthetic end
+struct AesDeltaZ <: Aesthetic end
 struct AesLayout <: Aesthetic end
 struct AesRow <: Aesthetic end
 struct AesCol <: Aesthetic end

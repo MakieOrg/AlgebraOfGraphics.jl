@@ -56,7 +56,7 @@ function (h::HistogramAnalysis)(input::ProcessedLayer)
     label = h.normalization == :none ? "count" : string(h.normalization)
     labels = set(output.labels, N+1 => label)
     attributes = if N == 1
-        set(output.attributes, :gap => 0, :dodge_gap => 0)
+        set(output.attributes, :gap => 0, :dodge_gap => 0, :direction => :y)
     else
         output.attributes
     end

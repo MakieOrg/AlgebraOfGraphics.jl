@@ -79,6 +79,10 @@ function aesthetic_mapping(::Type{BarPlot})
             :x => AesX,
         ]),
         :color => AesColor,
+        :width => :direction => dictionary([
+            :y => AesDeltaX,
+            :x => AesDeltaY,
+        ]),
     ])
 end
 
