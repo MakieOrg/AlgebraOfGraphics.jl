@@ -22,6 +22,7 @@ struct ScaleID
     id::Symbol
 end
 scale(id::Symbol) = ScaleID(id)
+Base.broadcastable(s::ScaleID) = Ref(s)
 
 ## Categorical Scales
 

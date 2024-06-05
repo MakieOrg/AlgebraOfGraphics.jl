@@ -107,13 +107,20 @@ function process_mappings(layer::Layer)
     labels = merge(Dictionary(pos_labels), nam_labels)
     scaleids = merge(Dictionary(pos_scaleids), nam_scaleids)
 
-    scale_mapping = map(
-        scaleid -> scaleid.id,
-        filter(
-            x -> x isa ScaleID,
-            map(x -> x[], scaleids)
-        )
-    )
+    # not sure if this logic should work in all cases, maybe multiple scales per
+    # mapping entry could be possible with wide data
+    uniqueelement(x) = x
+    function uniqueelement(a::AbstractArray)
+        u = unique(a)
+        if length(u) != 1
+            error("Found a collection of scale ids that does not contain a single unique value: $a")
+        end
+        return only(u)
+    end
+
+    unique_scales = map(uniqueelement, scaleids)
+    unique_scales_without_nothings = filter(x -> x isa ScaleID, unique_scales)
+    scale_mapping = map(scaleid -> scaleid.id, unique_scales_without_nothings)
 
     primary, named = separate(iscategoricalcontainer, named)
 
