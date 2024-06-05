@@ -114,14 +114,15 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
     return entries_grid, continuousscales_grid, merged_continuousscales
 end
 
-function hardcoded_aesthetic(sym::Symbol)
-    sym === :color ? AesColor :
-    sym === :marker ? AesMarker :
-    sym === :layout ? AesLayout :
-    sym === :row ? AesRow :
-    sym === :col ? AesCol :
-    nothing
-end
+hardcoded_aesthetic(sym::Symbol) = hardcoded_aesthetic(Val(sym))
+hardcoded_aesthetic(::Val) = nothing
+
+hardcoded_aesthetic(::Val{:color}) = AesColor
+hardcoded_aesthetic(::Val{:marker}) = AesMarker
+hardcoded_aesthetic(::Val{:layout}) = AesLayout
+hardcoded_aesthetic(::Val{:row}) = AesRow
+hardcoded_aesthetic(::Val{:col}) = AesCol
+
 
 function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales)
 
