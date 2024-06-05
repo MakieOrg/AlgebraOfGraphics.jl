@@ -44,11 +44,14 @@ function compute_colorbar(grid::Matrix{AxisEntries})
 
     colormap_colors = Makie.to_colormap(colormap)
 
+    lowclip = is_lowclipped ? get(colorscale.props, :lowclip, colormap_colors[1]) : Makie.automatic
+    highclip = is_highclipped ? get(colorscale.props, :highclip, colormap_colors[end]) : Makie.automatic
+
     return (;
         label,
         limits,
         colormap,
-        lowclip = is_lowclipped ? colormap_colors[1] : Makie.automatic,
-        highclip = is_highclipped ? colormap_colors[end] : Makie.automatic,
+        lowclip,
+        highclip,
     )
 end
