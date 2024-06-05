@@ -36,9 +36,9 @@ function select(data, x::Pair{<:Any, <:Any})
         vs = map(n -> only(first(select(data, n))), name)
         label = ""
     else
-        vs, (_, label) = select(data, name)
+        vs, (_, (label, scale)) = select(data, name)
     end
-    return vs => transformation => label => nothing
+    return vs => transformation => label => scale
 end
 
 function select(data, x::Pair{<:Any, <:Pair})
