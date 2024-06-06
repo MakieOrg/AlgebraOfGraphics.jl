@@ -23,9 +23,8 @@ visual(plottype::PlotType=Plot{plot}; kwargs...) = transformation(Visual(plottyp
 # which are required to some known value, unless overridden by the user. Usually, that should
 # be the same value that the plot type also sets in its default theme.
 mandatory_attributes(T) = NamedArguments()
-mandatory_attributes(::Type{BarPlot}) = dictionary([:direction => :y])
-mandatory_attributes(::Type{Violin}) = dictionary([:orientation => :vertical])
-mandatory_attributes(::Type{RainClouds}) = dictionary([:orientation => :vertical])
+mandatory_attributes(::Type{<:Union{BarPlot,Rangebars,Errorbars}}) = dictionary([:direction => :y])
+mandatory_attributes(::Type{<:Union{Violin,RainClouds}}) = dictionary([:orientation => :vertical])
 
 # this function needs to be defined for any plot type that should work with AoG, because it tells
 # AoG how its positional arguments can be understood in terms of the dimensions of the plot for
@@ -41,7 +40,7 @@ function aesthetic_mapping(plottype, attributes)::AestheticMapping
         if value isa Pair
             attrkey, dict = value
             if !haskey(attributes, attrkey)
-                error("Aesthetic mapping lookup for $plottype failed with key $(repr(key)), could not find $(repr(attrkey)) in plot attributes")
+                error("Aesthetic mapping lookup for $plottype failed with key $(repr(key)), could not find $(repr(attrkey)) in plot attributes. Consider adding `mandatory_attributes(::$plottype)` to define a default for $(repr(attrkey)).")
             end
             attrvalue = attributes[attrkey]
             if !haskey(dict, attrvalue)
@@ -152,6 +151,42 @@ function aesthetic_mapping(::Type{LinesFill})
         2 => AesY,
         :lower => AesY,
         :upper => AesY,
+        :color => AesColor,
+    ])
+end
+
+function aesthetic_mapping(::Type{Rangebars})
+    dictionary([
+        1 => :direction => dictionary([
+            :x => AesX,
+            :y => AesY,
+        ]),
+        2 => :direction => dictionary([
+            :x => AesY,
+            :y => AesX,
+        ]),
+        3 => :direction => dictionary([
+            :x => AesY,
+            :y => AesX,
+        ]),
+        :color => AesColor,
+    ])
+end
+
+function aesthetic_mapping(::Type{Errorbars})
+    dictionary([
+        1 => :direction => dictionary([
+            :x => AesX,
+            :y => AesY,
+        ]),
+        2 => :direction => dictionary([
+            :x => AesDeltaY,
+            :y => AesDeltaX,
+        ]),
+        3 => :direction => dictionary([
+            :x => AesDeltaY,
+            :y => AesDeltaX,
+        ]),
         :color => AesColor,
     ])
 end
