@@ -128,20 +128,31 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
 
     # allow specifying named scales just by symbol, we can find out what aesthetic that maps
     # to by checking the processed layers
-    named_scales = Dictionary{Symbol,Type{<:Aesthetic}}()
+    named_scales = Dictionary{Union{Symbol,Int},Type{<:Aesthetic}}()
+    unnamed_aes = Set{Type{<:Aesthetic}}()
 
     for processedlayer in processedlayers
         aes_mapping = aesthetic_mapping(processedlayer)
-        for (key, symbol) in pairs(processedlayer.scale_mapping)
-            existing_aes = get(named_scales, symbol, nothing)
-            aes = aes_mapping[key]
-            if existing_aes !== nothing && existing_aes !== aes
-                error("Found two different aesthetics for scale key $key, $aes and $existing_aes")
-            end
-            if existing_aes === nothing
-                insert!(named_scales, symbol, aes)
+
+        function p!(key)
+            if haskey(processedlayer.scale_mapping, key)
+                symbol = processedlayer.scale_mapping[key]
+                existing_aes = get(named_scales, symbol, nothing)
+                aes = aes_mapping[key]
+                if existing_aes !== nothing && existing_aes !== aes
+                    error("Found two different aesthetics for scale key $key, $aes and $existing_aes")
+                end
+                if existing_aes === nothing
+                    insert!(named_scales, symbol, aes)
+                end
+            else
+                aes = hardcoded_or_mapped_aes(processedlayer, key, aes_mapping)
+                push!(unnamed_aes, aes)
             end
         end
+        foreach(p!, keys(processedlayer.positional))
+        foreach(p!, keys(processedlayer.primary))
+        foreach(p!, keys(processedlayer.named))
     end
 
     dict = MultiAesScaleDict{Any}()
@@ -155,11 +166,14 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
         aes = hardcoded_aesthetic(sym)
         if aes === nothing
             if !haskey(named_scales, sym)
-                error("Got scale $(repr(sym)) in scale properties but it is neither a hardcoded scale, nor does it exist in the named scales $(keys(named_scales))")
+                error("Got scale $(repr(sym)) in scale properties but this key is neither the default name of a scale nor does it reference a named scale. The named scales are $(keys(named_scales))")
             end
             aes = named_scales[sym]
             scale_id = sym
         else
+            if aes ∉ unnamed_aes
+                error("Got scale properties for $(repr(sym)) but no scale of this kind is mapped.")
+            end
             scale_id = nothing
         end
     
