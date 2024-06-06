@@ -158,16 +158,16 @@ end
 function aesthetic_mapping(::Type{Rangebars})
     dictionary([
         1 => :direction => dictionary([
+            :x => AesY,
+            :y => AesX,
+        ]),
+        2 => :direction => dictionary([
             :x => AesX,
             :y => AesY,
         ]),
-        2 => :direction => dictionary([
-            :x => AesY,
-            :y => AesX,
-        ]),
         3 => :direction => dictionary([
-            :x => AesY,
-            :y => AesX,
+            :x => AesX,
+            :y => AesY,
         ]),
         :color => AesColor,
     ])
@@ -176,16 +176,16 @@ end
 function aesthetic_mapping(::Type{Errorbars})
     dictionary([
         1 => :direction => dictionary([
-            :x => AesX,
-            :y => AesY,
+            :x => AesY,
+            :y => AesX,
         ]),
         2 => :direction => dictionary([
-            :x => AesDeltaY,
-            :y => AesDeltaX,
+            :x => AesDeltaX,
+            :y => AesDeltaY,
         ]),
         3 => :direction => dictionary([
-            :x => AesDeltaY,
-            :y => AesDeltaX,
+            :x => AesDeltaX,
+            :y => AesDeltaY,
         ]),
         :color => AesColor,
     ])
