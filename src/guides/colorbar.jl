@@ -36,12 +36,8 @@ function compute_colorbar(grid::Matrix{AxisEntries})
     limits = get(colorscale.props, :colorrange, colorscale.extrema)
     is_highclipped = limits[2] < colorscale.extrema[2]
     is_lowclipped = limits[1] > colorscale.extrema[1]
-    colormap = current_default_theme().colormap[]
-    # FIXME: handle separate colorbars
-    for entry in entries(grid)
-        colormap = to_value(get(entry, :colormap, colormap))
-    end
 
+    colormap = get(default_colormap, colorscale.props, :colormap)
     colormap_colors = Makie.to_colormap(colormap)
 
     lowclip = is_lowclipped ? get(colorscale.props, :lowclip, colormap_colors[1]) : Makie.automatic
