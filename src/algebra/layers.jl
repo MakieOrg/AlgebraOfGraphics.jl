@@ -122,6 +122,9 @@ hardcoded_aesthetic(::Val{:marker}) = AesMarker
 hardcoded_aesthetic(::Val{:layout}) = AesLayout
 hardcoded_aesthetic(::Val{:row}) = AesRow
 hardcoded_aesthetic(::Val{:col}) = AesCol
+hardcoded_aesthetic(::Val{:x}) = AesX
+hardcoded_aesthetic(::Val{:y}) = AesY
+hardcoded_aesthetic(::Val{:z}) = AesZ
 
 
 function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales)
@@ -296,7 +299,7 @@ function compute_axes_grid(d::AbstractDrawable;
             # Use global scales for ticks for now
             # TODO: requires a nicer mechanism that takes into account axis linking
             (scale isa ContinuousScale) && (scale = merged_continuousscales[aes][nothing])
-            for (k, v) in pairs((label=to_string(label), ticks=ticks(scale)))
+            for (k, v) in pairs((label=label, ticks=ticks(scale)))
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand
                 get!(ae.axis.attributes, keyword, v)

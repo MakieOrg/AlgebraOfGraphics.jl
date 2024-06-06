@@ -87,7 +87,6 @@ end
 
 datavalues(c::CategoricalScale) = c.data
 plotvalues(c::CategoricalScale) = c.plot
-getlabel(c::CategoricalScale) = something(c.label, "")
 
 ## Continuous Scales
 
@@ -99,8 +98,7 @@ struct ContinuousScale{T}
 end
 
 ContinuousScale(extrema, label, props; force=false) = ContinuousScale(extrema, label, force, props)
-
-getlabel(c::ContinuousScale) = something(c.label, "")
+getlabel(c::Union{ContinuousScale,CategoricalScale}) = get(() -> something(c.label, ""), c.props, :label)
 
 # recentering hack to avoid Float32 conversion errors on recent dates
 # TODO: remove once Makie supports dates
