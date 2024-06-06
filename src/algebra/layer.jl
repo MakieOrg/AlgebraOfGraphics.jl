@@ -140,6 +140,7 @@ function get_categorical_palette(scale_props, aestype, scale_id)
     subdict = scale_props[aestype]
     haskey(subdict, scale_id) || return _default_categorical_palette(aestype)
     object = subdict[scale_id]
+    haskey(object, :palette) || return _default_categorical_palette(aestype)
     get_categorical_palette(aestype, object[:palette])
 end
 
