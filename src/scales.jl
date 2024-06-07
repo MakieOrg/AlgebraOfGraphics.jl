@@ -79,7 +79,7 @@ end
 
 category_value(v) = v
 category_value(p::Pair) = p[1]
-category_label(v) = v
+category_label(v) = string(v)
 category_label(p::Pair) = p[2]
 
 # Final processing step of a categorical scale
@@ -110,7 +110,7 @@ function datalabels(c::CategoricalScale)
     if haskey(c.props, :categories)
         map(category_label, c.props[:categories])
     else
-        datavalues(c)
+        string.(datavalues(c))
     end
 end
 
@@ -209,8 +209,14 @@ end
 # Logic to create ticks from a scale
 # Should take current tick to incorporate information
 function ticks(scale::CategoricalScale)
-    labs = datalabels(scale)
-    return (axes(labs, 1), labs)
+    labels = datalabels(scale)
+    plotvals = plotvalues(scale)
+    positions = if plotvals isa AbstractVector{<:Real}
+        plotvals
+    else
+        axes(labels, 1)
+    end
+    return (positions, labels)
 end
 
 ticks(scale::ContinuousScale) = ticks(scale.extrema)

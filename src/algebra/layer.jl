@@ -146,7 +146,7 @@ end
 
 get_categorical_palette(::Type{AesColor}, colormap::AbstractVector) = colormap
 get_categorical_palette(::Type{AesColor}, colormap::Symbol) = Makie.to_colormap(colormap)
-# get_categorical_palette(::Type{<:Union{AesX,AesY}}, a::Makie.Automatic) = a
+get_categorical_palette(::Type{<:Union{AesX,AesY,AesZ}}, v::AbstractVector{<:Real}) = v
 
 const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
 
