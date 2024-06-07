@@ -50,7 +50,7 @@ function facet_labels!(fig, aes, scale, dir)
         return ntuple(i -> i == padding_index ? gap : 0f0, 4)
     end
 
-    return map(plotvalues(scale), datavalues(scale)) do index, label
+    return map(plotvalues(scale), datalabels(scale)) do index, label
         rotation = dir == :row ? -π/2 : 0.0
         figpos = dir == :col ? fig[1, index, Top()] :
                  dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]

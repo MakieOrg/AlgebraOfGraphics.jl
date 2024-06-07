@@ -84,7 +84,7 @@ function compute_legend(grid::Matrix{AxisEntries})
     end
 
     titles = []
-    labels = Vector{AbstractString}[]
+    labels = Vector[]
     elements_list = Vector{Vector{LegendElement}}[]
 
     # we can't loop over all processedlayers here because one layer can be sliced into multiple processedlayers
@@ -98,6 +98,7 @@ function compute_legend(grid::Matrix{AxisEntries})
 
             datavals = datavalues(scale)
             plotvals = plotvalues(scale)
+            datalabs = datalabels(scale)
 
             legend_els = [LegendElement[] for _ in datavals]
 
@@ -111,13 +112,13 @@ function compute_legend(grid::Matrix{AxisEntries})
 
                 isempty(matching_keys) && continue
 
-                for (i, (dataval, plotval)) in enumerate(zip(datavals, plotvals))
+                for (i, (_, plotval)) in enumerate(zip(datavals, plotvals))
                     append!(legend_els[i], legend_elements(processedlayer, MixedArguments(map(key -> plotval, matching_keys))))
                 end
 
             end
 
-            push!(labels, string.(datavals))
+            push!(labels, datalabs)
             push!(elements_list, legend_els)
         end
     end

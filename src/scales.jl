@@ -77,16 +77,42 @@ function CategoricalScale(data, palette, label::Union{AbstractString, Nothing}, 
     return CategoricalScale(data, nothing, palette, label, props)
 end
 
+category_value(v) = v
+category_value(p::Pair) = p[1]
+category_label(v) = v
+category_label(p::Pair) = p[2]
+
 # Final processing step of a categorical scale
 function fitscale(c::CategoricalScale)
-    data = c.data
+    data = if haskey(c.props, :categories)
+        catvalues = map(category_value, c.props[:categories])
+        u = try
+            union(catvalues, c.data)
+        catch e
+            throw(ArgumentError("Custom categories were given but unioning them with the categories determined from the data failed."))
+        end
+        if u != catvalues
+            extraneous = setdiff(c.data, catvalues)
+            throw(ArgumentError("Custom categories were given but there were more categories in the data, which is not allowed. The additional categories were $extraneous"))
+        end
+        u
+    else
+        c.data
+    end
     palette = c.palette
-    plot = apply_palette(c.palette, c.data)
+    plot = apply_palette(c.palette, data)
     return CategoricalScale(data, plot, palette, c.label, c.props)
 end
 
 datavalues(c::CategoricalScale) = c.data
 plotvalues(c::CategoricalScale) = c.plot
+function datalabels(c::CategoricalScale)
+    if haskey(c.props, :categories)
+        map(category_label, c.props[:categories])
+    else
+        datavalues(c)
+    end
+end
 
 ## Continuous Scales
 
@@ -183,8 +209,8 @@ end
 # Logic to create ticks from a scale
 # Should take current tick to incorporate information
 function ticks(scale::CategoricalScale)
-    u = map(to_string, datavalues(scale))
-    return (axes(u, 1), u)
+    labs = datalabels(scale)
+    return (axes(labs, 1), labs)
 end
 
 ticks(scale::ContinuousScale) = ticks(scale.extrema)
