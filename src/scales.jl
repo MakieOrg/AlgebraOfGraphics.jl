@@ -14,6 +14,7 @@ struct AesCol <: Aesthetic end
 struct AesGroup <: Aesthetic end
 struct AesColor <: Aesthetic end
 struct AesMarker <: Aesthetic end
+struct AesMarkerSize <: Aesthetic end
 struct AesDodge <: Aesthetic end
 struct AesStack <: Aesthetic end
 
@@ -204,8 +205,13 @@ Base.@kwdef struct AesColorContinuousProps <: ContinuousAesProps
     nan_color = nothing
 end
 
+Base.@kwdef struct AesMarkerSizeContinuousProps <: ContinuousAesProps
+    sizerange::Tuple{Float64,Float64} = (5.0, 20.0)
+end
+
 continuous_aes_props_type(::Type{<:Aesthetic}) = EmptyContinuousProps
 continuous_aes_props_type(::Type{AesColor}) = AesColorContinuousProps
+continuous_aes_props_type(::Type{AesMarkerSize}) = AesMarkerSizeContinuousProps
 
 continuous_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any}) = aes_props(Val(:continuous), type, props_dict)
 

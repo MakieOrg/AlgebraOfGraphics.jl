@@ -114,17 +114,14 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
     return entries_grid, continuousscales_grid, merged_continuousscales
 end
 
-default_aesthetic(sym::Symbol) = default_aesthetic(Val(sym))
-default_aesthetic(::Val) = nothing
-
-default_aesthetic(::Val{:Color}) = AesColor
-default_aesthetic(::Val{:Marker}) = AesMarker
-default_aesthetic(::Val{:Layout}) = AesLayout
-default_aesthetic(::Val{:Row}) = AesRow
-default_aesthetic(::Val{:Col}) = AesCol
-default_aesthetic(::Val{:X}) = AesX
-default_aesthetic(::Val{:Y}) = AesY
-default_aesthetic(::Val{:Z}) = AesZ
+function aesthetic_for_symbol(s::Symbol)
+    t = getproperty(AlgebraOfGraphics, Symbol("Aes", s))
+    if !(t isa Type{<:Aesthetic})
+        return nothing
+    else
+        t
+    end
+end
 
 
 function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales)
@@ -166,7 +163,7 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
 
     for (sym, value) in pairs(scales)
 
-        aes = default_aesthetic(sym)
+        aes = aesthetic_for_symbol(sym)
         if aes === nothing
             if !haskey(named_scales, sym)
                 error("Got scale $(repr(sym)) in scale properties but this key is neither the default name of a scale nor does it reference a named scale. The named scales are $(keys(named_scales))")
@@ -381,6 +378,22 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     nan_color = Makie.to_color(@something(props.nan_color, RGBAf(0, 0, 0, 0)))
     Makie.numbers_to_colors(data, colormap, identity, colorrange, lowclip, highclip, nan_color)
 end
+
+function full_rescale(data, aes::Type{AesMarkerSize}, scale::ContinuousScale)
+    props = scale.props.aesprops::AesMarkerSizeContinuousProps
+    # we scale the area linearly with the values
+    areamin, areamax = props.sizerange .^ 2
+    areawidth = areamax - areamin
+    scalemin, scalemax = scale.extrema
+    scalewidth = scalemax - scalemin
+    map(data) do value
+        fraction = ((value - scalemin) / scalewidth)
+        markerarea = areamin + fraction * areawidth
+        markersize = sqrt(markerarea)
+        return markersize
+    end
+end
+
 function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ,AesDeltaX,AesDeltaY,AesDeltaZ}}, scale::ContinuousScale)
     return data
 end
