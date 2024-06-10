@@ -382,10 +382,14 @@ end
 
 function full_rescale(data, aes::Type{AesMarkerSize}, scale::ContinuousScale)
     props = scale.props.aesprops::AesMarkerSizeContinuousProps
+    values_to_markersizes(data, props.sizerange, scale.extrema)
+end
+
+function values_to_markersizes(data, sizerange, extrema)
     # we scale the area linearly with the values
-    areamin, areamax = props.sizerange .^ 2
+    areamin, areamax = sizerange .^ 2
     areawidth = areamax - areamin
-    scalemin, scalemax = scale.extrema
+    scalemin, scalemax = extrema
     scalewidth = scalemax - scalemin
     map(data) do value
         fraction = ((value - scalemin) / scalewidth)

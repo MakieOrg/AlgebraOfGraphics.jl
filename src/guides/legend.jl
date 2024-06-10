@@ -42,8 +42,8 @@ end
 compute_legend(fg::FigureGrid) = compute_legend(fg.grid)
 
 # ignore positional scales and keywords that don't support legends
-function legendable_scales(scales)
-    in_principle_legendable = filterkeys(scale_is_legendable, scales)
+function legendable_scales(kind::Val, scales)
+    in_principle_legendable = filterkeys(aes -> scale_is_legendable(kind, aes), scales)
     disabled_legends_filtered = map(in_principle_legendable) do dict
         filter(dict) do scale
             scale.props.legend
@@ -53,9 +53,11 @@ function legendable_scales(scales)
     return remaining
 end
 
-scale_is_legendable(_) = false
-scale_is_legendable(::Type{AesColor}) = true
-scale_is_legendable(::Type{AesMarker}) = true
+scale_is_legendable(kind::Union{Val{:categorical},Val{:continuous}}, _) = false
+scale_is_legendable(kind::Val{:categorical}, ::Type{AesColor}) = true
+scale_is_legendable(kind::Val{:categorical}, ::Type{AesMarker}) = true
+scale_is_legendable(kind::Val{:categorical}, ::Type{AesMarkerSize}) = true
+scale_is_legendable(kind::Val{:continuous}, ::Type{AesMarkerSize}) = true
 
 function unique_by(f, collection)
     T = Base._return_type(f, Tuple{eltype(collection)})
@@ -73,22 +75,15 @@ end
 
 function compute_legend(grid::Matrix{AxisEntries})
     # gather valid named scales
-    scales = legendable_scales(first(grid).categoricalscales)
+    scales_categorical = legendable_scales(Val(:categorical), first(grid).categoricalscales)
+    scales_continuous = legendable_scales(Val(:continuous), first(grid).continuousscales)
+
+    scales = Iterators.flatten((pairs(scales_categorical), pairs(scales_continuous)))
 
     # if no legendable scale is present, return nothing
     isempty(scales) && return nothing
 
     processedlayers = first(grid).processedlayers
-
-    plottypes, attributes = plottypes_attributes(entries(grid))
-
-    # turn dict of dicts into single-level dict
-    scales_flattened = Dictionary{Pair{Type{<:Aesthetic},Union{Nothing,Symbol}},CategoricalScale}()
-    for (aes, scaledict) in pairs(scales)
-        for (scale_id, scale) in pairs(scaledict)
-            insert!(scales_flattened, aes => scale_id, scale)
-        end
-    end
 
     titles = []
     labels = Vector[]
@@ -99,13 +94,11 @@ function compute_legend(grid::Matrix{AxisEntries})
         (pl.plottype, pl.attributes)
     end
 
-    for (aes, scaledict) in pairs(scales)
+    for (aes, scaledict) in scales
         for (scale_id, scale) in pairs(scaledict)
             push!(titles, getlabel(scale))
 
-            datavals = datavalues(scale)
-            plotvals = plotvalues(scale)
-            datalabs = datalabels(scale)
+            datavals, plotvals, datalabs = datavalues_plotvalues_datalabels(aes, scale)
 
             legend_els = [LegendElement[] for _ in datavals]
 
@@ -130,6 +123,15 @@ function compute_legend(grid::Matrix{AxisEntries})
         end
     end
     return elements_list, labels, titles
+end
+
+datavalues_plotvalues_datalabels(aes, scale::CategoricalScale) = datavalues(scale), plotvalues(scale), datalabels(scale)
+function datavalues_plotvalues_datalabels(aes::Type{AesMarkerSize}, scale::ContinuousScale)
+    n = 5
+    datavalues = range(scale.extrema..., length = n)
+    props = scale.props.aesprops::AesMarkerSizeContinuousProps
+    markersizes = values_to_markersizes(datavalues, props.sizerange, scale.extrema)
+    datavalues, markersizes, string.(datavalues)
 end
 
 function legend_elements(p::ProcessedLayer, scale_args::MixedArguments)
