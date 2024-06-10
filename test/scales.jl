@@ -1,8 +1,8 @@
 @testset "scales" begin
     l = data([(x = 1, subject = "c"), (x = 2, subject = "a")]) * mapping(:x, :subject)
     pl = ProcessedLayer(l)
-    palettes = compute_palettes((;))
-    scales = map(fitscale, categoricalscales(pl, palettes))
+    aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
+    scales = map(fitscale, categoricalscales(pl, Dictionary{Type{<:AlgebraOfGraphics.Aesthetic},Any}(), aesmapping))
     @test keys(scales) == Indices([2])
     scale = scales[2]
     @test scale isa CategoricalScale
@@ -14,15 +14,17 @@
     l = data([(x = 1, subject = "c", grp="f"), (x = 2, subject = "a", grp="g")]) *
         mapping(:x, :subject, color=:grp)
     pl = ProcessedLayer(l)
-    palettes = compute_palettes((; color=["g" => "red", "blue", "green"]))
-    scales = map(fitscale, categoricalscales(pl, palettes))
+    aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
+    scaleprops = AlgebraOfGraphics.compute_scale_properties([pl], (; Color = (; palette = ["red", "blue", "green"], categories = ["g", "f"])))
+
+    scales = map(fitscale, categoricalscales(pl, scaleprops, aesmapping))
     @test keys(scales) == Indices([:color, 2])
     scale = scales[:color]
     @test scale isa CategoricalScale
-    @test scale.data == ["f", "g"]
+    @test scale.data == ["g", "f"]
     @test scale.label == "grp"
-    @test scale.palette == ["g" => "red", "blue", "green"]
-    @test scale.plot == ["blue", "red"]
+    @test scale.palette == ["red", "blue", "green"]
+    @test scale.plot == ["red", "blue"]
     scale = scales[2]
     @test scale isa CategoricalScale
     @test scale.data == ["a", "c"]

@@ -3,7 +3,7 @@ using AlgebraOfGraphics, Makie, Random, Statistics, Test, Dates
 using AlgebraOfGraphics: Sorted
 using AlgebraOfGraphics: separate
 using AlgebraOfGraphics: midpoints
-using AlgebraOfGraphics: compute_palettes, apply_palette
+using AlgebraOfGraphics: apply_palette
 using AlgebraOfGraphics: categoricalscales, CategoricalScale, fitscale, datetime2float, datetimeticks
 using AlgebraOfGraphics: extrema_finite, nested_extrema_finite
 using AlgebraOfGraphics: get_layout
@@ -18,7 +18,7 @@ using AlgebraOfGraphics: Layer, Layers, ProcessedLayer, ProcessedLayers
 using Makie: automatic
 using GridLayoutBase: Protrusion
 
-using Dictionaries: Indices
+using Dictionaries: Indices, Dictionary
 
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, weights
