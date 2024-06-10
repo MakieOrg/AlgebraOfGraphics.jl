@@ -33,12 +33,14 @@ end
 function select(data, x::Pair{<:Any, <:Any})
     name, transformation = x
     if name isa Tuple
-        vs = map(n -> only(first(select(data, n))), name)
+        vs = map(name) do n
+            only(first(select(data, n)))
+        end
         label = ""
     else
-        vs, (_, (label, scale)) = select(data, name)
+        vs, (_, (label, _)) = select(data, name)
     end
-    return vs => transformation => label => scale
+    return vs => transformation => label => identity
 end
 
 function select(data, x::Pair{<:Any, <:Pair})
