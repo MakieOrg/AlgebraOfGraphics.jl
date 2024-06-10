@@ -115,7 +115,8 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
 end
 
 function aesthetic_for_symbol(s::Symbol)
-    t = getproperty(AlgebraOfGraphics, Symbol("Aes", s))
+    aessym = Symbol("Aes", s)
+    t = isdefined(AlgebraOfGraphics, aessym) ? getproperty(AlgebraOfGraphics, aessym) : nothing
     if !(t isa Type{<:Aesthetic})
         return nothing
     else
