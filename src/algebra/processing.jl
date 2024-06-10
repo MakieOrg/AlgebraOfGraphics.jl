@@ -133,5 +133,18 @@ function process(layer::Layer)
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
     transformed_processlayer = layer.transformation(ProcessedLayer(grouped_entry; primary))
     attributes = merge(mandatory_attributes(transformed_processlayer.plottype), transformed_processlayer.attributes)
-    return ProcessedLayer(transformed_processlayer; attributes)
+    possibly_without_visual = ProcessedLayer(transformed_processlayer; attributes)
+    return set_missing_visual(possibly_without_visual)
+end
+
+function set_missing_visual(p::ProcessedLayer)
+    if p.plottype !== Plot{plot}
+        p
+    else
+        plottype = Makie.plottype(p.plottype, p.positional...)
+        if plottype === Plot{plot}
+            error("Failed to determine default plot type for positional arguments of type $(typeof(p.positional))")
+        end
+        ProcessedLayer(p; plottype)
+    end
 end
