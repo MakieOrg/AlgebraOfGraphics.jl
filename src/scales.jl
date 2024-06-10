@@ -72,11 +72,12 @@ struct CategoricalScaleProps
     label # nothing or any type workable as a label
     legend::Bool
     categories::Union{Nothing,Vector}
+    palette # nothing or any type workable as a palette
 end
 
-Base.@kwdef struct AesColorCategoricalProps <: CategoricalAesProps end
+struct EmptyCategoricalProps <: CategoricalAesProps end
 
-categorical_aes_props_type(::Type{AesColor}) = AesColorCategoricalProps
+categorical_aes_props_type(::Type{<:Aesthetic}) = EmptyCategoricalProps
 
 function categorical_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any})
     T = categorical_aes_props_type(type)
@@ -116,12 +117,14 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     legend = _pop!(props_copy, :legend, true)
     label = _pop!(props_copy, :label, nothing)
     categories = _pop!(props_copy, :categories, nothing)
+    palette = _pop!(props_copy, :palette, nothing)
     aes_props = categorical_aes_props(aestype, props_copy)
     CategoricalScaleProps(
         aes_props,
         label,
         legend,
         categories,
+        palette,
     )
 end
 
@@ -241,11 +244,12 @@ end
 function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     data = mergesorted(c1.data, c2.data)
     palette = assert_equal(c1.palette, c2.palette)
+    plot = assert_equal(c1.plot, c2.plot)
     label = mergelabels(c1.label, c2.label)
     if c1.props != c2.props
         error("Expected props of merging categorical scales to match, got $(c1.props) and $(c2.props)")
     end
-    return CategoricalScale(data, palette, label, c1.props)
+    return CategoricalScale(data, plot, palette, label, c1.props)
 end
 
 function mergescales(c1::ContinuousScale, c2::ContinuousScale)
