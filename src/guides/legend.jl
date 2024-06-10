@@ -43,7 +43,14 @@ compute_legend(fg::FigureGrid) = compute_legend(fg.grid)
 
 # ignore positional scales and keywords that don't support legends
 function legendable_scales(scales)
-    return filterkeys(scale_is_legendable, scales)
+    in_principle_legendable = filterkeys(scale_is_legendable, scales)
+    disabled_legends_filtered = map(in_principle_legendable) do dict
+        filter(dict) do scale
+            scale.props.legend
+        end
+    end
+    remaining = filter(!isempty, disabled_legends_filtered)
+    return remaining
 end
 
 scale_is_legendable(_) = false
