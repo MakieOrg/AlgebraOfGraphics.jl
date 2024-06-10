@@ -127,3 +127,15 @@ verbatim(x) = Verbatim(x)
 
 Base.getindex(v::Verbatim) = v.x
 Base.print(io::IO, v::Verbatim) = print(io, v.x)
+
+
+@static if VERSION < v"1.7"
+    macro something(args...)
+        expr = :(nothing)
+        for arg in reverse(args)
+            expr = :(val = $(esc(arg)); val !== nothing ? val : ($expr))
+        end
+        something = GlobalRef(Base, :something)
+        return :($something($expr))
+    end
+end

@@ -33,15 +33,15 @@ function compute_colorbar(grid::Matrix{AxisEntries})
     colorscale = only(values(colorscale_dict))
     
     label = getlabel(colorscale)
-    limits = get(colorscale.props, :colorrange, colorscale.extrema)
+    limits = @something colorscale.props.aesprops.colorrange colorscale.extrema
     is_highclipped = limits[2] < colorscale.extrema[2]
     is_lowclipped = limits[1] > colorscale.extrema[1]
 
-    colormap = get(default_colormap, colorscale.props, :colormap)
+    colormap = @something colorscale.props.aesprops.colormap default_colormap()
     colormap_colors = Makie.to_colormap(colormap)
 
-    lowclip = is_lowclipped ? get(colorscale.props, :lowclip, colormap_colors[1]) : Makie.automatic
-    highclip = is_highclipped ? get(colorscale.props, :highclip, colormap_colors[end]) : Makie.automatic
+    lowclip = is_lowclipped ? @something(colorscale.props.aesprops.lowclip, colormap_colors[1]) : Makie.automatic
+    highclip = is_highclipped ? @something(colorscale.props.aesprops.highclip, colormap_colors[end]) : Makie.automatic
 
     return (;
         label,

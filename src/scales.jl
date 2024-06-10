@@ -66,7 +66,6 @@ function apply_palette(::Wrap, uv)
 end
 
 abstract type CategoricalAesProps end
-
 struct CategoricalScaleProps
     aesprops::CategoricalAesProps
     label # nothing or any type workable as a label
@@ -79,8 +78,12 @@ struct EmptyCategoricalProps <: CategoricalAesProps end
 
 categorical_aes_props_type(::Type{<:Aesthetic}) = EmptyCategoricalProps
 
-function categorical_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any})
-    T = categorical_aes_props_type(type)
+categorical_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any}) = aes_props(Val(:categorical), type, props_dict)
+
+function aes_props(kind::Val, type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any})
+    f_T(::Val{:categorical}) = categorical_aes_props_type
+    f_T(::Val{:continuous}) = continuous_aes_props_type
+    T = f_T(kind)(type)
     local invalid_keys
     try
         return T(; pairs(props_dict)...)
@@ -91,7 +94,8 @@ function categorical_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{S
             rethrow(e)
         end
     end
-    throw(ArgumentError("Unknown scale$(length(invalid_keys) == 1 ? "" : "s") attribute $(join((repr(key) for key in invalid_keys), ", ", " and ")) for categorical scale with aesthetic $type. $(isempty(fieldnames(T)) ? "$T does not accept any attributes." : "Available attributes for $T are $(join((repr(key) for key in fieldnames(T)), ", ", " and ")).")"))
+    sym(::Val{<:S}) where S = S
+    throw(ArgumentError("Unknown scale$(length(invalid_keys) == 1 ? "" : "s") attribute $(join((repr(key) for key in invalid_keys), ", ", " and ")) for $(sym(kind)) scale with aesthetic $type. $(isempty(fieldnames(T)) ? "$T does not accept any attributes." : "Available attributes for $T are $(join((repr(key) for key in fieldnames(T)), ", ", " and ")).")"))
 end
 
 struct CategoricalScale{S, T, U}
@@ -172,16 +176,54 @@ end
 
 ## Continuous Scales
 
+abstract type ContinuousAesProps end
+struct ContinuousScaleProps
+    aesprops::ContinuousAesProps
+    label # nothing or any type workable as a label
+    legend::Bool
+end
+
+function ContinuousScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
+    props_copy = copy(props)
+    legend = _pop!(props_copy, :legend, true)
+    label = _pop!(props_copy, :label, nothing)
+    aes_props = continuous_aes_props(aestype, props_copy)
+    ContinuousScaleProps(
+        aes_props,
+        label,
+        legend,
+    )
+end
+
+struct EmptyContinuousProps <: ContinuousAesProps end
+Base.@kwdef struct AesColorContinuousProps <: ContinuousAesProps
+    colormap = nothing
+    colorrange = nothing
+    lowclip = nothing
+    highclip = nothing
+    nan_color = nothing
+end
+
+continuous_aes_props_type(::Type{<:Aesthetic}) = EmptyContinuousProps
+continuous_aes_props_type(::Type{AesColor}) = AesColorContinuousProps
+
+continuous_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any}) = aes_props(Val(:continuous), type, props_dict)
+
 struct ContinuousScale{T}
     extrema::NTuple{2, T}
     label::Union{AbstractString, Nothing}
     force::Bool
-    props::Dictionary{Symbol,Any}
+    props::ContinuousScaleProps
 end
 
 ContinuousScale(extrema, label, props; force=false) = ContinuousScale(extrema, label, force, props)
-getlabel(c::ContinuousScale) = get(() -> something(c.label, ""), c.props, :label)
-getlabel(c::CategoricalScale) = c.props.label === nothing ? something(c.label, "") : c.props.label
+
+function ContinuousScale(aestype::Type{<:Aesthetic}, extrema, label, props; force=false)
+    props_typed = ContinuousScaleProps(aestype, props)
+    return ContinuousScale(extrema, label, force, props_typed)
+end
+
+getlabel(c::Union{ContinuousScale,CategoricalScale}) = c.props.label === nothing ? something(c.label, "") : c.props.label
 
 # recentering hack to avoid Float32 conversion errors on recent dates
 # TODO: remove once Makie supports dates

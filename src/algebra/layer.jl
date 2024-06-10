@@ -207,7 +207,7 @@ function continuousscales(processedlayer::ProcessedLayer, scale_props)
         props = get_scale_props(scale_props, aes, scale_id)
         extrema = extrema_finite(val)
         label = to_label(get(processedlayer.labels, key, ""))
-        return ContinuousScale(extrema, label, props)
+        return ContinuousScale(aes, extrema, label, props)
     end
 
     # this is now handled via aesthetic mapping plus custom Entry functions per plot type

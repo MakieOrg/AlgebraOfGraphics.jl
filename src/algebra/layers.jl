@@ -371,12 +371,14 @@ function default_colormap()
 end
 
 full_rescale(data, aes, scale::CategoricalScale) = rescale(data, scale)
+
 function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
-    colormap = Makie.to_colormap(get(default_colormap, scale.props, :colormap))
-    colorrange = Makie.Vec2(get(scale.props, :colorrange, scale.extrema))
-    lowclip = Makie.to_color(get(scale.props, :lowclip, first(colormap)))
-    highclip = Makie.to_color(get(scale.props, :highclip, last(colormap)))
-    nan_color = Makie.to_color(get(scale.props, :nan_color, RGBAf(0, 0, 0, 0)))
+    props = scale.props.aesprops::AesColorContinuousProps
+    colormap = Makie.to_colormap(@something(props.colormap, default_colormap()))
+    colorrange = Makie.Vec2(@something(props.colorrange, scale.extrema))
+    lowclip = Makie.to_color(@something(props.lowclip, first(colormap)))
+    highclip = Makie.to_color(@something(props.highclip, last(colormap)))
+    nan_color = Makie.to_color(@something(props.nan_color, RGBAf(0, 0, 0, 0)))
     Makie.numbers_to_colors(data, colormap, identity, colorrange, lowclip, highclip, nan_color)
 end
 function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ,AesDeltaX,AesDeltaY,AesDeltaZ}}, scale::ContinuousScale)
@@ -408,11 +410,11 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
         ])
     else
         color_attributes = dictionary([
-            :colormap => get(default_colormap, scale.props, :colormap),
-            :colorrange => get(scale.props, :colorrange, scale.extrema),
-            :nan_color => get(scale.props, :nan_color, :transparent),
-            :lowclip => get(scale.props, :lowclip, Makie.automatic),
-            :highclip => get(scale.props, :highclip, Makie.automatic),
+            :colormap => @something(scale.props.aesprops.colormap, default_colormap()),
+            :colorrange => @something(scale.props.aesprops.colorrange, scale.extrema),
+            :nan_color => @something(scale.props.aesprops.nan_color, :transparent),
+            :lowclip => @something(scale.props.aesprops.lowclip, Makie.automatic),
+            :highclip => @something(scale.props.aesprops.highclip, Makie.automatic),
         ])
     end
 
