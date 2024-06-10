@@ -65,16 +65,69 @@ function apply_palette(::Wrap, uv)
     return [fldmod1(idx, ncols) for idx in eachindex(uv)]
 end
 
+abstract type CategoricalAesProps end
+
+struct CategoricalScaleProps
+    aesprops::CategoricalAesProps
+    label # nothing or any type workable as a label
+    legend::Bool
+    categories::Union{Nothing,Vector}
+end
+
+Base.@kwdef struct AesColorCategoricalProps <: CategoricalAesProps end
+
+categorical_aes_props_type(::Type{AesColor}) = AesColorCategoricalProps
+
+function categorical_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any})
+    T = categorical_aes_props_type(type)
+    local invalid_keys
+    try
+        return T(; pairs(props_dict)...)
+    catch e
+        if e isa MethodError && e.f === Core.kwcall
+            invalid_keys = setdiff(keys(e.args[1]), fieldnames(T))
+        else
+            rethrow(e)
+        end
+    end
+    throw(ArgumentError("Unknown scale$(length(invalid_keys) == 1 ? "" : "s") attribute $(join((repr(key) for key in invalid_keys), ", ", " and ")) for categorical scale with aesthetic $type. $(isempty(fieldnames(T)) ? "$T does not accept any attributes." : "Available attributes for $T are $(join((repr(key) for key in fieldnames(T)), ", ", " and ")).")"))
+end
+
 struct CategoricalScale{S, T, U}
     data::S
     plot::T
     palette::U
     label::Union{AbstractString, Nothing}
-    props::Dictionary{Symbol,Any}
+    props::CategoricalScaleProps
 end
 
-function CategoricalScale(data, palette, label::Union{AbstractString, Nothing}, props)
-    return CategoricalScale(data, nothing, palette, label, props)
+function _pop!(d::Dictionary, key, default)
+    if haskey(d, key)
+        val = d[key]
+        delete!(d, key)
+        val
+    else
+        default
+    end
+end
+
+function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
+    props_copy = copy(props)
+    legend = _pop!(props_copy, :legend, true)
+    label = _pop!(props_copy, :label, nothing)
+    categories = _pop!(props_copy, :categories, nothing)
+    aes_props = categorical_aes_props(aestype, props_copy)
+    CategoricalScaleProps(
+        aes_props,
+        label,
+        legend,
+        categories,
+    )
+end
+
+function CategoricalScale(aestype::Type{<:Aesthetic}, data, palette, label::Union{AbstractString, Nothing}, props)
+    props_typed = CategoricalScaleProps(aestype, props)
+    return CategoricalScale(data, nothing, palette, label, props_typed)
 end
 
 category_value(v) = v
@@ -84,8 +137,8 @@ category_label(p::Pair) = p[2]
 
 # Final processing step of a categorical scale
 function fitscale(c::CategoricalScale)
-    data = if haskey(c.props, :categories)
-        catvalues = map(category_value, c.props[:categories])
+    data = if c.props.categories !== nothing
+        catvalues = map(category_value, c.props.categories)
         u = try
             union(catvalues, c.data)
         catch e
@@ -107,8 +160,8 @@ end
 datavalues(c::CategoricalScale) = c.data
 plotvalues(c::CategoricalScale) = c.plot
 function datalabels(c::CategoricalScale)
-    if haskey(c.props, :categories)
-        map(category_label, c.props[:categories])
+    if c.props.categories !== nothing
+        map(category_label, c.props.categories)
     else
         string.(datavalues(c))
     end
@@ -124,7 +177,8 @@ struct ContinuousScale{T}
 end
 
 ContinuousScale(extrema, label, props; force=false) = ContinuousScale(extrema, label, force, props)
-getlabel(c::Union{ContinuousScale,CategoricalScale}) = get(() -> something(c.label, ""), c.props, :label)
+getlabel(c::ContinuousScale) = get(() -> something(c.label, ""), c.props, :label)
+getlabel(c::CategoricalScale) = c.props.label === nothing ? something(c.label, "") : c.props.label
 
 # recentering hack to avoid Float32 conversion errors on recent dates
 # TODO: remove once Makie supports dates
