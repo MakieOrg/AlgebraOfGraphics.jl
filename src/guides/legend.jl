@@ -56,6 +56,7 @@ end
 scale_is_legendable(kind::Union{Val{:categorical},Val{:continuous}}, _) = false
 scale_is_legendable(kind::Val{:categorical}, ::Type{AesColor}) = true
 scale_is_legendable(kind::Val{:categorical}, ::Type{AesMarker}) = true
+scale_is_legendable(kind::Val{:categorical}, ::Type{AesLineStyle}) = true
 scale_is_legendable(kind::Val{:categorical}, ::Type{AesMarkerSize}) = true
 scale_is_legendable(kind::Val{:continuous}, ::Type{AesMarkerSize}) = true
 

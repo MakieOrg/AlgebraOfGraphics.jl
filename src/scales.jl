@@ -17,6 +17,7 @@ struct AesMarker <: Aesthetic end
 struct AesMarkerSize <: Aesthetic end
 struct AesDodge <: Aesthetic end
 struct AesStack <: Aesthetic end
+struct AesLineStyle <: Aesthetic end
 
 # helper to dissociate scales belonging to the same Aesthetic type
 struct ScaleID

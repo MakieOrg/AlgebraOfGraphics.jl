@@ -129,6 +129,7 @@ end
 _default_categorical_palette(::Type{<:Union{AesX,AesY}}) = Makie.automatic
 _default_categorical_palette(::Type{AesColor}) = to_value(Makie.current_default_theme()[:palette][:color])
 _default_categorical_palette(::Type{AesMarker}) = to_value(Makie.current_default_theme()[:palette][:marker])
+_default_categorical_palette(::Type{AesLineStyle}) = to_value(Makie.current_default_theme()[:palette][:linestyle])
 _default_categorical_palette(::Type{AesLayout}) = wrap
 _default_categorical_palette(::Type{<:Union{AesRow,AesCol}}) = Makie.automatic
 _default_categorical_palette(::Type{AesGroup}) = Makie.automatic

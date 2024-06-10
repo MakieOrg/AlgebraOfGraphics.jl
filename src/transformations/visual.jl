@@ -61,7 +61,8 @@ function aesthetic_mapping(::Type{Lines})
     dictionary([
         1 => AesX,
         2 => AesY,
-        :color => AesColor
+        :color => AesColor,
+        :linestyle => AesLineStyle,
     ])
 end
 
