@@ -114,17 +114,17 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
     return entries_grid, continuousscales_grid, merged_continuousscales
 end
 
-hardcoded_aesthetic(sym::Symbol) = hardcoded_aesthetic(Val(sym))
-hardcoded_aesthetic(::Val) = nothing
+default_aesthetic(sym::Symbol) = default_aesthetic(Val(sym))
+default_aesthetic(::Val) = nothing
 
-hardcoded_aesthetic(::Val{:color}) = AesColor
-hardcoded_aesthetic(::Val{:marker}) = AesMarker
-hardcoded_aesthetic(::Val{:layout}) = AesLayout
-hardcoded_aesthetic(::Val{:row}) = AesRow
-hardcoded_aesthetic(::Val{:col}) = AesCol
-hardcoded_aesthetic(::Val{:x}) = AesX
-hardcoded_aesthetic(::Val{:y}) = AesY
-hardcoded_aesthetic(::Val{:z}) = AesZ
+default_aesthetic(::Val{:Color}) = AesColor
+default_aesthetic(::Val{:Marker}) = AesMarker
+default_aesthetic(::Val{:Layout}) = AesLayout
+default_aesthetic(::Val{:Row}) = AesRow
+default_aesthetic(::Val{:Col}) = AesCol
+default_aesthetic(::Val{:X}) = AesX
+default_aesthetic(::Val{:Y}) = AesY
+default_aesthetic(::Val{:Z}) = AesZ
 
 
 function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales)
@@ -166,7 +166,7 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
 
     for (sym, value) in pairs(scales)
 
-        aes = hardcoded_aesthetic(sym)
+        aes = default_aesthetic(sym)
         if aes === nothing
             if !haskey(named_scales, sym)
                 error("Got scale $(repr(sym)) in scale properties but this key is neither the default name of a scale nor does it reference a named scale. The named scales are $(keys(named_scales))")
@@ -211,7 +211,8 @@ function compute_axes_grid(fig, d::AbstractDrawable;
     return map(ae -> AxisEntries(ae, fig), axes_grid)
 end
 
-function hardcoded_visual_scale(key)
+hardcoded_mapping(_::Int) = nothing
+function hardcoded_mapping(key::Symbol)
     key === :layout ? AesLayout :
     key === :row ? AesRow :
     key === :col ? AesCol :
@@ -220,7 +221,7 @@ function hardcoded_visual_scale(key)
 end
 
 function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_mapping::AestheticMapping)
-    hardcoded = hardcoded_visual_scale(key)
+    hardcoded = hardcoded_mapping(key)
     hardcoded !== nothing && return hardcoded
     if !haskey(aes_mapping, key)
         throw(ArgumentError("ProcessedLayer with plot type $(processedlayer.plottype) did not have $(repr(key)) in its AestheticMapping. The mapping was $aes_mapping"))
