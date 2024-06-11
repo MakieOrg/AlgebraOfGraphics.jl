@@ -360,14 +360,18 @@ function get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuou
     scale_id = get(scale_mapping, key, nothing)
     scale = if haskey(categoricalscales, aes) && haskey(categoricalscales[aes], scale_id)
         categoricalscales[aes][scale_id]
-    else
+    elseif haskey(continuousscales, aes) && haskey(continuousscales[aes], scale_id)
         continuousscales[aes][scale_id]
+    else
+        # this should mean that the data were passed `verbatim` so there is no scale
+        nothing
     end
     return scale
 end
 
 function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     scale = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    scale === nothing && return data # verbatim data
     full_rescale(data, aes_mapping[key], scale)
 end
 
@@ -415,6 +419,8 @@ function numerical_rescale(values, key, aes_mapping, scale_mapping, categoricals
     
     if scale isa ContinuousScale
         return values, scale
+    elseif scale === nothing
+        error("Cannot do numerical rescale on verbatim data for $(repr(key))")
     end
     indices = Int.(indexin(values, datavalues(scale)))
     return indices, scale
