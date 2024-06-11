@@ -24,7 +24,7 @@ visual(plottype::PlotType=Plot{plot}; kwargs...) = transformation(Visual(plottyp
 # be the same value that the plot type also sets in its default theme.
 mandatory_attributes(T) = NamedArguments()
 mandatory_attributes(::Type{<:Union{BarPlot,Rangebars,Errorbars}}) = dictionary([:direction => :y])
-mandatory_attributes(::Type{<:Union{Violin,RainClouds}}) = dictionary([:orientation => :vertical])
+mandatory_attributes(::Type{<:Union{Violin,RainClouds,BoxPlot}}) = dictionary([:orientation => :vertical])
 
 # this function needs to be defined for any plot type that should work with AoG, because it tells
 # AoG how its positional arguments can be understood in terms of the dimensions of the plot for
@@ -198,6 +198,20 @@ function aesthetic_mapping(::Type{Makie.Text})
         1 => AesX,
         2 => AesY,
         :text => AesText,
+        :color => AesColor,
+    ])
+end
+
+function aesthetic_mapping(::Type{BoxPlot})
+    dictionary([
+        1 => :orientation => dictionary([
+            :horizontal => AesY,
+            :vertical => AesX,
+        ]),
+        2 => :orientation => dictionary([
+            :horizontal => AesX,
+            :vertical => AesY,
+        ]),
         :color => AesColor,
     ])
 end
