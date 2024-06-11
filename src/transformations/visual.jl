@@ -97,6 +97,7 @@ function aesthetic_mapping(::Type{Violin})
             :vertical => AesX,
         ]),
         :color => AesColor,
+        :side => AesViolinSide,
     ])
 end
 
