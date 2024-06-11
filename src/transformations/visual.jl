@@ -192,3 +192,12 @@ function aesthetic_mapping(::Type{Errorbars})
         :color => AesColor,
     ])
 end
+
+function aesthetic_mapping(::Type{Makie.Text})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        :text => AesText,
+        :color => AesColor,
+    ])
+end

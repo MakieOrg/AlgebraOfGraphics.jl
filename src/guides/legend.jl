@@ -206,6 +206,12 @@ function legend_elements(T::Type{LinesFill}, attributes, scale_args::MixedArgume
     ]
 end
 
+function legend_elements(T::Type{Makie.Text}, attributes, scale_args::MixedArguments)
+    [PolyElement(
+        color = _get(T, scale_args, attributes, :color),
+    )]
+end
+
 # Notes
 
 # TODO: correctly handle composite plot types (now fall back to poly)
