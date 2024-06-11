@@ -61,8 +61,7 @@ scale_is_legendable(kind::Val{:categorical}, ::Type{AesMarkerSize}) = true
 scale_is_legendable(kind::Val{:continuous}, ::Type{AesMarkerSize}) = true
 
 function unique_by(f, collection)
-    T = Base._return_type(f, Tuple{eltype(collection)})
-    s = Set{T}()
+    s = Set() # type constraining this via `return_type` had some stack overflow problem on 1.6
     v = Vector{eltype(collection)}()
     for el in collection
         by = f(el)
