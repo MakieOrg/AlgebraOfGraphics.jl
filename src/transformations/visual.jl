@@ -216,3 +216,16 @@ function aesthetic_mapping(::Type{BoxPlot})
         :color => AesColor,
     ])
 end
+
+function aesthetic_mapping(::Type{Contour})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        3 => AesContourColor,
+        :color => AesColor, # only categorical, for continous one would have to use 3
+        :linestyle => AesLineStyle, # only categorical, for continous one would have to use 3
+    ])
+end
+
+# if this wasn't set, a contour plot would be colored with a colormap according to positional arg 3, but we currently cannot handle that in the right way
+mandatory_attributes(::Type{Contour}) = dictionary([:colormap => [Makie.current_default_theme()[:linecolor][]]])

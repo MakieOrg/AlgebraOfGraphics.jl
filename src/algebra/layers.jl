@@ -396,6 +396,8 @@ function full_rescale(data, aes::Type{AesMarkerSize}, scale::ContinuousScale)
     values_to_markersizes(data, props.sizerange, scale.extrema)
 end
 
+full_rescale(data, aes::Type{AesContourColor}, scale::ContinuousScale) = data # passthrough, this aes is a mock one anyway
+
 function values_to_markersizes(data, sizerange, extrema)
     # we scale the area linearly with the values
     areamin, areamax = sizerange .^ 2
