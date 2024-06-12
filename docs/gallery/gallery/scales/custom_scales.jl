@@ -40,7 +40,7 @@ plt = data(df) *
     mapping(arrowhead = :c => nonnumeric) *
     mapping(color = :d => nonnumeric) *
     visual(Arrows, arrowsize=10, lengthscale=0.4, linewidth = 1)
-draw(plt; scales = (; Marker = (; palette = heads), Color = (; palette = colors)))
+fg = draw(plt; scales = (; Marker = (; palette = heads), Color = (; palette = colors)))
 
 # To associate specific attribute values to specific data values, use pairs.
 # Missing keys will cycle over values that are not pairs.
