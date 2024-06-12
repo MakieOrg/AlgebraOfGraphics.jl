@@ -275,3 +275,11 @@ function aesthetic_mapping(::Type{Poly})
         :color => AesColor,
     ])
 end
+
+function aesthetic_mapping(::Type{Surface})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        3 => AesZ,
+    ])
+end
