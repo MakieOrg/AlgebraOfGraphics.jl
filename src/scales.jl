@@ -21,6 +21,7 @@ struct AesLineStyle <: Aesthetic end
 struct AesText <: Aesthetic end
 struct AesViolinSide <: Aesthetic end
 struct AesContourColor <: Aesthetic end # this is just so the third contour argument doesn't conflict with other things for now, it's complex to handle in its interplay with `color` and `levels`
+struct AesPlaceholder <: Aesthetic end # choropleth for example takes as first arg only geometries which avoid scales, but for now we still have to give an aes to 1, so this can serve for that purpose
 
 # helper to dissociate scales belonging to the same Aesthetic type
 struct ScaleID

@@ -260,3 +260,9 @@ function aesthetic_mapping(::Type{Arrows})
     ])
 end
 
+function aesthetic_mapping(::Type{Choropleth})
+    dictionary([
+        1 => AesPlaceholder,
+        :color => AesColor,
+    ])
+end
