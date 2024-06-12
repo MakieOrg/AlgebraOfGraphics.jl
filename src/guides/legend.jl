@@ -157,7 +157,7 @@ function legend_elements(T::Type{Scatter}, attributes, scale_args::MixedArgument
     )]
 end
 
-function legend_elements(T::Union{Type{BarPlot},Type{Violin},Type{BoxPlot},Type{Choropleth}}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Union{Type{BarPlot},Type{Violin},Type{BoxPlot},Type{Choropleth},Type{Poly}}, attributes, scale_args::MixedArguments)
     [PolyElement(
         color = _get(T, scale_args, attributes, :color),
         polystrokecolor = _get(T, scale_args, attributes, :strokecolor),
