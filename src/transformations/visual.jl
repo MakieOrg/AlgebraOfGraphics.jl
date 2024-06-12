@@ -283,3 +283,12 @@ function aesthetic_mapping(::Type{Surface})
         3 => AesZ,
     ])
 end
+
+function aesthetic_mapping(::Type{Wireframe})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        3 => AesZ,
+        :color => AesColor,
+    ])
+end
