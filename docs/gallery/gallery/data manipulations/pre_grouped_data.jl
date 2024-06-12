@@ -24,7 +24,7 @@ draw(m)
 
 #
 
-m = mapping(x, [y z], color=dims(1) => renamer(["a", "b", "c"]))
+m = mapping(x, [y z], color=dims(1) => renamer(["a", "b", "c"])) * visual(Scatter)
 draw(m)
 
 #
