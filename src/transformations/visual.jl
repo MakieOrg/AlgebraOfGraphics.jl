@@ -98,6 +98,7 @@ function aesthetic_mapping(::Type{Violin})
         ]),
         :color => AesColor,
         :side => AesViolinSide,
+        :dodge => AesDodge,
     ])
 end
 
@@ -214,6 +215,7 @@ function aesthetic_mapping(::Type{BoxPlot})
             :vertical => AesY,
         ]),
         :color => AesColor,
+        :dodge => AesDodge,
     ])
 end
 
@@ -229,3 +231,32 @@ end
 
 # if this wasn't set, a contour plot would be colored with a colormap according to positional arg 3, but we currently cannot handle that in the right way
 mandatory_attributes(::Type{Contour}) = dictionary([:colormap => [Makie.current_default_theme()[:linecolor][]]])
+
+function aesthetic_mapping(::Type{QQPlot})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        :color => AesColor,
+        :linestyle => AesLineStyle,
+    ])
+end
+
+function aesthetic_mapping(::Type{QQNorm})
+    dictionary([
+        1 => AesY,
+        :color => AesColor,
+        :linestyle => AesLineStyle,
+    ])
+end
+
+function aesthetic_mapping(::Type{Arrows})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        3 => AesDeltaX,
+        4 => AesDeltaY,
+        :color => AesColor,
+        :arrowhead => AesMarker,
+    ])
+end
+

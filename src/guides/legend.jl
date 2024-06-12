@@ -157,7 +157,7 @@ function legend_elements(T::Type{Scatter}, attributes, scale_args::MixedArgument
     )]
 end
 
-function legend_elements(T::Union{Type{BarPlot},Type{Violin}}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Union{Type{BarPlot},Type{Violin},Type{BoxPlot}}, attributes, scale_args::MixedArguments)
     [PolyElement(
         color = _get(T, scale_args, attributes, :color),
         polystrokecolor = _get(T, scale_args, attributes, :strokecolor),
@@ -218,6 +218,24 @@ function legend_elements(T::Type{Contour}, attributes, scale_args::MixedArgument
         linestyle = _get(T, scale_args, attributes, :linestyle),
         linewidth = _get(T, scale_args, attributes, :linewidth),
     )]
+end
+
+function legend_elements(T::Type{Arrows}, attributes, scale_args::MixedArguments)
+    marker = _get(T, scale_args, attributes, :arrowhead)
+    marker = marker === Makie.automatic ? :utriangle : marker # Makie handles this internally due to the 2d/3d combination. This should probably be fixed in Makie
+    [
+        LineElement(
+            color = _get(T, scale_args, attributes, :color),
+            linewidth = _get(T, scale_args, attributes, :linewidth),
+            linestyle = _get(T, scale_args, attributes, :linestyle),
+            linepoints = [Point2(0.5, 0), Point2(0.5, 0.75)]
+        ),
+        MarkerElement(;
+            marker,
+            color = _get(T, scale_args, attributes, :color),
+            markerpoints = [Point2(0.5, 0.75)],
+        ),
+    ]
 end
 
 # Notes
