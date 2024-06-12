@@ -151,6 +151,7 @@ get_categorical_palette(::Type{AesColor}, colormap::Symbol) = Makie.to_colormap(
 get_categorical_palette(::Type{AesColor}, grad::Makie.PlotUtils.CategoricalColorGradient) = grad
 get_categorical_palette(::Type{<:Union{AesX,AesY,AesZ,AesMarkerSize}}, v::AbstractVector{<:Real}) = v
 get_categorical_palette(::Type{AesMarker}, markers::AbstractVector) = markers
+get_categorical_palette(::Type{AesLayout}, positions::AbstractVector{Tuple{Int,Int}}) = positions
 
 const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
 
