@@ -61,6 +61,7 @@ function aesthetic_mapping(::Type{Lines})
     dictionary([
         1 => AesX,
         2 => AesY,
+        3 => AesZ,
         :color => AesColor,
         :linestyle => AesLineStyle,
     ])
@@ -106,6 +107,7 @@ function aesthetic_mapping(::Type{Scatter})
     dictionary([
         1 => AesX,
         2 => AesY,
+        3 => AesZ,
         :color => AesColor,
         :strokecolor => AesColor,
         :marker => AesMarker,
