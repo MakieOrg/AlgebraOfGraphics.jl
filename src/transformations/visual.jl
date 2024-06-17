@@ -292,3 +292,12 @@ function aesthetic_mapping(::Type{Wireframe})
         :color => AesColor,
     ])
 end
+
+function aesthetic_mapping(::Type{Band})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        3 => AesY,
+        :color => AesColor,
+    ])
+end

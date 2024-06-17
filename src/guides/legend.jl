@@ -220,6 +220,12 @@ function legend_elements(T::Type{Contour}, attributes, scale_args::MixedArgument
     )]
 end
 
+function legend_elements(T::Type{Band}, attributes, scale_args::MixedArguments)
+    [PolyElement(
+        color = _get(T, scale_args, attributes, :color),
+    )]
+end
+
 function legend_elements(T::Type{Arrows}, attributes, scale_args::MixedArguments)
     marker = _get(T, scale_args, attributes, :arrowhead)
     marker = marker === Makie.automatic ? :utriangle : marker # Makie handles this internally due to the 2d/3d combination. This should probably be fixed in Makie
