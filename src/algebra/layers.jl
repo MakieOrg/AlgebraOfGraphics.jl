@@ -388,7 +388,7 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     lowclip = Makie.to_color(@something(props.lowclip, first(colormap)))
     highclip = Makie.to_color(@something(props.highclip, last(colormap)))
     nan_color = Makie.to_color(@something(props.nan_color, RGBAf(0, 0, 0, 0)))
-    Makie.numbers_to_colors(data, colormap, identity, colorrange, lowclip, highclip, nan_color)
+    Makie.numbers_to_colors(collect(data), colormap, identity, colorrange, lowclip, highclip, nan_color)
 end
 
 function full_rescale(data, aes::Type{AesMarkerSize}, scale::ContinuousScale)
