@@ -324,8 +324,8 @@ function mergeable(processedlayer::ProcessedLayer)
     plottype, primary = processedlayer.plottype, processedlayer.primary
     # merge violins for correct renormalization
     plottype <: Violin && return true
-    # merge stacked barplots
-    plottype <: BarPlot && haskey(primary, :stack) && return true
+    # merge stacked or dodged barplots
+    plottype <: BarPlot && (haskey(primary, :stack) || haskey(primary, :dodge)) && return true
     # merge waterfall plots
     plottype <: Waterfall && return true
     # do not merge by default
