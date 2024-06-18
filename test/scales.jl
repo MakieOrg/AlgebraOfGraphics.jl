@@ -21,7 +21,8 @@
     @test keys(scales) == Indices([:color, 2])
     scale = scales[:color]
     @test scale isa CategoricalScale
-    @test scale.data == ["g", "f"]
+    @test scale.data == ["f", "g"]
+    @test datavalues(scale) == ["g", "f"]
     @test scale.label == "grp"
     @test scale.palette == ["red", "blue", "green"]
     @test scale.plot == ["red", "blue"]
