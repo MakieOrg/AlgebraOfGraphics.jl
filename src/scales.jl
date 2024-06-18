@@ -315,7 +315,10 @@ function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     if c1.props != c2.props
         error("Expected props of merging categorical scales to match, got $(c1.props) and $(c2.props)")
     end
-    return CategoricalScale(data, plot, palette, label, c1.props)
+    if c1.aes != c2.aes
+        error("Expected aes types of merging categorical scales to match, got $(c1.aes) and $(c2.aes)")
+    end
+    return CategoricalScale(data, plot, palette, label, c1.props, c1.aes)
 end
 
 function mergescales(c1::ContinuousScale, c2::ContinuousScale)
