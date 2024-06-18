@@ -54,7 +54,7 @@ function facet_labels!(fig, aes, scale, dir)
         rotation = dir == :row ? -π/2 : 0.0
         figpos = dir == :col ? fig[1, index, Top()] :
                  dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]
-        return Label(figpos, to_string(label); rotation, padding, color, font, fontsize, visible)
+        return Label(figpos, label; rotation, padding, color, font, fontsize, visible)
     end
 end
 
