@@ -11,8 +11,8 @@ end
 Compute legend for `grid` (which should be the output of [`draw!`](@ref)) and draw it in
 position `figpos`. Attributes allowed in `kwargs` are the same as `MakieLayout.Legend`.
 """
-function legend!(figpos, grid; kwargs...)
-    legend = compute_legend(grid)
+function legend!(figpos, grid; order = nothing, kwargs...)
+    legend = compute_legend(grid; order)
     return isnothing(legend) ? nothing : Legend(figpos, legend...; kwargs...)
 end
 
@@ -39,7 +39,7 @@ function plottypes_attributes(entries)
     return plottypes, attributes
 end
 
-compute_legend(fg::FigureGrid) = compute_legend(fg.grid)
+compute_legend(fg::FigureGrid; order) = compute_legend(fg.grid; order)
 
 # ignore positional scales and keywords that don't support legends
 function legendable_scales(kind::Val, scales)
@@ -73,7 +73,13 @@ function unique_by(f, collection)
     return v
 end
 
-function compute_legend(grid::Matrix{AxisEntries})
+struct ScaleWithMeta
+    aes::Type{<:Aesthetic}
+    scale_id::Union{Nothing,Symbol}
+    scale::Union{CategoricalScale,ContinuousScale}
+end
+
+function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,AbstractVector})
     # gather valid named scales
     scales_categorical = legendable_scales(Val(:categorical), first(grid).categoricalscales)
     scales_continuous = legendable_scales(Val(:continuous), first(grid).continuousscales)
@@ -82,6 +88,17 @@ function compute_legend(grid::Matrix{AxisEntries})
 
     # if no legendable scale is present, return nothing
     isempty(scales) && return nothing
+
+    scales_by_symbol = Dictionary{Symbol,ScaleWithMeta}()
+
+    _aes_sym(::Type{A}) where A<:Aesthetic = Symbol(replace(string(nameof(A)), r"^Aes" => ""))
+
+    for (aes, scaledict) in scales
+        for (scale_id, scale) in pairs(scaledict)
+            symbol = scale_id === nothing ? _aes_sym(aes) : scale_id
+            insert!(scales_by_symbol, symbol, ScaleWithMeta(aes, scale_id, scale))
+        end
+    end
 
     processedlayers = first(grid).processedlayers
 
@@ -94,13 +111,34 @@ function compute_legend(grid::Matrix{AxisEntries})
         (pl.plottype, pl.attributes)
     end
 
-    for (aes, scaledict) in scales
-        for (scale_id, scale) in pairs(scaledict)
-            push!(titles, getlabel(scale))
+    order = order === nothing ? collect(keys(scales_by_symbol)) : order
 
-            datavals, plotvals, datalabs = datavalues_plotvalues_datalabels(aes, scale)
+    syms_and_title(sym::Symbol) = [sym], getlabel(scales_by_symbol[sym].scale)
+    syms_and_title(syms::AbstractVector{Symbol}) = syms, nothing
+    syms_and_title(syms_title::Pair{<:AbstractVector{Symbol},<:Any}) = syms_title
+    syms_and_title(any) = throw(ArgumentError("Invalid legend order element $any"))
 
-            legend_els = [LegendElement[] for _ in datavals]
+    used_scales = Set{Symbol}()
+
+    for order_element in order
+        syms, title = syms_and_title(order_element)
+        push!(titles, title)
+        legend_els = []
+        datalabs = []
+        for sym in syms
+            if sym in used_scales
+                error("Scale $sym appeared twice in legend order.")
+            end
+            push!(used_scales, sym)
+
+            scalewithmeta = scales_by_symbol[sym]
+            aes = scalewithmeta.aes
+            scale_id = scalewithmeta.scale_id
+            scale = scalewithmeta.scale
+
+            datavals, plotvals, _datalabs = datavalues_plotvalues_datalabels(aes, scale)
+
+            _legend_els = [LegendElement[] for _ in datavals]
 
             for processedlayer in unique_processedlayers
                 aes_mapping = aesthetic_mapping(processedlayer)
@@ -113,15 +151,23 @@ function compute_legend(grid::Matrix{AxisEntries})
                 isempty(matching_keys) && continue
 
                 for (i, (_, plotval)) in enumerate(zip(datavals, plotvals))
-                    append!(legend_els[i], legend_elements(processedlayer, MixedArguments(map(key -> plotval, matching_keys))))
+                    append!(_legend_els[i], legend_elements(processedlayer, MixedArguments(map(key -> plotval, matching_keys))))
                 end
 
             end
 
-            push!(labels, datalabs)
-            push!(elements_list, legend_els)
+            append!(datalabs, _datalabs)
+            append!(legend_els, _legend_els)
         end
+        push!(labels, datalabs)
+        push!(elements_list, legend_els)
     end
+
+    unused_scales = setdiff(keys(scales_by_symbol), used_scales)
+    if !isempty(unused_scales)
+        error("Found scales that were missing from the manual legend ordering: $(sort!(collect(unused_scales)))")
+    end
+
     return elements_list, labels, titles
 end
 
