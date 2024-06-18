@@ -146,6 +146,8 @@ function get_categorical_palette(scale_props, aestype, scale_id)
     get_categorical_palette(aestype, object[:palette])
 end
 
+get_categorical_palette(anytype::Type{<:Aesthetic}, ::Nothing) = _default_categorical_palette(anytype)
+get_categorical_palette(_, func::Function) = func
 get_categorical_palette(::Type{AesColor}, colormap::AbstractVector) = colormap
 get_categorical_palette(::Type{AesColor}, colormap::Symbol) = Makie.to_colormap(colormap)
 get_categorical_palette(::Type{AesColor}, grad::Makie.PlotUtils.CategoricalColorGradient) = grad
@@ -178,11 +180,10 @@ function categoricalscales(processedlayer::ProcessedLayer, scale_props, aes_mapp
     map!(categoricalscales, pairs(categoricals)) do (key, val)
         aestype = hardcoded_or_mapped_aes(processedlayer, key, aes_mapping)
         scale_id = get(processedlayer.scale_mapping, key, nothing)
-        palette = get_categorical_palette(scale_props, aestype, scale_id)
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
         label = to_label(get(processedlayer.labels, key, ""))
         props = get_scale_props(scale_props, aestype, scale_id)
-        return CategoricalScale(aestype, datavalues, palette, label, props)
+        return CategoricalScale(aestype, datavalues, nothing, label, props)
     end
     return categoricalscales
 end

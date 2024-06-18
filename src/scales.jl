@@ -59,7 +59,7 @@ end
 # Use `Iterators.map` as `map` does not guarantee order
 apply_palette(p::Union{AbstractArray, AbstractColorList}, uv) = collect(Iterators.map(Cycler(p), uv))
 apply_palette(::Automatic, uv) = eachindex(uv)
-apply_palette(p, uv) = map(p, uv)
+apply_palette(f::Function, uv) = f(uv)
 
 # TODO: add more customizations?
 struct Wrap end
@@ -110,6 +110,7 @@ struct CategoricalScale{S, T, U}
     palette::U
     label::Union{AbstractString, Nothing}
     props::CategoricalScaleProps
+    aes::Type{<:Aesthetic}
 end
 
 function _pop!(d::Dictionary, key, default)
@@ -140,7 +141,7 @@ end
 
 function CategoricalScale(aestype::Type{<:Aesthetic}, data, palette, label::Union{AbstractString, Nothing}, props)
     props_typed = CategoricalScaleProps(aestype, props)
-    return CategoricalScale(data, nothing, palette, label, props_typed)
+    return CategoricalScale(data, nothing, palette, label, props_typed, aestype)
 end
 
 category_value(v) = v
@@ -151,12 +152,13 @@ category_label(p::Pair) = p[2]
 # Final processing step of a categorical scale
 function fitscale(c::CategoricalScale)
     possibly_transformed_data = datavalues(c)
-    palette = c.palette
+    # palette = c.palette
     # this is a bit weird maybe, but we look up the palette for the possibly transformed
     # data and store the normal data again, probably storing the palette is actually not
     # necessary but that can be a later refactor
-    plot = apply_palette(c.palette, possibly_transformed_data)
-    return CategoricalScale(c.data, plot, palette, c.label, c.props)
+    palette = get_categorical_palette(c.aes, c.props.palette)
+    plot = apply_palette(palette, possibly_transformed_data)
+    return CategoricalScale(c.data, plot, palette, c.label, c.props, c.aes)
 end
 
 function datavalues(c::CategoricalScale)
