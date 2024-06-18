@@ -76,7 +76,7 @@ struct CategoricalScaleProps
     aesprops::CategoricalAesProps
     label # nothing or any type workable as a label
     legend::Bool
-    categories::Union{Nothing,Vector}
+    categories::Union{Nothing,Function,Vector}
     palette # nothing or any type workable as a palette
 end
 
@@ -150,8 +150,24 @@ category_label(p::Pair) = p[2]
 
 # Final processing step of a categorical scale
 function fitscale(c::CategoricalScale)
-    data = if c.props.categories !== nothing
-        catvalues = map(category_value, c.props.categories)
+    possibly_transformed_data = datavalues(c)
+    palette = c.palette
+    # this is a bit weird maybe, but we look up the palette for the possibly transformed
+    # data and store the normal data again, probably storing the palette is actually not
+    # necessary but that can be a later refactor
+    plot = apply_palette(c.palette, possibly_transformed_data)
+    return CategoricalScale(c.data, plot, palette, c.label, c.props)
+end
+
+function datavalues(c::CategoricalScale)
+    if c.props.categories === nothing
+        c.data
+    else
+        if c.props.categories isa Function
+            catvalues = map(category_value, c.props.categories(c.data))
+        else
+            catvalues = map(category_value, c.props.categories)
+        end
         u = try
             union(catvalues, c.data)
         catch e
@@ -162,21 +178,16 @@ function fitscale(c::CategoricalScale)
             throw(ArgumentError("Custom categories were given but there were more categories in the data, which is not allowed. The additional categories were $extraneous"))
         end
         u
-    else
-        c.data
     end
-    palette = c.palette
-    plot = apply_palette(c.palette, data)
-    return CategoricalScale(data, plot, palette, c.label, c.props)
 end
-
-datavalues(c::CategoricalScale) = c.data
 plotvalues(c::CategoricalScale) = c.plot
 function datalabels(c::CategoricalScale)
-    if c.props.categories !== nothing
-        map(category_label, c.props.categories)
-    else
+    if c.props.categories === nothing
         string.(datavalues(c))
+    elseif c.props.categories isa Function
+        map(category_label, c.props.categories(c.data))
+    else
+        map(category_label, c.props.categories)
     end
 end
 
