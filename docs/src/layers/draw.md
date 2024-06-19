@@ -87,6 +87,65 @@ draw(spec; scales = (;
 ))
 ```
 
+#### `categories`
+
+The `categories` keyword can be used to reorder, label and even add categorical values.
+
+Some reordering and renaming can be done using the `sorter` and `renamer` helper functions applied directly to columns in `mapping`.
+However, this works less well when several `data` sources are combined where not all categories appear in each column.
+Also, no categories can be added this way, which is something that can be useful if the existence of categories should be shown even though there is no data for them.
+
+New labels can be assigned using the `value => label` pair syntax.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; group = ["A", "C", "D"], value = [1, 3, 4])) *
+    mapping(:group, :value) * visual(BarPlot)
+
+f = Figure()
+
+draw!(f[1, 1], spec; scales = (;
+    X = (; categories = ["A", "B", "C", "D"])
+))
+draw!(f[1, 2], spec; scales = (;
+    X = (; categories = ["D", "A", "C"])
+))
+draw!(f[1, 3], spec; scales = (;
+    X = (; categories = ["A" => "a", "C" => "c", "D" => "d"])
+))
+
+f
+```
+
+You can also pass a `Function` to `categories` which should take the vector of category values and return a new vector of categories or category/label pairs.
+
+For example, you could add summary statistics to the facet layout titles this way, by grabbing them from a dictionary computed separately.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+summary_stats = Dict("A" => 1.32, "B" => 4.19, "C" => 0.04)
+
+df = (;
+    x = randn(90),
+    y = randn(90) .+ repeat([0, 5, 10], inner = 30),
+    group = repeat(["A", "B", "C"], inner = 30)
+)
+
+spec = data(df) * mapping(:x, :y, col = :group) * visual(Scatter)
+
+draw(spec; scales = (; Col = (;
+    categories = cats -> [
+        cat => rich("$cat\n", rich("λ = $(summary_stats[cat])", font = :italic))
+            for cat in reverse(cats)
+        ]
+)))
+```
+
+
 ### Continous scale options
 
 #### Color
