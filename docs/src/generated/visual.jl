@@ -29,7 +29,7 @@ draw(plt * visual(Heatmap)) # plot as heatmap (the default)
 # controlled by scales instead. For example, continuous colors are completely controlled
 # by color scales, so setting `colormap` in `visual` does not have an effect.
 #
-# Set the colormap in the [scale options](@ref "Scale options") instead.
+# Set the colormap in the [Scale options](@ref) instead.
 
 draw(plt; scales = (; Color = (; colormap = :viridis))) # set a different colormap
 
