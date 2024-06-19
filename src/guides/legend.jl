@@ -79,6 +79,10 @@ struct ScaleWithMeta
     scale::Union{CategoricalScale,ContinuousScale}
 end
 
+function categorical_scales_mergeable(c1::CategoricalScale, c2::CategoricalScale)
+    getlabel(c1) == getlabel(c2) && datavalues(c1) == datavalues(c2) && datalabels(c1) == datalabels(c2)
+end
+
 function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,AbstractVector})
     # gather valid named scales
     scales_categorical = legendable_scales(Val(:categorical), first(grid).categoricalscales)
@@ -111,48 +115,134 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
         (pl.plottype, pl.attributes)
     end
 
-    order = order === nothing ? collect(keys(scales_by_symbol)) : order
+    final_order = if order === nothing
+        basic_order = collect(keys(scales_by_symbol))
+        merged_order = []
+        i = 1
+        while i <= length(basic_order)
+            sc = basic_order[i]
+            firstscale = scales_by_symbol[sc].scale
+            mergeable_indices = filter(i+1:length(basic_order)) do k
+                sym = basic_order[k]
+                otherscale = scales_by_symbol[sym].scale
+                return categorical_scales_mergeable(firstscale, otherscale)
+            end
+            if !isempty(mergeable_indices)
+                push!(merged_order, (sc, basic_order[mergeable_indices]...))
+                else
+                push!(merged_order, sc)
+            end
+            deleteat!(basic_order, mergeable_indices)
+            i += 1
+        end
+        merged_order
+    else
+        order
+    end
 
-    syms_and_title(sym::Symbol) = [sym], getlabel(scales_by_symbol[sym].scale)
-    syms_and_title(syms::AbstractVector{Symbol}) = syms, nothing
-    syms_and_title(syms_title::Pair{<:AbstractVector{Symbol},<:Any}) = syms_title
-    syms_and_title(any) = throw(ArgumentError("Invalid legend order element $any"))
+    syms_or_symgroups_and_title(sym::Symbol) = [sym], getlabel(scales_by_symbol[sym].scale)
+    syms_or_symgroups_and_title(syms::AbstractVector{Symbol}) = syms, nothing
+    syms_or_symgroups_and_title(syms_title::Pair{<:AbstractVector{Symbol},<:Any}) = syms_title
+    syms_or_symgroups_and_title(any) = throw(ArgumentError("Invalid legend order element $any"))
+    syms_or_symgroups_and_title(symgroup_title::Pair{<:NTuple{N,Symbol},<:Any}) where N = syms_or_symgroups_and_title(symgroup_title[1], symgroup_title[2])
+    function syms_or_symgroups_and_title(symgroup::NTuple{N,Symbol}, title = nothing) where N
+        symgroups = [[symgroup...]]
+        _titles = unique([getlabel(scales_by_symbol[sym].scale) for sym in symgroup])
+        title = title !== nothing ? title : if length(_titles) != 1
+            nothing
+        else
+            only(_titles)
+        end
+        return symgroups, title
+    end
 
     used_scales = Set{Symbol}()
 
-    for order_element in order
-        syms, title = syms_and_title(order_element)
+    for order_element in final_order
+        syms_or_symgroups, title = syms_or_symgroups_and_title(order_element)
         title = title == "" ? nothing : title # empty titles can be hidden completely if they're `nothing`, "" still uses layout space
         push!(titles, title)
         legend_els = []
         datalabs = []
-        for sym in syms
-            if sym in used_scales
-                error("Scale $sym appeared twice in legend order.")
+        for sym_or_symgroup in syms_or_symgroups
+            # a symgroup is a vector of scale symbols which all represent the same underlying categorical
+            # data, so their legends can be merged into one
+            symgroup::Vector{Symbol} = sym_or_symgroup isa Symbol ? [sym_or_symgroup] : sym_or_symgroup
+
+            for sym in symgroup
+                if sym in used_scales
+                    error("Scale $sym appeared twice in legend order.")
+                end
+                push!(used_scales, sym)
             end
-            push!(used_scales, sym)
 
-            scalewithmeta = scales_by_symbol[sym]
-            aes = scalewithmeta.aes
-            scale_id = scalewithmeta.scale_id
-            scale = scalewithmeta.scale
+            scalewithmetas = [scales_by_symbol[sym] for sym in symgroup]
+            aess = [scalewithmeta.aes for scalewithmeta in scalewithmetas]
+            scale_ids = [scalewithmeta.scale_id for scalewithmeta in scalewithmetas]
+            _scales = [scalewithmeta.scale for scalewithmeta in scalewithmetas]
 
-            datavals, plotvals, _datalabs = datavalues_plotvalues_datalabels(aes, scale)
+            dpds = [datavalues_plotvalues_datalabels(aes, scale) for (aes, scale) in zip(aess, _scales)]
 
-            _legend_els = [LegendElement[] for _ in datavals]
+            # Check that all scales in the merge group are compatible for the legend
+            # (they should be if we have computed them, but they might not be if they were passed manually)
 
+            for (k, kind) in zip([1, 3], ["values", "labels"])
+                for i in 2:length(symgroup)
+                    if dpds[1][k] != dpds[i][k]
+                        error("""
+                            Got passed scales $(repr(symgroup[1])) and $(repr(symgroup[i])) as a mergeable legend group but their data $kind don't match.
+                            Data $kind for $(repr(symgroup[1])) are $(dpds[1][k])
+                            Data $kind for $(repr(symgroup[i])) are $(dpds[i][k])
+                            """
+                        )
+                    end
+                end
+            end
+
+            # we can now extract data values and labels from the first entry, knowing they are all the same
+            _datavals = dpds[1][1]
+            _datalabs = dpds[1][3]
+
+            _legend_els = [LegendElement[] for _ in _datavals]
+
+            # We are layering legend elements on top of each other by deriving them from the processed layers,
+            # each processed layer can contribute a vector of legend elements for each data value in the scale.
             for processedlayer in unique_processedlayers
                 aes_mapping = aesthetic_mapping(processedlayer)
 
-                matching_keys = filter(keys(merge(Dictionary(processedlayer.positional), processedlayer.primary, processedlayer.named))) do key
-                    get(aes_mapping, key, nothing) === aes &&
-                        get(processedlayer.scale_mapping, key, nothing) === scale_id
+                # for each scale in the merge group, we're extracting the keys (of all positional and keyword mappings)
+                # for which the aesthetic and the scale id match a mapping of the processed layer
+                # (so basically we're finding all mappings which have used this scale)
+                all_plotval_kwargs = map(aess, scale_ids, dpds) do aes, scale_id, (_, plotvals, _)
+                    matching_keys = filter(keys(merge(Dictionary(processedlayer.positional), processedlayer.primary, processedlayer.named))) do key
+                        get(aes_mapping, key, nothing) === aes &&
+                            get(processedlayer.scale_mapping, key, nothing) === scale_id
+                    end
+
+                    # for each mapping which used the scale, we extract the matching plot value
+                    # for example the processed layer might have used the current `AesColor` scale
+                    # on the `color` mapping keyword, so we store `{:color => red}`, `{:color => blue}`, etc,
+                    # one for each value in the categorical scale
+                    map(plotvals) do plotval
+                        MixedArguments(map(key -> plotval, matching_keys))
+                    end
                 end
 
-                isempty(matching_keys) && continue
+                # we can merge the kwarg dicts from the different scales so that one legend element for this
+                # processed layer type can represent attributes for multiple scales at once.
+                # for example, a processed layer with a Scatter might get `{:color => red}` from one scale and
+                # `{:marker => circle}` from another, which means the legend element is computed using
+                # `{:color => red, :marker => circle}`
+                merged_plotval_kwargs = map(eachindex(first(all_plotval_kwargs))) do i
+                    merge([plotval_kwargs[i] for plotval_kwargs in all_plotval_kwargs]...)
+                end
 
-                for (i, (_, plotval)) in enumerate(zip(datavals, plotvals))
-                    append!(_legend_els[i], legend_elements(processedlayer, MixedArguments(map(key -> plotval, matching_keys))))
+                for (i, kwargs) in enumerate(merged_plotval_kwargs)
+                    # skip the legend element for this processed layer if the kwargs are empty
+                    # which means that no scale in this merge group affected this processedlayer
+                    if !isempty(kwargs)
+                        append!(_legend_els[i], legend_elements(processedlayer, kwargs))
+                    end
                 end
 
             end
