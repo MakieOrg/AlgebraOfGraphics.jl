@@ -25,14 +25,13 @@ df = (x=randn(1000), y=randn(1000))
 plt = data(df) * mapping(:x, :y) * AlgebraOfGraphics.density(npoints=50)
 draw(plt * visual(Heatmap)) # plot as heatmap (the default)
 
-# We can specify a different colormap using the underlying Makie keyword
-# `colormap`. 
+# From AlgebraOfGraphics version 0.7 on, some attributes of the underlying Makie functions will not have an effect if they are
+# controlled by scales instead. For example, continuous colors are completely controlled
+# by color scales, so setting `colormap` in `visual` does not have an effect.
 #
-# !!! note
-#    For discrete scales you should not use a `colormap`;
-#    you will want to instead use the related notion of a [palette](@ref custom_scales).
+# Set the colormap in the [scale options](@ref "Scale options") instead.
 
-draw(plt * visual(colormap=:viridis)) # set a different colormap
+draw(plt; scales = (; Color = (; colormap = :viridis))) # set a different colormap
 
 #
 
