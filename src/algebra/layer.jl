@@ -148,12 +148,9 @@ end
 
 get_categorical_palette(anytype::Type{<:Aesthetic}, ::Nothing) = _default_categorical_palette(anytype)
 get_categorical_palette(_, func::Function) = func
-get_categorical_palette(::Type{AesColor}, colormap::AbstractVector) = colormap
 get_categorical_palette(::Type{AesColor}, colormap::Symbol) = Makie.to_colormap(colormap)
 get_categorical_palette(::Type{AesColor}, grad::Makie.PlotUtils.CategoricalColorGradient) = grad
-get_categorical_palette(::Type{<:Union{AesX,AesY,AesZ,AesMarkerSize}}, v::AbstractVector{<:Real}) = v
-get_categorical_palette(::Type{AesMarker}, markers::AbstractVector) = markers
-get_categorical_palette(::Type{AesLayout}, positions::AbstractVector{Tuple{Int,Int}}) = positions
+get_categorical_palette(anytype::Type{<:Aesthetic}, palettevalues::AbstractVector) = palettevalues
 
 const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
 
