@@ -226,8 +226,8 @@ function aesthetic_mapping(::Type{Contour})
         1 => AesX,
         2 => AesY,
         3 => AesContourColor,
-        :color => AesColor, # only categorical, for continous one would have to use 3
-        :linestyle => AesLineStyle, # only categorical, for continous one would have to use 3
+        :color => AesColor, # only categorical, for continuous one would have to use 3
+        :linestyle => AesLineStyle, # only categorical, for continuous one would have to use 3
     ])
 end
 
