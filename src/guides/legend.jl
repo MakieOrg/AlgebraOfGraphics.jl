@@ -122,6 +122,7 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
 
     for order_element in order
         syms, title = syms_and_title(order_element)
+        title = title == "" ? nothing : title # empty titles can be hidden completely if they're `nothing`, "" still uses layout space
         push!(titles, title)
         legend_els = []
         datalabs = []
