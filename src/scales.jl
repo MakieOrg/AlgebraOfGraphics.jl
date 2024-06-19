@@ -104,10 +104,9 @@ function aes_props(kind::Val, type::Type{<:Aesthetic}, props_dict::Dictionary{Sy
     throw(ArgumentError("Unknown scale$(length(invalid_keys) == 1 ? "" : "s") attribute $(join((repr(key) for key in invalid_keys), ", ", " and ")) for $(sym(kind)) scale with aesthetic $type. $(isempty(fieldnames(T)) ? "$T does not accept any attributes." : "Available attributes for $T are $(join((repr(key) for key in fieldnames(T)), ", ", " and ")).")"))
 end
 
-struct CategoricalScale{S, T, U}
+struct CategoricalScale{S, T}
     data::S
     plot::T
-    palette::U
     label::Union{AbstractString, Nothing}
     props::CategoricalScaleProps
     aes::Type{<:Aesthetic}
@@ -139,9 +138,9 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     )
 end
 
-function CategoricalScale(aestype::Type{<:Aesthetic}, data, palette, label::Union{AbstractString, Nothing}, props)
+function CategoricalScale(aestype::Type{<:Aesthetic}, data, label::Union{AbstractString, Nothing}, props)
     props_typed = CategoricalScaleProps(aestype, props)
-    return CategoricalScale(data, nothing, palette, label, props_typed, aestype)
+    return CategoricalScale(data, nothing, label, props_typed, aestype)
 end
 
 category_value(v) = v
@@ -152,13 +151,12 @@ category_label(p::Pair) = p[2]
 # Final processing step of a categorical scale
 function fitscale(c::CategoricalScale)
     possibly_transformed_data = datavalues(c)
-    # palette = c.palette
     # this is a bit weird maybe, but we look up the palette for the possibly transformed
     # data and store the normal data again, probably storing the palette is actually not
     # necessary but that can be a later refactor
     palette = get_categorical_palette(c.aes, c.props.palette)
     plot = apply_palette(palette, possibly_transformed_data)
-    return CategoricalScale(c.data, plot, palette, c.label, c.props, c.aes)
+    return CategoricalScale(c.data, plot, c.label, c.props, c.aes)
 end
 
 function datavalues(c::CategoricalScale)
@@ -309,7 +307,6 @@ end
 
 function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     data = mergesorted(c1.data, c2.data)
-    palette = assert_equal(c1.palette, c2.palette)
     plot = assert_equal(c1.plot, c2.plot)
     label = mergelabels(c1.label, c2.label)
     if c1.props != c2.props
@@ -318,7 +315,7 @@ function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     if c1.aes != c2.aes
         error("Expected aes types of merging categorical scales to match, got $(c1.aes) and $(c2.aes)")
     end
-    return CategoricalScale(data, plot, palette, label, c1.props, c1.aes)
+    return CategoricalScale(data, plot, label, c1.props, c1.aes)
 end
 
 function mergescales(c1::ContinuousScale, c2::ContinuousScale)

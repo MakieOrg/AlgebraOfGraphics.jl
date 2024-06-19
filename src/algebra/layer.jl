@@ -180,7 +180,7 @@ function categoricalscales(processedlayer::ProcessedLayer, scale_props, aes_mapp
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
         label = to_label(get(processedlayer.labels, key, ""))
         props = get_scale_props(scale_props, aestype, scale_id)
-        return CategoricalScale(aestype, datavalues, nothing, label, props)
+        return CategoricalScale(aestype, datavalues, label, props)
     end
     return categoricalscales
 end

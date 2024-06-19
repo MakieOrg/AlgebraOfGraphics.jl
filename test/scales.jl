@@ -8,7 +8,6 @@
     @test scale isa CategoricalScale
     @test scale.data == ["a", "c"]
     @test scale.label == "subject"
-    @test scale.palette === automatic
     @test scale.plot == 1:2
 
     l = data([(x = 1, subject = "c", grp="f"), (x = 2, subject = "a", grp="g")]) *
@@ -24,13 +23,11 @@
     @test scale.data == ["f", "g"]
     @test datavalues(scale) == ["g", "f"]
     @test scale.label == "grp"
-    @test scale.palette == ["red", "blue", "green"]
     @test scale.plot == ["red", "blue"]
     scale = scales[2]
     @test scale isa CategoricalScale
     @test scale.data == ["a", "c"]
     @test scale.label == "subject"
-    @test scale.palette === automatic
     @test scale.plot == 1:2
 end
 
