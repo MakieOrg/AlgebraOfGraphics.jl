@@ -83,6 +83,8 @@ function categorical_scales_mergeable(c1::CategoricalScale, c2::CategoricalScale
     getlabel(c1) == getlabel(c2) && datavalues(c1) == datavalues(c2) && datalabels(c1) == datalabels(c2)
 end
 
+categorical_scales_mergeable(c1, c2) = false # there can be continuous scales in the mix, like markersize
+
 function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,AbstractVector})
     # gather valid named scales
     scales_categorical = legendable_scales(Val(:categorical), first(grid).categoricalscales)

@@ -241,3 +241,71 @@ legend!(f[2, 2], grid2)
 
 f
 ```
+
+## Legend options
+
+The `legend` keyword forwards most attributes to Makie's `Legend` function.
+The exceptions are listed here.
+
+### `order`
+
+By default, the legend order depends on the order in which layers and mappings have been defined, as well as whether scales are categorical or continuous.
+
+```@example legendorder
+using AlgebraOfGraphics
+using CairoMakie
+
+df = (;
+    x = 1:12,
+    y = 1:12,
+    z = 1:12,
+    group1 = repeat(["A", "B", "C"], inner = 4),
+    group2 = repeat(["X", "Y"], 6),
+)
+
+spec = data(df) *
+    mapping(:x, :y, markersize = :z, color = :group1, marker = :group2) *
+    visual(Scatter)
+
+draw(spec)
+```
+
+You can reorder the legend with the `order` keyword.
+This expects a vector with either `Symbol`s or `Vector{Symbol}`s as elements, where each `Symbol` is the identifier for a scale that's represented in the legend.
+
+Plain `Symbol`s can be used for simple reordering:
+
+
+```@example legendorder
+draw(spec; legend = (; order = [:MarkerSize, :Color, :Marker]))
+```
+
+`Symbol`s that are grouped into `Vector`s indicate that their groups should be merged together.
+For example, consider this plot that features two color scales, but one for a scatter plot and one for a line plot.
+
+```@example legendorder2
+using AlgebraOfGraphics
+using CairoMakie
+
+df_a = (; x = 1:9, y = [1, 2, 3, 5, 6, 7, 9, 10, 11], group = repeat(["A", "B", "C"], inner = 3))
+
+spec1 = data(df_a) * mapping(:x, :y, strokecolor = :group) * visual(Scatter, color = :transparent, strokewidth = 3, markersize = 15)
+
+df_b = (; y = [4, 8], threshold = ["first", "second"])
+
+spec2_custom_scale = data(df_b) * mapping(:y, color = :threshold => scale(:color2)) * visual(HLines)
+
+draw(spec1 + spec2_custom_scale)
+```
+
+You can group the two scales together using `order`. The titles are dropped.
+
+```@example legendorder2
+draw(spec1 + spec2_custom_scale; legend = (; order = [[:Color, :color2]]))
+```
+
+If you want to add a title to a merged group, you can add it with the `group => title` pair syntax:
+
+```@example legendorder2
+draw(spec1 + spec2_custom_scale; legend = (; order = [[:Color, :color2] => "Title"]))
+```
