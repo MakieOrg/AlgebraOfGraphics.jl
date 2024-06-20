@@ -87,6 +87,45 @@ draw(spec; scales = (;
 ))
 ```
 
+##### X & Y
+
+The "palette" values for X and Y axes are by default simply the numbers from 1 to N, the number of categories.
+In some circumstances, it might be useful to change these values, for example to visualize that one category is different than others.
+The palette values are normally assigned category-by-category in the sorted order, or in the order provided manually through the `categories` keyword. However, if you pass a vector of values, you can always use the `category => value` pair option to assign a specific category directly to a value, while the others cycle. Here, we do this with `"Unknown"` as it would otherwise be sorted before `"X"`.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+df = (; group = ["A", "B", "C", "X", "Y", "Unknown"], count = [45, 10, 20, 32, 54, 72])
+
+spec = data(df) * mapping(:group, :count) * visual(BarPlot)
+
+draw(spec; scales = (; X = (; palette = [1, 2, 3, 5, 6, "Unknown" => 8])))
+```
+
+##### Layout
+
+Normally, with the `Layout` aesthetic, rows wrap automatically such that an approximately square distribution of facets is attained.
+You can overwrite these values, however, to place axes at manually chosen positions:
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+df = (;
+    group = repeat(["A", "B", "C", "D", "E", "F", "G", "H"], inner = 20),
+    x = randn(160),
+    y = randn(160)
+)
+
+spec = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter)
+
+clockwise = [(1, 1), (1, 2), (1, 3), (2, 3), (3, 3), (3, 2), (3, 1), (2, 1)]
+
+draw(spec; scales = (; Layout = (; palette = clockwise)))
+```
+
 #### `categories`
 
 The `categories` keyword can be used to reorder, label and even add categorical values.
