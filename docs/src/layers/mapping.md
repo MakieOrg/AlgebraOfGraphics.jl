@@ -82,3 +82,8 @@ The complete API of helper functions is available at [Mapping helpers](@ref).
 # column `labels` is expressed in strings and we do not want to treat it as categorical
 :labels => verbatim
 ```
+
+!!! note
+
+   Renaming/reordering helpers need not mention all values; e.g. `sorter(["medium",
+   "high"])` will order the unspecified value ("low") after "medimum" and "high".
