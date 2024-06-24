@@ -30,7 +30,7 @@ export hideinnerdecorations!, deleteemptyaxes!
 export Layer, Layers, ProcessedLayer, ProcessedLayers
 export Entry, AxisEntries
 export renamer, sorter, nonnumeric, verbatim
-export density, histogram, linear, smooth, expectation, frequency
+export density, histogram, linear, smooth, expectation, frequency, contours
 export visual, data, geodata, dims, mapping
 export datetimeticks
 export draw, draw!
@@ -59,6 +59,7 @@ include("transformations/histogram.jl")
 include("transformations/groupreduce.jl")
 include("transformations/frequency.jl")
 include("transformations/expectation.jl")
+include("transformations/contour.jl")
 include("guides/guides.jl")
 include("guides/legendelements.jl")
 include("guides/legend.jl")
