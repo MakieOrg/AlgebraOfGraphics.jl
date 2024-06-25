@@ -55,6 +55,11 @@ function draw(d::AbstractDrawable;
     end
 end
 
+# this can be used as a trailing argument to |>
+function draw(; kwargs...)
+    drawable -> draw(drawable; kwargs...)
+end
+
 """
     draw!(fig, d::AbstractDrawable; axis=NamedTuple(), scales = [])
 
