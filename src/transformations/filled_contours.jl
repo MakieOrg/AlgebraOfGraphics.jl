@@ -65,7 +65,7 @@ end
 
 function calculate_pregrouped_poly_columns(xs, ys, zs, levels)
     @assert issorted(levels)
-    
+
     lows = levels[1:end-1]
     highs = levels[2:end]
 
@@ -110,15 +110,6 @@ end
 
 # copied from Makie
 
-"""
-    _group_polys(points, ids)
-
-Given a vector of polygon vertices, and one vector of group indices, which
-are assumed to be returned from the isoband algorithm, return
-a vector of groups, where each group has one outer polygon and zero or more
-inner polygons which are holes in the outer polygon. It is possible that one
-group has multiple outer polygons with multiple holes each.
-"""
 function _group_polys(points, ids)
     polys = [points[ids .== i] for i in unique(ids)]
 
