@@ -276,6 +276,16 @@ function aesthetic_mapping(::Type{Poly})
     ])
 end
 
+function aesthetic_mapping(::Type{LongPoly})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        3 => AesPlaceholder, # poly id
+        4 => AesPlaceholder, # subgroup id
+        :color => AesColor,
+    ])
+end
+
 function aesthetic_mapping(::Type{Surface})
     dictionary([
         1 => AesX,

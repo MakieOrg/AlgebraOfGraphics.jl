@@ -125,9 +125,10 @@ function merge_with_key_remap!(dict, dict2, remapdict)
     return dict
 end
 
-# TODO: thread this in from the outside instead like `palettes` before
+
+
 _default_categorical_palette(::Type{<:Union{AesX,AesY}}) = Makie.automatic
-_default_categorical_palette(::Type{AesColor}) = to_value(Makie.current_default_theme()[:palette][:color])
+_default_categorical_palette(::Type{AesColor}) = _default_categorical_colors
 _default_categorical_palette(::Type{AesMarker}) = to_value(Makie.current_default_theme()[:palette][:marker])
 _default_categorical_palette(::Type{AesLineStyle}) = to_value(Makie.current_default_theme()[:palette][:linestyle])
 _default_categorical_palette(::Type{AesLayout}) = wrap
@@ -136,6 +137,14 @@ _default_categorical_palette(::Type{AesGroup}) = Makie.automatic
 _default_categorical_palette(::Type{AesDodge}) = Makie.automatic
 _default_categorical_palette(::Type{AesStack}) = Makie.automatic
 _default_categorical_palette(::Type{AesViolinSide}) = [:left, :right]
+
+function _default_categorical_colors(categories::AbstractVector{Bin})
+    cmap = to_value(Makie.current_default_theme()[:colormap])
+    cgrad(cmap, length(categories); categorical = true)
+end
+function _default_categorical_colors(categories::AbstractVector)
+    to_value(Makie.current_default_theme()[:palette][:color])
+end
 
 function get_categorical_palette(scale_props, aestype, scale_id)
     haskey(scale_props, aestype) || return _default_categorical_palette(aestype)

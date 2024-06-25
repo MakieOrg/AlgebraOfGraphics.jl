@@ -25,12 +25,14 @@ using StatsBase: fit, histrange, Histogram, normalize, sturges, StatsBase
 import GLM, Loess
 import FileIO
 import RelocatableFolders
+import PolygonOps
+import Isoband
 
 export hideinnerdecorations!, deleteemptyaxes!
 export Layer, Layers, ProcessedLayer, ProcessedLayers
 export Entry, AxisEntries
 export renamer, sorter, nonnumeric, verbatim
-export density, histogram, linear, smooth, expectation, frequency, contours
+export density, histogram, linear, smooth, expectation, frequency, contours, filled_contours
 export visual, data, geodata, dims, mapping
 export datetimeticks
 export draw, draw!
@@ -51,6 +53,7 @@ include("algebra/select.jl")
 include("algebra/processing.jl")
 include("recipes/choropleth.jl")
 include("recipes/linesfill.jl")
+include("recipes/poly.jl")
 include("transformations/visual.jl")
 include("transformations/linear.jl")
 include("transformations/smooth.jl")
@@ -60,6 +63,7 @@ include("transformations/groupreduce.jl")
 include("transformations/frequency.jl")
 include("transformations/expectation.jl")
 include("transformations/contour.jl")
+include("transformations/filled_contours.jl")
 include("guides/guides.jl")
 include("guides/legendelements.jl")
 include("guides/legend.jl")
