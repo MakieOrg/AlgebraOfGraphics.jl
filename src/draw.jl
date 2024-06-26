@@ -43,7 +43,8 @@ Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@r
 """
 function draw(d::AbstractDrawable;
               axis=NamedTuple(), figure=NamedTuple(), scales = [],
-              facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple())
+              facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple(), palette=nothing)
+    check_palette_kw(palette)
     return update(Figure(; figure...)) do f
         grid = plot!(f, d; axis, scales)
         fg = FigureGrid(f, grid)
@@ -71,10 +72,38 @@ The output can be customized by giving axis attributes to `axis` or custom scale
 to `scales`.
 """
 function draw!(fig, d::AbstractDrawable;
-               axis=NamedTuple(), scales = [], facet=NamedTuple())
+               axis=NamedTuple(), scales = [], facet=NamedTuple(), palette=nothing)
+    check_palette_kw(palette)
     return update(fig) do f
         ag = plot!(f, d; axis, scales)
         facet!(f, ag; facet)
         return ag
     end
+end
+
+struct PaletteError <: Exception
+    palette
+end
+
+check_palette_kw(_::Nothing) = return
+check_palette_kw(palette) = throw(PaletteError(palette))
+
+function Base.showerror(io::IO, pe::PaletteError)
+    msg = """
+        The `palette` keyword for `draw` and `draw!` has been removed in AlgebraOfGraphics v0.7. \
+        Categorical palettes should now be passed via the `scales` keyword, \
+        and they don't apply per plot keyword, but per scale. Different keywords from different \
+        plot objects can share the same scale.
+
+        For example, where before you'd have passed `palette = (; color = [:red, :green, :blue])` \
+        you would now pass `scales = (; Color = (; palette = [:red, :green, :blue]))`. \
+        In many cases, the scale name will be a camel-case variant of the keyword, \
+        for example `color => Color` or `markersize => MarkerSize` but this depends. \
+        To check which aesthetics a plot type, for example `Scatter`, supports, call \
+        `AlgebraOfGraphics.aesthetic_mapping(Scatter)`. The key passed to `scales` is \
+        the aesthetic type without the `Aes` so `AesColor` has the key `Color`, etc.
+
+        The palette passed was `$(pe.palette)`
+        """
+    print(io, msg)
 end
