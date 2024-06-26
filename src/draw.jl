@@ -14,7 +14,7 @@ function update(f, fig)
 end
 
 function Makie.plot!(fig, d::AbstractDrawable;
-                     axis=NamedTuple(), scales = [])
+                     axis=NamedTuple(), scales = Dictionary{Symbol,Any}())
     if isa(fig, Union{Axis, Axis3}) && !isempty(axis)
         @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $axis.")
     end
@@ -24,14 +24,18 @@ function Makie.plot!(fig, d::AbstractDrawable;
 end
 
 function Makie.plot(d::AbstractDrawable;
-                    axis=NamedTuple(), figure=NamedTuple(), scales = [])
+                    axis=NamedTuple(), figure=NamedTuple(), scales = Dictionary{Symbol,Any}())
     fig = Figure(; figure...)
     grid = plot!(fig, d; axis, scales)
     return FigureGrid(fig, grid)
 end
 
+function _kwdict(prs)::Dictionary{Symbol,Any}
+    isempty(prs) ? Dictionary{Symbol,Any}() : dictionary(pairs(prs))
+end
+
 """
-    draw(d; axis=NamedTuple(), figure=NamedTuple, scales = [])
+    draw(d; axis=NamedTuple(), figure=NamedTuple, scales=NamedTuple())
 
 Draw a [`AlgebraOfGraphics.AbstractDrawable`](@ref) object `d`.
 In practice, `d` will often be a [`AlgebraOfGraphics.Layer`](@ref) or
@@ -42,9 +46,27 @@ Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@r
 [`legend!`](@ref), and [`colorbar!`](@ref) independently.
 """
 function draw(d::AbstractDrawable;
-              axis=NamedTuple(), figure=NamedTuple(), scales = [],
+              axis=NamedTuple(), figure=NamedTuple(), scales = NamedTuple(),
               facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple(), palette=nothing)
     check_palette_kw(palette)
+    axis = _kwdict(axis)
+    figure = _kwdict(figure)
+    scales = _kwdict(scales)
+    for (key, value) in pairs(scales)
+        scales[key] = _kwdict(value)
+    end
+    facet = _kwdict(facet)
+    legend = _kwdict(legend)
+    colorbar = _kwdict(colorbar)
+
+    return _draw(d; axis, figure, scales, facet, legend, colorbar, palette)
+end
+
+function _draw(d::AbstractDrawable;
+              axis, figure, scales,
+              facet, legend, colorbar, palette)
+    check_palette_kw(palette)
+
     return update(Figure(; figure...)) do f
         grid = plot!(f, d; axis, scales)
         fg = FigureGrid(f, grid)

@@ -122,8 +122,11 @@ function _pop!(d::Dictionary, key, default)
     end
 end
 
+# delete! on a `copy`ed dict modifies original
+_dictcopy(dict::T) where {T<:Dictionary} = T(copy(keys(dict)), copy(values(dict)))
+
 function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
-    props_copy = copy(props)
+    props_copy = _dictcopy(props)
     legend = _pop!(props_copy, :legend, true)
     label = _pop!(props_copy, :label, nothing)
     categories = _pop!(props_copy, :categories, nothing)
@@ -201,7 +204,7 @@ struct ContinuousScaleProps
 end
 
 function ContinuousScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
-    props_copy = copy(props)
+    props_copy = _dictcopy(props)
     legend = _pop!(props_copy, :legend, true)
     label = _pop!(props_copy, :label, nothing)
     aes_props = continuous_aes_props(aestype, props_copy)

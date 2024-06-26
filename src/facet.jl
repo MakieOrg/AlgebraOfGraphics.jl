@@ -142,7 +142,7 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     all(isnothing, (row_scale, col_scale)) && return
 
     # link axes and hide decorations if appropriate
-    attrs = clean_facet_attributes(aes; facet...)
+    attrs = clean_facet_attributes(aes; pairs(facet)...)
     link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
     hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap=false)
 

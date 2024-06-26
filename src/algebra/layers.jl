@@ -132,7 +132,7 @@ function aesthetic_for_symbol(s::Symbol)
 end
 
 
-function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales)
+function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales::Dictionary{Symbol,Any})
 
     # allow specifying named scales just by symbol, we can find out what aesthetic that maps
     # to by checking the processed layers
@@ -170,7 +170,6 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
     fn(value::Pair{Symbol,<:Any}) = value[1], named_scales[value[1]], value[2]
 
     for (sym, value) in pairs(scales)
-
         aes = aesthetic_for_symbol(sym)
         if aes === nothing
             if !haskey(named_scales, sym)
@@ -204,7 +203,7 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
 end
 
 function compute_axes_grid(fig, d::AbstractDrawable;
-                           axis=NamedTuple(), scales=[])
+                           axis=NamedTuple(), scales=Dictionary{Symbol,Any}())
 
     axes_grid = compute_axes_grid(d; axis, scales)
     sz = size(axes_grid)
@@ -235,7 +234,7 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_map
 end
 
 function compute_axes_grid(d::AbstractDrawable;
-                           axis=NamedTuple(), scales=[])
+                           axis=NamedTuple(), scales=Dictionary{Symbol,Any}())
 
     processedlayers = ProcessedLayers(d).layers
 

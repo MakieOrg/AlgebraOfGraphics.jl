@@ -172,7 +172,7 @@ function get_scale_props(scale_props, aes::Type{<:Aesthetic}, scale_id::Union{Sy
     if !haskey(props_dict, scale_id)
         return Dictionary{Symbol,Any}()
     end
-    return Dictionary{Symbol,Any}(pairs(props_dict[scale_id]))
+    return props_dict[scale_id]
 end
 
 function categoricalscales(processedlayer::ProcessedLayer, scale_props, aes_mapping::AestheticMapping)
@@ -220,7 +220,8 @@ function continuousscales(processedlayer::ProcessedLayer, scale_props)
         props = get_scale_props(scale_props, aes, scale_id)
         extrema = extrema_finite(val)
         label = to_label(get(processedlayer.labels, key, ""))
-        return ContinuousScale(aes, extrema, label, props)
+        cont = ContinuousScale(aes, extrema, label, _dictcopy(props))
+        return cont
     end
 
     # this is now handled via aesthetic mapping plus custom Entry functions per plot type
