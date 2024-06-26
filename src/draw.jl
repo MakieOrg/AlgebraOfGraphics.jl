@@ -90,18 +90,9 @@ check_palette_kw(palette) = throw(PaletteError(palette))
 
 function Base.showerror(io::IO, pe::PaletteError)
     msg = """
-        The `palette` keyword for `draw` and `draw!` has been removed in AlgebraOfGraphics v0.7. \
-        Categorical palettes should now be passed via the `scales` keyword, \
-        and they don't apply per plot keyword, but per scale. Different keywords from different \
-        plot objects can share the same scale.
+        The `palette` keyword for `draw` and `draw!` has been removed in AlgebraOfGraphics v0.7. Categorical palettes should now be passed via the `scales` keyword, and they don't apply per plot keyword, but per scale. Different keywords from different plot objects can share the same scale.
 
-        For example, where before you'd have passed `palette = (; color = [:red, :green, :blue])` \
-        you would now pass `scales = (; Color = (; palette = [:red, :green, :blue]))`. \
-        In many cases, the scale name will be a camel-case variant of the keyword, \
-        for example `color => Color` or `markersize => MarkerSize` but this depends. \
-        To check which aesthetics a plot type, for example `Scatter`, supports, call \
-        `AlgebraOfGraphics.aesthetic_mapping(Scatter)`. The key passed to `scales` is \
-        the aesthetic type without the `Aes` so `AesColor` has the key `Color`, etc.
+        For example, where before you'd have passed `palette = (; color = [:red, :green, :blue])` you would now pass `scales = (; Color = (; palette = [:red, :green, :blue]))`. In many cases, the scale name will be a camel-case variant of the keyword, for example `color => Color` or `markersize => MarkerSize` but this depends. To check which aesthetics a plot type, for example `Scatter`, supports, call `AlgebraOfGraphics.aesthetic_mapping(Scatter)`. The key passed to `scales` is the aesthetic type without the `Aes` so `AesColor` has the key `Color`, etc.
 
         The palette passed was `$(pe.palette)`
         """
