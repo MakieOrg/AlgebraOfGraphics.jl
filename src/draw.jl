@@ -70,8 +70,8 @@ function _draw(d::AbstractDrawable;
         grid = plot!(f, d; axis, scales)
         fg = FigureGrid(f, grid)
         facet!(fg; facet)
-        colorbar!(fg; colorbar...)
-        legend!(fg; legend...)
+        colorbar!(fg; pairs(colorbar)...)
+        legend!(fg; pairs(legend)...)
         resize_to_layout!(fg)
         return fg
     end
