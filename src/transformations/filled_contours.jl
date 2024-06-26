@@ -54,10 +54,27 @@ function (c::FilledContoursAnalysis)(input::ProcessedLayer)
     
 end
 
-function filled_contours(; bands = nothing, levels = nothing, kwargs...)
-    if bands === nothing && levels === nothing
+"""
+    filled_contours(; bands=automatic, levels=automatic)
+
+Create filled contours over the grid spanned over x and y by args 1 and 2 in the `mapping`,
+with height values z passed via arg 3. 
+
+You can pass either the number of bands to `bands` or pass a vector of levels (the boundaries
+of the bands) to `levels`, but not both.
+The number of bands when `levels` is passed is `length(levels) - 1`.
+The levels are calculated across the whole z data if the number of `bands` is specified.
+If neither levels nor bands are specified, the default is `bands = 10`.
+
+Note that `visual(Contourf)` does not work with AlgebraOfGraphics since version 0.7,
+because the internal binning it does is not compatible with the scale system.
+"""
+function filled_contours(; bands = automatic, levels = automatic, kwargs...)
+    if bands === automatic && levels === automatic
         bands = 10
     end
+    bands = bands === automatic ? nothing : bands
+    levels = levels === automatic ? nothing : levels
     transformation(FilledContoursAnalysis(; bands, levels, kwargs = Dict(kwargs)))
 end
 
