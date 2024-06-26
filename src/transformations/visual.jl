@@ -311,3 +311,12 @@ function aesthetic_mapping(::Type{Band})
         :color => AesColor,
     ])
 end
+
+function aesthetic_mapping(::Type{ABLines})
+    dictionary([
+        1 => AesABIntercept,
+        2 => AesABSlope,
+        :color => AesColor,
+        :linestyle => AesLineStyle,
+    ])
+end
