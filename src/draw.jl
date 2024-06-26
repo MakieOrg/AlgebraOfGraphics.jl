@@ -66,7 +66,7 @@ function _draw(d::AbstractDrawable;
               axis, figure, scales,
               facet, legend, colorbar)
 
-    return update(Figure(; figure...)) do f
+    return update(Figure(; pairs(figure)...)) do f
         grid = plot!(f, d; axis, scales)
         fg = FigureGrid(f, grid)
         facet!(fg; facet)
