@@ -115,6 +115,19 @@ function aesthetic_mapping(::Type{Scatter})
     ])
 end
 
+function aesthetic_mapping(::Type{ScatterLines})
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        3 => AesZ,
+        :color => AesColor,
+        :strokecolor => AesColor,
+        :marker => AesMarker,
+        :markersize => AesMarkerSize,
+        :linestyle => AesLineStyle,
+    ])
+end
+
 function aesthetic_mapping(::Type{HLines})
     dictionary([
         1 => AesY,
