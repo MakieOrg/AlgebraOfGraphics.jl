@@ -59,13 +59,12 @@ function draw(d::AbstractDrawable;
     legend = _kwdict(legend)
     colorbar = _kwdict(colorbar)
 
-    return _draw(d; axis, figure, scales, facet, legend, colorbar, palette)
+    return _draw(d; axis, figure, scales, facet, legend, colorbar)
 end
 
 function _draw(d::AbstractDrawable;
               axis, figure, scales,
-              facet, legend, colorbar, palette)
-    check_palette_kw(palette)
+              facet, legend, colorbar)
 
     return update(Figure(; figure...)) do f
         grid = plot!(f, d; axis, scales)
@@ -96,6 +95,16 @@ to `scales`.
 function draw!(fig, d::AbstractDrawable;
                axis=NamedTuple(), scales = Dictionary{Symbol,Any}(), facet=NamedTuple(), palette=nothing)
     check_palette_kw(palette)
+    axis = _kwdict(axis)
+    facet = _kwdict(facet)
+    scales = _kwdict(scales)
+    for (key, value) in pairs(scales)
+        scales[key] = _kwdict(value)
+    end
+    _draw!(fig, d; axis, facet, scales)
+end
+
+function _draw!(fig, d; axis, scales, facet)
     return update(fig) do f
         ag = plot!(f, d; axis, scales)
         facet!(f, ag; facet)
