@@ -94,7 +94,7 @@ The output can be customized by giving axis attributes to `axis` or custom scale
 to `scales`.
 """
 function draw!(fig, d::AbstractDrawable;
-               axis=NamedTuple(), scales = [], facet=NamedTuple(), palette=nothing)
+               axis=NamedTuple(), scales = Dictionary{Symbol,Any}(), facet=NamedTuple(), palette=nothing)
     check_palette_kw(palette)
     return update(fig) do f
         ag = plot!(f, d; axis, scales)
