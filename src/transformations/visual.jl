@@ -32,10 +32,21 @@ mandatory_attributes(::Type{<:Union{Violin,RainClouds,BoxPlot}}) = dictionary([:
 # The default assumption of x, y, [z] does not hold for many plot objects
 function aesthetic_mapping end
 
-aesthetic_mapping(p::ProcessedLayer) = aesthetic_mapping(p.plottype, p.attributes)
+function positional_scientific_types(p::ProcessedLayer)::Vector{ScientificType}
+    map(p.positional) do pos
+        # TODO: what about cases where the elements are actually vectors? Somehow this must be determined better
+        if pos isa AbstractArray{<:AbstractArray}
+            return only(unique(map(scientific_eltype, pos)))
+        else
+            return scientific_eltype(pos)
+        end
+    end
+end
 
-function aesthetic_mapping(plottype, attributes)::AestheticMapping
-    mapping = aesthetic_mapping(plottype)
+aesthetic_mapping(p::ProcessedLayer) = aesthetic_mapping(p.plottype, p.attributes, positional_scientific_types(p))
+
+function aesthetic_mapping(plottype, attributes, scitypes::Vector{ScientificType})::AestheticMapping
+    mapping = aesthetic_mapping(plottype, scitypes...)
     for (key, value) in pairs(mapping)
         if value isa Pair
             attrkey, dict = value
@@ -53,30 +64,59 @@ function aesthetic_mapping(plottype, attributes)::AestheticMapping
     return mapping
 end
 
-function aesthetic_mapping(T::Type{<:Plot})
-    error("No aesthetic mapping defined yet for plot type $T. AlgebraOfGraphics can only use plot types if it is told which attributes and input arguments map to which aesthetics like color, markersize or linewidth for example.")
+function aesthetic_mapping(T::Type{<:Plot}, scitypes)
+    error("No aesthetic mapping defined yet for plot type $T with scientific eltypes $scitypes. AlgebraOfGraphics can only use plot types if it is told which attributes and input arguments map to which aesthetics like color, markersize or linewidth for example.")
 end
 
-function aesthetic_mapping(::Type{Lines})
+aesthetic_mapping(::Type{Lines}, ::Normal) = aesthetic_mapping(Lines, 1)
+aesthetic_mapping(::Type{Lines}, ::Normal, ::Normal) = aesthetic_mapping(Lines, 2)
+aesthetic_mapping(::Type{Lines}, ::Normal, ::Normal, ::Normal) = aesthetic_mapping(Lines, 3)
+
+function pointlike_positionals(N::Int)
+    @assert 1 <= N <= 3
+    if N == 1
+        [1 => AesY]
+    elseif N == 2
+        [1 => AesX, 2 => AesY]
+    else
+        [1 => AesX, 2 => AesY, 3 => AesZ]
+    end
+end
+
+function aesthetic_mapping(::Type{Lines}, N::Int)
     dictionary([
-        1 => AesX,
-        2 => AesY,
-        3 => AesZ,
+        pointlike_positionals(N)...,
         :color => AesColor,
         :linestyle => AesLineStyle,
     ])
 end
 
-function aesthetic_mapping(::Type{BarPlot})
-    dictionary([
-        1 => :direction => dictionary([
-            :y => AesX,
-            :x => AesY,
-        ]),
-        2 => :direction => dictionary([
+aesthetic_mapping(::Type{BarPlot}, ::Normal) = aesthetic_mapping(BarPlot, 1)
+aesthetic_mapping(::Type{BarPlot}, ::Normal, ::Normal) = aesthetic_mapping(BarPlot, 2)
+
+function aesthetic_mapping(::Type{BarPlot}, N::Int)
+    @assert 1 <= N <= 2
+    positionals = if N == 1
+        [
+            1 => :direction => dictionary([
             :y => AesY,
             :x => AesX,
-        ]),
+            ])
+        ]
+    else
+        [
+            1 => :direction => dictionary([
+                :y => AesX,
+                :x => AesY,
+            ]),
+            2 => :direction => dictionary([
+                :y => AesY,
+                :x => AesX,
+            ]),
+        ]
+    end
+    dictionary([
+        positionals...,
         :color => AesColor,
         :width => :direction => dictionary([
             :y => AesDeltaX,
@@ -87,7 +127,7 @@ function aesthetic_mapping(::Type{BarPlot})
     ])
 end
 
-function aesthetic_mapping(::Type{Violin})
+function aesthetic_mapping(::Type{Violin}, ::Normal, ::Normal)
     dictionary([
         1 => :orientation => dictionary([
             :horizontal => AesX,
@@ -103,11 +143,13 @@ function aesthetic_mapping(::Type{Violin})
     ])
 end
 
-function aesthetic_mapping(::Type{Scatter})
+aesthetic_mapping(::Type{Scatter}, ::Normal) = aesthetic_mapping(Scatter, 1)
+aesthetic_mapping(::Type{Scatter}, ::Normal, ::Normal) = aesthetic_mapping(Scatter, 2)
+aesthetic_mapping(::Type{Scatter}, ::Normal, ::Normal, ::Normal) = aesthetic_mapping(Scatter, 3)
+
+function aesthetic_mapping(::Type{Scatter}, N::Int)
     dictionary([
-        1 => AesX,
-        2 => AesY,
-        3 => AesZ,
+        pointlike_positionals(N)...,
         :color => AesColor,
         :strokecolor => AesColor,
         :marker => AesMarker,
@@ -115,11 +157,13 @@ function aesthetic_mapping(::Type{Scatter})
     ])
 end
 
-function aesthetic_mapping(::Type{ScatterLines})
+aesthetic_mapping(::Type{ScatterLines}, ::Normal) = aesthetic_mapping(ScatterLines, 1)
+aesthetic_mapping(::Type{ScatterLines}, ::Normal, ::Normal) = aesthetic_mapping(ScatterLines, 2)
+aesthetic_mapping(::Type{ScatterLines}, ::Normal, ::Normal, ::Normal) = aesthetic_mapping(ScatterLines, 3)
+
+function aesthetic_mapping(::Type{ScatterLines}, N::Int)
     dictionary([
-        1 => AesX,
-        2 => AesY,
-        3 => AesZ,
+        pointlike_positionals(N)...,
         :color => AesColor,
         :strokecolor => AesColor,
         :marker => AesMarker,
@@ -128,21 +172,21 @@ function aesthetic_mapping(::Type{ScatterLines})
     ])
 end
 
-function aesthetic_mapping(::Type{HLines})
+function aesthetic_mapping(::Type{HLines}, ::Normal)
     dictionary([
         1 => AesY,
         :color => AesColor,
     ])
 end
 
-function aesthetic_mapping(::Type{VLines})
+function aesthetic_mapping(::Type{VLines}, ::Normal)
     dictionary([
         1 => AesX,
         :color => AesColor,
     ])
 end
 
-function aesthetic_mapping(::Type{RainClouds})
+function aesthetic_mapping(::Type{RainClouds}, ::Normal, ::Normal)
     dictionary([
         1 => :orientation => dictionary([
             :horizontal => AesY,
@@ -156,7 +200,7 @@ function aesthetic_mapping(::Type{RainClouds})
     ])
 end
 
-function aesthetic_mapping(::Type{Heatmap})
+function aesthetic_mapping(::Type{Heatmap}, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -164,7 +208,7 @@ function aesthetic_mapping(::Type{Heatmap})
     ])
 end
 
-function aesthetic_mapping(::Type{LinesFill})
+function aesthetic_mapping(::Type{LinesFill}, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -174,7 +218,7 @@ function aesthetic_mapping(::Type{LinesFill})
     ])
 end
 
-function aesthetic_mapping(::Type{Rangebars})
+function aesthetic_mapping(::Type{Rangebars}, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => :direction => dictionary([
             :x => AesY,
@@ -192,7 +236,7 @@ function aesthetic_mapping(::Type{Rangebars})
     ])
 end
 
-function aesthetic_mapping(::Type{Errorbars})
+function aesthetic_mapping(::Type{Errorbars}, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => :direction => dictionary([
             :x => AesY,
@@ -210,7 +254,7 @@ function aesthetic_mapping(::Type{Errorbars})
     ])
 end
 
-function aesthetic_mapping(::Type{Makie.Text})
+function aesthetic_mapping(::Type{Makie.Text}, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -219,7 +263,7 @@ function aesthetic_mapping(::Type{Makie.Text})
     ])
 end
 
-function aesthetic_mapping(::Type{BoxPlot})
+function aesthetic_mapping(::Type{BoxPlot}, ::Normal, ::Normal)
     dictionary([
         1 => :orientation => dictionary([
             :horizontal => AesY,
@@ -234,7 +278,7 @@ function aesthetic_mapping(::Type{BoxPlot})
     ])
 end
 
-function aesthetic_mapping(::Type{Contour})
+function aesthetic_mapping(::Type{Contour}, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -247,7 +291,7 @@ end
 # if this wasn't set, a contour plot would be colored with a colormap according to positional arg 3, but we currently cannot handle that in the right way
 mandatory_attributes(::Type{Contour}) = dictionary([:colormap => [Makie.current_default_theme()[:linecolor][]]])
 
-function aesthetic_mapping(::Type{QQPlot})
+function aesthetic_mapping(::Type{QQPlot}, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -256,7 +300,7 @@ function aesthetic_mapping(::Type{QQPlot})
     ])
 end
 
-function aesthetic_mapping(::Type{QQNorm})
+function aesthetic_mapping(::Type{QQNorm}, ::Normal)
     dictionary([
         1 => AesY,
         :color => AesColor,
@@ -264,7 +308,7 @@ function aesthetic_mapping(::Type{QQNorm})
     ])
 end
 
-function aesthetic_mapping(::Type{Arrows})
+function aesthetic_mapping(::Type{Arrows}, ::Normal, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -275,21 +319,21 @@ function aesthetic_mapping(::Type{Arrows})
     ])
 end
 
-function aesthetic_mapping(::Type{Choropleth})
+function aesthetic_mapping(::Type{Choropleth}, ::Geometrical)
     dictionary([
         1 => AesPlaceholder,
         :color => AesColor,
     ])
 end
 
-function aesthetic_mapping(::Type{Poly})
+function aesthetic_mapping(::Type{Poly}, ::Geometrical)
     dictionary([
         1 => AesPlaceholder,
         :color => AesColor,
     ])
 end
 
-function aesthetic_mapping(::Type{LongPoly})
+function aesthetic_mapping(::Type{LongPoly}, ::Normal, ::Normal, ::Any, ::Any)
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -299,7 +343,7 @@ function aesthetic_mapping(::Type{LongPoly})
     ])
 end
 
-function aesthetic_mapping(::Type{Surface})
+function aesthetic_mapping(::Type{Surface}, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -307,7 +351,7 @@ function aesthetic_mapping(::Type{Surface})
     ])
 end
 
-function aesthetic_mapping(::Type{Wireframe})
+function aesthetic_mapping(::Type{Wireframe}, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -316,7 +360,7 @@ function aesthetic_mapping(::Type{Wireframe})
     ])
 end
 
-function aesthetic_mapping(::Type{Band})
+function aesthetic_mapping(::Type{Band}, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
@@ -325,7 +369,7 @@ function aesthetic_mapping(::Type{Band})
     ])
 end
 
-function aesthetic_mapping(::Type{ABLines})
+function aesthetic_mapping(::Type{ABLines}, ::Normal, ::Normal)
     dictionary([
         1 => AesABIntercept,
         2 => AesABSlope,
