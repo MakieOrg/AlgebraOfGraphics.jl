@@ -159,3 +159,25 @@ end
     @test length(leg_els[1]) == 3
     @test length(leg_els[2]) == 1
 end
+
+@testset "Invalid scale settings" begin
+    spec = data((; x = 1:10, y = 1:10, z = 1:10)) *
+        mapping(:x, :y, color = :z) * visual(Lines)
+    @test_throws_message "Got scale :cccolor in scale properties but this key" draw(spec, scales = (; cccolor = (; colormap = :Blues)))
+
+    spec = data((; x = 1:10, y = 1:10, z = 1:10)) *
+        mapping(:x, :y, color = :z) * visual(Lines)
+    @test_throws_message "Got scale properties for :Marker but no scale of this kind is mapped" draw(spec, scales = (; Marker = (; palette = ['x', 'y', 'z'])))
+
+    spec = data((; x = 1:10, y = 1:10, z = 1:10)) *
+        mapping(:x, :y, color = :z => nonnumeric) * visual(Scatter)
+    @test_throws_message "Unknown scale attribute :unknown for categorical scale" draw(spec, scales = (; Color = (; unknown = false)))
+end
+
+@testset "Removed palette keyword" begin
+    spec = data((; x = 1:10, y = 1:10, z = 1:10)) *
+        mapping(:x, :y, color = :z) * visual(Lines)
+    @test_throws_message "The `palette` keyword for `draw` and `draw!` has been removed" draw(spec; palette = (; color = [:red, :green, :blue]))
+    f = Figure()
+    @test_throws_message "The `palette` keyword for `draw` and `draw!` has been removed" draw!(f[1, 1], spec; palette = (; color = [:red, :green, :blue]))
+end
