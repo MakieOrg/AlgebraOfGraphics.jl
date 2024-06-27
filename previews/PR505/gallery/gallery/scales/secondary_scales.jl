@@ -20,4 +20,11 @@ fg = draw(split_spec; scales = (; secondary = (;
     palette = [:gray70, :gray30]
 )))
 
+draw(split_spec;
+    scales = (; secondary = (;
+        palette = [:gray70, :gray30]
+    )),
+    legend = (; order = [[:Color, :secondary] => "Legend"])
+)
+
 # This file was generated using Literate.jl, https://github.com/fredrikekre/Literate.jl
