@@ -98,7 +98,12 @@ function aes_props(kind::Val, type::Type{<:Aesthetic}, props_dict::Dictionary{Sy
     try
         return T(; pairs(props_dict)...)
     catch e
-        if e isa MethodError && e.f === Core.kwcall
+        is_kw_error = @static if isdefined(Core, :kwcall)
+            e isa MethodError && e.f === Core.kwcall
+        else
+            e isa MethodError && endswith(string(e.f), "#kw")
+        end
+        if is_kw_error
             invalid_keys = setdiff(keys(e.args[1]), fieldnames(T))
         else
             rethrow(e)
