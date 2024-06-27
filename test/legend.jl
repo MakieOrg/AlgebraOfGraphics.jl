@@ -84,19 +84,33 @@ end
 end
 
 @testset "Scale properties" begin
-    spec2 = data((; x = 1:3, y = 1:3, g1 = ["A", "B", "C"], g2 = ["D", "E", "F"])) *
-        mapping(:x, :y, color = :g1, marker = :g2) *
-        visual(Scatter)
+    df  = (; x = 1:3, y = 1:3, g1 = ["A", "B", "C"], g2 = ["D", "E", "F"])
+    spec1 = data(df) * mapping(:x, :y, color = :g1, marker = :g2) * visual(Scatter)
 
-    leg_els, el_labels, group_labels = _compute_legend(spec2)
+    leg_els, el_labels, group_labels = _compute_legend(spec1)
     @test length(leg_els) == 2
     @test group_labels == ["g1", "g2"]
 
-    leg_els, el_labels, group_labels = _compute_legend(spec2; scales = (; Color = (; legend = false)))
+    leg_els, el_labels, group_labels = _compute_legend(spec1; scales = (; Color = (; legend = false)))
     @test length(leg_els) == 1
     @test group_labels == ["g2"]
 
-    leg_els, el_labels, group_labels = _compute_legend(spec2; scales = (; Color = (; label = "Color"), Marker = (; label = "Marker")))
+    leg_els, el_labels, group_labels = _compute_legend(spec1; scales = (; Color = (; label = "Color"), Marker = (; label = "Marker")))
     @test length(leg_els) == 2
     @test group_labels == ["Color", "Marker"]
+
+    spec2 = data(df) * mapping(:x, :y, color = :g1) * visual(Scatter)
+    leg_els, el_labels, group_labels = _compute_legend(spec2)
+    @test length(leg_els) == 1
+    @test el_labels[] == ["A", "B", "C"]
+
+    categories = reverse
+    leg_els, el_labels, group_labels = _compute_legend(spec2; scales = (; Color = (; categories)))
+    @test length(leg_els) == 1
+    @test el_labels[] == ["C", "B", "A"]
+
+    categories = ["A" => rich("a"), "C" => L"c", "B" => "b"]
+    leg_els, el_labels, group_labels = _compute_legend(spec2; scales = (; Color = (; categories)))
+    @test length(leg_els) == 1
+    @test el_labels[] == last.(categories)
 end
