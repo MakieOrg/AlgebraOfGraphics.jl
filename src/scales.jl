@@ -383,7 +383,14 @@ function ticks(limits::NTuple{2, TimeType})
     return datetime2float.(datetimes), format_datetimes(datetimes)
 end
 
-@enum ScientificType categorical continuous geometrical
+abstract type ScientificType end
+struct Categorical <: ScientificType end
+struct Continuous <: ScientificType end
+struct Geometrical <: ScientificType end
+const categorical = Categorical()
+const continuous = Continuous()
+const geometrical = Geometrical()
+const Normal = Union{Categorical,Continuous}
 
 """
     scientific_type(T::Type)

@@ -65,12 +65,9 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
         # Apply continuous transformations
         positional = map(contextfree_rescale, pl.positional)
         named = map(contextfree_rescale, pl.named)
-        plottype = Makie.plottype(pl.plottype, positional...)
+        aes_mapping = aesthetic_mapping(pl)
 
-        aes_mapping = aesthetic_mapping(plottype, pl.attributes)
-
-        # Compute continuous scales with correct plottype, to figure out role of color
-        continuousscales = AlgebraOfGraphics.continuousscales(ProcessedLayer(pl; plottype), scale_props)
+        continuousscales = AlgebraOfGraphics.continuousscales(pl, scale_props)
 
         for (key, scale) in pairs(continuousscales)
             aes = aes_mapping[key]
@@ -88,7 +85,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
         end
 
         # Compute `ProcessedLayer` with rescaled columns
-        push!(rescaled_pls_grid[idx], ProcessedLayer(pl; plottype, positional, named))
+        push!(rescaled_pls_grid[idx], ProcessedLayer(pl; positional, named))
     end
 
     # Compute merged continuous scales, as it may be needed to use global extrema
