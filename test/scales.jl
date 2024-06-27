@@ -105,3 +105,57 @@ end
     @test labels == ["January", "March", "May"]
     @test floats == datetime2float.([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
 end
+
+@testset "Aesthetics switch via visual attribute" begin
+    spec = data((; x = ["A", "B", "C"], y = 1:3)) * mapping(:x, :y) * visual(BarPlot)
+    ag1 = compute_axes_grid(spec)
+    @test ag1[].axis.attributes[:xlabel] == "x"
+    @test ag1[].axis.attributes[:xticks] == (1:3, ["A", "B", "C"])
+    @test ag1[].axis.attributes[:yticks] == Makie.automatic
+    @test ag1[].axis.attributes[:ylabel] == "y"
+
+    @test only(keys(ag1[].categoricalscales)) == AlgebraOfGraphics.AesX
+    @test only(keys(ag1[].continuousscales)) == AlgebraOfGraphics.AesY
+
+    spec2 = spec * visual(direction = :x)
+    ag2 = compute_axes_grid(spec2)
+    @test ag2[].axis.attributes[:xlabel] == "y"
+    @test ag2[].axis.attributes[:xticks] == Makie.automatic
+    @test ag2[].axis.attributes[:yticks] == (1:3, ["A", "B", "C"])
+    @test ag2[].axis.attributes[:ylabel] == "x"
+
+    @test only(keys(ag2[].categoricalscales)) == AlgebraOfGraphics.AesY
+    @test only(keys(ag2[].continuousscales)) == AlgebraOfGraphics.AesX
+
+    spec3 = spec * visual(direction = :unknown)
+    @test_throws_message "no entry for attribute :direction with value :unknown" compute_axes_grid(spec3)
+end
+
+@testset "Combined and split scales" begin
+    spec1 = data((; x = 1:3, y = 1:3, c = ["A", "B", "C"])) * mapping(:x, :y, strokecolor = :c) * visual(Scatter)
+    spec2 = data((; x = 4:5, y = 4:5, c = ["D", "D"])) * mapping(:x, :y, color = :c) * visual(Lines)
+    ag1 = compute_axes_grid(spec1 + spec2)
+    @test only(keys(ag1[].categoricalscales)) == AlgebraOfGraphics.AesColor
+    @test only(keys(ag1[].categoricalscales[AlgebraOfGraphics.AesColor])) === nothing
+    @test datavalues(ag1[].categoricalscales[AlgebraOfGraphics.AesColor][nothing]) == ["A", "B", "C", "D"]
+
+    f = Figure()
+    axisentries = AlgebraOfGraphics.AxisEntries.(ag1, Ref(f))
+    leg_els, el_labels, group_labels = AlgebraOfGraphics.compute_legend(axisentries, order = nothing)
+    @test length(leg_els) == 1
+    @test length(leg_els[]) == 4
+    
+    ag2 = compute_axes_grid(spec1 + spec2 * mapping(color = :c => scale(:color2)))
+    @test only(keys(ag2[].categoricalscales)) == AlgebraOfGraphics.AesColor
+    dict = ag2[].categoricalscales[AlgebraOfGraphics.AesColor]
+    @test Set(keys(dict)) == Set([nothing, :color2])
+    @test datavalues(dict[nothing]) == ["A", "B", "C"]
+    @test datavalues(dict[:color2]) == ["D"]
+
+    f = Figure()
+    axisentries2 = AlgebraOfGraphics.AxisEntries.(ag2, Ref(f))
+    leg_els, el_labels, group_labels = AlgebraOfGraphics.compute_legend(axisentries2, order = nothing)
+    @test length(leg_els) == 2
+    @test length(leg_els[1]) == 3
+    @test length(leg_els[2]) == 1
+end

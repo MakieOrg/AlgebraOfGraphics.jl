@@ -44,7 +44,7 @@ function aesthetic_mapping(plottype, attributes)::AestheticMapping
             end
             attrvalue = attributes[attrkey]
             if !haskey(dict, attrvalue)
-                error("Aesthetic mapping lookup for $plottype failed with key $(repr(key)), no entry for attribute $(repr(attrkey)) with value $(attrvalue). Existing variants are $(dict)")
+                error("Aesthetic mapping lookup for $plottype failed with key $(repr(key)), no entry for attribute $(repr(attrkey)) with value $(repr(attrvalue)). Existing variants are $(dict)")
             end
             aes = dict[attrvalue]
             mapping[key] = aes
