@@ -38,6 +38,16 @@ fg = draw(split_spec; scales = (; secondary = (;
     palette = [:gray70, :gray30]
 )))
 
+# If you don't want to have separate legend groups, you can merge them using the `order` keyword
+# in the `legend` config.
+
+draw(split_spec;
+    scales = (; secondary = (;
+        palette = [:gray70, :gray30]
+    )),
+    legend = (; order = [[:Color, :secondary] => "Legend"])
+)
+
 # save cover image #src
 mkpath("assets") #src
 save("assets/secondary_scales.png", fg) #src
