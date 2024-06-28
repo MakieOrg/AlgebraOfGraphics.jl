@@ -6,3 +6,7 @@ docs/build
 docs/src/gallery
 docs/src/democards
 .vscode/settings.json
+
+docs/node_modules
+docs/.DS_Store
+docs/package-lock.json

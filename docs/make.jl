@@ -1,5 +1,6 @@
 using AlgebraOfGraphics
 using Documenter
+using DocumenterVitepress
 using Literate, Glob
 using CairoMakie
 using DemoCards
@@ -20,17 +21,21 @@ gallery, postprocess_cb, gallery_assets = makedemos("gallery")
 makedocs(;
     modules=[AlgebraOfGraphics],
     authors="Pietro Vertechi",
-    repo="https://github.com/MakieOrg/AlgebraOfGraphics.jl/blob/{commit}{path}#{line}",
+    repo="https://github.com/MakieOrg/AlgebraOfGraphics.jl",
+
     sitename="Algebra of Graphics",
-    format=Documenter.HTML(;
-        prettyurls=get(ENV, "CI", "false") == "true",
-        assets=["assets/favicon.ico", gallery_assets],
+    format = DocumenterVitepress.MarkdownVitepress(
+        repo = "https://github.com/MakieOrg/AlgebraOfGraphics.jl",
     ),
+    # format=Documenter.HTML(;
+    #     prettyurls=get(ENV, "CI", "false") == "true",
+    #     assets=["assets/favicon.ico", gallery_assets],
+    # ),
     pages=Any[
         "Home" => "index.md",
         "Getting Started" => [
             "generated/penguins.md",
-            gallery
+            # gallery
         ],
         "Algebra of Layers" => [
             "layers/introduction.md",
@@ -49,8 +54,8 @@ makedocs(;
         "FAQs.md",
         "philosophy.md",
     ],
-    strict=true,
 )
+
 postprocess_cb() # redirect url for DemoCards generated files
 
 deploydocs(;
