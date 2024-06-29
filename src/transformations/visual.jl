@@ -252,23 +252,35 @@ function aesthetic_mapping(::Type{Rangebars}, ::Normal, ::Normal, ::Normal)
     ])
 end
 
-function aesthetic_mapping(::Type{Errorbars}, ::Normal, ::Normal, ::Normal)
+aesthetic_mapping(::Type{Errorbars}, ::Normal, ::Normal, ::Normal) = aesthetic_mapping(Errorbars, 3)
+aesthetic_mapping(::Type{Errorbars}, ::Normal, ::Normal, ::Normal, ::Normal) = aesthetic_mapping(Errorbars, 4)
+
+function aesthetic_mapping(::Type{Errorbars}, i::Int)
+    @assert i in (3, 4)
+    fourtharg = i == 3 ? [] : [
+        4 => :direction => dictionary([
+            :x => AesDeltaX,
+            :y => AesDeltaY,
+        ])
+    ]
     dictionary([
         1 => :direction => dictionary([
             :x => AesY,
             :y => AesX,
         ]),
         2 => :direction => dictionary([
-            :x => AesDeltaX,
-            :y => AesDeltaY,
+            :x => AesX,
+            :y => AesY,
         ]),
         3 => :direction => dictionary([
             :x => AesDeltaX,
             :y => AesDeltaY,
         ]),
+        fourtharg...,
         :color => AesColor,
     ])
 end
+
 
 function aesthetic_mapping(::Type{Makie.Text}, ::Normal, ::Normal)
     dictionary([
