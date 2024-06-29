@@ -50,11 +50,11 @@ function facet_labels!(fig, aes, scale, dir)
         return ntuple(i -> i == padding_index ? gap : 0f0, 4)
     end
 
-    return map(plotvalues(scale), datavalues(scale)) do index, label
+    return map(plotvalues(scale), datalabels(scale)) do index, label
         rotation = dir == :row ? -π/2 : 0.0
         figpos = dir == :col ? fig[1, index, Top()] :
                  dir == :row ? fig[index, size(aes, 2), Right()] : fig[index..., Top()]
-        return Label(figpos, to_string(label); rotation, padding, color, font, fontsize, visible)
+        return Label(figpos, label; rotation, padding, color, font, fontsize, visible)
     end
 end
 
@@ -109,11 +109,11 @@ span_ylabel!(fig, aes) = span_label!(fig, aes, :y)
 
 function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
 
-    scale = get(aes[1].categoricalscales, :layout, nothing)
+    scale = extract_single(AesLayout, aes[1].categoricalscales)
     isnothing(scale) && return
 
     # Link axes and hide decorations if appropriate
-    attrs = clean_facet_attributes(aes; facet...)
+    attrs = clean_facet_attributes(aes; pairs(facet)...)
     link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
     hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap=true)
 
@@ -137,11 +137,12 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
 end
 
 function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
-    row_scale, col_scale = map(sym -> get(aes[1].categoricalscales, sym, nothing), (:row, :col))
+    row_scale = extract_single(AesRow, aes[1].categoricalscales)
+    col_scale = extract_single(AesCol, aes[1].categoricalscales)
     all(isnothing, (row_scale, col_scale)) && return
 
     # link axes and hide decorations if appropriate
-    attrs = clean_facet_attributes(aes; facet...)
+    attrs = clean_facet_attributes(aes; pairs(facet)...)
     link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
     hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap=false)
 

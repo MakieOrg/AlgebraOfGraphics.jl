@@ -158,9 +158,10 @@ draw(plt; axis = axis)
 
 # The default colormap is multi-hue, but it is possible to pass single-hue colormaps as well.
 # The color range is inferred from the data by default, but it can also be passed manually.
+# Both settings are passed through the `scales` attribute to `draw`, because multiple plots
+# can share the same colormap, so `visual` is not the appropriate place for this setting.
 
-plt *= visual(colormap = :grayC, colorrange = (0, 6))
-draw(plt; axis = axis)
+draw(plt; axis = axis, scales = (; Color = (; colormap = :grayC, colorrange = (0, 6))))
 
 # A `Heatmap` (the default visualization for a 2D density) is a bit unfortunate if
 # we want to mark species by color. In that case, one can use `visual` to change

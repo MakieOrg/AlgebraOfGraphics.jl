@@ -18,15 +18,36 @@ end
 
 compute_colorbar(fg::FigureGrid) = compute_colorbar(fg.grid)
 function compute_colorbar(grid::Matrix{AxisEntries})
-    colorscales = filter(!isnothing, [get(ae.continuousscales, :color, nothing) for ae in grid])
+    colorscales = filter(!isnothing, [get(ae.continuousscales, AesColor, nothing) for ae in grid])
     isempty(colorscales) && return
-    colorscale = reduce(mergescales, colorscales)
-    label = getlabel(colorscale)
-    limits = colorscale.extrema
-    colormap = current_default_theme().colormap[]
-    # FIXME: handle separate colorbars
-    for entry in entries(grid)
-        colormap = to_value(get(entry, :colormap, colormap))
+
+    # colorscale = reduce(mergescales, colorscales)
+    colorscale_dict = reduce(colorscales, init=Dictionary{Union{Nothing,Symbol},ContinuousScale}()) do c1, c2
+        mergewith!(mergescales, c1, c2)
     end
-    return (; label, limits, colormap)
+
+    if length(colorscale_dict) > 1
+        error("Cannot yet handle multiple colorscales, found $colorscale_dict")
+    end
+
+    colorscale = only(values(colorscale_dict))
+    
+    label = getlabel(colorscale)
+    limits = @something colorscale.props.aesprops.colorrange colorscale.extrema
+    is_highclipped = limits[2] < colorscale.extrema[2]
+    is_lowclipped = limits[1] > colorscale.extrema[1]
+
+    colormap = @something colorscale.props.aesprops.colormap default_colormap()
+    colormap_colors = Makie.to_colormap(colormap)
+
+    lowclip = is_lowclipped ? @something(colorscale.props.aesprops.lowclip, colormap_colors[1]) : Makie.automatic
+    highclip = is_highclipped ? @something(colorscale.props.aesprops.highclip, colormap_colors[end]) : Makie.automatic
+
+    return (;
+        label,
+        limits,
+        colormap,
+        lowclip,
+        highclip,
+    )
 end

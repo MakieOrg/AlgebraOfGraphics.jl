@@ -27,7 +27,7 @@
 
     # consistent `x` and directionally consistent `y` labels
     df = (x=rand(100), y1=rand(100), y2=rand(100), i=rand(["a", "b", "c"], 100))
-    plt = data(df) * mapping(:x, [:y1, :y2], col=:i, row=dims(1))
+    plt = data(df) * mapping(:x, [:y1, :y2], col=:i, row=dims(1)) * visual(Scatter)
     aes = compute_axes_grid(Figure(), plt)
     @test consistent_xlabels(aes)
     @test !consistent_ylabels(aes)
@@ -64,7 +64,7 @@ end
     scales = first(aes).categoricalscales
     ax = first(aes).axis
 
-    labels = col_labels!(fig, aes, scales[:col])
+    labels = col_labels!(fig, aes, scales[AlgebraOfGraphics.AesCol][nothing])
     @test labels[1].text[] == "a"
     @test labels[2].text[] == "b"
     @test labels[3].text[] == "c"
@@ -78,7 +78,7 @@ end
         @test label.visible[] == ax.titlevisible[]
     end
 
-    labels = row_labels!(fig, aes, scales[:row])
+    labels = row_labels!(fig, aes, scales[AlgebraOfGraphics.AesRow][nothing])
     @test labels[1].text[] == "d"
     @test labels[2].text[] == "e"
     @test labels[3].text[] == "f"
@@ -99,7 +99,7 @@ end
     scales = first(aes).categoricalscales
     ax = first(aes).axis
 
-    labels = panel_labels!(fig, aes, scales[:layout])
+    labels = panel_labels!(fig, aes, scales[AlgebraOfGraphics.AesLayout][nothing])
     @test labels[1].text[] == "a"
     @test labels[2].text[] == "b"
     @test labels[3].text[] == "c"
