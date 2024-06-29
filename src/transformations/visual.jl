@@ -64,7 +64,7 @@ function aesthetic_mapping(plottype, attributes, scitypes::Vector{ScientificType
     return mapping
 end
 
-function aesthetic_mapping(T::Type{<:Plot}, scitypes)
+function aesthetic_mapping(T::Type{<:Plot}, scitypes::ScientificType...)
     error("No aesthetic mapping defined yet for plot type $T with scientific eltypes $scitypes. AlgebraOfGraphics can only use plot types if it is told which attributes and input arguments map to which aesthetics like color, markersize or linewidth for example.")
 end
 
@@ -182,6 +182,22 @@ end
 function aesthetic_mapping(::Type{VLines}, ::Normal)
     dictionary([
         1 => AesX,
+        :color => AesColor,
+    ])
+end
+
+function aesthetic_mapping(::Type{HSpan}, ::Normal, ::Normal)
+    dictionary([
+        1 => AesY,
+        2 => AesY,
+        :color => AesColor,
+    ])
+end
+
+function aesthetic_mapping(::Type{VSpan}, ::Normal, ::Normal)
+    dictionary([
+        1 => AesX,
+        2 => AesX,
         :color => AesColor,
     ])
 end

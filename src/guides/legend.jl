@@ -378,7 +378,7 @@ function legend_elements(T::Type{Contour}, attributes, scale_args::MixedArgument
     )]
 end
 
-function legend_elements(T::Type{Band}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Type{<:Union{Band,VSpan,HSpan}}, attributes, scale_args::MixedArguments)
     [PolyElement(
         color = _get(T, scale_args, attributes, :color),
     )]
