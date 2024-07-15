@@ -361,7 +361,7 @@ function aesthetic_mapping(::Type{Poly}, ::Geometrical)
     ])
 end
 
-function aesthetic_mapping(::Type{LongPoly}, ::Normal, ::Normal, ::Any, ::Any)
+function aesthetic_mapping(::Type{LongPoly}, ::Normal, ::Normal, ::Union{Normal,Geometrical}, ::Union{Normal,Geometrical})
     dictionary([
         1 => AesX,
         2 => AesY,
