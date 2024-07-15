@@ -53,7 +53,7 @@ draw(plt, facet=(; linkxaxes=:none, linkyaxes=:none))
 
 # ## Facet wrap with specified layout for rows and cols
 
-draw(plt, scales = (; Layout = (; palette = [(1, 1), (2, 1), (3, 1), (1, 2), (2, 2)])))
+draw(plt, scales(Layout = (; palette = [(1, 1), (2, 1), (3, 1), (1, 2), (2, 2)])))
 
 # ## Adding traces to only some subplots
 

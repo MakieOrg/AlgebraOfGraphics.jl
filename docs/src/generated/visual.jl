@@ -31,7 +31,7 @@ draw(plt * visual(Heatmap)) # plot as heatmap (the default)
 #
 # Set the colormap in the [Scale options](@ref) instead.
 
-draw(plt; scales = (; Color = (; colormap = :viridis))) # set a different colormap
+draw(plt, scales(Color = (; colormap = :viridis))) # set a different colormap
 
 #
 

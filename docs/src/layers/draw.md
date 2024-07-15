@@ -12,7 +12,7 @@ Colorbar and legend, should they be necessary, can be added separately with the
 
 ## Scale options
 
-All properties that decide how scales are visualized can be modified using the `scales` keyword of the `draw` function.
+All properties that decide how scales are visualized can be modified by passing scale options (using the `scales` function) as the second argument of `draw` .
 The properties that are accepted differ depending on the scale aesthetic type (for example `Color`, `Marker`, `LineStyle`) and whether the scale is categorical or continuous.
 
 ### Categorical scale options
@@ -34,7 +34,7 @@ using CairoMakie
 spec = data((; x = 1:10, y = 1:10, z = 'A':'J')) *
     mapping(:x, :y, color = :z) *
     visual(BarPlot)
-draw(spec; scales = (; Color = (; palette = :tab10)))
+draw(spec, scales(Color = (; palette = :tab10)))
 ```
 
 It's also possible to directly specify a vector of colors, each of which `Makie.to_color` can handle:
@@ -47,7 +47,7 @@ using CairoMakie.Colors: RGB, RGBA, Gray, HSV
 spec = data((; x = 1:10, y = 1:10, z = 'A':'J')) *
     mapping(:x, :y, color = :z) *
     visual(BarPlot)
-draw(spec; scales = (; Color = (; palette = [:red, :green, :blue, RGB(1, 0, 1), RGB(1, 1, 0), "#abcff0", "#c88cbccc", HSV(0.9, 0.3, 0.7), RGBA(0.7, 0.9, 0.6, 0.5), Gray(0.5)])))
+draw(spec, scales(Color = (; palette = [:red, :green, :blue, RGB(1, 0, 1), RGB(1, 1, 0), "#abcff0", "#c88cbccc", HSV(0.9, 0.3, 0.7), RGBA(0.7, 0.9, 0.6, 0.5), Gray(0.5)])))
 ```
 
 ##### Marker
@@ -63,8 +63,8 @@ spec = data((; x = 1:10, y = 1:10, z = 'A':'J')) *
     visual(Scatter, markersize = 20)
 
 draw(
-    spec;
-    scales = (;
+    spec,
+    scales(
         Marker = (; palette = [:rect, :circle, :utriangle, :dtriangle, :diamond, :hline, :vline, :star5, :star6, :hexagon])
     )
 )
@@ -82,7 +82,7 @@ spec = data((; x = 1:10, y = 1:10, z = repeat('A':'E', inner = 2))) *
     mapping(:x, :y, linestyle = :z) *
     visual(Lines, linewidth = 2)
 
-draw(spec; scales = (;
+draw(spec, scales(
     LineStyle = (; palette = [:solid, :dash, :dot, (:dot, :loose), Linestyle([0, 1, 2, 3, 4, 8])])
 ))
 ```
@@ -101,7 +101,7 @@ df = (; group = ["A", "B", "C", "X", "Y", "Unknown"], count = [45, 10, 20, 32, 5
 
 spec = data(df) * mapping(:group, :count) * visual(BarPlot)
 
-draw(spec; scales = (; X = (; palette = [1, 2, 3, 5, 6, "Unknown" => 8])))
+draw(spec, scales(X = (; palette = [1, 2, 3, 5, 6, "Unknown" => 8])))
 ```
 
 ##### Layout
@@ -123,7 +123,7 @@ spec = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter)
 
 clockwise = [(1, 1), (1, 2), (1, 3), (2, 3), (3, 3), (3, 2), (3, 1), (2, 1)]
 
-draw(spec; scales = (; Layout = (; palette = clockwise)))
+draw(spec, scales(Layout = (; palette = clockwise)))
 ```
 
 #### `categories`
@@ -145,13 +145,13 @@ spec = data((; group = ["A", "C", "D"], value = [1, 3, 4])) *
 
 f = Figure()
 
-draw!(f[1, 1], spec; scales = (;
+draw!(f[1, 1], spec, scales(
     X = (; categories = ["A", "B", "C", "D"])
 ))
-draw!(f[1, 2], spec; scales = (;
+draw!(f[1, 2], spec, scales(
     X = (; categories = ["D", "A", "C"])
 ))
-draw!(f[1, 3], spec; scales = (;
+draw!(f[1, 3], spec, scales(
     X = (; categories = ["A" => "a", "C" => "c", "D" => "d"])
 ))
 
@@ -176,7 +176,7 @@ df = (;
 
 spec = data(df) * mapping(:x, :y, col = :group) * visual(Scatter)
 
-draw(spec; scales = (; Col = (;
+draw(spec, scales(Col = (;
     categories = cats -> [
         cat => rich("$cat\n", rich("λ = $(summary_stats[cat])", font = :italic))
             for cat in reverse(cats)
@@ -199,7 +199,7 @@ spec = data((; x = 1:10, y = 1:10, z = [1:4; NaN; 6:10])) *
     mapping(:x, :y, color = :z) *
     visual(Scatter, markersize = 20)
 
-draw(spec; scales = (;
+draw(spec, scales(
     Color = (;
         colormap = :plasma,
         nan_color = :cyan,
@@ -225,14 +225,14 @@ spec = data((; x = 1:10, y = 1:10, z = 10:10:100)) *
 
 f = Figure()
 
-grid = draw!(f[1, 1], spec; scales = (;
+grid = draw!(f[1, 1], spec, scales(
     MarkerSize = (;
         sizerange = (5, 15)
     )
 ))
 legend!(f[1, 2], grid)
 
-grid2 = draw!(f[2, 1], spec; scales = (;
+grid2 = draw!(f[2, 1], spec, scales(
     MarkerSize = (;
         sizerange = (5, 30)
     )

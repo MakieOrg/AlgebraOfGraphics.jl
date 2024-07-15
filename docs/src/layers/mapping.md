@@ -143,7 +143,7 @@ spec2_custom_scale = data(df_b) * mapping(:y, color = :threshold => scale(:color
 draw(spec1 + spec2_custom_scale)
 ```
 
-Each scale can be customized further by passing configuration options under its key to the `scales` keyword of the `draw` function.
+Each scale can be customized further by passing configuration options via `scales` as the second argument of the `draw` function.
 More information on scale options can be found under [Scale options](@ref).
 
 As an example, we can pass separate colormaps using the `palette` keyword:
@@ -152,8 +152,8 @@ As an example, we can pass separate colormaps using the `palette` keyword:
 spec2_custom_scale = data(df_b) * mapping(:y, color = :threshold => scale(:color2)) * visual(HLines)
 
 draw(
-   spec1 + spec2_custom_scale;
-   scales = (;
+   spec1 + spec2_custom_scale,
+   scales(
       Color = (; palette = [:red, :green, :blue]),
       color2 = (; palette = [:gray30, :gray80]),
    )

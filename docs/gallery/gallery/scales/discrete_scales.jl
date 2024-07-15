@@ -24,7 +24,7 @@ draw(plt)
 #
 
 plt = data(df) * mapping(:x, :y) * visual(BoxPlot)
-draw(plt; scales = (; X = (;
+draw(plt, scales(X = (;
     categories = ["a" => "label1", "b" => "label2", "c" => "label3"]
 )))
 
@@ -40,14 +40,14 @@ draw(plt)
 # With `categories`, you can add further categories that might be missing from your data
 
 plt = data(df) * mapping(:x, :y) * visual(BoxPlot)
-draw(plt; scales = (; X = (;
+draw(plt, scales(X = (;
     categories = ["a", "missing", "b", "c"]
 )))
 
 # The order can also be changed:
 
 plt = data(df) * mapping(:x, :y) * visual(BoxPlot)
-draw(plt; scales = (; X = (;
+draw(plt, scales(X = (;
     categories = ["b" => "label b", "a" => "label a", "c" => "label c"]
 )))
 
@@ -70,7 +70,7 @@ draw(plt)
 
 #
 
-draw(plt; scales = (; X = (;
+draw(plt, scales(X = (;
     categories = ["one", "two", "three", "four"]
 )))
 
@@ -84,7 +84,7 @@ draw(plt)
 
 # Instead of specifying the order manually, we could use a function to order by last name:
 
-draw(plt, scales = (; X = (;
+draw(plt, scales(X = (;
     categories = cats -> sort(cats; by = name -> split(name)[2])
 )))
 
@@ -95,7 +95,7 @@ function initialed(name)
     return name => "$(first(a)). $b"
 end
 
-draw(plt, scales = (; X = (;
+draw(plt, scales(X = (;
     categories = cats -> initialed.(sort(cats; by = name -> split(name)[2]))
 )))
 
