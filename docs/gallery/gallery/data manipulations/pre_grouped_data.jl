@@ -9,27 +9,27 @@ using AlgebraOfGraphics, CairoMakie
 set_aog_theme!() #src
 
 
-x = [rand(10) for i in 1:3]
-y = [rand(10) for i in 1:3]
-z = [rand(10) for i in 1:3]
+x = [rand(10) .+ i for i in 1:3]
+y = [rand(10) .+ i for i in 1:3]
+z = [rand(10) .+ i for i in 1:3]
 c = ["a", "b", "c"]
 
-m = mapping(x, y, color=c => (t -> "Type " * t ) => "Category")
+m = pregrouped(x, y, color=c => (t -> "Type " * t ) => "Category")
 draw(m)
 
 #
 
-m = mapping(x, (y, z) => (+) => "sum", color=c => (t -> "Type " * t ) => "Category")
+m = pregrouped(x, (y, z) => (+) => "sum", color=c => (t -> "Type " * t ) => "Category")
 draw(m)
 
 #
 
-m = mapping(x, [y z], color=dims(1) => renamer(["a", "b", "c"])) * visual(Scatter)
+m = pregrouped(x, [y z], color=dims(1) => renamer(["a", "b", "c"])) * visual(Scatter)
 draw(m)
 
 #
 
-m = mapping(x, [y z], color=["1" "2"])
+m = pregrouped(x, [y z], color=["1" "2"])
 layers = visual(Scatter) + linear()
 fg = draw(m * layers)
 
