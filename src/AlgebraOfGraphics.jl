@@ -39,7 +39,7 @@ export draw, draw!
 export facet!, colorbar!, legend!
 export set_aog_theme!
 export paginate
-export scale
+export scale, scales
 
 include("dict.jl")
 include("theme.jl")

@@ -129,7 +129,7 @@ function aesthetic_for_symbol(s::Symbol)
 end
 
 
-function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales::Dictionary{Symbol,Any})
+function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scales::Scales)
 
     # allow specifying named scales just by symbol, we can find out what aesthetic that maps
     # to by checking the processed layers
@@ -166,7 +166,7 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
     fn(value::Pair{<:Tuple{<:Type,Symbol},<:Any}) = value[1][2], value[1][1], value[2]
     fn(value::Pair{Symbol,<:Any}) = value[1], named_scales[value[1]], value[2]
 
-    for (sym, value) in pairs(scales)
+    for (sym, value) in pairs(scales.dict)
         aes = aesthetic_for_symbol(sym)
         if aes === nothing
             if !haskey(named_scales, sym)
@@ -199,10 +199,10 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
     return dict
 end
 
-function compute_axes_grid(fig, d::AbstractDrawable;
-                           axis=NamedTuple(), scales=Dictionary{Symbol,Any}())
+function compute_axes_grid(fig, d::AbstractDrawable, scales::Scales;
+                           axis=NamedTuple())
 
-    axes_grid = compute_axes_grid(d; axis, scales)
+    axes_grid = compute_axes_grid(d, scales; axis)
     sz = size(axes_grid)
     if sz != (1, 1) && fig isa Axis
         msg = "You can only pass an `Axis` to `draw!` if the calculated layout only contains one element. Elements: $(sz)"
@@ -230,8 +230,7 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_map
     return aes_mapping[key]
 end
 
-function compute_axes_grid(d::AbstractDrawable;
-                           axis=NamedTuple(), scales=Dictionary{Symbol,Any}())
+function compute_axes_grid(d::AbstractDrawable, scales::Scales; axis=NamedTuple())
 
     processedlayers = ProcessedLayers(d).layers
 
@@ -283,17 +282,17 @@ function compute_axes_grid(d::AbstractDrawable;
         aesthetics = [AesX, AesY, AesZ]
         for (aes, var) in zip(aesthetics[1:ndims], (:x, :y, :z)[1:ndims])
             if haskey(ae.categoricalscales, aes)
-                scales = ae.categoricalscales[aes]
-                if length(keys(scales)) != 1 || only(keys(scales)) !== nothing
-                    error("There should only be one $aes, found keys $(keys(scales))")
+                catscales = ae.categoricalscales[aes]
+                if length(keys(catscales)) != 1 || only(keys(catscales)) !== nothing
+                    error("There should only be one $aes, found keys $(keys(catscales))")
                 end
-                scale = scales[nothing]
+                scale = catscales[nothing]
             elseif haskey(ae.continuousscales, aes)
-                scales = ae.continuousscales[aes]
-                if length(keys(scales)) != 1 || only(keys(scales)) !== nothing
-                    error("There should only be one $aes, found keys $(keys(scales))")
+                conscales = ae.continuousscales[aes]
+                if length(keys(conscales)) != 1 || only(keys(conscales)) !== nothing
+                    error("There should only be one $aes, found keys $(keys(conscales))")
                 end
-                scale = scales[nothing]
+                scale = conscales[nothing]
             else
                 continue
             end

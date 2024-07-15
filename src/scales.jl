@@ -34,6 +34,18 @@ end
 scale(id::Symbol) = ScaleID(id)
 Base.broadcastable(s::ScaleID) = Ref(s)
 
+struct Scales
+    dict::Dictionary{Symbol,Dictionary{Symbol,Any}}
+end
+
+function scales(; kwargs...)
+    dict = Dictionary{Symbol,Dictionary{Symbol,Any}}()
+    for (kw, value) in pairs(kwargs)
+        insert!(dict, kw, _kwdict(value))
+    end
+    return Scales(dict)
+end
+
 ## Categorical Scales
 
 mutable struct Cycler{K, V}
