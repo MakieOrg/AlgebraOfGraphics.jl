@@ -29,7 +29,7 @@ function select(::Nothing, shape, selector)
         fn(x::Function) = x, "", nothing
         fn(x::ScaleID) = identity, "", x
         fn(x) = identity, x, nothing
-        fn(x, y::Pair) = x, y[1], y[2]
+        fn(x::Function, y::Pair) = x, y[1], y[2]
         fn(x::Function, y::ScaleID) = x, "", y
         fn(x::Function, y) = x, y, nothing
         fn(x, y::ScaleID) = identity, x, y
