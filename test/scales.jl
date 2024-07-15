@@ -15,11 +15,7 @@
     pl = ProcessedLayer(l)
     aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
     scaleprops = AlgebraOfGraphics.compute_scale_properties(
-        [pl], AlgebraOfGraphics._kwdict(
-            (; Color = AlgebraOfGraphics._kwdict(
-                (; palette = ["red", "blue", "green"], categories = ["g", "f"])
-            ))
-        )
+        [pl], AlgebraOfGraphics.scales(Color = (; palette = ["red", "blue", "green"], categories = ["g", "f"]))
     )
 
     scales = map(fitscale, categoricalscales(pl, scaleprops, aesmapping))
