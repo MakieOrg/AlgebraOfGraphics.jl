@@ -8,6 +8,7 @@ draw!
 colorbar!
 legend!
 paginate
+scales
 ```
 
 ## Mapping helpers
@@ -17,6 +18,7 @@ renamer
 sorter
 nonnumeric
 verbatim
+scale
 ```
 
 ## Theming
