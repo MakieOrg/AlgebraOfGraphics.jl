@@ -14,7 +14,6 @@ scales
 ## Mapping helpers
 
 ```@docs
-mapping
 pregrouped
 direct
 renamer

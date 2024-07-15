@@ -29,15 +29,33 @@ end
 
 transformation(f) = Layer(transformation=f)
 
+"""
+    data(table)
+
+Create a [`Layer`](@ref) with its data field set to a table-like object.
+
+There are no type restrictions on this object, as long as it respects the Tables interface.
+In particular, any one of [these formats](https://github.com/JuliaData/Tables.jl/blob/main/INTEGRATIONS.md)
+should work out of the box.
+
+To create a fully specified layer, the layer created with `data` needs to be multiplied with the output of [`mapping`](@ref).
+
+```julia
+spec = data(...) * mapping(...)
+```
+"""
 data(df) = Layer(data=Columns(columns(df)))
 data(p::Pregrouped) = Layer(data=p)
 
 """
     mapping(positional...; named...)
 
-Create a `Layer` with `positional` and `named` selectors.
-The resulting `Layer` does not have a data source by default, you can add one by
-multiplying with the output of `data`.
+Create a [`Layer`](@ref) with `positional` and `named` selectors.
+These selectors will be translated into input data for the Makie plotting function or
+AlgebraOfGraphics analysis that is chosen to visualize the `Layer`.
+
+A `Layer` created with `mapping` does not have a data source by default, you can add one by
+multiplying with the output of the [`data`](@ref) function.
 
 The positional and named selectors of `mapping` are converted to actual input
 data for the plotting function that will be selected via `visual`.

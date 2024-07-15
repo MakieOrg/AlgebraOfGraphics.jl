@@ -7,6 +7,10 @@ For example, this `mapping` maps columns `weight` and `height` to positional arg
 mapping(:weight, :height, markersize = :age)
 ```
 
+```@docs
+mapping
+```
+
 ## Aesthetics
 
 The structure of a `mapping` is always directly tied to the signature of the plotting function (or analysis) that it is being connected with.
