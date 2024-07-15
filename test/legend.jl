@@ -1,9 +1,5 @@
-function _compute_legend(spec; scales = (;), order = nothing)
-    scales = AlgebraOfGraphics._kwdict(scales)
-    for (key, value) in pairs(scales)
-        scales[key] = AlgebraOfGraphics._kwdict(value)
-    end
-    axisgrid = compute_axes_grid(spec; scales)
+function _compute_legend(spec; scales = scales(), order = nothing)
+    axisgrid = compute_axes_grid(spec, scales)
     figure = Figure()
     axisentries = AlgebraOfGraphics.AxisEntries.(axisgrid, Ref(figure))
     AlgebraOfGraphics.compute_legend(axisentries; order)
@@ -91,11 +87,11 @@ end
     @test length(leg_els) == 2
     @test group_labels == ["g1", "g2"]
 
-    leg_els, el_labels, group_labels = _compute_legend(spec1; scales = (; Color = (; legend = false)))
+    leg_els, el_labels, group_labels = _compute_legend(spec1, scales = scales(Color = (; legend = false)))
     @test length(leg_els) == 1
     @test group_labels == ["g2"]
 
-    leg_els, el_labels, group_labels = _compute_legend(spec1; scales = (; Color = (; label = "Color"), Marker = (; label = "Marker")))
+    leg_els, el_labels, group_labels = _compute_legend(spec1, scales = scales(Color = (; label = "Color"), Marker = (; label = "Marker")))
     @test length(leg_els) == 2
     @test group_labels == ["Color", "Marker"]
 
@@ -105,12 +101,12 @@ end
     @test el_labels[] == ["A", "B", "C"]
 
     categories = reverse
-    leg_els, el_labels, group_labels = _compute_legend(spec2; scales = (; Color = (; categories)))
+    leg_els, el_labels, group_labels = _compute_legend(spec2, scales = scales(Color = (; categories)))
     @test length(leg_els) == 1
     @test el_labels[] == ["C", "B", "A"]
 
     categories = ["A" => rich("a"), "C" => L"c", "B" => "b"]
-    leg_els, el_labels, group_labels = _compute_legend(spec2; scales = (; Color = (; categories)))
+    leg_els, el_labels, group_labels = _compute_legend(spec2, scales = scales(Color = (; categories)))
     @test length(leg_els) == 1
     @test el_labels[] == last.(categories)
 end
