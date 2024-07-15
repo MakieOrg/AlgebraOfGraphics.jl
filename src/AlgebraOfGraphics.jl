@@ -40,6 +40,8 @@ export facet!, colorbar!, legend!
 export set_aog_theme!
 export paginate
 export scale, scales
+export pregrouped
+export direct
 
 include("dict.jl")
 include("theme.jl")

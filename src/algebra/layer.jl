@@ -29,8 +29,70 @@ end
 
 transformation(f) = Layer(transformation=f)
 
-data(df) = Layer(data=columns(df))
+data(df) = Layer(data=Columns(columns(df)))
+data(p::Pregrouped) = Layer(data=p)
 
+"""
+    mapping(positional...; named...)
+
+Create a `Layer` with `positional` and `named` selectors.
+The resulting `Layer` does not have a data source by default, you can add one by
+multiplying with the output of `data`.
+
+The positional and named selectors of `mapping` are converted to actual input
+data for the plotting function that will be selected via `visual`.
+The translation from selector to data differs according to the `data` source.
+
+## Tabular data
+
+When a `mapping` is combined with a `data(tabular)` where tabular is some
+Tables.jl-compatible object, each argument will be interpreted as a column
+selector. Additionally, it's allowed to specify columns outside of the dataset
+directly by wrapping the values in `direct`. The values can either be vectors
+that have to match the number of rows from the tabular data, or scalars that
+will be expanded as if they were a column filled with the same value.
+
+```julia
+mapping(
+    :x,                        # column named "x"
+    "a column";                # column named "a column"
+    color = 1,                 # first column
+    marker = direct("abc"),    # a new column filled with the string "abc"
+    linestyle = direct(1:3),   # a new column, length must match the table
+)
+```
+
+## `nothing`
+
+If no `data` is set, each entry of `mapping` should be an `AbstractVector`
+that specifies a column of data directly. Scalars like strings for example
+will be expanded as if they were a column filled with the same value.
+This is useful when a legend should be shown, but there's only one group.
+
+```julia
+mapping(
+    1:3,               # a column with values 1 to 3
+    [4, 5, 6],         # a column with values 4 to 6 
+    color = "group 1", # a column with repeated value "group 1"         
+)
+```
+
+## Pregrouped
+
+With `data(Pregrouped()) * mapping(...)` or the shortcut `pregrouped(...)`,
+each element in `mapping` specifies input data directly, like with `nothing`.
+However, in this mode, data should be passed in pregrouped.
+Categorical variables should come as a vector of categories, while numerical
+variables should come as a vector of vectors of values, with as many inner vectors
+as there are groups in the categorical variables.
+
+```julia
+pregrouped(
+    [[1, 2, 3], [4, 5]], # two grouped vectors, of length 3 and 2
+    color = ["A", "B"]   # a vector with two categorical group values
+)
+```
+"""
 mapping(args...; kwargs...) = Layer(positional=collect(Any, args), named=NamedArguments(kwargs))
 
 ⨟(f, g) = f === identity ? g : g === identity ? f : g ∘ f

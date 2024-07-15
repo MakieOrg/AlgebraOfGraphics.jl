@@ -151,3 +151,30 @@ function Base.show(io::IO, b::Bin)
     print(io, b.inclusive[1] ? "[" : "(", b.range[1], ", ", b.range[2], b.inclusive[2] ? "]" : ")")
 end
 
+struct Pregrouped end
+
+"""
+    pregrouped(positional...; named...)
+
+Equivalent to `data(Pregrouped()) * mapping(positional...; named...)`.
+Refer to [`mapping`](@ref) for more information.
+"""
+pregrouped(args...; kwargs...) = data(Pregrouped()) * mapping(args...; kwargs...)
+
+struct Columns{T}
+    columns::T
+end
+
+struct DirectData{T}
+    data::T
+end
+
+"""
+    direct(x)
+
+Return `DirectData(x)` which marks `x` for direct use in a `mapping` that's
+used with a table-like `data` source. As a result, `x` will be used directly as
+data, without lookup in the table. If `x` is not an `AbstractArray`, it will
+be expanded like `fill(x, n)` where `n` is the number of rows in the `data` source.
+"""
+direct(x) = DirectData(x)

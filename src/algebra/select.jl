@@ -12,22 +12,60 @@ end
 
 select(data, d::DimsSelector) = (d,) => identity => "" => nothing
 
-function select(data, name::Union{Symbol, AbstractString})
-    v = getcolumn(data, Symbol(name))
+function select(data::Columns, name::Union{Symbol, AbstractString})
+    v = getcolumn(data.columns, Symbol(name))
     return (v,) => identity => to_string(name) => nothing
 end
 
-function select(data, idx::Integer)
-    name = columnnames(data)[idx]
+function select(data::Columns, idx::Integer)
+    name = columnnames(data.columns)[idx]
     return select(data, name)
 end
 
-select(::Nothing, v::AbstractArray) = (v,) => identity => "" => nothing
+function select(::Nothing, shape, selector)
+    if selector isa Pair
+        vs, rest = selector
+        fn(x::Pair) = fn(x[1], x[2])
+        fn(x::Function) = x, "", nothing
+        fn(x::ScaleID) = identity, "", x
+        fn(x) = identity, x, nothing
+        fn(x, y::Pair) = x, y[1], y[2]
+        fn(x::Function, y::ScaleID) = x, "", y
+        fn(x, y::ScaleID) = identity, x, y
+
+        f, label, scaleid = fn(rest)
+    else
+        vs = selector
+        f = identity
+        label = ""
+        scaleid = nothing
+    end
+
+    if !(vs isa AbstractArray)
+        vs = [vs for _ in CartesianIndices(shape)]
+    end
+
+    return (vs,), (f, (label, scaleid))
+end
+
+select(::Pregrouped, v::AbstractArray) = (v,) => identity => "" => nothing
 
 function select(data, x::Pair{<:Any, <:Union{Symbol, AbstractString}})
     name, label = x
     vs, _ = select(data, name)
     return vs => identity => to_string(label) => nothing
+end
+
+function select(data::Columns, direct::DirectData{T}) where T
+    arr = if T <: AbstractArray{1}
+        direct.data
+    elseif T <: AbstractArray
+        throw(ArgumentError("It's currently not allowed to use arrays that are not one-dimensional (column vectors) as direct data."))
+    else
+        nrows = length(rows(data.columns))
+        fill(direct.data, nrows)
+    end
+    (arr,) => identity => "" => nothing
 end
 
 function select(data, x::Pair{<:Any, <:Any})

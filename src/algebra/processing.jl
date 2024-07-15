@@ -13,7 +13,13 @@ shape(pl::ProcessedLayer) = Broadcast.combine_axes(pl.primary..., pl.positional.
 
 function shape(l::Layer)
     containers = (l.positional, l.named)
-    wrappedvars = (v isa AbstractArray ? v : fill(v) for vs in containers for v in vs)
+    wrap(x::AbstractArray) = x
+    wrap(x) = fill(x)
+    extract(x) = x
+    extract(x::Pair) = x[1]
+    
+    wrappedvars = (wrap(extract(v)) for vs in containers for v in vs)
+    
     return Broadcast.combine_axes(wrappedvars...)
 end
 
@@ -62,15 +68,23 @@ function getlabeledarray(layer::Layer, s)
     isdims = s isa DimsSelector || s isa Pair && first(s) isa DimsSelector
     if isdims
         vs, (f, (label, scaleid)) = select(data, s)
-        d = only(vs) # multiple dims selectors in the same mapping are disallowed
+        if length(vs) != 1
+            throw(ArgumentError("Multiple dims selectors in the same mapping are disallowed"))
+        end
+        d = only(vs)
         sz = ntuple(length(axs)) do n
             return n in d.dims ? length(axs[n]) : 1
         end
         arr = map(fill∘f, CartesianIndices(sz))
-    elseif isnothing(data)
+    elseif data === Pregrouped()
         vs, (f, (label, scaleid)) = select(data, s)
         isprim = any(iscategoricalcontainer, vs)
         arr = isprim ? map(fill∘f, vs...) : map(x -> map(f, x...), zip(vs...)) 
+    elseif data === nothing
+        vs, (f, (label, scaleid)) = select(data, axs, s)
+        arr = fill(map(x -> map(f, x...), zip(vs...)))
+        label = fill(label)
+        scaleid = fill(scaleid)
     else
         selector = s isa AbstractArray ? s : fill(s)
         labeled_arr = map(selector) do s
@@ -129,7 +143,7 @@ end
 
 function process(layer::Layer)
     processedlayer = process_mappings(layer)
-    grouped_entry = isnothing(layer.data) ? processedlayer : group(processedlayer)
+    grouped_entry = layer.data === Pregrouped() ? processedlayer : group(processedlayer)
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
     transformed_processlayer = layer.transformation(ProcessedLayer(grouped_entry; primary))
     attributes = merge(mandatory_attributes(transformed_processlayer.plottype), transformed_processlayer.attributes)

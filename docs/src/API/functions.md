@@ -11,9 +11,12 @@ paginate
 scales
 ```
 
-## Mapping helpers
+## Mapping
 
 ```@docs
+mapping
+pregrouped
+direct
 renamer
 sorter
 nonnumeric

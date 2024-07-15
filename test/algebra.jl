@@ -8,7 +8,7 @@
     @test layers[1].transformation.attributes[:color] == :red
     @test layers[1].positional == Any[:x, :y]
     @test layers[1].named == NamedArguments((color=:c,))
-    @test layers[1].data == df
+    @test layers[1].data == AlgebraOfGraphics.Columns(df)
 end
 
 @testset "process_mappings" begin
@@ -25,6 +25,21 @@ end
     @test processedlayer.labels[2] ==  ["y", "z"]
     @test processedlayer.labels[:color] == fill("c")
     @test processedlayer.labels[:marker] == ""
+
+    layer = mapping(1:3, ["a", "b", "c"] => uppercase, color = "X")
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.positional[1] == fill(1:3)
+    @test processedlayer.positional[2] == fill(["A", "B", "C"])
+    @test processedlayer.primary[:color] == fill(["X", "X", "X"])
+
+    layer = mapping(1:3 => "label" => scale(:somescale), color = "X" => lowercase => "NAME" => scale(:otherscale))
+    @test AlgebraOfGraphics.shape(layer) == (1:3,)
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.labels[1] == fill("label")
+    @test processedlayer.labels[:color] == fill("NAME")
+    @test processedlayer.scale_mapping[1] == :somescale
+    @test processedlayer.primary[:color] == fill(["x", "x", "x"])
+    @test processedlayer.scale_mapping[:color] == :otherscale
 end
 
 @testset "shape" begin
