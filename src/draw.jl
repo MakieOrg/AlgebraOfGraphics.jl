@@ -13,8 +13,7 @@ function update(f, fig)
     return output
 end
 
-function Makie.plot!(fig, d::AbstractDrawable, scales::Scales = scales();
-                     axis=NamedTuple())
+function Makie.plot!(fig, d::AbstractDrawable, scales::Scales = scales(); axis=NamedTuple())
     if isa(fig, Union{Axis, Axis3}) && !isempty(axis)
         @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $axis.")
     end
@@ -86,16 +85,12 @@ In practice, `d` will often be a [`AlgebraOfGraphics.Layer`](@ref) or
 `fig` can be a figure, a position in a layout, or an axis if `d` has no facet specification.
 The output can be customized by passing named tuples or dictionaries with settings via the `axis`, `facet`, `legend` or `colorbar` keywords.
 """
-function draw!(fig, d::AbstractDrawable;
-               axis=NamedTuple(), scales = Dictionary{Symbol,Any}(), facet=NamedTuple(), palette=nothing)
+function draw!(fig, d::AbstractDrawable, scales::Scales = scales();
+               axis=NamedTuple(), facet=NamedTuple(), palette=nothing)
     check_palette_kw(palette)
     axis = _kwdict(axis)
     facet = _kwdict(facet)
-    scales = _kwdict(scales)
-    for (key, value) in pairs(scales)
-        scales[key] = _kwdict(value)
-    end
-    _draw!(fig, d; axis, facet, scales)
+    _draw!(fig, d, scales; axis, facet)
 end
 
 function _draw!(fig, d, scales; axis, facet)
