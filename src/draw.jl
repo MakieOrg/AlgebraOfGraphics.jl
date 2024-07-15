@@ -35,13 +35,13 @@ function _kwdict(prs)::Dictionary{Symbol,Any}
 end
 
 """
-    draw(d; axis=NamedTuple(), figure=NamedTuple, scales=NamedTuple())
+    draw(d, scales::Scales = scales(); [axis, figure, facet, legend, colorbar])
 
 Draw a [`AlgebraOfGraphics.AbstractDrawable`](@ref) object `d`.
 In practice, `d` will often be a [`AlgebraOfGraphics.Layer`](@ref) or
 [`AlgebraOfGraphics.Layers`](@ref).
-The output can be customized by giving axis attributes to `axis`, figure attributes
-to `figure`, or custom scale properties to `scales`.
+Scale options can be passed as an optional second argument.
+The output can be customized by passing named tuples or dictionaries with settings via the `axis`, `figure`, `facet`, `legend` or `colorbar` keywords.
 Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@ref),
 [`legend!`](@ref), and [`colorbar!`](@ref) independently.
 """
@@ -78,14 +78,13 @@ function draw(scales::Scales = scales(); kwargs...)
 end
 
 """
-    draw!(fig, d::AbstractDrawable; axis=NamedTuple(), scales = [])
+    draw!(fig, d::AbstractDrawable, scales::Scales = scales(); [axis, facet, legend, colorbar])
 
 Draw a [`AlgebraOfGraphics.AbstractDrawable`](@ref) object `d` on `fig`.
 In practice, `d` will often be a [`AlgebraOfGraphics.Layer`](@ref) or
 [`AlgebraOfGraphics.Layers`](@ref).
 `fig` can be a figure, a position in a layout, or an axis if `d` has no facet specification.
-The output can be customized by giving axis attributes to `axis` or custom scale properties
-to `scales`.
+The output can be customized by passing named tuples or dictionaries with settings via the `axis`, `facet`, `legend` or `colorbar` keywords.
 """
 function draw!(fig, d::AbstractDrawable;
                axis=NamedTuple(), scales = Dictionary{Symbol,Any}(), facet=NamedTuple(), palette=nothing)
