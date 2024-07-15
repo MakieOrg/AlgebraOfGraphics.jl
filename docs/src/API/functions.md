@@ -11,7 +11,7 @@ paginate
 scales
 ```
 
-## Mapping
+## Mapping helpers
 
 ```@docs
 mapping
