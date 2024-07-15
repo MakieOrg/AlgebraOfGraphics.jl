@@ -199,7 +199,7 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
     return dict
 end
 
-function compute_axes_grid(fig, d::AbstractDrawable, scales::Scales;
+function compute_axes_grid(fig, d::AbstractDrawable, scales::Scales = scales();
                            axis=NamedTuple())
 
     axes_grid = compute_axes_grid(d, scales; axis)
@@ -230,7 +230,7 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_map
     return aes_mapping[key]
 end
 
-function compute_axes_grid(d::AbstractDrawable, scales::Scales; axis=NamedTuple())
+function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=NamedTuple())
 
     processedlayers = ProcessedLayers(d).layers
 
