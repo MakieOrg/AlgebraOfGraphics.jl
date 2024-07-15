@@ -31,13 +31,32 @@ struct AesABSlope <: Aesthetic end
 struct ScaleID
     id::Symbol
 end
+
+"""
+    scale(id::Symbol)
+
+Create a `ScaleID` object that can be used in a [`mapping`](@ref) to assign a custom id
+to the mapped variable. This variable will then not be merged into the default scale
+for its aesthetic type, but instead be handled separately, leading to a separate legend entry.
+"""
 scale(id::Symbol) = ScaleID(id)
+
 Base.broadcastable(s::ScaleID) = Ref(s)
 
 struct Scales
     dict::Dictionary{Symbol,Dictionary{Symbol,Any}}
 end
 
+"""
+    scales(; kwargs...)
+
+Create a `Scales` object containing properties for aesthetic scales that can be passed to [`draw`](@ref) and [`draw!`](@ref).
+Each keyword should be the name of a scale in the spec that is being drawn.
+That can either be a default one like `Color`, `Marker` or `LineStyle`, or a custom scale name
+defined in a [`mapping`](@ref) using the `scale` function.
+
+The values attached to the keywords must be dict-like, with `Symbol`s as keys (such as `NamedTuple`s).
+"""
 function scales(; kwargs...)
     dict = Dictionary{Symbol,Dictionary{Symbol,Any}}()
     for (kw, value) in pairs(kwargs)
