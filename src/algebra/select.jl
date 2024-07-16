@@ -42,8 +42,13 @@ function select(::Nothing, shape, selector)
         scaleid = nothing
     end
 
+    # Makie doesn't like getting zero-dimensional arrays, so if we have only scalars
+    # we make one-element vectors instead
+    non_zerodim_shape(s::Tuple{}) = (Base.OneTo(1),)
+    non_zerodim_shape(s) = s
+
     if !(vs isa AbstractArray)
-        vs = [vs for _ in CartesianIndices(shape)]
+        vs = [vs for _ in CartesianIndices(non_zerodim_shape(shape))]
     end
 
     return (vs,), (f, (label, scaleid))

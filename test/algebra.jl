@@ -55,6 +55,13 @@ end
     @test AlgebraOfGraphics.shape(layer) == ()
     processedlayer = AlgebraOfGraphics.process_mappings(layer)
     @test AlgebraOfGraphics.shape(processedlayer) == ()
+
+    layer = mapping(1, 2, color = "A")
+    @test AlgebraOfGraphics.shape(layer) == ()
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.primary[:color] == fill(["A"])
+    @test processedlayer.positional[1] == fill([1])
+    @test processedlayer.positional[2] == fill([2])
 end
 
 @testset "grouping" begin
