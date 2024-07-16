@@ -530,3 +530,21 @@ end
 reftest("qqplot") do
     data((; x = sin.(1:100), y = sin.((1:100) .+ 0.2))) * mapping(:x, :y) * visual(QQPlot, qqline = :identity) |> draw
 end
+
+reftest("arrows cat color and marker") do
+    x=repeat(1:10, inner=10)
+    y=repeat(1:10, outer=10)
+    u=cos.(x)
+    v=sin.(y)
+    c=round.(Bool, sin.(1:100) .* 0.5 .+ 0.5)
+    d=round.(Bool, cos.(1:100) .* 0.5 .+ 0.5)
+    df = (; x, y, u, v, c, d)
+    colors = [colorant"#E24A33", colorant"#348ABD"]
+    heads = ['◮', '◭']
+    plt = data(df) *
+        mapping(:x, :y, :u, :v) *
+        mapping(arrowhead = :c => nonnumeric) *
+        mapping(color = :d => nonnumeric) *
+        visual(Arrows, arrowsize=14, lengthscale=0.4, linewidth = 1)
+    fg = draw(plt, scales(Marker = (; palette = heads), Color = (; palette = colors)))
+end
