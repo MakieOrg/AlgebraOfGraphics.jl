@@ -1,6 +1,8 @@
-# AlgebraOfGraphics.jl v0.7 Release Notes
+# Release Notes
 
-## Breaking Changes
+## v0.7
+
+### Breaking Changes
 
 - The `palette` keyword of `draw` linking palettes to keyword arguments was removed. Instead, palettes need to be passed to specific scales like `draw(..., scales(Color = (; palette = :Set1_3)))`
 - All recipes need to have the new function `aesthetic_mapping` defined for all sets of positional arguments that should be supported, as can be seen in `src/aesthetics.jl`. This breaks usage of all custom recipes. Additionally, not all Makie plots have been ported to the new system yet. If you encounter missing plots, or missing attributes of already ported plots, please open an issue.
@@ -9,7 +11,7 @@
 - `Contour` and `Contourf` generally do not work anymore with `visual()`. Instead, the `contours()` and `filled_contours()` analyses should be used. `Contour` can still be used with categorical colors, but not with continuous ones.
 - All colormap properties for continuous color scales need to be passed via `scales` now, and not through `visual`. This is to have central control over the scale as it can be used by multiple `visual`s simultaneously.
 
-## New Features
+### New Features
 
 - Horizontal barplots, violins, errorbars, rangebars and other plot types that have two different orientations work correctly now. Axis labels switch accordingly when the orientation is changed.
 - Plotting functions whose positional arguments don't correspond to X, Y, Z work correctly now. For example, `HLines` (1 => Y) or `rangebars` (1 => X, 2 => Y, 3 => Y).
@@ -24,13 +26,13 @@
 - The numbers at which categorical values are plotted on x and y axis can now be changed via `scales(X = (; palette = [1, 2, 4]))` or similar.
 - Continuous marker size scales can now be shown in the legend. Numerical values are proportional to area and not diameter now, which makes more sense with respect to human perception. The min and max marker size can be set using the `sizerange` property for the respective scale in `scales`.
 
-# AlgebraOfGraphics.jl v0.6 Release Notes
+## v0.6
 
-## Breaking Changes
+### Breaking Changes
 
 - Default axis linking behavior has changed: now only axes corresponding to the same variable are linked. For consistency with `row`/`col`, `layout` will hide decorations of linked axes and span axis labels if appropriate.
 
-## New Features
+### New Features
 
 - Customizable axis linking behavior.
 - Customizable legend and colorbar position and look.
@@ -38,25 +40,25 @@
 - In v0.6.8, added `choropleth` recipe to supersede `geodata` for geographical data.
 - In v0.6.11, added `paginate` for pagination of large facet plots. 
 
-## Internal changes
+### Internal changes
 
 - In v0.6.1, replaced tuples and named tuples in `Layer` and `Entry` with dictionaries from [Dictionaries.jl](https://github.com/andyferris/Dictionaries.jl).
 - In v0.6.1, split internal `Entry` type into `ProcessedLayer` (to be used for analyses) and `Entry` (to be used for plotting).
 
-# AlgebraOfGraphics.jl v0.5 Release Notes
+## v0.5
 
-## Breaking Changes
+### Breaking Changes
 
 - `Axis(ae)` has been replaced by `ae.axis`.
 - `Legend(fg)` has been replaced by `legend!(fg)` and `colorbar!(fg)`.
 
-## New Features
+### New Features
 
 - `legend!` and `colorbar!` API allows for custom legend placement.
 
-# AlgebraOfGraphics.jl v0.4 Release Notes
+## v0.4
 
-## Breaking Changes
+### Breaking Changes
 
 - Removed deprecations for `style` and `spec` (now only `mapping` and `visual` are allowed).
 - Analyses now require parentheses (i.e. `linear()` instead of `linear`).
