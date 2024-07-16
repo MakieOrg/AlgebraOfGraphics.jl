@@ -68,10 +68,11 @@ function slice_rings(x::AbstractVector, all_rings::Vector{Vector{UnitRange{Int}}
         start = ring[1].start
         stop = ring[end].stop
         values = @view x[start:stop]
-        if !allequal(values)
+        firstval = first(values)
+        if !all(x -> isequal(x, firstval), @view(values[begin+1:end]))
             error("Encountered more than one value for long-format polygon at ring $ring: $(unique(values))")
         end
-        first(values)
+        firstval
     end
 end
 
