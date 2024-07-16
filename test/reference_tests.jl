@@ -526,3 +526,7 @@ reftest("ablines cat color linestyle") do
         mapping(:intercept, :slope, color = :group, linestyle = :group) *
         visual(ABLines) |> draw
 end
+
+reftest("qqplot") do
+    data((; x = sin.(1:100), y = sin.((1:100) .+ 0.2))) * mapping(:x, :y) * visual(QQPlot, qqline = :identity) |> draw
+end
