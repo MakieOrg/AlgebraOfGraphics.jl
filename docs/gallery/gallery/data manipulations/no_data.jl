@@ -1,5 +1,5 @@
 # ---
-# title: "`mapping` without `data`"
+# title: "Using mapping without tabular data"
 # cover: assets/no_data.png
 # description: "Passing columnar data directly to `mapping`."
 # author: "[Julius Krumbiegel](https://github.com/jkrumbiegel)"
