@@ -381,3 +381,148 @@ reftest("boxplot cat color") do
         mapping(:x, :y, color = :x) * visual(BoxPlot)
     draw(plt)
 end
+
+reftest("contour") do
+    x = repeat(range(0, 10, length = 100), 100)
+    y = repeat(range(0, 15, length = 100), inner = 100)
+    z = @. cos(x) * sin(y)
+    data((; x, y, z)) * mapping(:x, :y, :z) * visual(Contour) |> draw
+end
+
+reftest("contour cat color") do
+    x = repeat(range(0, 10, length = 100), 100)
+    y = repeat(range(0, 15, length = 100), inner = 100)
+    z = @. cos(x) * sin(y)
+    group = repeat(["A", "B"], inner = length(z) ÷ 2)
+    data((; x, y, z, group)) * mapping(:x, :y, :z, color = :group) * visual(Contour) |> draw
+end
+
+reftest("band") do
+    x = 1:10
+    lower = sin.(range(0, 2pi, length = 10))
+    upper = cos.(range(0, 2pi, length = 10)) .+ 3
+    data((; x, lower, upper)) * mapping(:x, :lower, :upper) * visual(Band) |> draw
+end
+
+reftest("band cat color") do
+    x = 1:10
+    lower = sin.(range(0, 2pi, length = 10))
+    upper = cos.(range(0, 2pi, length = 10)) .+ 3
+    group = repeat(["A", "B"], inner = 5)
+    data((; x, lower, upper, group)) * mapping(:x, :lower, :upper, color = :group) *
+        visual(Band) |> draw
+end
+
+reftest("legend merging") do
+    N = 20
+
+    x = [1:N; 1:N]
+    y = [sin.(range(0, 2pi, length = N)); cos.(range(0, 2pi, length = N)) .+ 2]
+    grp = [fill("a", N); fill("b", N)]
+
+    df = (; x, y, grp)
+
+    layers = visual(Lines) * mapping(linestyle = :grp) + visual(Scatter, markersize = 18) * mapping(marker = :grp)
+    plt = data(df) * layers * mapping(:x, :y, color = :grp)
+
+    draw(plt, legend = (; patchsize = (50, 30)))
+end
+
+reftest("legend merging breakup") do
+    N = 20
+
+    x = [1:N; 1:N]
+    y = [sin.(range(0, 2pi, length = N)); cos.(range(0, 2pi, length = N)) .+ 2]
+    grp = [fill("a", N); fill("b", N)]
+
+    df = (; x, y, grp)
+
+    layers = visual(Lines) + visual(Scatter, markersize = 18) * mapping(marker = :grp)
+    plt = data(df) * layers * mapping(:x, :y, color = :grp)
+
+    draw(plt, legend = (; order = [:Marker, :Color]))
+end
+
+reftest("legend merging manual") do
+    N = 20
+
+    x = [1:N; 1:N]
+    y = [sin.(range(0, 2pi, length = N)); cos.(range(0, 2pi, length = N)) .+ 2]
+    grp = [fill("a", N); fill("b", N)]
+
+    df = (; x, y, grp)
+
+    layers = visual(Lines) + visual(Scatter, markersize = 18) * mapping(marker = :grp)
+    plt = data(df) * layers * mapping(:x, :y, color = :grp)
+
+    draw(plt, legend = (; order = [(:Marker, :Color)]))
+end
+
+reftest("legend merging manual title override") do
+    N = 20
+
+    x = [1:N; 1:N]
+    y = [sin.(range(0, 2pi, length = N)); cos.(range(0, 2pi, length = N)) .+ 2]
+    grp = [fill("a", N); fill("b", N)]
+
+    df = (; x, y, grp)
+
+    layers = visual(Lines) + visual(Scatter, markersize = 18) * mapping(marker = :grp)
+    plt = data(df) * layers * mapping(:x, :y, color = :grp)
+
+    draw(plt, legend = (; order = [(:Marker, :Color) => "merged"]))
+end
+
+reftest("contours analysis") do
+    volcano = DelimitedFiles.readdlm(Makie.assetpath("volcano.csv"), ',', Float64)
+
+    x = repeat(range(3, 17, length = size(volcano, 1)), size(volcano, 2))
+    y = repeat(range(52, 79, length = size(volcano, 2)), inner = size(volcano, 1))
+    z = vec(volcano)
+
+    data((; x, y, z)) *
+        mapping(:x => "The X", :y, :z, row = :x => (x -> x > 10)) *
+        contours(; levels = 10) |> draw(scales(Color = (; colormap = :plasma)))
+end
+
+reftest("filled contours analysis") do
+    volcano = DelimitedFiles.readdlm(Makie.assetpath("volcano.csv"), ',', Float64)
+
+    x = repeat(range(3, 17, length = size(volcano, 1)), size(volcano, 2))
+    y = repeat(range(52, 79, length = size(volcano, 2)), inner = size(volcano, 1))
+    z = vec(volcano)
+
+    data((; x, y, z)) *
+        mapping(:x => "The X", :y, :z, row = :x => >(10)) *
+        filled_contours(; bands = 10) |> draw
+end
+
+reftest("longpoly con color") do
+    N = 5
+    _x = [1, 2, 2, 1, 1.25, 1.75, 1.75, 1.25]
+    _y = [1, 1, 2, 2, 1.25, 1.25, 1.75, 1.75]
+
+    x = collect(Iterators.flatten([_x .+ k for k in 1:N]))
+    y = collect(Iterators.flatten([_y .+ k for k in 1:N]))
+    id = repeat(1:N, inner = 8)
+    subid = repeat(repeat(1:2, inner = 4), N)
+    color = repeat(1:N, inner = 8)
+    data((; x, y, id, subid, color)) * mapping(:x, :y, :id => verbatim, :subid => verbatim,
+        color = :color) *
+        visual(AlgebraOfGraphics.LongPoly) |> draw
+end
+
+reftest("legend via direct data") do
+    data((; x = 1:10)) * mapping(:x, color = direct("A scatter")) |> draw
+end
+
+reftest("ablines") do
+    data((; intercept = 1:3, slope = [-0.2, 0.1, 0.7])) * mapping(:intercept, :slope) *
+        visual(ABLines) |> draw
+end
+
+reftest("ablines cat color linestyle") do
+    data((; intercept = 1:3, slope = [-0.2, 0.1, 0.7], group = ["A", "B", "C"])) *
+        mapping(:intercept, :slope, color = :group, linestyle = :group) *
+        visual(ABLines) |> draw
+end
