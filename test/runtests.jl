@@ -3,7 +3,8 @@ using AlgebraOfGraphics, Makie, Random, Statistics, Test, Dates
 using AlgebraOfGraphics: Sorted
 using AlgebraOfGraphics: separate
 using AlgebraOfGraphics: midpoints
-using AlgebraOfGraphics: compute_palettes, apply_palette
+using AlgebraOfGraphics: apply_palette
+using AlgebraOfGraphics: datavalues
 using AlgebraOfGraphics: categoricalscales, CategoricalScale, fitscale, datetime2float, datetimeticks
 using AlgebraOfGraphics: extrema_finite, nested_extrema_finite
 using AlgebraOfGraphics: get_layout
@@ -18,7 +19,7 @@ using AlgebraOfGraphics: Layer, Layers, ProcessedLayer, ProcessedLayers
 using Makie: automatic
 using GridLayoutBase: Protrusion
 
-using Dictionaries: Indices
+using Dictionaries: Indices, Dictionary
 
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, weights
@@ -28,6 +29,21 @@ using Loess: Loess
 import Shapefile, GeometryBasics
 
 Random.seed!(1234)
+
+# This can be removed for `@test_throws` once CI only uses Julia 1.8 and up
+macro test_throws_message(message::String, exp)
+    quote
+        threw_exception = false
+        try
+            $(esc(exp))
+        catch e
+            msg = sprint(Base.showerror, e)
+            threw_exception = true
+            @test occursin($message, msg)
+        end
+        @test threw_exception
+    end
+end
 
 include("utils.jl")
 include("visual.jl")
@@ -39,3 +55,4 @@ include("facet.jl")
 include("legend.jl")
 include("geometry.jl")
 include("paginate.jl")
+include("run_reference_tests.jl")

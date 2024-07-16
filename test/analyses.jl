@@ -119,7 +119,7 @@ end
 
     @test processedlayer.primary == NamedArguments((layout=["a", "b"],))
     @test isempty(processedlayer.named)
-    @test processedlayer.attributes == NamedArguments()
+    @test processedlayer.attributes == NamedArguments((direction = :y,))
     @test processedlayer.plottype == BarPlot
 
     labels = MixedArguments()
@@ -194,7 +194,7 @@ end
 
     @test processedlayer.primary == NamedArguments((layout=["a", "b"],))
     @test isempty(processedlayer.named)
-    @test processedlayer.attributes == NamedArguments()
+    @test processedlayer.attributes == NamedArguments((; direction = :y))
     @test processedlayer.plottype == BarPlot
 
     labels = MixedArguments()
@@ -302,7 +302,7 @@ end
     @test width[2] ≈ diff(bins2)
 
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
-    @test processedlayer.attributes == NamedArguments((gap=0, dodge_gap=0))
+    @test processedlayer.attributes == NamedArguments((direction = :y, gap=0, dodge_gap=0))
     @test keys(processedlayer.named) == Indices([:width])
     @test processedlayer.plottype == AlgebraOfGraphics.BarPlot
 
@@ -345,7 +345,7 @@ end
 
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
     @test keys(processedlayer.named) == Indices([:width])
-    @test processedlayer.attributes == NamedArguments((gap=0, dodge_gap=0))
+    @test processedlayer.attributes == NamedArguments((direction = :y, gap=0, dodge_gap=0))
     @test processedlayer.plottype == AlgebraOfGraphics.BarPlot
 
     labels = MixedArguments()

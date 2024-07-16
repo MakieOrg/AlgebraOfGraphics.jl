@@ -8,15 +8,19 @@ draw!
 colorbar!
 legend!
 paginate
+scales
 ```
 
 ## Mapping helpers
 
 ```@docs
+pregrouped
+direct
 renamer
 sorter
 nonnumeric
 verbatim
+scale
 ```
 
 ## Theming

@@ -128,3 +128,38 @@ y = sin.(x) .+ a .+ 0.1 .* randn.()
 df = (; x, y, a)
 specs = data(df) * mapping(:x, :y, color=:a => nonnumeric) * (smooth() + visual(Scatter))
 draw(specs)
+
+# ## Contours
+#
+# ```@docs
+# contours
+# ```
+
+x = repeat(1:10, 10)
+y = repeat(11:20, inner = 10)
+z = sqrt.(x .* y)
+df = (; x, y, z)
+specs = data(df) * mapping(:x, :y, :z) * contours(levels = 8)
+draw(specs)
+
+#
+
+x = repeat(1:10, 10)
+y = repeat(11:20, inner = 10)
+z = sqrt.(x .* y)
+df = (; x, y, z)
+specs = data(df) * mapping(:x, :y, :z) * contours(levels = 8, labels = true)
+draw(specs)
+
+# ## Filled Contours
+#
+# ```@docs
+# filled_contours
+# ```
+
+x = repeat(1:10, 10)
+y = repeat(11:20, inner = 10)
+z = sqrt.(x .* y)
+df = (; x, y, z)
+specs = data(df) * mapping(:x, :y, :z) * filled_contours(levels = 3:2:15)
+draw(specs)
