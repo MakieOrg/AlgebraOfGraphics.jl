@@ -63,7 +63,7 @@ function select(data, x::Pair{<:Any, <:Union{Symbol, AbstractString}})
 end
 
 function select(data::Columns, direct::DirectData{T}) where T
-    arr = if T <: AbstractArray{1}
+    arr = if T <: AbstractArray{X, 1} where X
         direct.data
     elseif T <: AbstractArray
         throw(ArgumentError("It's currently not allowed to use arrays that are not one-dimensional (column vectors) as direct data."))
