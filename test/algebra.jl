@@ -132,3 +132,16 @@ end
     @test processedlayers[6].positional[2] == df.z[df.c .== "c"]
     @test processedlayers[6].named[:markersize] == df.w[df.c .== "c"]
 end
+
+@testset "printing" begin
+    spec = data((; x = 1:10, y = 11:20)) * mapping(:x, :y, color = :y) * visual(BarPlot) + mapping(:x) * visual(HLines)
+    # testing printing exactly is finicky across Julia versions, just make sure it's not completely broken
+    printout = @test_nowarn repr(spec)
+    @test occursin("Layers with 2 elements", printout)
+    @test occursin("Layer 1", printout)
+    @test occursin("Layer 2", printout)
+    @test occursin("transformation:", printout)
+    @test occursin("data:", printout)
+    @test occursin("positional:", printout)
+    @test occursin("named:", printout)
+end
