@@ -75,7 +75,7 @@ function paginate_layer(layer::ProcessedLayer; layout=nothing, row=nothing, col=
         paginate_layer(layer, row_data => row, col_data => col)
     elseif valid(row_data, row)
         paginate_layer(layer, row_data => row)
-    elseif valid(col, col)
+    elseif valid(col_data, col)
         paginate_layer(layer, col_data => col)
     else
         [layer]
