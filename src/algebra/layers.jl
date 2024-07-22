@@ -454,3 +454,12 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
     
     Entry(P, positional, merge(p.named, p.primary, p.attributes, color_attributes))
 end
+
+function Base.show(io::IO, layers::Layers; indent = 0)
+    ind = "  " ^ indent
+    printstyled(io, ind, "Layers", bold = true)
+    println(io, ind, " with $(length(layers.layers)) elements:")
+    for (i, layer) in enumerate(layers)
+        show(io, layer; indent = indent + 1, index = i)
+    end
+end

@@ -512,3 +512,19 @@ function compute_attributes(pl::ProcessedLayer,
     # remove unnecessary information
     return filterkeys(!in((:col, :row, :layout, :alpha, :group)), attrs)
 end
+
+function Base.show(_io::IO, l::Layer; indent = 0, index = nothing)
+    io = IOContext(_io, :limit => true)
+    ind = "  " ^ indent
+    printstyled(io, ind, "Layer ", index === nothing ? "" : index, "\n", bold = true)
+    println(io, ind, "  transformation: ", l.transformation)
+    println(io, ind, "  data: ", typeof(l.data)) # print only type here as data source could be anything and print a lot of stuff
+    println(io, ind, "  positional:")
+    for (i, pos) in enumerate(l.positional)
+        println(io, ind, "    ", i, ": ", pos)
+    end
+    println(io, ind, "  named:")
+    for (name, named) in pairs(l.named)
+        println(io, ind, "    ", name, ": ", named)
+    end
+end
