@@ -458,7 +458,7 @@ end
 function Base.show(io::IO, layers::Layers; indent = 0)
     ind = "  " ^ indent
     printstyled(io, ind, "Layers", bold = true)
-    println(io, ind, " with $(length(layers.layers)) elements:")
+    println(io, " with $(length(layers.layers)) elements:")
     for (i, layer) in enumerate(layers)
         show(io, layer; indent = indent + 1, index = i)
     end
