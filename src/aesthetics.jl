@@ -18,7 +18,7 @@ function positional_scientific_types(p::ProcessedLayer)::Vector{ScientificType}
     map(p.positional) do pos
         # TODO: what about cases where the elements are actually vectors? Somehow this must be determined better
         if pos isa AbstractArray{<:AbstractArray}
-            return only(unique(map(scientific_eltype, pos)))
+            return scientific_type(eltype(eltype(pos)))
         else
             return scientific_eltype(pos)
         end
