@@ -27,6 +27,7 @@ import FileIO
 import RelocatableFolders
 import PolygonOps
 import Isoband
+import NaturalSort
 
 export hideinnerdecorations!, deleteemptyaxes!
 export Layer, Layers, ProcessedLayer, ProcessedLayers

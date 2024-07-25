@@ -188,7 +188,11 @@ end
 
 ## Get scales from a `ProcessedLayer`
 
-uniquevalues(v::AbstractArray) = collect(uniquesorted(vec(v)))
+function uniquevalues(v::AbstractArray)
+    _v = vec(v)
+    perm = sortperm(_v; lt = natural_lt)
+    collect(uniquesorted(_v, perm))
+end
 
 to_label(label::AbstractString) = label
 to_label(labels::AbstractArray) = reduce(mergelabels, labels)
