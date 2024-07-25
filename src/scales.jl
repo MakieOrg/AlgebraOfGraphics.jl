@@ -434,12 +434,14 @@ const Normal = Union{Categorical,Continuous}
 Determine whether `T` represents a continuous, geometrical, or categorical variable.
 """
 function scientific_type(::Type{T}) where T
-    T <: Bool && return categorical
-    T <: Union{Number, TimeType} && return continuous
-    T <: Verbatim && return geometrical
-    T <: Union{Makie.StaticVector, Point, AbstractGeometry} && return geometrical
-    T <: AbstractArray && eltype(T) <: Union{Point, AbstractGeometry} && return geometrical
-    isgeometry(T) && return geometrical
+    T === Missing && return categorical
+    NT = nonmissingtype(T)
+    NT <: Bool && return categorical
+    NT <: Union{Number, TimeType} && return continuous
+    NT <: Verbatim && return geometrical
+    NT <: Union{Makie.StaticVector, Point, AbstractGeometry} && return geometrical
+    NT <: AbstractArray && eltype(NT) <: Union{Point, AbstractGeometry} && return geometrical
+    isgeometry(NT) && return geometrical
     return categorical
 end
 
