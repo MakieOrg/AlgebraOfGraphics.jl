@@ -1,5 +1,12 @@
 # Release Notes
 
+## v0.8
+
+### Breaking Changes
+
+- Columns with element types of `Union{Missing,T}` are not treated as categorical by default anymore, instead `T` decides if data is seen as categorical, continuous or geometrical. If you relied on numerical vectors with `missing`s being treated as categorical, you can use `:columnname => nonnumeric` in the `mapping` instead.
+- `AbstractString` categories are now sorted with natural sort order by default. This means that where you got `["1", "10", "2"]` before, you now get `["1", "2", "10"]`. You can use `sorter`, the `categories` keyword or categorical arrays to sort your data differently if needed.
+
 ## v0.7
 
 ### Breaking Changes
