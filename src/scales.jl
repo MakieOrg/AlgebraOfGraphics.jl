@@ -468,7 +468,7 @@ nested_extrema_finite(iter) = mapreduce(extrema_finite, extend_extrema, iter)
 
 push_different!(v, val) = !isempty(v) && isequal(last(v), val) || push!(v, val)
 
-natural_lt(x, y) = lt(x, y)
+natural_lt(x, y) = isless(x, y)
 natural_lt(x::AbstractString, y::AbstractString) = NaturalSort.natural(x, y)
 
 function mergesorted(v1, v2)
