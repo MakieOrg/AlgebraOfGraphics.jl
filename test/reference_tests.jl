@@ -548,3 +548,26 @@ reftest("arrows cat color and marker") do
         visual(Arrows, arrowsize=14, lengthscale=0.4, linewidth = 1)
     fg = draw(plt, scales(Marker = (; palette = heads), Color = (; palette = colors)))
 end
+
+reftest("continuous missings", true) do
+    df = (; x = [1, 2, 3, 4, 5, 6], y = [1, 2, missing, 3, 1, 2], z = [1.0, 2.0, 3.0, 4.0, 5.0, missing])
+    dm = data(df) * mapping(:x, :y)
+    f = Figure()
+    draw!(f[1, 1], dm * mapping(color = :z))
+    draw!(f[1, 2], dm * visual(Lines))
+    df2 = (; x = [1, 2, 3, 1, 2, 3], y = [1, 1, 1, 2, 2, 2], z = [1, 2, 3, 4, 5, missing])
+    draw!(f[2, 1], data(df2) * mapping(:x, :y, :z) * visual(Heatmap))
+    f
+end
+
+reftest("categorical missings", true) do
+    df = (; x = [1, 2, 3, 4, 5, 6], y = ["A", "B", missing, "C", "A", "B"], z = ["A", "B", "C", "D", "E", missing])
+    dm = data(df) * mapping(:x, :y)
+    f = Figure()
+    draw!(f[1, 1], dm * mapping(color = :z))
+    draw!(f[1, 2], dm * visual(Lines))
+    df2 = (; x = [1, 2, 3, 1, 2, 3], y = [1, 1, 1, 2, 2, 2], z = ["A", "B", "C", "D", "E", missing])
+    fg = draw!(f[2, 1], data(df2) * mapping(:x, :y, :z) * visual(Heatmap))
+    legend!(f[2, 2], fg, tellwidth = false)
+    f
+end
