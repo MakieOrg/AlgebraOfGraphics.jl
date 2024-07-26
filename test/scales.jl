@@ -177,3 +177,15 @@ end
     f = Figure()
     @test_throws_message "The `palette` keyword for `draw` and `draw!` has been removed" draw!(f[1, 1], spec; palette = (; color = [:red, :green, :blue]))
 end
+
+@testset "Natural sorting" begin
+    l = mapping(["Id 100", "Id 1", "Id 10", "Id 21", "Id 2"])
+
+    pl = ProcessedLayer(l)
+    aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
+    scales = map(fitscale, categoricalscales(pl, Dictionary{Type{<:AlgebraOfGraphics.Aesthetic},Any}(), aesmapping))
+    @test keys(scales) == Indices([1])
+    scale = scales[1]
+    @test scale isa CategoricalScale
+    @test scale.data == ["Id 1", "Id 2", "Id 10", "Id 21", "Id 100"]
+end

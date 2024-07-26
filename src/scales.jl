@@ -470,8 +470,11 @@ nested_extrema_finite(iter) = mapreduce(extrema_finite, extend_extrema, iter)
 
 push_different!(v, val) = !isempty(v) && isequal(last(v), val) || push!(v, val)
 
+natural_lt(x, y) = isless(x, y)
+natural_lt(x::AbstractString, y::AbstractString) = NaturalSort.natural(x, y)
+
 function mergesorted(v1, v2)
-    issorted(v1) && issorted(v2) || throw(ArgumentError("Arguments must be sorted"))
+    issorted(v1; lt = natural_lt) && issorted(v2; lt = natural_lt) || throw(ArgumentError("Arguments must be sorted"))
     T = promote_type(eltype(v1), eltype(v2))
     v = sizehint!(T[], length(v1) + length(v2))
     i1, i2 = 1, 1
