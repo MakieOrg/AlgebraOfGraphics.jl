@@ -7,7 +7,7 @@
 mandatory_attributes(T) = NamedArguments()
 mandatory_attributes(::Type{<:Union{BarPlot,Rangebars,Errorbars,Hist}}) = dictionary([:direction => :y])
 mandatory_attributes(::Type{Density}) = dictionary([:direction => :x])
-mandatory_attributes(::Type{<:Union{Violin,RainClouds,BoxPlot}}) = dictionary([:orientation => :vertical])
+mandatory_attributes(::Type{<:Union{Violin,RainClouds,BoxPlot,CrossBar}}) = dictionary([:orientation => :vertical])
 
 # this function needs to be defined for any plot type that should work with AoG, because it tells
 # AoG how its positional arguments can be understood in terms of the dimensions of the plot for
@@ -281,6 +281,29 @@ function aesthetic_mapping(::Type{BoxPlot}, ::Normal, ::Normal)
             :vertical => AesX,
         ]),
         2 => :orientation => dictionary([
+            :horizontal => AesX,
+            :vertical => AesY,
+        ]),
+        :color => AesColor,
+        :dodge => AesDodge,
+    ])
+end
+
+function aesthetic_mapping(::Type{CrossBar}, ::Normal, ::Normal, ::Normal, ::Normal)
+    dictionary([
+        1 => :orientation => dictionary([
+            :horizontal => AesY,
+            :vertical => AesX,
+        ]),
+        2 => :orientation => dictionary([
+            :horizontal => AesX,
+            :vertical => AesY,
+        ]),
+        3 => :orientation => dictionary([
+            :horizontal => AesX,
+            :vertical => AesY,
+        ]),
+        4 => :orientation => dictionary([
             :horizontal => AesX,
             :vertical => AesY,
         ]),

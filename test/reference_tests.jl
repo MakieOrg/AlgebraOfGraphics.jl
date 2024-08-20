@@ -632,3 +632,46 @@ reftest("hist direction x") do
     legend!(f[2, 2], fg, orientation = :horizontal)
     f
 end
+
+reftest("crossbar") do
+    x = 1:5
+    y = 6:10
+    ylow = 5:9
+    yhigh = 6.5:10.5
+    group = ["A", "A", "A", "B", "B"]
+    df = (; x, y, ylow, yhigh, group)
+    spec1 = data(df) * mapping(:x, :y, :ylow, :yhigh) * visual(CrossBar)
+    spec2 = data(df) * mapping(:x, :y, :ylow, :yhigh, color = :group) * visual(CrossBar, strokecolor = :black, strokewidth = 1)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[2, 1], spec2)
+    legend!(f[2, 2], fg)
+    f
+end
+
+reftest("crossbar dodge") do
+    x = [1, 2, 3, 1, 2, 3]
+    y = 1:6
+    ylow = 0:5
+    yhigh = 2:7
+    dodge = [1, 1, 1, 2, 2, 2]
+    df = (; x, y, ylow, yhigh, dodge)
+    spec = data(df) * mapping(:x, :y, :ylow, :yhigh, dodge = :dodge => nonnumeric) * visual(CrossBar)
+    draw(spec)
+end
+
+reftest("crossbar orientation horizontal") do
+    x = 1:5
+    y = 6:10
+    ylow = 5:9
+    yhigh = 6.5:10.5
+    group = ["A", "A", "A", "B", "B"]
+    df = (; x, y, ylow, yhigh, group)
+    spec1 = data(df) * mapping(:x, :y, :ylow, :yhigh) * visual(CrossBar, orientation = :horizontal)
+    spec2 = data(df) * mapping(:x, :y, :ylow, :yhigh, color = :group) * visual(CrossBar, orientation = :horizontal, strokecolor = :black, strokewidth = 1)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[2, 1], spec2)
+    legend!(f[2, 2], fg)
+    f
+end
