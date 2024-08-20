@@ -398,3 +398,11 @@ function aesthetic_mapping(::Type{Density}, ::Normal)
         :color => AesColor,
     ])
 end
+
+function aesthetic_mapping(::Type{ECDFPlot}, ::Normal)
+    dictionary([
+        1 => AesX,
+        :color => AesColor,
+        :linestyle => AesLineStyle,
+    ])
+end
