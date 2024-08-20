@@ -6,6 +6,7 @@
 # be the same value that the plot type also sets in its default theme.
 mandatory_attributes(T) = NamedArguments()
 mandatory_attributes(::Type{<:Union{BarPlot,Rangebars,Errorbars}}) = dictionary([:direction => :y])
+mandatory_attributes(::Type{Density}) = dictionary([:direction => :x])
 mandatory_attributes(::Type{<:Union{Violin,RainClouds,BoxPlot}}) = dictionary([:orientation => :vertical])
 
 # this function needs to be defined for any plot type that should work with AoG, because it tells
@@ -385,5 +386,15 @@ function aesthetic_mapping(::Type{ABLines}, ::Normal, ::Normal)
         2 => AesABSlope,
         :color => AesColor,
         :linestyle => AesLineStyle,
+    ])
+end
+
+function aesthetic_mapping(::Type{Density}, ::Normal)
+    dictionary([
+        1 => :direction => dictionary([
+            :x => AesX,
+            :y => AesY,
+        ]),
+        :color => AesColor,
     ])
 end
