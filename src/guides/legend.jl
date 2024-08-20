@@ -315,7 +315,7 @@ function legend_elements(T::Type{ScatterLines}, attributes, scale_args::MixedArg
     ]
 end
 
-function legend_elements(T::Union{Type{BarPlot},Type{Violin},Type{BoxPlot},Type{Choropleth},Type{Poly},Type{LongPoly}}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Type{<:Union{BarPlot,Violin,BoxPlot,Choropleth,Poly,LongPoly,Density,Hist,CrossBar}}, attributes, scale_args::MixedArguments)
     [PolyElement(
         color = _get(T, scale_args, attributes, :color),
         polystrokecolor = _get(T, scale_args, attributes, :strokecolor),
@@ -335,7 +335,7 @@ function legend_elements(T::Type{Heatmap}, attributes, scale_args::MixedArgument
     )]
 end
 
-function legend_elements(T::Type{<:Union{HLines,VLines,Lines,LineSegments,Errorbars,Rangebars,Wireframe,ABLines}}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Type{<:Union{HLines,VLines,Lines,LineSegments,Errorbars,Rangebars,Wireframe,ABLines,ECDFPlot}}, attributes, scale_args::MixedArguments)
 
     is_vertical = T === VLines || (T <: Union{Errorbars,Rangebars} && _get(T, scale_args, attributes, :direction) === :y)
     # TODO: seems errorbars and rangebars are missing linestyle in Makie, once this is fixed, remove this

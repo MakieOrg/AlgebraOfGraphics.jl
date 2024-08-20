@@ -5,8 +5,9 @@
 # which are required to some known value, unless overridden by the user. Usually, that should
 # be the same value that the plot type also sets in its default theme.
 mandatory_attributes(T) = NamedArguments()
-mandatory_attributes(::Type{<:Union{BarPlot,Rangebars,Errorbars}}) = dictionary([:direction => :y])
-mandatory_attributes(::Type{<:Union{Violin,RainClouds,BoxPlot}}) = dictionary([:orientation => :vertical])
+mandatory_attributes(::Type{<:Union{BarPlot,Rangebars,Errorbars,Hist}}) = dictionary([:direction => :y])
+mandatory_attributes(::Type{Density}) = dictionary([:direction => :x])
+mandatory_attributes(::Type{<:Union{Violin,RainClouds,BoxPlot,CrossBar}}) = dictionary([:orientation => :vertical])
 
 # this function needs to be defined for any plot type that should work with AoG, because it tells
 # AoG how its positional arguments can be understood in terms of the dimensions of the plot for
@@ -288,6 +289,29 @@ function aesthetic_mapping(::Type{BoxPlot}, ::Normal, ::Normal)
     ])
 end
 
+function aesthetic_mapping(::Type{CrossBar}, ::Normal, ::Normal, ::Normal, ::Normal)
+    dictionary([
+        1 => :orientation => dictionary([
+            :horizontal => AesY,
+            :vertical => AesX,
+        ]),
+        2 => :orientation => dictionary([
+            :horizontal => AesX,
+            :vertical => AesY,
+        ]),
+        3 => :orientation => dictionary([
+            :horizontal => AesX,
+            :vertical => AesY,
+        ]),
+        4 => :orientation => dictionary([
+            :horizontal => AesX,
+            :vertical => AesY,
+        ]),
+        :color => AesColor,
+        :dodge => AesDodge,
+    ])
+end
+
 function aesthetic_mapping(::Type{Contour}, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
@@ -385,5 +409,34 @@ function aesthetic_mapping(::Type{ABLines}, ::Normal, ::Normal)
         2 => AesABSlope,
         :color => AesColor,
         :linestyle => AesLineStyle,
+    ])
+end
+
+function aesthetic_mapping(::Type{Density}, ::Normal)
+    dictionary([
+        1 => :direction => dictionary([
+            :x => AesX,
+            :y => AesY,
+        ]),
+        :color => AesColor,
+    ])
+end
+
+function aesthetic_mapping(::Type{ECDFPlot}, ::Normal)
+    dictionary([
+        1 => AesX,
+        :color => AesColor,
+        :linestyle => AesLineStyle,
+    ])
+end
+
+function aesthetic_mapping(::Type{Hist}, ::Normal)
+    dictionary([
+        1 => :direction => dictionary([
+            :y => AesX,
+            :x => AesY,
+        ]),
+        :color => AesColor,
+        :strokecolor => AesColor,
     ])
 end

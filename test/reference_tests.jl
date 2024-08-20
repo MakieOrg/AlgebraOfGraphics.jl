@@ -549,7 +549,7 @@ reftest("arrows cat color and marker") do
     fg = draw(plt, scales(Marker = (; palette = heads), Color = (; palette = colors)))
 end
 
-reftest("continuous missings", true) do
+reftest("continuous missings") do
     df = (; x = [1, 2, 3, 4, 5, 6], y = [1, 2, missing, 3, 1, 2], z = [1.0, 2.0, 3.0, 4.0, 5.0, missing])
     dm = data(df) * mapping(:x, :y)
     f = Figure()
@@ -560,7 +560,7 @@ reftest("continuous missings", true) do
     f
 end
 
-reftest("categorical missings", true) do
+reftest("categorical missings") do
     df = (; x = [1, 2, 3, 4, 5, 6], y = ["A", "B", missing, "C", "A", "B"], z = ["A", "B", "C", "D", "E", missing])
     dm = data(df) * mapping(:x, :y)
     f = Figure()
@@ -569,5 +569,109 @@ reftest("categorical missings", true) do
     df2 = (; x = [1, 2, 3, 1, 2, 3], y = [1, 1, 1, 2, 2, 2], z = ["A", "B", "C", "D", "E", missing])
     fg = draw!(f[2, 1], data(df2) * mapping(:x, :y, :z) * visual(Heatmap))
     legend!(f[2, 2], fg, tellwidth = false)
+    f
+end
+
+reftest("makie density") do
+    x = sin.(1:100) .+ repeat([1, 2], inner = 50)
+    group = repeat(["A", "B"], inner = 50)
+    spec1 = data((; x, group)) * mapping(:x) * visual(Density)
+    spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(Density, strokewidth = 1, strokecolor = :black)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[2, 1], spec2)
+    legend!(f[2, 2], fg)
+    f
+end
+
+reftest("makie density direction y") do
+    x = sin.(1:100) .+ repeat([1, 2], inner = 50)
+    group = repeat(["A", "B"], inner = 50)
+    spec1 = data((; x, group)) * mapping(:x) * visual(Density, direction = :y)
+    spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(Density, direction = :y, strokewidth = 1, strokecolor = :black)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[2, 1], spec2)
+    legend!(f[2, 2], fg)
+    f
+end
+
+reftest("ecdfplot") do
+    x = (1:100) .+ sin.(1:100)
+    group = repeat(["A", "B"], inner = 50)
+    spec1 = data((; x)) * mapping(:x) * visual(ECDFPlot)
+    # attributes for ecdfplot currently don't work in Makie, add back to test when they do
+    # spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(ECDFPlot)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    # fg = draw!(f[2, 1], spec2)
+    # legend!(f[2, 2], fg)
+    f
+end
+
+reftest("hist") do
+    x = cos.(range(0, pi/2, length = 100))
+    group = repeat(["A", "B"], inner = 50)
+    spec1 = data((; x)) * mapping(:x) * visual(Hist)
+    spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(Hist, strokecolor = :black, strokewidth = 1)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[2, 1], spec2)
+    legend!(f[2, 2], fg)
+    f
+end
+
+reftest("hist direction x") do
+    x = cos.(range(0, pi/2, length = 100))
+    group = repeat(["A", "B"], inner = 50)
+    spec1 = data((; x)) * mapping(:x) * visual(Hist, direction = :x)
+    spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(Hist, direction = :x, strokecolor = :black, strokewidth = 1)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[1, 2], spec2)
+    legend!(f[2, 2], fg, orientation = :horizontal)
+    f
+end
+
+reftest("crossbar") do
+    x = 1:5
+    y = 6:10
+    ylow = 5:9
+    yhigh = 6.5:10.5
+    group = ["A", "A", "A", "B", "B"]
+    df = (; x, y, ylow, yhigh, group)
+    spec1 = data(df) * mapping(:x, :y, :ylow, :yhigh) * visual(CrossBar)
+    spec2 = data(df) * mapping(:x, :y, :ylow, :yhigh, color = :group) * visual(CrossBar, strokecolor = :black, strokewidth = 1)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[2, 1], spec2)
+    legend!(f[2, 2], fg)
+    f
+end
+
+reftest("crossbar dodge") do
+    x = [1, 2, 3, 1, 2, 3]
+    y = 1:6
+    ylow = 0:5
+    yhigh = 2:7
+    dodge = [1, 1, 1, 2, 2, 2]
+    df = (; x, y, ylow, yhigh, dodge)
+    spec = data(df) * mapping(:x, :y, :ylow, :yhigh, dodge = :dodge => nonnumeric) * visual(CrossBar)
+    draw(spec)
+end
+
+reftest("crossbar orientation horizontal") do
+    x = 1:5
+    y = 6:10
+    ylow = 5:9
+    yhigh = 6.5:10.5
+    group = ["A", "A", "A", "B", "B"]
+    df = (; x, y, ylow, yhigh, group)
+    spec1 = data(df) * mapping(:x, :y, :ylow, :yhigh) * visual(CrossBar, orientation = :horizontal)
+    spec2 = data(df) * mapping(:x, :y, :ylow, :yhigh, color = :group) * visual(CrossBar, orientation = :horizontal, strokecolor = :black, strokewidth = 1)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[2, 1], spec2)
+    legend!(f[2, 2], fg)
     f
 end
