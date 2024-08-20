@@ -608,3 +608,27 @@ reftest("ecdfplot") do
     # legend!(f[2, 2], fg)
     f
 end
+
+reftest("hist") do
+    x = cos.(range(0, pi/2, length = 100))
+    group = repeat(["A", "B"], inner = 50)
+    spec1 = data((; x)) * mapping(:x) * visual(Hist)
+    spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(Hist, strokecolor = :black, strokewidth = 1)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[2, 1], spec2)
+    legend!(f[2, 2], fg)
+    f
+end
+
+reftest("hist direction x") do
+    x = cos.(range(0, pi/2, length = 100))
+    group = repeat(["A", "B"], inner = 50)
+    spec1 = data((; x)) * mapping(:x) * visual(Hist, direction = :x)
+    spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(Hist, direction = :x, strokecolor = :black, strokewidth = 1)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[1, 2], spec2)
+    legend!(f[2, 2], fg, orientation = :horizontal)
+    f
+end
