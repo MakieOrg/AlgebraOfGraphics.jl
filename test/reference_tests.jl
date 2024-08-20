@@ -583,3 +583,15 @@ reftest("makie density") do
     legend!(f[2, 2], fg)
     f
 end
+
+reftest("makie density direction y") do
+    x = sin.(1:100) .+ repeat([1, 2], inner = 50)
+    group = repeat(["A", "B"], inner = 50)
+    spec1 = data((; x, group)) * mapping(:x) * visual(Density, direction = :y)
+    spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(Density, direction = :y, strokewidth = 1, strokecolor = :black)
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    fg = draw!(f[2, 1], spec2)
+    legend!(f[2, 2], fg)
+    f
+end
