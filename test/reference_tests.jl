@@ -681,3 +681,10 @@ reftest("crossbar orientation horizontal") do
     legend!(f[2, 2], fg)
     f
 end
+
+reftest("renamer latexstring rich text") do
+    df = (; x = ["a", "b"], y = 1:2)
+    rnm = renamer("a" => L"\sum{x + y}", "b" => Makie.rich("Red text", color = :red))
+    spec = data(df) * mapping(:x => rnm, :y, color = :x => rnm) * visual(Scatter)
+    draw(spec)
+end

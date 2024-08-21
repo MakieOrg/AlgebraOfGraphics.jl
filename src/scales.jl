@@ -224,9 +224,15 @@ function datavalues(c::CategoricalScale)
     end
 end
 plotvalues(c::CategoricalScale) = c.plot
+
+to_datalabel(x::AbstractString) = x
+to_datalabel(x::Makie.RichText) = x
+to_datalabel(x) = string(x)
+to_datalabel(s::Sorted) = to_datalabel(s.value)
+
 function datalabels(c::CategoricalScale)
     if c.props.categories === nothing
-        string.(datavalues(c))
+        to_datalabel.(datavalues(c))
     elseif c.props.categories isa Function
         map(category_label, c.props.categories(c.data))
     else
