@@ -420,6 +420,8 @@ function mergeable(processedlayer::ProcessedLayer)
     plottype <: Union{BarPlot,CrossBar} && (haskey(primary, :stack) || haskey(primary, :dodge)) && return true
     # merge waterfall plots
     plottype <: Waterfall && return true
+    # merge dodged boxplots
+    plottype <: BoxPlot && haskey(primary, :dodge) && return true
     # do not merge by default
     return false
 end

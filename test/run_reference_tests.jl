@@ -45,38 +45,41 @@ function reftest(f::Function, name::String, update::Bool = get(ENV, "UPDATE_REFI
     
     save(recpath, fig)
 
-    if isfile(refpath)
-        ref = Makie.FileIO.load(refpath)
-        rec = Makie.FileIO.load(recpath)
-        maxscore, tile = compare_images(ref, rec)
-        if !update
-            @testset "$name" begin
-                @test size(ref) == size(rec)
-                @test maxscore <= threshold
+    @testset "$name" begin
+        ref_exists = isfile(refpath)
+        @test ref_exists
+
+        if ref_exists
+            ref = Makie.FileIO.load(refpath)
+            rec = Makie.FileIO.load(recpath)
+            maxscore, tile = compare_images(ref, rec)
+            if !update
+                    @test size(ref) == size(rec)
+                    @test maxscore <= threshold
             end
-        end
-        if maxscore > threshold && maxscore != Inf
-            @info "\"$name\" score $maxscore at $(tile)"
-            maxsize = (200, 200) # in github actions you can always maximize your screen later but a tiny view doesn't help
-            @info "Reference"
-            ImageInTerminal.imshow(ref, maxsize)
-            println()
-            @info "Recording"
-            ImageInTerminal.imshow(rec, maxsize)
-            println()
-        end
-        if maxscore > threshold
-            if update
-                rm(refpath)
-                cp(recpath, refpath)
-                @info "Updated reference image \"$name\""
-            else
-                @info "Set ENV[\"UPDATE_REFIMAGES\"] = true to update or pass `true` to a specific `reftest function`"
+            if maxscore > threshold && maxscore != Inf
+                @info "\"$name\" score $maxscore at $(tile)"
+                maxsize = (200, 200) # in github actions you can always maximize your screen later but a tiny view doesn't help
+                @info "Reference"
+                ImageInTerminal.imshow(ref, maxsize)
+                println()
+                @info "Recording"
+                ImageInTerminal.imshow(rec, maxsize)
+                println()
             end
+            if maxscore > threshold
+                if update
+                    rm(refpath)
+                    cp(recpath, refpath)
+                    @info "Updated reference image \"$name\""
+                else
+                    @info "Set ENV[\"UPDATE_REFIMAGES\"] = true to update or pass `true` to a specific `reftest function`"
+                end
+            end
+        else
+            cp(recpath, refpath)
+            @info "New reference image \"$name\""
         end
-    else
-        cp(recpath, refpath)
-        @info "New reference image \"$name\""
     end
     return fig # so running a block interactively shows the image
 end
