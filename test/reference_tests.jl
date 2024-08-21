@@ -382,6 +382,13 @@ reftest("boxplot cat color") do
     draw(plt)
 end
 
+reftest("boxplot dodge", true) do
+    df = (x=repeat(["a", "b", "c"], inner = 20), x2 = repeat(["x", "y"], 30), y=1:60)
+    plt = data(df) *
+        mapping(:x, :y, color = :x2, dodge = :x2) * visual(BoxPlot)
+    draw(plt)
+end
+
 reftest("contour") do
     x = repeat(range(0, 10, length = 100), 100)
     y = repeat(range(0, 15, length = 100), inner = 100)
