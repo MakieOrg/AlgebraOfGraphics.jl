@@ -39,8 +39,7 @@ reftest("barplot row layout") do
     data((; x = ["A", "B", "C"], y = 1:3, z = ["X", "Y", "Z"])) * mapping(:x, :y; row = :z) * visual(BarPlot) |> draw
 end
 
-for plottype in [Lines, Scatter]
-    name = lowercase(string(plottype))
+for (plottype, name) in zip([Lines, Scatter], ["lines", "scatter"])
     reftest("$name") do
         data((; x = [1, 3, 2, 4], y = ["A", "B", "C", "D"])) * mapping(:x, :y) * visual(plottype) |> draw
     end
@@ -382,7 +381,7 @@ reftest("boxplot cat color") do
     draw(plt)
 end
 
-reftest("boxplot dodge", true) do
+reftest("boxplot dodge") do
     df = (x=repeat(["a", "b", "c"], inner = 20), x2 = repeat(["x", "y"], 30), y=1:60)
     plt = data(df) *
         mapping(:x, :y, color = :x2, dodge = :x2) * visual(BoxPlot)
