@@ -18,7 +18,7 @@ Create a [`Layer`](@ref) that will cause a plot spec multiplied with it to be vi
 plot type `plottype`, together with optional `attributes`.
 
 The available plotting functions are documented
-[here](http://makie.juliaplots.org/dev/examples/plotting_functions/). Refer to
+[here](https://docs.makie.org/stable/reference/plots/overview). Refer to
 plotting functions using upper CamelCase for `visual`'s first argument (e.g.
 `visual(Scatter), visual(BarPlot)`). See the documentation of each plotting
 function to discover the available attributes. These attributes can be passed
