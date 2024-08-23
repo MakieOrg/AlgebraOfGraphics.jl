@@ -113,12 +113,12 @@ end
 function aesthetic_mapping(::Type{Violin}, ::Normal, ::Normal)
     dictionary([
         1 => :orientation => dictionary([
-            :horizontal => AesX,
-            :vertical => AesY,
-        ]),
-        2 => :orientation => dictionary([
             :horizontal => AesY,
             :vertical => AesX,
+        ]),
+        2 => :orientation => dictionary([
+            :horizontal => AesX,
+            :vertical => AesY,
         ]),
         :color => AesColor,
         :side => AesViolinSide,

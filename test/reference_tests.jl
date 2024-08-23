@@ -106,15 +106,15 @@ reftest("scatter markersize sizerange") do
 end
 
 reftest("violin cat color") do
-    data((; x = 1:4, y = ["A", "B", "C", "D"], z = ["U", "V", "W", "X"])) * mapping(:x, :y; color = :z) * visual(Violin) |> draw
+    data((; x = ["A", "B", "C", "D"], y = [1, 2, 5, 9], z = ["U", "V", "W", "X"])) * mapping(:x, :y; color = :z) * visual(Violin) |> draw
 end
 
 reftest("violin cat color horizontal") do
-    data((; x = 1:4, y = ["A", "B", "C", "D"], z = ["U", "V", "W", "X"])) * mapping(:x, :y; color = :z) * visual(Violin, orientation = :horizontal) |> draw
+    data((; x = ["A", "B", "C", "D"], y = [1, 2, 5, 9], z = ["U", "V", "W", "X"])) * mapping(:x, :y; color = :z) * visual(Violin, orientation = :horizontal) |> draw
 end
 
 reftest("violin cat color side") do
-    data((; x = 1:4, y = ["A", "B", "C", "D"], z = ["U", "V", "W", "X"], q = ["A", "A", "B", "B"])) * mapping(:x, :y; color = :z, side = :q) * visual(Violin) |> draw
+    data((; x = ["A", "B", "C", "D"], y = [1, 2, 5, 9], z = ["U", "V", "W", "X"], q = ["A", "A", "B", "B"])) * mapping(:x, :y; color = :z, side = :q) * visual(Violin) |> draw
 end
 
 reftest("hlines cat color") do
