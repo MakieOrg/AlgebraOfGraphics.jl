@@ -56,3 +56,30 @@
     @test string(nonnumeric(1)) == "1"
     @test isless(nonnumeric(1), nonnumeric(2))
 end
+
+@testset "Presorted" begin
+    p = [
+        Presorted("a", 0x0000),
+        Presorted("b", 0x0001),
+        Presorted("c", 0x0002),
+        Presorted("a", 0x0003),
+        Presorted("b", 0x0004),
+    ]
+    @test unique(p) == p[1:3]
+    @test hash(Presorted("a", 0x0000)) == hash(Presorted("a", 0x0001))
+
+    p1 = [Presorted("b", 0x0000), Presorted("c", 0x0001)]
+    p2 = [Presorted("a", 0x0000), Presorted("b", 0x0001)]
+    @test AlgebraOfGraphics.possibly_mergesorted(p1, p2) == [Presorted("b", 0x0000), Presorted("c", 0x0001), Presorted("a", 0x0000)]
+
+    p = [
+        Presorted("a", 0x0002),
+        Presorted("b", 0x0000),
+        Presorted("c", 0x0001),
+    ]
+    @test sort(p) == [
+        Presorted("b", 0x0000),
+        Presorted("c", 0x0001),
+        Presorted("a", 0x0002),
+    ]
+end

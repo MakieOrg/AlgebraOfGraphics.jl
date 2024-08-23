@@ -688,3 +688,52 @@ reftest("renamer latexstring rich text") do
     spec = data(df) * mapping(:x => rnm, :y, color = :x => rnm) * visual(Scatter)
     draw(spec)
 end
+
+function presorted_plot(; with_missing::Bool)
+    countries = ["Algeria", "Bolivia", "China", "Denmark", "Ecuador", "France"]
+    if with_missing
+        countries = [c == "Denmark" ? missing : c for c in countries]
+    end
+    group = ["2", "3", "1", "2", "1", "2"]
+    some_value = exp.(sin.(1:6))
+    
+    df = DataFrame(; countries, group, some_value)
+    sort!(df, :some_value)
+    
+    m1 = mapping(:countries, :some_value, color = :group)
+    m2 = mapping(:countries => presorted, :some_value, color = :group)
+    m3 = mapping(:countries => presorted, :some_value, color = :group => presorted)
+
+    base = data(df) *  visual(BarPlot, direction = :x)
+    
+    f = Figure()
+    fg1 = draw!(f[1, 1], base * m1)
+    fg2 = draw!(f[2, 1], base * m2)
+    fg3 = draw!(f[3, 1], base * m3)
+    legend!(f[1, 2], fg1)
+    legend!(f[2, 2], fg2)
+    legend!(f[3, 2], fg3)
+    f
+end
+
+reftest("presorted") do
+    presorted_plot(; with_missing = false)
+end
+
+reftest("presorted with missing") do
+    presorted_plot(; with_missing = true)
+end
+
+reftest("presorted additional data") do
+    df1 = DataFrame(name = ["Bob", "Charlie"], value = [27, 13])
+    df2 = DataFrame(name = ["Alice", "Bob"], value = [15, 30])
+
+    spec = data(df1) * visual(BarPlot)
+    spec2 = data(df2) * visual(Scatter)
+
+    f = Figure()
+    draw!(f[1, 1], (spec + spec2) * mapping(:name, :value))
+    draw!(f[1, 2], (spec + spec2) * mapping(:name => presorted, :value))
+
+    f
+end

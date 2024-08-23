@@ -178,3 +178,21 @@ data, without lookup in the table. If `x` is not an `AbstractArray`, it will
 be expanded like `fill(x, n)` where `n` is the number of rows in the `data` source.
 """
 direct(x) = DirectData(x)
+
+struct Presorted{T}
+    x::T
+    i::UInt16
+end
+Presorted(x) = Presorted(x, 0x0000)
+presorted(x) = Presorted(x)
+
+Base.show(io::IO, p::Presorted) = print(io, p.x)
+
+# this is a bit weird, but two Presorteds wrapping different values should be sorted by the index they store,
+# so that the original order of the dataset remains intact,
+# but two Presorteds with the same value should be considered equal no matter which indices they have,
+# so that the same value appearing in different positions in two datasets is considered the same when plotting
+Base.isless(p::Presorted, p2::Presorted) = isless(p.i, p2.i)
+Base.isequal(p::Presorted, p2::Presorted) = isequal(p.x, p2.x)
+Base.:(==)(p::Presorted, p2::Presorted) = p.x == p2.x
+Base.hash(p::Presorted) = hash(p.x)
