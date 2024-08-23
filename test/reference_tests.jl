@@ -690,17 +690,15 @@ reftest("renamer latexstring rich text") do
 end
 
 function presorted_plot(; with_missing::Bool)
-    countries = ["Algeria", "Bolivia", "China", "Denmark", "Ecuador", "France"]
+    countries = ["Denmark", "Ecuador", "Bolivia", "China", "France", "Algeria"]
     if with_missing
         countries = [c == "Denmark" ? missing : c for c in countries]
     end
     group = ["2", "3", "1", "1", "3", "2"]
-    some_value = exp.(sin.(1:6))
+    some_value = sort(exp.(sin.(1:6)))
     
-    df = DataFrame(; countries, group, some_value)
-    sort!(df, :some_value)
-    display(df)
-    
+    df = (; countries, group, some_value)
+
     m1 = mapping(:countries, :some_value, color = :group)
     m2 = mapping(:countries => presorted, :some_value, color = :group)
     m3 = mapping(:countries => presorted, :some_value, color = :group => presorted)
@@ -726,8 +724,8 @@ reftest("presorted with missing") do
 end
 
 reftest("presorted additional data") do
-    df1 = DataFrame(name = ["Bob", "Charlie"], value = [27, 13])
-    df2 = DataFrame(name = ["Alice", "Bob"], value = [15, 30])
+    df1 = (; name = ["Bob", "Charlie"], value = [27, 13])
+    df2 = (; name = ["Alice", "Bob"], value = [15, 30])
 
     spec = data(df1) * visual(BarPlot)
     spec2 = data(df2) * visual(Scatter)
