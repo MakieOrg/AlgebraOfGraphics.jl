@@ -694,11 +694,12 @@ function presorted_plot(; with_missing::Bool)
     if with_missing
         countries = [c == "Denmark" ? missing : c for c in countries]
     end
-    group = ["2", "3", "1", "2", "1", "2"]
+    group = ["2", "3", "1", "1", "3", "2"]
     some_value = exp.(sin.(1:6))
     
     df = DataFrame(; countries, group, some_value)
     sort!(df, :some_value)
+    display(df)
     
     m1 = mapping(:countries, :some_value, color = :group)
     m2 = mapping(:countries => presorted, :some_value, color = :group)

@@ -184,6 +184,23 @@ struct Presorted{T}
     i::UInt16
 end
 Presorted(x) = Presorted(x, 0x0000)
+
+"""
+    presorted(x)
+
+Use within a pair expression in `mapping` to signal that
+a categorical column from the data source should be
+used in the original order and not automatically sorted.
+
+Example:
+
+```julia
+# normally, categories would be sorted a, b, c but with `presorted`
+# they stay in the order b, c, a
+
+data((; some_column = ["b", "c", "a"])) * mapping(:some_column => presorted)
+```
+"""
 presorted(x) = Presorted(x)
 
 Base.show(io::IO, p::Presorted) = print(io, p.x)
