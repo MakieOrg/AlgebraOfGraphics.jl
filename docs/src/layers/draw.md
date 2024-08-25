@@ -185,7 +185,7 @@ draw(spec, scales(Col = (;
 ```
 
 
-### Continous scale options
+### Continuous scale options
 
 #### Color
 
