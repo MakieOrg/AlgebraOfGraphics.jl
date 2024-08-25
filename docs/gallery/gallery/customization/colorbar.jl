@@ -17,10 +17,10 @@ draw(plt)
 
 fg = draw(plt, colorbar=(position=:top, size=25))
 
-# To change the colormap, pass the `colormap` keyword to `visual`. For example
+# To change the colormap, pass the `colormap` to `scales`. For example
 
-plt = visual(Scatter, colormap=:thermal) * data(df) * mapping(:x, :y, color=:z)
-draw(plt)
+plt = visual(Scatter) * data(df) * mapping(:x, :y, color=:z)
+draw(plt, scales(Color = (; colormap = :thermal,)))
 
 # save cover image #src
 mkpath("assets") #src
