@@ -254,6 +254,22 @@ reftest("density layout") do
         draw
 end
 
+reftest("density layout datalimits extrema") do
+    x = sin.(1:40) .+ repeat([0, 2], inner = 20)
+    z = repeat(["A", "B"], inner = 20)
+    data((; x, z)) *
+        mapping(:x, layout=:z) * AlgebraOfGraphics.density(datalimits = extrema) |>
+        draw
+end
+
+reftest("density layout datalimits manual") do
+    x = sin.(1:40) .+ repeat([0, 2], inner = 20)
+    z = repeat(["A", "B"], inner = 20)
+    data((; x, z)) *
+        mapping(:x, layout=:z) * AlgebraOfGraphics.density(datalimits = (-3, 5)) |>
+        draw
+end
+
 reftest("density layout cat color") do
     x = sin.(1:40) .+ repeat([0, 2], inner = 20)
     z = repeat(["A", "B"], inner = 20)
