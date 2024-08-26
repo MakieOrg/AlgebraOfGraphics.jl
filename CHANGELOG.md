@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `fillto` to `BarPlot` aesthetics [#535](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/535).
+
 ## v0.8.3 - 2024-08-23
 
 - Fixed incorrect x/y axis assignment for the `violin` plot type [#528](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/528).
