@@ -454,11 +454,38 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
         ])
     end
 
-    positional = Any[
-        full_rescale(p.positional[1], 1, aes_mapping, scale_mapping, categoricalscales, continuousscales),
-        full_rescale(p.positional[2], 2, aes_mapping, scale_mapping, categoricalscales, continuousscales),
-        z_indices,
-    ]
+    x_unscaled = p.positional[1]
+    y_unscaled = p.positional[2]
+
+    # issue 407:
+    # We add possibly missing x or y values if we are dealing with categorical scales.
+    # If data is split over facets, not all facets necessarily contain all categorical values from the scale,
+    # but Makie does not know this and will not produce the gaps in places where no x or y entry exists.
+    # Instead, it will close these gaps, which is incorrect if we already know we're dealing with categorical data.
+    # Note that we can not in general do the same fixing if x or y are numerical, as it's possible that each facet receives
+    # unrelated sets of x/y values. This is different than with categorical scales, which are the same across facets.
+    #
+    # We just add x or y values that are present in the categorical scale but not in the data with a z value of NaN.
+    # This will cause Makie to respect them in the heatmap grid it builds.
+    xscale = get_scale(1, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    if xscale isa CategoricalScale && !isempty(y_unscaled)
+        x_unscaled_missing = setdiff(datavalues(xscale), x_unscaled)
+        x_unscaled = [x_unscaled; x_unscaled_missing]
+        y_unscaled = [y_unscaled; fill(first(y_unscaled), length(x_unscaled_missing))]
+        z_indices = [z_indices; fill(NaN, length(x_unscaled_missing))]
+    end
+    yscale = get_scale(2, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    if yscale isa CategoricalScale && !isempty(x_unscaled)
+        y_unscaled_missing = setdiff(datavalues(yscale), y_unscaled)
+        x_unscaled = [x_unscaled; fill(first(x_unscaled), length(y_unscaled_missing))]
+        y_unscaled = [y_unscaled; y_unscaled_missing]
+        z_indices = [z_indices; fill(NaN, length(y_unscaled_missing))]
+    end
+
+    x = full_rescale(x_unscaled, 1, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    y = full_rescale(y_unscaled, 2, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+
+    positional = Any[x, y, z_indices]
     
     Entry(P, positional, merge(p.named, p.primary, p.attributes, color_attributes))
 end

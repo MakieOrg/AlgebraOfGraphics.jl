@@ -169,6 +169,17 @@ reftest("heatmap con color") do
         draw(scales(Color = (; colormap = :Blues, colorrange = (0, 10), nan_color = (:black, 0.1))))
 end
 
+reftest("heatmap missing stripes") do
+    df = DataFrames.DataFrame(x = repeat(["A", "B", "C"], 3), y = repeat(["D", "E", "F"], inner = 3))
+    df = vcat(df, df, source = :id)
+    df.z .= 1:size(df, 1)
+    
+    df = df[.!(df.id .== 1 .&& df.x .== "B"), :]
+    df = df[.!(df.id .== 2 .&& df.y .== "E"), :]
+
+    data(df) * mapping(:x, :y, :z, col = :id => nonnumeric) * visual(Heatmap) |> draw
+end
+
 reftest("rangebars") do
     data((; x = 1:4, ylow = 1:4, yhigh = 2:5)) * mapping(:x, :ylow, :yhigh) *
         visual(Rangebars) |> draw
