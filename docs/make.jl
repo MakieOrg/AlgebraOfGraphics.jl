@@ -17,7 +17,7 @@ DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics)
 
 gallery, postprocess_cb, gallery_assets = makedemos("gallery")
 
-cp(joinpath(@__DIR__, "..", "NEWS.md"), joinpath(@__DIR__, "src", "release_notes.md"))
+cp(joinpath(@__DIR__, "..", "CHANGELOG.md"), joinpath(@__DIR__, "src", "changelog.md"))
 
 makedocs(;
     modules=[AlgebraOfGraphics],
@@ -50,7 +50,7 @@ makedocs(;
         ],
         "FAQs.md",
         "philosophy.md",
-        "release_notes.md",
+        "changelog.md",
     ],
     strict=true,
 )
