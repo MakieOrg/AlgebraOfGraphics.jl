@@ -82,8 +82,8 @@ function aesthetic_mapping(::Type{BarPlot}, N::Int)
     positionals = if N == 1
         [
             1 => :direction => dictionary([
-            :y => AesY,
-            :x => AesX,
+                :y => AesY,
+                :x => AesX,
             ])
         ]
     else
@@ -107,6 +107,10 @@ function aesthetic_mapping(::Type{BarPlot}, N::Int)
         ]),
         :dodge => AesDodge,
         :stack => AesStack,
+        :fillto => :direction => dictionary([
+            :y => AesY,
+            :x => AesX,
+        ]),
     ])
 end
 

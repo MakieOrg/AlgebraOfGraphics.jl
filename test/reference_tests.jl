@@ -39,6 +39,18 @@ reftest("barplot row layout") do
     data((; x = ["A", "B", "C"], y = 1:3, z = ["X", "Y", "Z"])) * mapping(:x, :y; row = :z) * visual(BarPlot) |> draw
 end
 
+reftest("barplot fillto") do
+    df = (; x = 11:20, upper = 1:10, lower = 0:-1:-9)
+    spec = data(df) * mapping(:x, :upper, fillto = :lower) * visual(BarPlot)
+    draw(spec)
+end
+
+reftest("barplot fillto direction x") do
+    df = (; x = 11:20, upper = 1:10, lower = 0:-1:-9)
+    spec = data(df) * mapping(:x, :upper, fillto = :lower) * visual(BarPlot, direction = :x)
+    draw(spec)
+end
+
 for (plottype, name) in zip([Lines, Scatter], ["lines", "scatter"])
     reftest("$name") do
         data((; x = [1, 3, 2, 4], y = ["A", "B", "C", "D"])) * mapping(:x, :y) * visual(plottype) |> draw
@@ -239,6 +251,22 @@ reftest("density layout") do
     z = repeat(["A", "B"], inner = 20)
     data((; x, z)) *
         mapping(:x, layout=:z) * AlgebraOfGraphics.density() |>
+        draw
+end
+
+reftest("density layout datalimits extrema") do
+    x = sin.(1:40) .+ repeat([0, 2], inner = 20)
+    z = repeat(["A", "B"], inner = 20)
+    data((; x, z)) *
+        mapping(:x, layout=:z) * AlgebraOfGraphics.density(datalimits = extrema) |>
+        draw
+end
+
+reftest("density layout datalimits manual") do
+    x = sin.(1:40) .+ repeat([0, 2], inner = 20)
+    z = repeat(["A", "B"], inner = 20)
+    data((; x, z)) *
+        mapping(:x, layout=:z) * AlgebraOfGraphics.density(datalimits = (-3, 5)) |>
         draw
 end
 
