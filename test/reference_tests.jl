@@ -104,6 +104,12 @@ reftest("scatter con color highclip lowclip") do
         draw(scales(Color = (; colormap = :viridis, colorrange = (2, 7), lowclip = :red, highclip = :cyan)))
 end
 
+reftest("scatter con color layout") do
+    data((; x = 1:8, y = 11:18, z = 1:8, group = repeat(["A", "B"], inner = 4))) *
+        mapping(:x, :y, color = :z, layout = :group) * visual(Scatter, markersize = 20) |>
+        draw
+end
+
 reftest("scatter marker") do
     data((; x = 1:4, y = 5:8, z = ["A", "B", "C", "D"])) * mapping(:x, :y, marker = :z) * visual(Scatter, markersize = 20) |> draw
 end

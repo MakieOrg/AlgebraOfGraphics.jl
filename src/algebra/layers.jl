@@ -111,7 +111,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
 
     entries_grid = map(rescaled_pls_grid, CartesianIndices(rescaled_pls_grid)) do processedlayers, idx
         map(processedlayers) do processedlayer
-            to_entry(processedlayer, categoricalscales, continuousscales_grid[idx])
+            to_entry(processedlayer, categoricalscales, merged_continuousscales)
         end
     end
 
