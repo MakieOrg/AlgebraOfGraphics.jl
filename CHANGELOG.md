@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+## v0.8.4 - 2024-08-26
+
 - Added `fillto` to `BarPlot` aesthetics [#535](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/535).
 - Fixed bug when giving `datalimits` of `density` as a (low, high) tuple [#536](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/536).
+- Fixed bug where facet-local continuous scale limits were used instead of the globally merged ones, possibly leading to mismatches between data and legend [#539](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/539).
 
 ## v0.8.3 - 2024-08-23
 
