@@ -50,6 +50,29 @@ spec = data((; x = 1:10, y = 1:10, z = 'A':'J')) *
 draw(spec, scales(Color = (; palette = [:red, :green, :blue, RGB(1, 0, 1), RGB(1, 1, 0), "#abcff0", "#c88cbccc", HSV(0.9, 0.3, 0.7), RGBA(0.7, 0.9, 0.6, 0.5), Gray(0.5)])))
 ```
 
+If you want to use a continuous colormap for categorical data, you can use the `from_continuous`
+helper function. It automatically takes care that the continuous colormap is sampled evenly
+from start to end depending on the number of categories. Any colormap that Makie understands can
+be passed, including named colormaps such as `:viridis`.
+
+This example shows the difference in behavior when the two-element colormap `[:red, :blue]` is used with or without `from_continuous`:
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = 'A':'J')) *
+    mapping(:x, :y, color = :z) *
+    visual(BarPlot)
+
+f = Figure()
+fg1 = draw!(f[1, 1], spec, scales(Color = (; palette = [:red, :blue])))
+legend!(f[1, 2], fg1)
+fg2 = draw!(f[1, 3], spec, scales(Color = (; palette = from_continuous([:red, :blue]))))
+legend!(f[1, 4], fg2)
+f
+```
+
 ##### Marker
 
 A vector of values that `Makie.to_spritemarker` can handle.

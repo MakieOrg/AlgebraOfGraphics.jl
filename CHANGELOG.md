@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added `presorted` helper function to keep categorical data in the order encountered in the source table, instead of sorting it alphabetically [#529](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/529).
+- Added `from_continuous` helper function which allows to sample continuous colormaps evenly to use them as categorical palettes without having to specify how many categories there are [#541](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/541).
 
 ## v0.8.4 - 2024-08-26
 

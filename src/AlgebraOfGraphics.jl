@@ -43,6 +43,7 @@ export paginate
 export scale, scales
 export pregrouped
 export direct
+export from_continuous
 
 include("dict.jl")
 include("theme.jl")

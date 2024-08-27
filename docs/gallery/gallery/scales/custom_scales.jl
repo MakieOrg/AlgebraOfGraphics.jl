@@ -41,14 +41,16 @@ colors = ["a" => :tomato, "c" => :lime, colorant"#988ED5", colorant"#777777"]
 draw(plt, scales(Color = (; palette = colors)))
 
 # Categorical color gradients can also be passed to `palettes`.
+# You can use the `from_continuous` helper function to wrap continuous colormaps which you want
+# to sample from start to end in n steps, where n is the number of categories you are
+# visualizing.
 
 x = rand(200)
 y = rand(200)
 z = rand(["a", "b", "c", "d", "e", "f", "g", "h"], 200)
 df = (; x, y, z)
 plt = data(df) * mapping(:x, :y, color=:z)
-colors = cgrad(:cividis, 8, categorical=true)
-draw(plt, scales(Color = (; palette = colors)))
+draw(plt, scales(Color = (; palette = from_continuous(:cividis))))
 
 # save cover image #src
 mkpath("assets") #src

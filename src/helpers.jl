@@ -213,3 +213,26 @@ Base.isless(p::Presorted, p2::Presorted) = isless(p.i, p2.i)
 Base.isequal(p::Presorted, p2::Presorted) = isequal(p.x, p2.x)
 Base.:(==)(p::Presorted, p2::Presorted) = p.x == p2.x
 Base.hash(p::Presorted) = hash(p.x)
+
+struct FromContinuous{T}
+    continuous::T
+end
+
+"""
+    from_continuous(x)
+
+Mark a colormap as continuous such that AlgebraOfGraphics will sample
+a categorical palette from start to end in n steps, and not by using the first
+n colors.
+
+You could also use `cgrad(colormap, n; categorical = true)`, however,
+this requires you to specify how many levels there are, which
+`from_continuous` detects automatically.
+
+Example:
+
+```julia
+draw(scales(Color = (; palette = from_continuous(:viridis))))
+```
+"""
+from_continuous(x) = FromContinuous(x)
