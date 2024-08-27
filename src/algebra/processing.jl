@@ -95,7 +95,24 @@ function getlabeledarray(layer::Layer, s)
         scaleid = map(x -> x[2], labeled_arr)
         arr = map(last, labeled_arr)
     end
+
+    arr = with_presorted_indices(arr)
+
     return label, scaleid, arr
+end
+
+with_presorted_indices(arr) = arr
+function with_presorted_indices(arr::AbstractArray{<:AbstractArray{<:Presorted}})
+    s = Dict{Any,UInt16}() # TODO: how to get parametric type in Union{T,Missing} case? where T throws UndefVarError then
+    with_indices = map(arr) do subarr
+        map(subarr) do el
+            i = get!(s, el.x) do
+                UInt16(length(s) + 1)
+            end
+            Presorted(el.x, i)
+        end
+    end
+    return with_indices
 end
 
 function extract_values!(pairs, labels)

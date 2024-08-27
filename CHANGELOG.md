@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `presorted` helper function to keep categorical data in the order encountered in the source table, instead of sorting it alphabetically [#529](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/529).
+
 ## v0.8.4 - 2024-08-26
 
 - Added `fillto` to `BarPlot` aesthetics [#535](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/535).

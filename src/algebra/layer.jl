@@ -417,7 +417,7 @@ function mergeable(processedlayer::ProcessedLayer)
     # merge violins for correct renormalization
     plottype <: Violin && return true
     # merge stacked or dodged barplots
-    plottype <: Union{BarPlot,CrossBar} && (haskey(primary, :stack) || haskey(primary, :dodge)) && return true
+    plottype <: Union{BarPlot,CrossBar} && return true
     # merge waterfall plots
     plottype <: Waterfall && return true
     # merge dodged boxplots

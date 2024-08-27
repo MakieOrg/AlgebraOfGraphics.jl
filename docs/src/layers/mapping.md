@@ -113,6 +113,8 @@ The complete API of helper functions is available at [Mapping helpers](@ref), bu
 :age => nonnumeric
 # column `labels` is expressed in strings and we do not want to treat it as categorical
 :labels => verbatim
+# wrap categorical values to signal that the order from the data source should be respected
+:weight => presorted
 ```
 
 ## Custom scales

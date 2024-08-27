@@ -32,7 +32,7 @@ import NaturalSort
 export hideinnerdecorations!, deleteemptyaxes!
 export Layer, Layers, ProcessedLayer, ProcessedLayers
 export Entry, AxisEntries
-export renamer, sorter, nonnumeric, verbatim
+export renamer, sorter, nonnumeric, verbatim, presorted
 export density, histogram, linear, smooth, expectation, frequency, contours, filled_contours
 export visual, data, geodata, dims, mapping
 export datetimeticks

@@ -21,6 +21,7 @@ sorter
 nonnumeric
 verbatim
 scale
+presorted
 ```
 
 ## Theming

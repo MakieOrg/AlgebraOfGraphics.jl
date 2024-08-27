@@ -335,6 +335,11 @@ function rescale(values, c::CategoricalScale)
     # Do not rescale continuous data with categorical scale
     scientific_eltype(values) === categorical || return values
     idxs = indexin(values, datavalues(c))
+    for (i, idx) in zip(eachindex(values), idxs)
+        if idx === nothing
+            error("Value $(values[i]) was not found in categorical scale with datavalues $(datavalues(c))")
+        end
+    end
     return plotvalues(c)[idxs]
 end
 
@@ -355,7 +360,9 @@ function mergelabels(label1, label2)
 end
 
 function mergescales(c1::CategoricalScale, c2::CategoricalScale)
-    data = mergesorted(c1.data, c2.data)
+    # "possibly" because presorted data should where c2 contains something c1 doesn't should just be appended, there's no meaningful
+    # sort order between two disjoint sets of data which are supposed to be kept in their intrinsic order
+    data = possibly_mergesorted(c1.data, c2.data)
     plot = assert_equal(c1.plot, c2.plot)
     label = mergelabels(c1.label, c2.label)
     if c1.props != c2.props
@@ -497,4 +504,18 @@ function mergesorted(v1, v2)
         i1 += 1
     end
     return v
+end
+
+possibly_mergesorted(v1, v2) = mergesorted(v1, v2)
+
+function possibly_mergesorted(v1::AbstractVector{<:Presorted{T}}, v2::AbstractVector{<:Presorted}) where T
+    set = Set{T}()
+    for el in v1
+        push!(set, el.x)
+    end
+    v = copy(v1)
+    for el in v2
+        el.x in set || push!(v, el)
+    end
+    return @show v
 end
