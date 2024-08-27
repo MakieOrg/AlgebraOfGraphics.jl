@@ -10,21 +10,8 @@ using AlgebraOfGraphics, CairoMakie
 using Colors
 set_aog_theme!() #src
 
-# A palette maps particular values to particular attribute specifications (e.g.
-# 1 maps to green, 2 maps to red). Sometimes, there is no default palette for a
-# specific attribute, and you will need to specify it manually, but there are
-# sensible default palettes for many attributes. In either case, you can always
-# manually specify the palette used for a particular attribute.
-
-# TODO: allow legend to use custom attribute of plot, such as the arrowhead or
-# the arrowcolor and pass correct legend symbol.
-
-# !!! note
-#     A related concept (from Makie) is a colormap, which maps a continuous space
-#     of numbers to a sequence of colors. For discrete colors you will want to
-#     employ a palette, not a colormap, because discrete values are mapped to
-#     colors within AlgebraOfGraphics. AlgebraOfGraphics doesn't directly handle
-#     continuous colors: this is a feature of the underlying Makie plots.
+# A palette maps categorical values to particular attribute specifications (e.g.
+# the first value maps to green, the second maps to red, and so on).
 
 x=repeat(1:20, inner=20)
 y=repeat(1:20, outer=20)
