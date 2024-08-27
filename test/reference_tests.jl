@@ -770,3 +770,10 @@ reftest("presorted additional data") do
 
     f
 end
+
+reftest("presorted wide") do
+    df = (; x1 = ["E", "D"], x2 = ["C", "B"], x3 = ["A", "E"], y = [1, 2])
+    spec = data(df) * mapping([:x1, :x2, :x3] .=> presorted, :y, color = dims(1)) *
+        visual(Scatter, markersize = 20)
+    draw(spec)
+end
