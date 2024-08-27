@@ -1,0 +1,28 @@
+name: Check up-to-date Readme
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - uses: quarto-dev/quarto-actions/setup@v2
+      - name: Render readme
+        run: julia _readme/make.jl
+      - name: Succeed if there is no git diff output
+        run: git diff --exit-code
+      
