@@ -127,3 +127,112 @@ verbatim(x) = Verbatim(x)
 
 Base.getindex(v::Verbatim) = v.x
 Base.print(io::IO, v::Verbatim) = print(io, v.x)
+
+
+@static if VERSION < v"1.7"
+    macro something(args...)
+        expr = :(nothing)
+        for arg in reverse(args)
+            expr = :(val = $(esc(arg)); val !== nothing ? val : ($expr))
+        end
+        something = GlobalRef(Base, :something)
+        return :($something($expr))
+    end
+end
+
+struct Bin
+    range::Tuple{Float64,Float64}
+    inclusive::Tuple{Bool,Bool}
+end
+
+Base.isless(b1::Bin, b2::Bin) = isless(b1.range, b2.range)
+
+function Base.show(io::IO, b::Bin)
+    print(io, b.inclusive[1] ? "[" : "(", b.range[1], ", ", b.range[2], b.inclusive[2] ? "]" : ")")
+end
+
+struct Pregrouped end
+
+"""
+    pregrouped(positional...; named...)
+
+Equivalent to `data(Pregrouped()) * mapping(positional...; named...)`.
+Refer to [`mapping`](@ref) for more information.
+"""
+pregrouped(args...; kwargs...) = data(Pregrouped()) * mapping(args...; kwargs...)
+
+struct Columns{T}
+    columns::T
+end
+
+struct DirectData{T}
+    data::T
+end
+
+"""
+    direct(x)
+
+Return `DirectData(x)` which marks `x` for direct use in a `mapping` that's
+used with a table-like `data` source. As a result, `x` will be used directly as
+data, without lookup in the table. If `x` is not an `AbstractArray`, it will
+be expanded like `fill(x, n)` where `n` is the number of rows in the `data` source.
+"""
+direct(x) = DirectData(x)
+
+struct Presorted{T}
+    x::T
+    i::UInt16
+end
+Presorted(x) = Presorted(x, 0x0000)
+
+"""
+    presorted(x)
+
+Use within a pair expression in `mapping` to signal that
+a categorical column from the data source should be
+used in the original order and not automatically sorted.
+
+Example:
+
+```julia
+# normally, categories would be sorted a, b, c but with `presorted`
+# they stay in the order b, c, a
+
+data((; some_column = ["b", "c", "a"])) * mapping(:some_column => presorted)
+```
+"""
+presorted(x) = Presorted(x)
+
+Base.show(io::IO, p::Presorted) = print(io, p.x)
+
+# this is a bit weird, but two Presorteds wrapping different values should be sorted by the index they store,
+# so that the original order of the dataset remains intact,
+# but two Presorteds with the same value should be considered equal no matter which indices they have,
+# so that the same value appearing in different positions in two datasets is considered the same when plotting
+Base.isless(p::Presorted, p2::Presorted) = isless(p.i, p2.i)
+Base.isequal(p::Presorted, p2::Presorted) = isequal(p.x, p2.x)
+Base.:(==)(p::Presorted, p2::Presorted) = p.x == p2.x
+Base.hash(p::Presorted) = hash(p.x)
+
+struct FromContinuous{T}
+    continuous::T
+end
+
+"""
+    from_continuous(x)
+
+Mark a colormap as continuous such that AlgebraOfGraphics will sample
+a categorical palette from start to end in n steps, and not by using the first
+n colors.
+
+You could also use `cgrad(colormap, n; categorical = true)`, however,
+this requires you to specify how many levels there are, which
+`from_continuous` detects automatically.
+
+Example:
+
+```julia
+draw(scales(Color = (; palette = from_continuous(:viridis))))
+```
+"""
+from_continuous(x) = FromContinuous(x)

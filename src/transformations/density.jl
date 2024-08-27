@@ -12,6 +12,7 @@ _kde(data::Tuple; kwargs...) = kde(data; kwargs...)
 defaultdatalimits(positional) = map(nested_extrema_finite, Tuple(positional))
 
 applydatalimits(f::Function, d) = map(f, d)
+applydatalimits(limits::Tuple{Real,Real}, d) = map(_ -> limits, d)
 applydatalimits(limits::Tuple, _) = limits
 
 function _density(vs::Tuple; datalimits, npoints, kwargs...)

@@ -17,6 +17,8 @@ DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics)
 
 gallery, postprocess_cb, gallery_assets = makedemos("gallery")
 
+cp(joinpath(@__DIR__, "..", "CHANGELOG.md"), joinpath(@__DIR__, "src", "changelog.md"))
+
 makedocs(;
     modules=[AlgebraOfGraphics],
     authors="Pietro Vertechi",
@@ -41,9 +43,6 @@ makedocs(;
             "layers/operations.md",
             "layers/draw.md",
         ],
-        "Internals" => [
-            "generated/entries.md",
-        ],
         "API" => [
             "API/types.md",
             "API/functions.md",
@@ -51,6 +50,7 @@ makedocs(;
         ],
         "FAQs.md",
         "philosophy.md",
+        "changelog.md",
     ],
     warnonly=false,
 )
