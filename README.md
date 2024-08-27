@@ -1,3 +1,11 @@
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="/docs/src/assets/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="/docs/src/assets/logo.svg">
+    <img alt="AlgebraOfGraphics Logo" src="/docs/src/assets/logo.svg" width="350">
+  </picture>
+</div>
+
 # AlgebraOfGraphics
 
 [![CI](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml)
