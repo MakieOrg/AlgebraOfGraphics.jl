@@ -518,5 +518,5 @@ function possibly_mergesorted(v1::AbstractVector{<:Presorted{T}}, v2::AbstractVe
     for el in v2
         el.x in set || push!(v, el)
     end
-    return @show v
+    return v
 end
