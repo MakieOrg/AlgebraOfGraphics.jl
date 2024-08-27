@@ -32,6 +32,7 @@ Visualizations are powered by [Makie](https://github.com/MakieOrg/Makie.jl) and 
 #| output: false
 using CairoMakie
 CairoMakie.activate!(type = "svg")
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for PalmerPenguins download
 ```
 
 ```{julia}
