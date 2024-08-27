@@ -65,6 +65,12 @@ draw(facetted)
 
 ![](README_files/figure-commonmark/cell-6-output-1.svg)
 
+``` julia
+draw(facetted, scales(Color = (; palette = :Set1_3)))
+```
+
+![](README_files/figure-commonmark/cell-7-output-1.svg)
+
 ## Acknowledgements
 
 Analyses rely on
