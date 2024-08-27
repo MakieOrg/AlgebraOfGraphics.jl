@@ -244,6 +244,7 @@ get_categorical_palette(anytype::Type{<:Aesthetic}, ::Nothing) = _default_catego
 get_categorical_palette(_, func::Function) = func
 get_categorical_palette(::Type{AesColor}, colormap::Symbol) = Makie.to_colormap(colormap)
 get_categorical_palette(::Type{AesColor}, grad::Makie.PlotUtils.CategoricalColorGradient) = grad
+get_categorical_palette(::Type{AesColor}, fc::FromContinuous) = fc
 get_categorical_palette(anytype::Type{<:Aesthetic}, palettevalues::AbstractVector) = palettevalues
 
 const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}

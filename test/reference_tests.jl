@@ -777,3 +777,14 @@ reftest("presorted wide") do
         visual(Scatter, markersize = 20)
     draw(spec)
 end
+
+reftest("categorical color from continuous") do
+    f = Figure()
+    for (i, n) in enumerate([3, 5, 7])
+        df = (; x = 1:n, y = 1:n, z = 1:n)
+        spec = data(df) * mapping(:x, :y, color = :z => nonnumeric) * visual(Scatter, markersize = 15)
+        fg = draw!(f[i, 1], spec, scales(Color = (; palette = from_continuous(:plasma))))
+        legend!(f[i, 2], fg, nbanks = 2)
+    end
+    f
+end
