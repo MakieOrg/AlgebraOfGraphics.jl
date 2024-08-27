@@ -80,7 +80,4 @@ Analyses rely on
 [GLM.jl](https://github.com/JuliaStats/GLM.jl). Some of their
 documentation is transcribed here.
 
-Automatic legend creation re-implements the machinery in
-[TabularMakie](https://github.com/greimel/TabularMakie.jl).
-
 Logo and favicon made with 🧡 by @dyogurt.
