@@ -17,10 +17,12 @@ DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics)
 
 gallery, postprocess_cb, gallery_assets = makedemos("gallery")
 
+cp(joinpath(@__DIR__, "..", "CHANGELOG.md"), joinpath(@__DIR__, "src", "changelog.md"))
+
 makedocs(;
     modules=[AlgebraOfGraphics],
     authors="Pietro Vertechi",
-    repo="https://github.com/MakieOrg/AlgebraOfGraphics.jl/blob/{commit}{path}#{line}",
+    repo=Documenter.Remotes.GitHub("MakieOrg", "AlgebraOfGraphics.jl"),
     sitename="Algebra of Graphics",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
@@ -41,9 +43,6 @@ makedocs(;
             "layers/operations.md",
             "layers/draw.md",
         ],
-        "Internals" => [
-            "generated/entries.md",
-        ],
         "API" => [
             "API/types.md",
             "API/functions.md",
@@ -51,8 +50,9 @@ makedocs(;
         ],
         "FAQs.md",
         "philosophy.md",
+        "changelog.md",
     ],
-    strict=true,
+    warnonly=false,
 )
 postprocess_cb() # redirect url for DemoCards generated files
 

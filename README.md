@@ -1,7 +1,15 @@
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="/docs/src/assets/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="/docs/src/assets/logo.svg">
+    <img alt="AlgebraOfGraphics Logo" src="/docs/src/assets/logo.svg" width="350">
+  </picture>
+</div>
+
 # AlgebraOfGraphics
 
-[![CI](https://github.com/MakieOrg/AlgebraOfGraphics.jl/workflows/CI/badge.svg?branch=master)](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions?query=workflow%3ACI+branch%3Amaster)
-[![codecov.io](http://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl/coverage.svg?branch=master)](http://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl?branch=master)
+[![CI](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml)
+[![codecov.io](https://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl/coverage.svg?branch=master)](http://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl?branch=master)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://aog.makie.org/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://aog.makie.org/dev)
 

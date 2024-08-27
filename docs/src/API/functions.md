@@ -8,15 +8,20 @@ draw!
 colorbar!
 legend!
 paginate
+scales
 ```
 
 ## Mapping helpers
 
 ```@docs
+pregrouped
+direct
 renamer
 sorter
 nonnumeric
 verbatim
+scale
+presorted
 ```
 
 ## Theming
@@ -24,6 +29,7 @@ verbatim
 ```@docs
 set_aog_theme!
 AlgebraOfGraphics.aog_theme
+from_continuous
 ```
 
 

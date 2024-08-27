@@ -8,7 +8,7 @@
     @test layers[1].transformation.attributes[:color] == :red
     @test layers[1].positional == Any[:x, :y]
     @test layers[1].named == NamedArguments((color=:c,))
-    @test layers[1].data == df
+    @test layers[1].data == AlgebraOfGraphics.Columns(df)
 end
 
 @testset "process_mappings" begin
@@ -25,6 +25,29 @@ end
     @test processedlayer.labels[2] ==  ["y", "z"]
     @test processedlayer.labels[:color] == fill("c")
     @test processedlayer.labels[:marker] == ""
+
+    layer = mapping(1:3, ["a", "b", "c"] => uppercase, color = "X")
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.positional[1] == fill(1:3)
+    @test processedlayer.positional[2] == fill(["A", "B", "C"])
+    @test processedlayer.primary[:color] == fill(["X", "X", "X"])
+
+    layer = mapping(1:3 => "label" => scale(:somescale), color = "X" => lowercase => "NAME" => scale(:otherscale))
+    @test AlgebraOfGraphics.shape(layer) == (1:3,)
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.labels[1] == fill("label")
+    @test processedlayer.labels[:color] == fill("NAME")
+    @test processedlayer.scale_mapping[1] == :somescale
+    @test processedlayer.primary[:color] == fill(["x", "x", "x"])
+    @test processedlayer.scale_mapping[:color] == :otherscale
+
+    layer = data(df) * mapping(:x, direct(1:1000) => "y")
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.positional[2] == fill(1:1000)
+    @test processedlayer.labels[2] == fill("y")
+
+    layer = data(df) * mapping(:x, direct(zeros(2, 1000)) => "y")
+    @test_throws_message "not allowed to use arrays that are not one-dimensional" AlgebraOfGraphics.process_mappings(layer)
 end
 
 @testset "shape" begin
@@ -40,13 +63,20 @@ end
     @test AlgebraOfGraphics.shape(layer) == ()
     processedlayer = AlgebraOfGraphics.process_mappings(layer)
     @test AlgebraOfGraphics.shape(processedlayer) == ()
+
+    layer = mapping(1, 2, color = "A")
+    @test AlgebraOfGraphics.shape(layer) == ()
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.primary[:color] == fill(["A"])
+    @test processedlayer.positional[1] == fill([1])
+    @test processedlayer.positional[2] == fill([2])
 end
 
 @testset "grouping" begin
     df = (x=rand(1000), y=rand(1000), z=rand(1000), w=rand(1000), c=rand(["a", "b", "c"], 1000))
     df.c[1:3] .= ["a", "b", "c"] # ensure all three values exist
     d = mapping(:x => exp, [:y, :z], color=:c, marker=dims(1) => t -> ["1", "2"][t], markersize=:w)
-    layer = data(df) * d
+    layer = data(df) * d * visual(Scatter)
     processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
     processedlayers = map(CartesianIndices(AlgebraOfGraphics.shape(processedlayer))) do c
         primary, positional, named = map((processedlayer.primary, processedlayer.positional, processedlayer.named)) do tup
@@ -57,7 +87,7 @@ end
     end
     @test length(processedlayers) == 6
     for i in 1: 6
-        @test processedlayers[i].plottype === Any
+        @test processedlayers[i].plottype === Scatter
         @test isempty(processedlayers[i].attributes)
         @test processedlayers[i].labels[1] == "x"
         @test processedlayers[i].labels[2] == (i ≤ 3 ? "y" : "z")
@@ -101,4 +131,17 @@ end
     @test processedlayers[6].positional[1] == exp.(df.x[df.c .== "c"])
     @test processedlayers[6].positional[2] == df.z[df.c .== "c"]
     @test processedlayers[6].named[:markersize] == df.w[df.c .== "c"]
+end
+
+@testset "printing" begin
+    spec = data((; x = 1:10, y = 11:20)) * mapping(:x, :y, color = :y) * visual(BarPlot) + mapping(:x) * visual(HLines)
+    # testing printing exactly is finicky across Julia versions, just make sure it's not completely broken
+    printout = @test_nowarn repr(spec)
+    @test occursin("Layers with 2 elements", printout)
+    @test occursin("Layer 1", printout)
+    @test occursin("Layer 2", printout)
+    @test occursin("transformation:", printout)
+    @test occursin("data:", printout)
+    @test occursin("positional:", printout)
+    @test occursin("named:", printout)
 end

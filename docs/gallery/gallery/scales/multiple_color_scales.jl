@@ -8,8 +8,7 @@
 using AlgebraOfGraphics, CairoMakie
 set_aog_theme!() #src
 
-# Normally, a unique scale is associated to each given attribute. Color is an important
-# exception: continuous and discrete color scales can coexist in the same plot.
+# Continuous and discrete color scales can coexist in the same plot.
 # This should be used sparingly, as it can make the plot harder to interpret.
 
 x = range(-π, π, length=100)
