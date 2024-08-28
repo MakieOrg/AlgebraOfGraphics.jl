@@ -111,6 +111,7 @@ function aesthetic_mapping(::Type{BarPlot}, N::Int)
             :y => AesY,
             :x => AesX,
         ]),
+        :bar_labels => AesText,
     ])
 end
 

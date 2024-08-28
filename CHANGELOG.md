@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `bar_labels` to `BarPlot`'s aesthetic mapping [#544](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/544).
+
 ## v0.8.5 - 2024-08-27
 
 - Added `presorted` helper function to keep categorical data in the order encountered in the source table, instead of sorting it alphabetically [#529](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/529).

@@ -51,6 +51,12 @@ reftest("barplot fillto direction x") do
     draw(spec)
 end
 
+reftest("barplot labels") do
+    df = (; x = 1:6, y = [1, 2, 3, 2, 4, 1], group = [1, 2, 3, 2, 3, 4], label = ["A", "B", "C", "D", "E", "F"])
+    spec = data(df) * mapping(:x, :y, color = :group => nonnumeric, bar_labels = :label => verbatim) * visual(BarPlot, label_font = :bold)
+    draw(spec)
+end
+
 for (plottype, name) in zip([Lines, Scatter], ["lines", "scatter"])
     reftest("$name") do
         data((; x = [1, 3, 2, 4], y = ["A", "B", "C", "D"])) * mapping(:x, :y) * visual(plottype) |> draw
