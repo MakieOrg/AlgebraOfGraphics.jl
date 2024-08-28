@@ -1,6 +1,8 @@
 using CairoMakie
 import ImageInTerminal
 import DelimitedFiles
+using Test
+using Statistics
 
 rgbf_convert(x::AbstractMatrix{<:Makie.RGB}) = convert(Matrix{RGBf}, x)
 rgbf_convert(x::AbstractMatrix{<:Makie.RGBA}) = convert(Matrix{RGBAf}, x)
