@@ -41,7 +41,10 @@ In practice, `d` will often be a [`AlgebraOfGraphics.Layer`](@ref) or
 [`AlgebraOfGraphics.Layers`](@ref).
 Scale options can be passed as an optional second argument.
 The output can be customized by passing named tuples or dictionaries with settings via the `axis`, `figure`, `facet`, `legend` or `colorbar` keywords.
-Legend and colorbar are drawn automatically. For finer control, use [`draw!`](@ref),
+Legend and colorbar are drawn automatically unless `show = false` is passed to the keyword
+arguments of either `legend` or `colorbar`.
+
+For finer control, use [`draw!`](@ref),
 [`legend!`](@ref), and [`colorbar!`](@ref) independently.
 """
 function draw(d::AbstractDrawable, scales::Scales = scales();
@@ -57,6 +60,8 @@ function draw(d::AbstractDrawable, scales::Scales = scales();
     return _draw(d, scales; axis, figure, facet, legend, colorbar)
 end
 
+_remove_show_kw(pairs) = filter(((key, value),) -> key !== :show, pairs)
+
 function _draw(d::AbstractDrawable, scales::Scales;
               axis, figure, facet, legend, colorbar)
 
@@ -64,8 +69,12 @@ function _draw(d::AbstractDrawable, scales::Scales;
         grid = plot!(f, d, scales; axis)
         fg = FigureGrid(f, grid)
         facet!(fg; facet)
-        colorbar!(fg; pairs(colorbar)...)
-        legend!(fg; pairs(legend)...)
+        if get(colorbar, :show, true)
+            colorbar!(fg; _remove_show_kw(pairs(colorbar))...)
+        end
+        if get(legend, :show, true)
+            legend!(fg; _remove_show_kw(pairs(legend))...)
+        end
         resize_to_layout!(fg)
         return fg
     end
@@ -77,13 +86,13 @@ function draw(scales::Scales = scales(); kwargs...)
 end
 
 """
-    draw!(fig, d::AbstractDrawable, scales::Scales = scales(); [axis, facet, legend, colorbar])
+    draw!(fig, d::AbstractDrawable, scales::Scales = scales(); [axis, facet])
 
 Draw a [`AlgebraOfGraphics.AbstractDrawable`](@ref) object `d` on `fig`.
 In practice, `d` will often be a [`AlgebraOfGraphics.Layer`](@ref) or
 [`AlgebraOfGraphics.Layers`](@ref).
 `fig` can be a figure, a position in a layout, or an axis if `d` has no facet specification.
-The output can be customized by passing named tuples or dictionaries with settings via the `axis`, `facet`, `legend` or `colorbar` keywords.
+The output can be customized by passing named tuples or dictionaries with settings via the `axis` or `facet` keywords.
 """
 function draw!(fig, d::AbstractDrawable, scales::Scales = scales();
                axis=NamedTuple(), facet=NamedTuple(), palette=nothing)

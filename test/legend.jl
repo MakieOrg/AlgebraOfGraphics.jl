@@ -110,3 +110,33 @@ end
     @test length(leg_els) == 1
     @test el_labels[] == last.(categories)
 end
+
+@testset "hidden legend" begin
+    df = (;
+        x = repeat(1:3, 3),
+        y = abs.(sin.(1:9)),
+        z=["a", "a", "a", "b", "b", "b", "c", "c", "c"]
+    )
+    for show in [true, false]
+        fg = draw(
+            data(df) * mapping(:x, :y; stack=:z, color=:z) * visual(BarPlot),
+            legend = (; show)
+        )
+        @test any(x -> x isa Legend, fg.figure.content) == show
+    end
+end
+
+@testset "hidden colorbar" begin
+    df = (;
+        x = 1:3,
+        y = 4:6,
+        z = 7:9
+    )
+    for show in [true, false]
+        fg = draw(
+            data(df) * mapping(:x, :y; color=:z) * visual(BarPlot),
+            colorbar = (; show)
+        )
+        @test any(x -> x isa Colorbar, fg.figure.content) == show
+    end
+end

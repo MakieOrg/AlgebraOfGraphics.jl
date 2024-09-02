@@ -6,10 +6,17 @@ function legend!(fg::FigureGrid; position=:right,
 end
 
 """
-    legend!(figpos, grid; kwargs...)
+    legend!(figpos, grid; order = nothing, kwargs...)
 
 Compute legend for `grid` (which should be the output of [`draw!`](@ref)) and draw it in
-position `figpos`. Attributes allowed in `kwargs` are the same as `MakieLayout.Legend`.
+position `figpos`. All `kwargs` are forwarded to Makie's `Legend` constructor.
+
+The order of scales represented in the legend can be changed with the `order` keyword.
+By default, legend sections are ordered the same as they appear in the plot specification.
+Assuming three scales `Color`, `MarkerSize` and `custom` exist in a spec, you can pass a vector
+to reorder them like `[:MarkerSize, :custom, :Color]`, or merge multiple entries together with
+a nested vector like `[[:MarkerSize, :custom], :Color]`, or give merged sections a title with the
+pair syntax `[[:MarkerSize, :custom] => "Merged group", :Color]`.
 """
 function legend!(figpos, grid; order = nothing, kwargs...)
     legend = compute_legend(grid; order)
