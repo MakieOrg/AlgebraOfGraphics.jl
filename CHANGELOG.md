@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added `bar_labels` to `BarPlot`'s aesthetic mapping [#544](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/544).
+- Added ability to hide legend or colorbar by passing, e.g., `legend = (; show = false)` to `draw` [#547](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/547).
 
 ## v0.8.5 - 2024-08-27
 
