@@ -145,3 +145,26 @@ end
     @test occursin("positional:", printout)
     @test occursin("named:", printout)
 end
+
+@testset "transformation resulting in multiple processedlayers" begin
+    struct DuplicateShifted end
+
+    function (::DuplicateShifted)(p::ProcessedLayer)
+        p2 = map(p) do pos, named
+            return [_p .+ 10 for _p in pos], named
+        end
+        p2 = ProcessedLayer(p2; plottype = BarPlot)
+        return ProcessedLayers([p, p2])
+    end
+
+    duplicate_shifted() = AlgebraOfGraphics.transformation(DuplicateShifted())
+
+    fg = data((; x = 1:3, y = 4:6)) * mapping(:x, :y) * duplicate_shifted() |> draw
+
+    pls = fg.grid[].processedlayers
+    @test length(pls) == 2
+    @test pls[1].plottype == Scatter
+    @test pls[2].plottype == BarPlot
+    @test pls[1].positional == [[1, 2, 3], [4, 5, 6]]
+    @test pls[2].positional == [[11, 12, 13], [14, 15, 16]]
+end

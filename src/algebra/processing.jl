@@ -162,10 +162,12 @@ function process(layer::Layer)
     processedlayer = process_mappings(layer)
     grouped_entry = layer.data === Pregrouped() ? processedlayer : group(processedlayer)
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
-    transformed_processlayer = layer.transformation(ProcessedLayer(grouped_entry; primary))
-    attributes = merge(mandatory_attributes(transformed_processlayer.plottype), transformed_processlayer.attributes)
-    possibly_without_visual = ProcessedLayer(transformed_processlayer; attributes)
-    return set_missing_visual(possibly_without_visual)
+    transformed_processlayers = ProcessedLayers(layer.transformation(ProcessedLayer(grouped_entry; primary)))
+    return ProcessedLayers(map(transformed_processlayers.layers) do transformed_processlayer
+        attributes = merge(mandatory_attributes(transformed_processlayer.plottype), transformed_processlayer.attributes)
+        possibly_without_visual = ProcessedLayer(transformed_processlayer; attributes)
+        return set_missing_visual(possibly_without_visual)
+    end)
 end
 
 function set_missing_visual(p::ProcessedLayer)

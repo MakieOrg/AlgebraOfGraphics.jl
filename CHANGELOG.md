@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added ability to return `ProcessedLayers` from transformations, thereby enabling multi-layer transformations, such as scatter plus errorbars [#549](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/549).
+
 ## v0.8.6 - 2024-09-02
 
 - Added `bar_labels` to `BarPlot`'s aesthetic mapping [#544](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/544).

@@ -150,16 +150,22 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
 end
 
 """
-    ProcessedLayer(layer::Layer)
+    ProcessedLayer(l::Layer)
 
-Output of processing a `layer`. A `ProcessedLayer` encodes
-- plot type,
-- grouping arguments,
-- positional and named arguments for the plot,
-- labeling information,
-- visual attributes.
+Process a `Layer` and return the resulting `ProcessedLayer`.
+
+Note that this method should not be used anymore as processing a `Layer`
+can now potentially return multiple `ProcessedLayer` objects.
+Therefore, you should use the plural form `ProcessedLayers(layer)`.
 """
-ProcessedLayer(layer::Layer) = process(layer)
+function ProcessedLayer(l::Layer)
+    processedlayers = ProcessedLayers(l)
+    n = length(processedlayers.layers)
+    if n != 1
+        error("Received $n `ProcessedLayer`s when calling `ProcessedLayer(layer)`. If you have a layer whose processing returns zero or multiple `ProcessedLayer`s, use `ProcessedLayers(layer)` instead.")
+    end
+    return processedlayers.layers[]
+end
 
 unnest(vs::AbstractArray, indices) = map(k -> [el[k] for el in vs], indices)
 
