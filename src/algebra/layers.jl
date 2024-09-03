@@ -38,7 +38,8 @@ end
 
 function ProcessedLayers(a::AbstractAlgebraic)
     layers::Layers = a
-    return ProcessedLayers(map(process, layers))
+    processedlayers_array = map(process, layers)
+    return ProcessedLayers(reduce(vcat, [processedlayer.layers for processedlayer in processedlayers_array]))
 end
 
 """
