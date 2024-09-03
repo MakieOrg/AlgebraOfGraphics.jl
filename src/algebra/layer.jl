@@ -149,18 +149,6 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
     return ProcessedLayer(; merge(nt, values(kwargs))...)
 end
 
-"""
-    ProcessedLayers(layer::Layer)
-
-Output of processing a `layer`. Each `ProcessedLayer` encodes
-- plot type,
-- grouping arguments,
-- positional and named arguments for the plot,
-- labeling information,
-- visual attributes.
-"""
-ProcessedLayers(layer::Layer) = process(layer)
-
 unnest(vs::AbstractArray, indices) = map(k -> [el[k] for el in vs], indices)
 
 unnest_arrays(vs) = unnest(vs, keys(first(vs)))

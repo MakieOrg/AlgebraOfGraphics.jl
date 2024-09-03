@@ -41,6 +41,18 @@ function ProcessedLayers(a::AbstractAlgebraic)
     return ProcessedLayers(map(process, layers))
 end
 
+"""
+    ProcessedLayers(layer::Layer)
+
+Output of processing a `layer`. Each `ProcessedLayer` encodes
+- plot type,
+- grouping arguments,
+- positional and named arguments for the plot,
+- labeling information,
+- visual attributes.
+"""
+ProcessedLayers(layer::Layer) = process(layer)
+
 ProcessedLayers(p::ProcessedLayer) = ProcessedLayers([p])
 ProcessedLayers(p::ProcessedLayers) = p
 
