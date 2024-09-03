@@ -77,7 +77,7 @@ end
     df.c[1:3] .= ["a", "b", "c"] # ensure all three values exist
     d = mapping(:x => exp, [:y, :z], color=:c, marker=dims(1) => t -> ["1", "2"][t], markersize=:w)
     layer = data(df) * d * visual(Scatter)
-    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+    processedlayer = AlgebraOfGraphics.ProcessedLayers(layer).layers[]
     processedlayers = map(CartesianIndices(AlgebraOfGraphics.shape(processedlayer))) do c
         primary, positional, named = map((processedlayer.primary, processedlayer.positional, processedlayer.named)) do tup
             return map(v -> v[c], tup)
