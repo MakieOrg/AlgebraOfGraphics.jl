@@ -149,6 +149,24 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
     return ProcessedLayer(; merge(nt, values(kwargs))...)
 end
 
+"""
+    ProcessedLayer(l::Layer)
+
+Process a `Layer` and return the resulting `ProcessedLayer`.
+
+Note that this method should not be used anymore as processing a `Layer`
+can now potentially return multiple `ProcessedLayer` objects.
+Therefore, you should use the plural form `ProcessedLayers(layer)`.
+"""
+function ProcessedLayer(l::Layer)
+    processedlayers = ProcessedLayers(l)
+    n = length(processedlayers.layers)
+    if n != 1
+        error("Received $n `ProcessedLayer`s when calling `ProcessedLayer(layer)`. If you have a layer whose processing returns zero or multiple `ProcessedLayer`s, use `ProcessedLayers(layer)` instead.")
+    end
+    return processedlayers.layers[]
+end
+
 unnest(vs::AbstractArray, indices) = map(k -> [el[k] for el in vs], indices)
 
 unnest_arrays(vs) = unnest(vs, keys(first(vs)))
