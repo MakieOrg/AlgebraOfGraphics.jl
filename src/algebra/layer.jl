@@ -150,16 +150,16 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
 end
 
 """
-    ProcessedLayer(layer::Layer)
+    ProcessedLayers(layer::Layer)
 
-Output of processing a `layer`. A `ProcessedLayer` encodes
+Output of processing a `layer`. Each `ProcessedLayer` encodes
 - plot type,
 - grouping arguments,
 - positional and named arguments for the plot,
 - labeling information,
 - visual attributes.
 """
-ProcessedLayer(layer::Layer) = process(layer)
+ProcessedLayers(layer::Layer) = process(layer)
 
 unnest(vs::AbstractArray, indices) = map(k -> [el[k] for el in vs], indices)
 
