@@ -493,7 +493,7 @@ function mergesorted(v1, v2)
     v = sizehint!(T[], length(v1) + length(v2))
     i1, i2 = 1, 1
     while i2 ≤ length(v2)
-        while i1 ≤ length(v1) && isless(v1[i1], v2[i2])
+        while i1 ≤ length(v1) && natural_lt(v1[i1], v2[i2])
             push_different!(v, v1[i1])
             i1 += 1
         end

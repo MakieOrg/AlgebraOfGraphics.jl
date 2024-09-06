@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added ability to return `ProcessedLayers` from transformations, thereby enabling multi-layer transformations, such as scatter plus errorbars [#549](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/549).
+- Fixed bug where `mergesorted` applied on string vectors used `isless` instead of natural sort [#553](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/553).
 
 ## v0.8.6 - 2024-09-02
 
