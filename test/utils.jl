@@ -11,6 +11,10 @@
     @test AlgebraOfGraphics.extend_extrema(e1, e2) == (-5, 11)
 
     @test AlgebraOfGraphics.midpoints(1:10) == 1.5:9.5
+
+    # issue 552
+    v = ["1", "9", "10"]
+    @test AlgebraOfGraphics.mergesorted(v, v) == v
 end
 
 @testset "arguments" begin
