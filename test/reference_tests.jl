@@ -794,3 +794,111 @@ reftest("categorical color from continuous") do
     end
     f
 end
+
+reftest("title subtitle footnotes") do 
+    spec = pregrouped(
+        fill(1:5, 6),
+        fill(11:15, 6),
+        [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
+        layout = 1:6 => nonnumeric) * visual(Heatmap)
+
+    draw(
+        spec;
+        figure = (;
+            title = "Numbers in square configuration",
+            subtitle = "Arbitrary data exhibits sinusoidal properties",
+            footnotes = [
+                rich(superscript("1"), "First footnote"),
+                rich(superscript("2"), "Second ", rich("footnote", color = :red)),
+            ],
+        ),
+        axis = (; width = 100, height = 100)
+    )
+end
+
+reftest("title subtitle footnotes single unconstrained facet") do 
+    spec = data((; x = 1:10, y = 11:20)) * mapping(:x, :y) * visual(Scatter)
+    draw(
+        spec;
+        figure = (;
+            title = "Some title",
+            subtitle = "Some subtitle",
+            footnotes = [
+                rich(superscript("1"), "First footnote"),
+                rich(superscript("2"), "Second ", rich("footnote", color = :red)),
+            ],
+        ),
+    )
+end
+
+reftest("title") do 
+    spec = pregrouped(
+        fill(1:5, 6),
+        fill(11:15, 6),
+        [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
+        layout = 1:6 => nonnumeric) * visual(Heatmap)
+
+    draw(
+        spec;
+        figure = (;
+            title = "Numbers in square configuration",
+        ),
+        axis = (; width = 100, height = 100)
+    )
+end
+
+reftest("title subtitle footnotes settings") do 
+    spec = pregrouped(
+        fill(1:5, 6),
+        fill(11:15, 6),
+        [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
+        layout = 1:6 => nonnumeric) * visual(Heatmap)
+
+    draw(
+        spec;
+        figure = (;
+            title = "Numbers in square configuration",
+            titlefont = :italic,
+            titlesize = 20,
+            titlecolor = :orange,
+            subtitle = "Arbitrary data exhibits sinusoidal properties",
+            subtitlefont = :bold_italic,
+            subtitlesize = 10,
+            subtitlecolor = :brown,
+            titlealign = :right,
+            footnotes = [
+                rich(superscript("1"), "First footnote"),
+                rich(superscript("2"), "Second ", rich("footnote", color = :red)),
+            ],
+            footnotefont = :bold,
+            footnotecolor = :blue,
+            footnotesize = 20,
+            footnotealign = :right,
+        ),
+        axis = (; width = 100, height = 100)
+    )
+    
+end
+
+reftest("title subtitle footnotes fontsize inherit") do 
+    spec = pregrouped(
+        fill(1:5, 6),
+        fill(11:15, 6),
+        [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
+        layout = 1:6 => nonnumeric) * visual(Heatmap)
+
+    draw(
+        spec;
+        figure = (;
+            fontsize = 20,
+            title = "Numbers in square configuration",
+            subtitle = "Arbitrary data exhibits sinusoidal properties",
+            footnotes = [
+                rich(superscript("1"), "First footnote"),
+                rich(superscript("2"), "Second ", rich("footnote", color = :red)),
+            ],
+        ),
+        axis = (; width = 100, height = 100)
+    )
+    
+end
