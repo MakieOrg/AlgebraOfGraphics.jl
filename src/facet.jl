@@ -94,7 +94,9 @@ function span_label!(fig, aes, var)
         return ntuple(i -> i == index ? protrusion + p : 0f0, 4)
     end
 
-    label = getattr(ax, :label)
+    label = to_value(getattr(ax, :label))
+    label == "" && return
+
     rotation = var == :x ? 0.0 : π/2
     color = getattr(ax, :labelcolor)
     font = getattr(ax, :labelfont)
