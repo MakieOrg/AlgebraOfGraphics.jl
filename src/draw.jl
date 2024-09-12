@@ -46,6 +46,31 @@ arguments of either `legend` or `colorbar`.
 
 For finer control, use [`draw!`](@ref),
 [`legend!`](@ref), and [`colorbar!`](@ref) independently.
+
+## Figure options
+
+AlgebraOfGraphics accepts the following special keywords under the `figure` keyword,
+the remaining attributes are forwarded to Makie's `Figure` constructor.
+The `title`, `subtitle` and `footnotes` arguments accept objects of any kind that Makie's
+`Label` or `text` function can handle, such as `rich` text.
+
+    - `title`
+    - `subtitle`
+    - `titlesize::Union{Nothing,Float64}`
+    - `subtitlesize::Union{Nothing,Float64}`
+    - `titlealign::Union{Nothing,Symbol}`
+    - `titlecolor`
+    - `subtitlecolor`
+    - `titlefont`
+    - `subtitlefont`
+    - `titlelineheight`
+    - `subtitlelineheight`
+    - `footnotes::Union{Nothing,Vector{Any}}`
+    - `footnotesize::Union{Nothing,Float64}`
+    - `footnotefont`
+    - `footnotecolor`
+    - `footnotealign`
+    - `footnotelineheight`
 """
 function draw(d::AbstractDrawable, scales::Scales = scales();
               axis=NamedTuple(), figure=NamedTuple(),
@@ -62,10 +87,78 @@ end
 
 _remove_show_kw(pairs) = filter(((key, value),) -> key !== :show, pairs)
 
+struct FigureSettings
+    title
+    subtitle
+    titlesize::Union{Nothing,Float64}
+    subtitlesize::Union{Nothing,Float64}
+    titlealign::Union{Nothing,Symbol}
+    titlecolor
+    subtitlecolor
+    titlefont
+    subtitlefont
+    titlelineheight
+    subtitlelineheight
+    footnotes::Union{Nothing,Vector{Any}}
+    footnotesize::Union{Nothing,Float64}
+    footnotefont
+    footnotecolor
+    footnotealign
+    footnotelineheight
+end
+
+function figure_settings(;
+        title = nothing,
+        subtitle = nothing,
+        titlefont = nothing,
+        subtitlefont = nothing,
+        titlecolor = nothing,
+        subtitlecolor = nothing,
+        titlesize = nothing,
+        subtitlesize = nothing,
+        titlealign = nothing,
+        titlelineheight = nothing,
+        subtitlelineheight = nothing,
+        footnotes = nothing,
+        footnotesize = nothing,
+        footnotefont = nothing,
+        footnotecolor = nothing,
+        footnotealign = nothing,
+        footnotelineheight = nothing,
+        kwargs...,
+    )
+
+    f = FigureSettings(
+        title,
+        subtitle,
+        titlesize,
+        subtitlesize,
+        titlealign,
+        titlecolor,
+        subtitlecolor,
+        titlefont,
+        subtitlefont,
+        titlelineheight,
+        subtitlelineheight,
+        footnotes,
+        footnotesize,
+        footnotefont,
+        footnotecolor,
+        footnotealign,
+        footnotelineheight,
+    )
+
+    return f, kwargs
+end
+
 function _draw(d::AbstractDrawable, scales::Scales;
               axis, figure, facet, legend, colorbar)
 
-    return update(Figure(; pairs(figure)...)) do f
+    fs, remaining_figure_kw = figure_settings(; pairs(figure)...)
+
+    _filter_nothings(; kwargs...) = (key => value for (key, value) in kwargs if value !== nothing)
+
+    return update(Figure(; pairs(remaining_figure_kw)...)) do f
         grid = plot!(f, d, scales; axis)
         fg = FigureGrid(f, grid)
         facet!(fg; facet)
@@ -74,6 +167,25 @@ function _draw(d::AbstractDrawable, scales::Scales;
         end
         if get(legend, :show, true)
             legend!(fg; _remove_show_kw(pairs(legend))...)
+        end
+
+        base_fontsize = Makie.theme(fg.figure.scene)[:fontsize][]
+
+        if fs.subtitle !== nothing
+            Label(fg.figure[begin-1, :], fs.subtitle; tellwidth = false, halign = :left, _filter_nothings(; font = fs.subtitlefont, color = fs.subtitlecolor, fontsize = fs.subtitlesize, halign = fs.titlealign, lineheight = fs.subtitlelineheight)...)
+        end
+        if fs.title !== nothing
+            Label(fg.figure[begin-1, :], fs.title; tellwidth = false, fontsize = base_fontsize * 1.15, font = :bold, halign = :left, _filter_nothings(; font = fs.titlefont, color = fs.titlecolor, fontsize = fs.titlesize, halign = fs.titlealign, lineheight = fs.titlelineheight)...)
+        end
+        if fs.subtitle !== nothing
+            fg.figure.layout.addedrowgaps[1] = Fixed(0)
+        end
+        if fs.footnotes !== nothing
+            fgl = GridLayout(fg.figure[end+1, :]; halign = :left, _filter_nothings(; halign = fs.footnotealign)...)
+            for (i, note) in enumerate(fs.footnotes)
+                Label(fgl[i, 1], note; tellwidth = false, halign = :left, fontsize = base_fontsize / 1.15, _filter_nothings(; halign = fs.footnotealign, font = fs.footnotefont, color = fs.footnotecolor, fontsize = fs.footnotesize, lineheight = fs.footnotelineheight)...)
+            end
+            fgl.addedrowgaps .= Ref(Fixed(0))
         end
         resize_to_layout!(fg)
         return fg

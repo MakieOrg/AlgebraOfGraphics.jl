@@ -112,6 +112,7 @@ function aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
     )
 
     return (;
+        fonts = (; regular = lightfont, bold = mediumfont),
         marker,
         colormap,
         linecolor,

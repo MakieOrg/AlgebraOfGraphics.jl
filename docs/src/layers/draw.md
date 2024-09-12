@@ -332,3 +332,33 @@ If you want to add a title to a merged group, you can add it with the `group => 
 ```@example legendorder2
 draw(spec1 + spec2_custom_scale; legend = (; order = [[:Color, :color2] => "Title"]))
 ```
+
+## Figure options
+
+AlgebraOfGraphics can add a title, subtitle and footnotes to a figure automatically.
+Settings for these must be passed to the `figure` keyword.
+Check the [`draw`](@ref) function for a complete list.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = pregrouped(
+    fill(1:5, 6),
+    fill(11:15, 6),
+    [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
+    layout = 1:6 => nonnumeric) * visual(Heatmap)
+
+draw(
+    spec;
+    figure = (;
+        title = "Numbers in square configuration",
+        subtitle = "Arbitrary data exhibits sinusoidal properties",
+        footnotes = [
+            rich(superscript("1"), "First footnote"),
+            rich(superscript("2"), "Second ", rich("footnote", color = :red)),
+        ],
+    ),
+    axis = (; width = 100, height = 100)
+)
+```
