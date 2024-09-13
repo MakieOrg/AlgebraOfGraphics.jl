@@ -231,6 +231,8 @@ function hardcoded_mapping(key::Symbol)
     key === :row ? AesRow :
     key === :col ? AesCol :
     key === :group ? AesGroup :
+    key === :xdodge ? AesDodgeX :
+    key === :ydodge ? AesDodgeY :
     nothing
 end
 
@@ -327,7 +329,7 @@ end
 function to_entry(p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
     entry = to_entry(p.plottype, p, categoricalscales, continuousscales)
     insert!(entry.named, :cycle, nothing)
-    for key in (:group, :layout, :row, :col)
+    for key in (:group, :layout, :row, :col, :xdodge, :ydodge)
         if haskey(entry.named, key)
             delete!(entry.named, key)
         end
@@ -346,7 +348,7 @@ function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuou
         full_rescale(value, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     end
     primary = map(pairs(p.primary)) do (key, values)
-        if key in (:group, :layout, :col, :row)
+        if key in (:group, :layout, :col, :row, :xdodge, :ydodge)
             return values
         end
         # seems that there can be vectors here for concatenated layers, but for unconcatenated these should
@@ -360,11 +362,25 @@ function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuou
         end
     end
 
+    for dodge in (:xdodge, :ydodge)
+        dodge_aes = dodge === :xdodge ? AesDodgeX : AesDodgeY
+        axis_aes = dodge === :xdodge ? AesX : AesY
+        if haskey(primary, dodge)
+            positional = map(eachindex(positional)) do i
+                aes_mapping[i] == axis_aes || return positional[i]
+                return compute_dodge(positional[i], dodge, primary[dodge], scale_mapping, categoricalscales, dodge_aes)
+            end
+            named = map(pairs(named)) do (key, values)
+                aes_mapping[key] == axis_aes || return values
+                return compute_dodge(values, dodge, primary[dodge], scale_mapping, categoricalscales, dodge_aes)
+            end
+        end
+    end
+
     Entry(P, positional, merge(p.attributes, named, primary))
 end
 
-function get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
-    aes = aes_mapping[key]
+function get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     scale_id = get(scale_mapping, key, nothing)
     scale = if haskey(categoricalscales, aes) && haskey(categoricalscales[aes], scale_id)
         categoricalscales[aes][scale_id]
@@ -378,9 +394,11 @@ function get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuou
 end
 
 function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
-    scale = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    hc_aes = hardcoded_mapping(key)
+    aes = hc_aes === nothing ? aes_mapping[key] : hc_aes
+    scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     scale === nothing && return data # verbatim data
-    full_rescale(data, aes_mapping[key], scale)
+    return full_rescale(data, aes, scale)
 end
 
 function default_colormap()
@@ -483,4 +501,19 @@ function Base.show(io::IO, layers::Layers; indent = 0)
     for (i, layer) in enumerate(layers)
         show(io, layer; indent = indent + 1, index = i)
     end
+end
+
+function compute_dodge(data, key::Symbol, dodgevalues, scale_mapping, categoricalscales, dodge_aes)
+    scale_id = get(scale_mapping, key, nothing)
+    scale = categoricalscales[dodge_aes][scale_id]
+
+    indices = rescale(dodgevalues isa AbstractArray ? dodgevalues : [dodgevalues], scale)
+    
+    props = scale.props.aesprops
+    n = length(datavalues(scale))
+    n == 1 && return data
+    width = props.width !== nothing ? props.width : 0.85
+    # scale to 0-1, center around 0, shrink to width (like centers of bins that added together result in width)
+    offsets = ((indices .- 1) ./ (n - 1) .- 0.5) .* width * (n-1) / n
+    return data .+ offsets
 end

@@ -84,7 +84,7 @@ function aesthetic_mapping(::Type{BarPlot}, N::Int)
             1 => :direction => dictionary([
                 :y => AesY,
                 :x => AesX,
-            ])
+            ]),
         ]
     else
         [
@@ -105,7 +105,10 @@ function aesthetic_mapping(::Type{BarPlot}, N::Int)
             :y => AesDeltaX,
             :x => AesDeltaY,
         ]),
-        :dodge => AesDodge,
+        :dodge => :direction => dictionary([
+            :y => AesDodgeX,
+            :x => AesDodgeY,
+        ]),
         :stack => AesStack,
         :fillto => :direction => dictionary([
             :y => AesY,
@@ -127,7 +130,10 @@ function aesthetic_mapping(::Type{Violin}, ::Normal, ::Normal)
         ]),
         :color => AesColor,
         :side => AesViolinSide,
-        :dodge => AesDodge,
+        :dodge => :orientation => dictionary([
+            :horizontal => AesDodgeY,
+            :vertical => AesDodgeX,
+        ]),
     ])
 end
 
@@ -290,7 +296,10 @@ function aesthetic_mapping(::Type{BoxPlot}, ::Normal, ::Normal)
             :vertical => AesY,
         ]),
         :color => AesColor,
-        :dodge => AesDodge,
+        :dodge => :orientation => dictionary([
+            :horizontal => AesDodgeY,
+            :vertical => AesDodgeX,
+        ]),
     ])
 end
 
@@ -313,7 +322,10 @@ function aesthetic_mapping(::Type{CrossBar}, ::Normal, ::Normal, ::Normal, ::Nor
             :vertical => AesY,
         ]),
         :color => AesColor,
-        :dodge => AesDodge,
+        :dodge => :orientation => dictionary([
+            :horizontal => AesDodgeY,
+            :vertical => AesDodgeX,
+        ]),
     ])
 end
 
