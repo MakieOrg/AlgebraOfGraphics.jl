@@ -451,7 +451,8 @@ function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ,AesDeltaX,AesDeltaY
 end
 
 function numerical_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
-    scale = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    aes = aes_mapping[key]
+    scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     
     if scale isa ContinuousScale
         return values, scale
