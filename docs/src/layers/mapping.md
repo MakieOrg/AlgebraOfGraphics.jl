@@ -39,6 +39,74 @@ draw!(f[1, 2], spec2)
 f
 ```
 
+## Hardcoded aesthetics
+
+Most aesthetics are tied to specific attributes of plot types, for example like `AesColor` to `strokecolor` of `Scatter`.
+There are a few aesthetics, however, which are hardcoded to belong to certain `mapping` keywords independent of the plot type in use.
+
+These are `layout`, `row` and `col` for facetting, `group` for creating a separate plot for each group (like separate lines instead of one long line) and `dodge_x` and `dodge_y` for dodging.
+
+### Dodging
+
+Dodging refers to the shifting of plots on a (usually categorical) scale depending on the group they belong to.
+It is used to avoid overlaps. Some plot types, like `BarPlot`, have their own `dodge` keyword because their dodging logic additionally needs to transform the visual elements (for example, dodging a bar plot makes thinner bars). For all other plot types, you can use the generic `dodge_x` and `dodge_y` keywords.
+
+They work by shifting each categorical group by some value that depends on the chosen "dodge width".
+The dodge width refers to the width that all dodged elements in a group add up to at a given point.
+Some plot types have an inherent width, like barplots. Others have no width, like scatters or errorbars.
+For those plot types that have no width to use for dodging, you have to specify one manually in `scales`.
+
+Here's an example of a manual width selection:
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+df = (
+   x = repeat(1:10, inner = 2),
+   y = cos.(range(0, 2pi, length = 20)),
+   ylow = cos.(range(0, 2pi, length = 20)) .- 0.2,
+   yhigh = cos.(range(0, 2pi, length = 20)) .+ 0.3,
+   dodge = repeat(["A", "B"], 10)
+)
+
+f = Figure()
+plt = data(df) * (
+   mapping(:x, :y, dodge_x = :dodge, color = :dodge) * visual(Scatter) +
+   mapping(:x, :ylow, :yhigh, dodge_x = :dodge, color = :dodge) * visual(Rangebars)
+)
+draw!(f[1, 1], plt, scales(DodgeX = (; width = 1)), axis = (; title = "width = 1"))
+draw!(f[1, 2], plt, scales(DodgeX = (; width = 0.75)), axis = (; title = "width = 0.75"))
+draw!(f[2, 1], plt, scales(DodgeX = (; width = 0.5)), axis = (; title = "width = 0.5"))
+draw!(f[2, 2], plt, scales(DodgeX = (; width = 0.25)), axis = (; title = "width = 0.25"))
+f
+```
+
+A common scenario is plotting errorbars on top of barplots.
+In this case, AlgebraOfGraphics can detect the inherent dodging width of the barplots and adjust accordingly for the errorbars. Note in this example how choosing a manual dodging width only applies to the errorbars (because the barplot plot type handles this internally) and potentially leads to a misalignment between the different plot elements:
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+df = (
+   x = repeat(1:10, inner = 2),
+   y = cos.(range(0, 2pi, length = 20)),
+   ylow = cos.(range(0, 2pi, length = 20)) .- 0.2,
+   yhigh = cos.(range(0, 2pi, length = 20)) .+ 0.3,
+   dodge = repeat(["A", "B"], 10)
+)
+
+f = Figure()
+plt = data(df) * (
+   mapping(:x, :y, dodge = :dodge, color = :dodge) * visual(BarPlot) +
+   mapping(:x, :ylow, :yhigh, dodge_x = :dodge) * visual(Rangebars)
+)
+draw!(f[1, 1], plt, axis = (; title = "No width specified, auto-determined by AlgebraOfGraphics"))
+draw!(f[2, 1], plt, scales(DodgeX = (; width = 0.25)), axis = (; title = "Manually specifying width = 0.25 leads to a mismatch"))
+f
+```
+
 ## Pair syntax
 
 The `Pair` operator `=>` can be used for three different purposes within `mapping`:
