@@ -647,11 +647,11 @@ reftest("ecdfplot") do
     group = repeat(["A", "B"], inner = 50)
     spec1 = data((; x)) * mapping(:x) * visual(ECDFPlot)
     # attributes for ecdfplot currently don't work in Makie, add back to test when they do
-    # spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(ECDFPlot)
+    spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(ECDFPlot)
     f = Figure()
     draw!(f[1, 1], spec1)
-    # fg = draw!(f[2, 1], spec2)
-    # legend!(f[2, 2], fg)
+    fg = draw!(f[2, 1], spec2)
+    legend!(f[2, 2], fg)
     f
 end
 
