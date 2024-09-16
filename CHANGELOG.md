@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added ability to specify `title`, `subtitle` and `footnotes` plus settings in the `draw` function [#556](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/556).
+- Added `dodge_x` and `dodge_y` keywords to `mapping` that allow to dodge any plot types that have `AesX` or `AesY` data [#558](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/558).
 
 ## v0.8.7 - 2024-09-06
 
