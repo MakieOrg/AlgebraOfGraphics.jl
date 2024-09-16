@@ -513,7 +513,11 @@ function compute_dodge(data, key::Symbol, dodgevalues, scale_mapping, categorica
     props = scale.props.aesprops
     n = length(datavalues(scale))
     n == 1 && return data
-    width = props.width !== nothing ? props.width : 0.85
+    width = if props.width !== nothing
+        props.width
+    else
+        error("Tried to compute dodging offsets but the `width` attribute of the dodging scale was `nothing`. This happens if only plots participate in the dodge that do not have an inherent width. For example, a scatter plot has no width but a barplot does. You can pass a width manually via the settings for `$(scale_id !== nothing ? scale_id : string(nameof(dodge_aes))[4:end])` in the `scales()` function.")
+    end
     # scale to 0-1, center around 0, shrink to width (like centers of bins that added together result in width)
     offsets = ((indices .- 1) ./ (n - 1) .- 0.5) .* width * (n-1) / n
     return data .+ offsets
