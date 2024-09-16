@@ -258,14 +258,8 @@ function aesthetic_mapping(::Type{Errorbars}, i::Int)
         ])
     ]
     dictionary([
-        1 => :direction => dictionary([
-            :x => AesY,
-            :y => AesX,
-        ]),
-        2 => :direction => dictionary([
-            :x => AesX,
-            :y => AesY,
-        ]),
+        1 => AesX,
+        2 => AesY,
         3 => :direction => dictionary([
             :x => AesDeltaX,
             :y => AesDeltaY,

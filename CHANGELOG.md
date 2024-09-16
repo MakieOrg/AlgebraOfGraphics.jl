@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fixed aesthetics of `errorbar` so that x and y stay labelled correctly when using `direction = :x` [#560](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/560).
 - Added ability to specify `title`, `subtitle` and `footnotes` plus settings in the `draw` function [#556](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/556).
 - Added `dodge_x` and `dodge_y` keywords to `mapping` that allow to dodge any plot types that have `AesX` or `AesY` data [#558](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/558).
 
