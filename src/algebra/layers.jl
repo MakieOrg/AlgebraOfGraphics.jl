@@ -231,8 +231,8 @@ function hardcoded_mapping(key::Symbol)
     key === :row ? AesRow :
     key === :col ? AesCol :
     key === :group ? AesGroup :
-    key === :xdodge ? AesDodgeX :
-    key === :ydodge ? AesDodgeY :
+    key === :dodge_x ? AesDodgeX :
+    key === :dodge_y ? AesDodgeY :
     nothing
 end
 
@@ -329,7 +329,7 @@ end
 function to_entry(p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
     entry = to_entry(p.plottype, p, categoricalscales, continuousscales)
     insert!(entry.named, :cycle, nothing)
-    for key in (:group, :layout, :row, :col, :xdodge, :ydodge)
+    for key in (:group, :layout, :row, :col, :dodge_x, :dodge_y)
         if haskey(entry.named, key)
             delete!(entry.named, key)
         end
@@ -348,7 +348,7 @@ function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuou
         full_rescale(value, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     end
     primary = map(pairs(p.primary)) do (key, values)
-        if key in (:group, :layout, :col, :row, :xdodge, :ydodge)
+        if key in (:group, :layout, :col, :row, :dodge_x, :dodge_y)
             return values
         end
         # seems that there can be vectors here for concatenated layers, but for unconcatenated these should
@@ -362,9 +362,9 @@ function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuou
         end
     end
 
-    for dodge in (:xdodge, :ydodge)
-        dodge_aes = dodge === :xdodge ? AesDodgeX : AesDodgeY
-        axis_aes = dodge === :xdodge ? AesX : AesY
+    for dodge in (:dodge_x, :dodge_y)
+        dodge_aes = dodge === :dodge_x ? AesDodgeX : AesDodgeY
+        axis_aes = dodge === :dodge_x ? AesX : AesY
         if haskey(primary, dodge)
             positional = map(eachindex(positional)) do i
                 aes_mapping[i] == axis_aes || return positional[i]
