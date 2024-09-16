@@ -196,27 +196,27 @@ reftest("rangebars cat color direction x") do
 end
 
 reftest("errorbars") do
-    data((; x = 1:4, y = 1:4, err = 2:5)) * mapping(:x, :y, :err) *
+    data((; x = ["A", "B", "C", "D"], y = 5:8, err = 2:5)) * mapping(:x, :y, :err) *
         visual(Errorbars) |> draw
 end
 
 reftest("errorbars direction x") do
-    data((; x = 1:4, y = 1:4, err = 2:5)) * mapping(:x, :y, :err) *
+    data((; x = ["A", "B", "C", "D"], y = 5:8, err = 2:5)) * mapping(:x, :y, :err) *
         visual(Errorbars; direction = :x) |> draw
 end
 
 reftest("errorbars cat color direction x") do
-    data((; x = 1:4, y = 1:4, err = 2:5, z = 1:4)) * mapping(:x, :y, :err, color = :z => nonnumeric) *
+    data((; x = ["A", "B", "C", "D"], y = 5:8, err = 2:5, z = 1:4)) * mapping(:x, :y, :err, color = :z => nonnumeric) *
         visual(Errorbars; direction = :x) |> draw
 end
 
 reftest("errorbars cat color") do
-    data((; x = 1:4, y = 1:4, err = 2:5, z = 1:4)) * mapping(:x, :y, :err, color = :z => nonnumeric) *
+    data((; x = ["A", "B", "C", "D"], y = 5:8, err = 2:5, z = 1:4)) * mapping(:x, :y, :err, color = :z => nonnumeric) *
         visual(Errorbars) |> draw
 end
 
 reftest("errorbars low high") do
-    data((; x = 1:4, y = 1:4, errlow = [0.1, 0.2, 0.3, 0.4], errhigh = [0.4, 0.2, 0.3, 0.1])) * mapping(:x, :y, :errlow, :errhigh) *
+    data((; x = ["A", "B", "C", "D"], y = 5:8, errlow = [0.1, 0.2, 0.3, 0.4], errhigh = [0.4, 0.2, 0.3, 0.1])) * mapping(:x, :y, :errlow, :errhigh) *
         visual(Errorbars) |> draw
 end
 
