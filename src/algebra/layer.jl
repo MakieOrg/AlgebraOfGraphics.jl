@@ -169,8 +169,9 @@ end
 
 unnest(vs::AbstractArray, indices) = map(k -> [el[k] for el in vs], indices)
 
-unnest_arrays(vs) = unnest(vs, keys(first(vs)))
+unnest_arrays(vs) = isempty(vs) ? [[]] : unnest(vs, keys(first(vs)))
 function unnest_dictionaries(vs)
+    isempty(vs) && return Dictionary()
     return Dictionary(Dict((k => [el[k] for el in vs] for k in collect(keys(first(vs))))))
 end
 slice(v, c) = map(el -> getnewindex(el, c), v)
@@ -190,6 +191,21 @@ function Base.map(f, processedlayer::ProcessedLayer)
     end
     positional, named = unnest_arrays(map(first, outputs)), unnest_dictionaries(map(last, outputs))
     return ProcessedLayer(processedlayer; positional, named)
+end
+
+function filtermap(f, processedlayer::ProcessedLayer)
+    axs = shape(processedlayer)
+    outputs = map(CartesianIndices(axs)) do c
+        return f(slice(processedlayer.positional, c), slice(processedlayer.named, c))
+    end
+    to_remove = outputs .== nothing
+    deleteat!(outputs, to_remove)
+    primary = map(processedlayer.primary) do value
+        value[.!to_remove]
+    end
+    
+    positional, named = unnest_arrays(map(first, outputs)), unnest_dictionaries(map(last, outputs))
+    return ProcessedLayer(processedlayer; positional, named, primary)
 end
 
 ## Get scales from a `ProcessedLayer`
