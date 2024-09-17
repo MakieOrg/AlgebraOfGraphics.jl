@@ -927,6 +927,31 @@ reftest("dodge barplot with errorbars") do
     f
 end
 
+reftest("dodge barplot with errorbars 5") do
+    f = Figure(size = (800, 800))
+    df = (
+        x = repeat(1:2, inner = 5),
+        y = 1:10,
+        err = repeat([0.5, 0.4, 0.7, 0.6, 0.4], 2),
+        group = repeat(["A", "B", "C", "D", "E"], 2),
+    )
+
+    function spec(; kwargs...)
+        xdir = get(kwargs, :direction, :y) == :x
+        dodge_map = xdir ? mapping(dodge_y = :group) : mapping(dodge_x = :group)
+        return data(df) * (
+            mapping(:x, :y, dodge = :group, color = :group) * visual(BarPlot; kwargs...) +
+            mapping(xdir ? :y : :x, xdir ? :x : :y, :err) * dodge_map * visual(Errorbars; direction = xdir ? :x : :y)
+        )
+    end
+
+    draw!(f[1, 1], spec())
+    draw!(f[1, 2], spec(; width = 0.7, dodge_gap = 0.1))
+    draw!(f[2, 1], spec(; direction = :x))
+    draw!(f[2, 2], spec(; direction = :x, width = 0.7, gap = 0.3, dodge_gap = 0.1))
+    f
+end
+
 reftest("dodge scatter with rangebars") do
     df = (
         x = repeat(1:10, inner = 2),

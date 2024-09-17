@@ -577,22 +577,23 @@ function determine_dodge_width(T::Type{BarPlot}, p::ProcessedLayer, aes_mapping,
     width = attribute_or_plot_default(T, p.attributes, :width)
     gap = attribute_or_plot_default(T, p.attributes, :gap)
     dodge_gap = attribute_or_plot_default(T, p.attributes, :dodge_gap)
-    gap_scaler = dodge_gap / (n_dodge - 1) * 1.5 # why 1.5?
+    dodge_width = Makie.scale_width(dodge_gap, n_dodge)
     if width === Makie.automatic
         corresponding_aes(::Type{AesDodgeX}) = AesX
         corresponding_aes(::Type{AesDodgeY}) = AesY
         if length(p.positional) == 1 # Makie goes 1:n automatically if only one arg is given
-            return (1.0 - gap + gap_scaler)
+            w = 1
         end
         for key in eachindex(p.positional)
             if aes_mapping[key] === corresponding_aes(dodgetype)
-                return resolution(p.positional[key]) * (1 - gap + gap_scaler)
+                w = resolution(p.positional[key])
             end
         end
     elseif width isa Real
-        return width * (1 - gap + gap_scaler)
+        w = width
     end
-    return
+    w_with_gap = w * (1 - gap)
+    return n_dodge * w_with_gap * (dodge_width + dodge_gap)
 end
 
 function resolution(vec_of_vecs)::Float64
