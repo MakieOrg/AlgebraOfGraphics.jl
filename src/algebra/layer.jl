@@ -224,7 +224,8 @@ _default_categorical_palette(::Type{AesLineStyle}) = to_value(Makie.current_defa
 _default_categorical_palette(::Type{AesLayout}) = wrap
 _default_categorical_palette(::Type{<:Union{AesRow,AesCol}}) = Makie.automatic
 _default_categorical_palette(::Type{AesGroup}) = Makie.automatic
-_default_categorical_palette(::Type{AesDodge}) = Makie.automatic
+_default_categorical_palette(::Type{AesDodgeX}) = Makie.automatic
+_default_categorical_palette(::Type{AesDodgeY}) = Makie.automatic
 _default_categorical_palette(::Type{AesStack}) = Makie.automatic
 _default_categorical_palette(::Type{AesViolinSide}) = [:left, :right]
 

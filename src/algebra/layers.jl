@@ -231,6 +231,8 @@ function hardcoded_mapping(key::Symbol)
     key === :row ? AesRow :
     key === :col ? AesCol :
     key === :group ? AesGroup :
+    key === :dodge_x ? AesDodgeX :
+    key === :dodge_y ? AesDodgeY :
     nothing
 end
 
@@ -273,6 +275,8 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
     for scaledict in values(categoricalscales)
         map!(fitscale, scaledict, scaledict)
     end
+
+    set_dodge_width_default!(categoricalscales, processedlayers)
 
     pls_grid = compute_processedlayers_grid(processedlayers, categoricalscales)
     entries_grid, continuousscales_grid, merged_continuousscales =
@@ -327,7 +331,7 @@ end
 function to_entry(p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
     entry = to_entry(p.plottype, p, categoricalscales, continuousscales)
     insert!(entry.named, :cycle, nothing)
-    for key in (:group, :layout, :row, :col)
+    for key in (:group, :layout, :row, :col, :dodge_x, :dodge_y)
         if haskey(entry.named, key)
             delete!(entry.named, key)
         end
@@ -346,7 +350,7 @@ function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuou
         full_rescale(value, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     end
     primary = map(pairs(p.primary)) do (key, values)
-        if key in (:group, :layout, :col, :row)
+        if key in (:group, :layout, :col, :row, :dodge_x, :dodge_y)
             return values
         end
         # seems that there can be vectors here for concatenated layers, but for unconcatenated these should
@@ -360,11 +364,25 @@ function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuou
         end
     end
 
+    for dodge in (:dodge_x, :dodge_y)
+        dodge_aes = dodge === :dodge_x ? AesDodgeX : AesDodgeY
+        axis_aes = dodge === :dodge_x ? AesX : AesY
+        if haskey(primary, dodge)
+            positional = map(eachindex(positional)) do i
+                aes_mapping[i] == axis_aes || return positional[i]
+                return compute_dodge(positional[i], dodge, primary[dodge], scale_mapping, categoricalscales, dodge_aes)
+            end
+            named = map(pairs(named)) do (key, values)
+                aes_mapping[key] == axis_aes || return values
+                return compute_dodge(values, dodge, primary[dodge], scale_mapping, categoricalscales, dodge_aes)
+            end
+        end
+    end
+
     Entry(P, positional, merge(p.attributes, named, primary))
 end
 
-function get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
-    aes = aes_mapping[key]
+function get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     scale_id = get(scale_mapping, key, nothing)
     scale = if haskey(categoricalscales, aes) && haskey(categoricalscales[aes], scale_id)
         categoricalscales[aes][scale_id]
@@ -378,9 +396,11 @@ function get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuou
 end
 
 function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
-    scale = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    hc_aes = hardcoded_mapping(key)
+    aes = hc_aes === nothing ? aes_mapping[key] : hc_aes
+    scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     scale === nothing && return data # verbatim data
-    full_rescale(data, aes_mapping[key], scale)
+    return full_rescale(data, aes, scale)
 end
 
 function default_colormap()
@@ -433,7 +453,8 @@ function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ,AesDeltaX,AesDeltaY
 end
 
 function numerical_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
-    scale = get_scale(key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    aes = aes_mapping[key]
+    scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     
     if scale isa ContinuousScale
         return values, scale
@@ -483,4 +504,100 @@ function Base.show(io::IO, layers::Layers; indent = 0)
     for (i, layer) in enumerate(layers)
         show(io, layer; indent = indent + 1, index = i)
     end
+end
+
+scale_setting_name(scale_id, aes::Type{<:Aesthetic}) = scale_id !== nothing ? scale_id : string(nameof(aes))[4:end]
+
+function compute_dodge(data, key::Symbol, dodgevalues, scale_mapping, categoricalscales, dodge_aes)
+    scale_id = get(scale_mapping, key, nothing)
+    scale = categoricalscales[dodge_aes][scale_id]
+
+    indices = rescale(dodgevalues isa AbstractArray ? dodgevalues : [dodgevalues], scale)
+    
+    props = scale.props.aesprops
+    n = length(datavalues(scale))
+    n == 1 && return data
+    width = if props.width !== nothing
+        props.width
+    else
+        error("Tried to compute dodging offsets but the `width` attribute of the dodging scale was `nothing`. This happens if only plots participate in the dodge that do not have an inherent width. For example, a scatter plot has no width but a barplot does. You can pass a width manually like `draw(..., scales($(scale_setting_name(scale_id, dodge_aes)) = (; width = 0.6))`.")
+    end
+    # scale to 0-1, center around 0, shrink to width (like centers of bins that added together result in width)
+    offsets = ((indices .- 1) ./ (n - 1) .- 0.5) .* width * (n-1) / n
+    return data .+ offsets
+end
+
+function set_dodge_width_default!(categoricalscales, processedlayers)
+    for dodgetype in (AesDodgeX, AesDodgeY)
+        haskey(categoricalscales, dodgetype) || continue
+        scales = categoricalscales[dodgetype]
+        for (scale_id, scale) in pairs(scales)
+            props = scale.props.aesprops
+            props.width === nothing || continue
+            n_dodge = length(datavalues(scale))
+            width::Union{Float64,Nothing} = nothing
+            for p in processedlayers
+                _width = determine_dodge_width(p, dodgetype, n_dodge)
+                if width === nothing
+                    width = _width
+                elseif _width !== nothing
+                    width == _width || error("Determined at least two different auto-widths for the `$(scale_setting_name(scale_id, dodgetype))` scale, $width and $_width. AlgebraOfGraphics tried to determine dodge with because you specified that a width-less plot type such as Scatter or Errorbars should be dodged. Some plot types like Barplot may have an inherent width for dodging which can often be auto-determined, so AlgebraOfGraphics looked for such widths in all other plot types in this plot. Because multiple such widths were detected, AlgebraOfGraphics gives up and you have to specify the dodge width for your width-less plots manually, like `draw(..., scales($(scale_setting_name(scale_id, dodgetype)) = (; width = 0.5))`")
+                end
+            end
+            if width !== nothing
+                scales[scale_id] = update_width(scale, width)
+            end
+        end
+    end
+    return
+end
+
+function update_width(scale::CategoricalScale, width)
+    return Accessors.@set scale.props.aesprops.width = width
+end
+
+function determine_dodge_width(p::ProcessedLayer, dodgetype, n_dodge)::Union{Float64,Nothing}
+    aes_mapping = aesthetic_mapping(p)
+    for key in keys(p.primary)
+        aes = hardcoded_or_mapped_aes(p, key, aes_mapping)
+        # check that processedlayer participates in this dodge
+        aes == dodgetype || continue
+        return determine_dodge_width(p.plottype, p, aes_mapping, dodgetype, n_dodge)
+    end
+    return nothing
+end
+
+determine_dodge_width(anyplot, p::ProcessedLayer, aes_mapping, dodgetype, n_dodge) = nothing
+
+attribute_or_plot_default(plottype, attributes, key) = get(attributes, key) do
+    to_value(Makie.default_theme(nothing, plottype)[key])
+end
+
+function determine_dodge_width(T::Type{BarPlot}, p::ProcessedLayer, aes_mapping, dodgetype, n_dodge)
+    width = attribute_or_plot_default(T, p.attributes, :width)
+    gap = attribute_or_plot_default(T, p.attributes, :gap)
+    dodge_gap = attribute_or_plot_default(T, p.attributes, :dodge_gap)
+    dodge_width = Makie.scale_width(dodge_gap, n_dodge)
+    if width === Makie.automatic
+        corresponding_aes(::Type{AesDodgeX}) = AesX
+        corresponding_aes(::Type{AesDodgeY}) = AesY
+        if length(p.positional) == 1 # Makie goes 1:n automatically if only one arg is given
+            w = 1
+        end
+        for key in eachindex(p.positional)
+            if aes_mapping[key] === corresponding_aes(dodgetype)
+                w = resolution(p.positional[key])
+            end
+        end
+    elseif width isa Real
+        w = width
+    end
+    w_with_gap = w * (1 - gap)
+    return n_dodge * w_with_gap * (dodge_width + dodge_gap)
+end
+
+function resolution(vec_of_vecs)::Float64
+    iscategoricalcontainer(vec_of_vecs) && return 1.0
+    s = unique(sort(reduce(vcat, vec_of_vecs)))
+    return minimum((b - a for (a, b) in @views zip((s[begin:end-1]), s[begin+1:end])))
 end

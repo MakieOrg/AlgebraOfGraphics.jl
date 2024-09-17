@@ -15,7 +15,8 @@ struct AesGroup <: Aesthetic end
 struct AesColor <: Aesthetic end
 struct AesMarker <: Aesthetic end
 struct AesMarkerSize <: Aesthetic end
-struct AesDodge <: Aesthetic end
+struct AesDodgeX <: Aesthetic end
+struct AesDodgeY <: Aesthetic end
 struct AesStack <: Aesthetic end
 struct AesLineStyle <: Aesthetic end
 struct AesText <: Aesthetic end
@@ -181,6 +182,17 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
         palette,
     )
 end
+
+Base.@kwdef struct AesDodgeXCategoricalProps <: CategoricalAesProps
+    width::Union{Nothing,Float64} = nothing
+end
+Base.@kwdef struct AesDodgeYCategoricalProps <: CategoricalAesProps
+    width::Union{Nothing,Float64} = nothing
+end
+
+categorical_aes_props_type(::Type{AesDodgeX}) = AesDodgeXCategoricalProps
+categorical_aes_props_type(::Type{AesDodgeY}) = AesDodgeYCategoricalProps
+
 
 function CategoricalScale(aestype::Type{<:Aesthetic}, data, label::Union{AbstractString, Nothing}, props)
     props_typed = CategoricalScaleProps(aestype, props)

@@ -22,6 +22,7 @@ using Dictionaries: AbstractDictionary, Dictionary, Indices, getindices, set!, d
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, normalize, sturges, StatsBase
 
+import Accessors
 import GLM, Loess
 import FileIO
 import RelocatableFolders
