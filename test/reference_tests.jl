@@ -995,3 +995,9 @@ reftest("manual legend order") do
     @test_throws ErrorException legend!(f[1, 4], fg, order = [:Label])
     f
 end
+
+reftest("scatterlines legend") do
+    spec1 = data((; x = 1:10, y = cos.(1:10))) * mapping(:x, :y) * visual(ScatterLines, color = :red, label = "markercolor auto")
+    spec2 = data((; x = 1:10, y = cos.(1:10) .+ 2)) * mapping(:x, :y) * visual(ScatterLines, color = :blue, markercolor = :cyan, label = "markercolor cyan")
+    draw(spec1 + spec2)
+end

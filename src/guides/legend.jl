@@ -330,15 +330,17 @@ function legend_elements(T::Type{Scatter}, attributes, scale_args::MixedArgument
 end
 
 function legend_elements(T::Type{ScatterLines}, attributes, scale_args::MixedArguments)
+    color = _get(T, scale_args, attributes, :color)
+    markercolor = _get(T, scale_args, attributes, :markercolor)
     [
         LineElement(
-            color = _get(T, scale_args, attributes, :color),
+            color = color,
             linestyle = _get(T, scale_args, attributes, :linestyle),
             linewidth = _get(T, scale_args, attributes, :linewidth),
             linepoints = [Point2f(0, 0.5), Point2f(1, 0.5)],
         ),
         MarkerElement(
-            color = _get(T, scale_args, attributes, :color),
+            color = markercolor === Makie.automatic ? color : markercolor,
             markerpoints = [Point2f(0.5, 0.5)],
             marker = _get(T, scale_args, attributes, :marker),
             markerstrokewidth = _get(T, scale_args, attributes, :strokewidth),
