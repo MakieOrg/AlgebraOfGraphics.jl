@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.8.9 - 2024-09-24
+
 - Added ability to include layers in the legend without using scales by adding `visual(label = "some label")` [#565](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/565).
 
 ## v0.8.8 - 2024-09-17
