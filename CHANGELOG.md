@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added ability to include layers in the legend without using scales by adding `visual(label = "some label")` [#565](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/565).
+
 ## v0.8.8 - 2024-09-17
 
 - Fixed aesthetics of `errorbar` so that x and y stay labelled correctly when using `direction = :x` [#560](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/560).
