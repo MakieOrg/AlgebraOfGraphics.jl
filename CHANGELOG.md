@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-## v0.8.10 -2024-09-24
+## v0.8.11 - 2024-09-25
+
+- Fixed lexicographic natural sorting of tuples (this would fall back to default sort order before) [#568](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/568).
+
+## v0.8.10 - 2024-09-24
 
 - Fixed markercolor in `ScatterLines` legends when it did not match `color` [#567](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/567).
 
