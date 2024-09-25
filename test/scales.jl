@@ -188,4 +188,10 @@ end
     scale = scales[1]
     @test scale isa CategoricalScale
     @test scale.data == ["Id 1", "Id 2", "Id 10", "Id 21", "Id 100"]
+
+    @test sort(["1", "10", "2"]) == ["1", "10", "2"]
+    @test sort(["1", "10", "2"], lt = AlgebraOfGraphics.natural_lt) == ["1", "2", "10"]
+
+    @test sort([("1", 1), ("10", 2), ("2",3)]) == [("1", 1), ("10", 2), ("2", 3)]
+    @test sort([("1", 1), ("10", 2), ("2",3)], lt = AlgebraOfGraphics.natural_lt) == [("1", 1), ("2", 3), ("10", 2)]
 end
