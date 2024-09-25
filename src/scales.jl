@@ -504,11 +504,11 @@ natural_lt(::Tuple{}, ::Tuple{}) = false
 natural_lt(::Tuple{}, ::Tuple) = true
 natural_lt(::Tuple, ::Tuple{}) = false
 
-"""
-    natural_lt(t1::Tuple, t2::Tuple)
+# """
+#     natural_lt(t1::Tuple, t2::Tuple)
 
-Return `true` when `t1` is less than `t2` in lexicographic order.
-"""
+# Return `true` when `t1` is less than `t2` in lexicographic order.
+# """
 function natural_lt(t1::Tuple, t2::Tuple)
     a, b = t1[1], t2[1]
     natural_lt(a, b) || (isequal(a, b) && natural_lt(tail(t1), tail(t2)))
