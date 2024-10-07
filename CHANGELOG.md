@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.8.12 - 2024-10-07
+
+- Added `legend` keyword in `visual` to allow overriding legend element attributes [#570](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/570).
+
 ## v0.8.11 - 2024-09-25
 
 - Fixed lexicographic natural sorting of tuples (this would fall back to default sort order before) [#568](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/568).
