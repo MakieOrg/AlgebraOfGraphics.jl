@@ -194,7 +194,7 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
                 push!(used_scales, :Label)
                 for (label, processedlayers) in pairs(labelled_layers)
                     push!(legend_els, mapreduce(vcat, processedlayers) do p
-                        legend_elements(p, MixedArguments())
+                        _legend_elements(p, MixedArguments())
                     end)
                     push!(datalabs, label)
                 end
@@ -275,7 +275,7 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
                         # skip the legend element for this processed layer if the kwargs are empty
                         # which means that no scale in this merge group affected this processedlayer
                         if !isempty(kwargs)
-                            append!(_legend_els[i], legend_elements(processedlayer, kwargs))
+                            append!(_legend_els[i], _legend_elements(processedlayer, kwargs))
                         end
                     end
                 end
@@ -304,6 +304,20 @@ function datavalues_plotvalues_datalabels(aes::Type{AesMarkerSize}, scale::Conti
     props = scale.props.aesprops::AesMarkerSizeContinuousProps
     markersizes = values_to_markersizes(datavalues, props.sizerange, scale.extrema)
     datavalues, markersizes, string.(datavalues)
+end
+
+function _legend_elements(processedlayer, scale_args::MixedArguments)
+    els = legend_elements(processedlayer, scale_args)
+    if haskey(processedlayer.attributes, :legend)
+        # LegendOverride and apply_legend_override are not public API (introduced in 0.21.13)
+        # but unlikely to change much so it's easier to just depend on them instead of copying
+        # their implementation
+        override = Makie.LegendOverride(processedlayer.attributes[:legend])
+        for el in els
+            Makie.apply_legend_override!(el, override)
+        end
+    end
+    return els
 end
 
 function legend_elements(p::ProcessedLayer, scale_args::MixedArguments)

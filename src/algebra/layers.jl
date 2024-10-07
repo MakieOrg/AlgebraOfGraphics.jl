@@ -331,7 +331,7 @@ end
 function to_entry(p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
     entry = to_entry(p.plottype, p, categoricalscales, continuousscales)
     insert!(entry.named, :cycle, nothing)
-    for key in (:group, :layout, :row, :col, :dodge_x, :dodge_y)
+    for key in (:group, :layout, :row, :col, :dodge_x, :dodge_y, :legend)
         if haskey(entry.named, key)
             delete!(entry.named, key)
         end
