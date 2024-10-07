@@ -1001,3 +1001,9 @@ reftest("scatterlines legend") do
     spec2 = data((; x = 1:10, y = cos.(1:10) .+ 2)) * mapping(:x, :y) * visual(ScatterLines, color = :blue, markercolor = :cyan, label = "markercolor cyan")
     draw(spec1 + spec2)
 end
+
+reftest("legend element overrides") do
+    spec = mapping(1:10, 1:10, color = repeat(["A", "B"], inner = 5)) *
+        visual(Scatter, legend = (; markersize = 30))
+    draw(spec)
+end

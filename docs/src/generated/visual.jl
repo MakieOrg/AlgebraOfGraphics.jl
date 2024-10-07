@@ -55,3 +55,34 @@ legend!(f[1, 2], fg)
 legend!(f[1, 3], fg, order = [:Label, :Color])
 
 f
+
+# ## Legend element overrides
+
+# Sometimes it might be necessary to override legend element properties that are otherwise
+# copied from the `visual` settings. For example, a scatter plot with many small markers might have
+# a legend that is hard to read. We can use AlgebraOfGraphics's `legend` keyword in `visual` to
+# specify override attributes via key-value pairs. Here we increase the markersize for the `MarkerElement`s
+# that are created for a `Scatter` plot:
+
+df = (;
+    x = randn(200) .+ repeat([0, 3], 100),
+    y = randn(200) .+ repeat([0, 3], 100),
+    group = repeat(["A", "B"], 100)
+)
+
+spec = data(df) *
+    mapping(:x, :y, color = :group) *
+    visual(Scatter; markersize = 5, legend = (; markersize = 15))
+
+draw(spec)
+
+# These are the attributes you can override (note that some of them have convenience aliases like `color` which applies to all elements while `polycolor` only applies to `PolyElement`s):
+# 
+# - `MarkerElement`
+#   - `[marker]points`, `markersize`, `[marker]strokewidth`, `[marker]color`, `[marker]strokecolor`, `[marker]colorrange`, `[marker]colormap`
+# - `LineElement`
+#   - `[line]points`, `linewidth`, `[line]color`, `linestyle`, `[line]colorrange`, `[line]colormap`
+# - `PolyElement`
+#   - `[poly]points`, `[poly]strokewidth`, `[poly]color`, `[poly]strokecolor`, `[poly]colorrange`, `[poly]colormap`
+# 
+#  More information about legend overrides can be found in [Makie's documentation](https://docs.makie.org/stable/reference/blocks/legend#Overriding-legend-entry-attributes).
