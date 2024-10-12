@@ -166,6 +166,14 @@ function aesthetic_mapping(::Type{ScatterLines}, N::Int)
     ])
 end
 
+function aesthetic_mapping(::Type{Stairs}, ::Normal, ::Normal)
+    dictionary([
+        pointlike_positionals(2)...,
+        :color => AesColor,
+        :linestyle => AesLineStyle,
+    ])
+end
+
 function aesthetic_mapping(::Type{HLines}, ::Normal)
     dictionary([
         1 => AesY,
