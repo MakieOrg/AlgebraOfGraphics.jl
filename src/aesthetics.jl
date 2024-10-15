@@ -226,6 +226,15 @@ function aesthetic_mapping(::Type{Heatmap}, ::Normal, ::Normal, ::Normal)
     ])
 end
 
+function aesthetic_mapping(::Type{Volume}, ::Normal, ::Normal, ::Normal, ::Normal)
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        3 => AesZ,
+        4 => AesVolumeColor, # set to AesColor would not work
+    ])
+end
+
 function aesthetic_mapping(::Type{LinesFill}, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
