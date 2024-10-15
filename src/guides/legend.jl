@@ -384,7 +384,7 @@ function legend_elements(T::Type{Heatmap}, attributes, scale_args::MixedArgument
     )]
 end
 
-function legend_elements(T::Type{<:Union{HLines,VLines,Lines,LineSegments,Errorbars,Rangebars,Wireframe,ABLines,ECDFPlot}}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Type{<:Union{HLines,VLines,Lines,LineSegments,Errorbars,Rangebars,Wireframe,ABLines,ECDFPlot,Stairs}}, attributes, scale_args::MixedArguments)
 
     is_vertical = T === VLines || (T <: Union{Errorbars,Rangebars} && _get(T, scale_args, attributes, :direction) === :y)
     # TODO: seems errorbars and rangebars are missing linestyle in Makie, once this is fixed, remove this
