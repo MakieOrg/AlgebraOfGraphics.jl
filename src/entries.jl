@@ -27,7 +27,7 @@ end
 # Use technique from https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/289
 # to encode all axis information without creating the axis.
 struct AxisSpec
-    type::Union{Type{Axis}, Type{Axis3}}
+    type::Type{<: Makie.AbstractAxis}
     position::Tuple{Int,Int}
     attributes::NamedArguments
 end
@@ -59,7 +59,7 @@ Each categorical scale should be a `CategoricalScale`, and each continuous
 scale should be a `ContinuousScale`.
 """
 struct AxisEntries
-    axis::Union{Axis, Axis3}
+    axis::Makie.AbstractAxis
     entries::Vector{Entry}
     categoricalscales::MultiAesScaleDict{CategoricalScale}
     continuousscales::MultiAesScaleDict{ContinuousScale}
