@@ -1007,3 +1007,14 @@ reftest("legend element overrides") do
         visual(Scatter, legend = (; markersize = 30))
     draw(spec)
 end
+
+reftest("stairs") do
+    spec = mapping(
+        1:10,
+        [1, 4, 3, 7, 5, 3, 2, 4, 3, 7],
+        color = repeat(["A", "B"], inner = 5),
+        linestyle = repeat(["A", "B"], inner = 5),
+    ) *
+        visual(Stairs)
+    draw(spec)
+end

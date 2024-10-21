@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.8.13 - 2024-10-21
+
+- Added aesthetics for `Stairs` [#573](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/573).
+
 ## v0.8.12 - 2024-10-07
 
 - Added `legend` keyword in `visual` to allow overriding legend element attributes [#570](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/570).
