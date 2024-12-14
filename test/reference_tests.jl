@@ -970,3 +970,34 @@ reftest("dodge scatter with rangebars") do
     draw!(f[2, 2], spec2, scales(DodgeY = (; width = 1.0)))
     f
 end
+
+reftest("manual legend labels in visual") do
+    df_subjects = (; x = repeat(1:10, 10), y = cos.(1:100), id = repeat(1:10, inner = 10))
+    df_func = (; x = range(1, 10, length = 20), y = cos.(range(1, 10, length = 20)))
+    
+    spec1 = data(df_subjects) * mapping(:x, :y, group = :id => nonnumeric) * visual(Lines, linestyle = :dash, color = (:black, 0.2), label = "Subject data")
+    spec2 = data(df_func) * mapping(:x, :y) * (visual(Lines, color = :tomato) + visual(Scatter, markersize = 12, color = :tomato, strokewidth = 2)) * visual(label = L"\cos(x)")
+    
+    draw(spec1 + spec2)
+end
+
+reftest("manual legend order") do
+    df = (; x = repeat(1:10, 3), y = cos.(1:30), group = repeat(["A", "B", "C"], inner = 10))
+    spec1 = data(df) * mapping(:x, :y, color = :group) * visual(Lines)
+
+    spec2 = data((; x = 1:10, y = cos.(1:10) .+ 2)) * mapping(:x, :y) * visual(Scatter, color = :purple, label = "Scatter")
+    
+    f = Figure()
+    fg = draw!(f[1, 1], spec1 + spec2)
+    legend!(f[1, 2], fg)
+    legend!(f[1, 3], fg, order = [:Label, :Color])
+    @test_throws ErrorException legend!(f[1, 4], fg, order = [:Color])
+    @test_throws ErrorException legend!(f[1, 4], fg, order = [:Label])
+    f
+end
+
+reftest("scatterlines legend") do
+    spec1 = data((; x = 1:10, y = cos.(1:10))) * mapping(:x, :y) * visual(ScatterLines, color = :red, label = "markercolor auto")
+    spec2 = data((; x = 1:10, y = cos.(1:10) .+ 2)) * mapping(:x, :y) * visual(ScatterLines, color = :blue, markercolor = :cyan, label = "markercolor cyan")
+    draw(spec1 + spec2)
+end

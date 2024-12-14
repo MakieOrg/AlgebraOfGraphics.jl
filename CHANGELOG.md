@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+## v0.8.11 - 2024-09-25
+
+- Fixed lexicographic natural sorting of tuples (this would fall back to default sort order before) [#568](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/568).
+
+## v0.8.10 - 2024-09-24
+
+- Fixed markercolor in `ScatterLines` legends when it did not match `color` [#567](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/567).
+
+## v0.8.9 - 2024-09-24
+
+- Added ability to include layers in the legend without using scales by adding `visual(label = "some label")` [#565](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/565).
+
 ## v0.8.8 - 2024-09-17
 
 - Fixed aesthetics of `errorbar` so that x and y stay labelled correctly when using `direction = :x` [#560](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/560).

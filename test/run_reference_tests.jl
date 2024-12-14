@@ -38,6 +38,7 @@ function compare_images(a::AbstractMatrix{<:Union{Makie.RGB,Makie.RGBA}}, b::Abs
 end
 
 function reftest(f::Function, name::String, update::Bool = get(ENV, "UPDATE_REFIMAGES", "false") == "true"; threshold = 0.05)
+    @info name
     CairoMakie.activate!(px_per_unit = 1)
     fig = with_theme(f, size = (400, 400))
     path = joinpath(@__DIR__, "reference_tests")
