@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Support `Waterfall` plot type #583
+
 ## v0.8.13 - 2024-10-21
 
 - Added aesthetics for `Stairs` [#573](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/573).
