@@ -372,6 +372,12 @@ function legend_elements(T::Type{<:Union{BarPlot,Violin,BoxPlot,Choropleth,Poly,
     )]
 end
 
+function legend_elements(T::Type{Waterfall}, attributes, scale_args::MixedArguments)
+    [PolyElement(
+        color = _get(T, scale_args, attributes, :color),
+    )]
+end
+
 function legend_elements(T::Type{RainClouds}, attributes, scale_args::MixedArguments)
     [PolyElement(
         color = _get(T, scale_args, attributes, :color),
