@@ -1018,3 +1018,13 @@ reftest("stairs") do
         visual(Stairs)
     draw(spec)
 end
+
+reftest("waterfall") do
+    df = (
+        x=repeat(1:2, inner=5),
+        y=[6, 4, 2, -8, 3, 5, 1, -2, -3, 7],
+        group=repeat('A':'E', outer=2),
+    )
+    data(df) * visual(Waterfall, show_direction=true) * mapping(:x, :y, color=:group, dodge=:group) |> draw
+end
+
