@@ -1028,3 +1028,7 @@ reftest("waterfall") do
     data(df) * visual(Waterfall, show_direction=true) * mapping(:x, :y, color=:group, dodge=:group) |> draw
 end
 
+reftest("waterfall one arg") do
+    draw(visual(Waterfall) * mapping([-1, 3, 1, -2, -1, 2]))
+end
+
