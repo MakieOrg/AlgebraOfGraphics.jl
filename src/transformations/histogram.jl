@@ -1,4 +1,4 @@
-const categoricalplottypes = [BarPlot, Heatmap, Volume, Waterfall]
+const categoricalplottypes = [BarPlot, Heatmap, Volume]
 
 function compute_edges(intervals::Tuple, bins, closed)
     bs = bins isa Tuple ? bins : map(_ -> bins, intervals)
