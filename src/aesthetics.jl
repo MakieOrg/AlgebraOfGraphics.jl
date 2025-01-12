@@ -118,6 +118,23 @@ function aesthetic_mapping(::Type{BarPlot}, N::Int)
     ])
 end
 
+aesthetic_mapping(::Type{Waterfall}, ::Normal) = aesthetic_mapping(Waterfall, 1)
+aesthetic_mapping(::Type{Waterfall}, ::Normal, ::Normal) = aesthetic_mapping(Waterfall, 2)
+function aesthetic_mapping(::Type{Waterfall}, N::Int)
+    @assert 1 <= N <= 2
+    positionals = if N == 1
+        [1 => AesY]
+    elseif N == 2
+        [1 => AesX, 2 => AesY]
+    end
+    dictionary([
+        positionals...,
+        :color => AesColor,
+        :width => AesDeltaX,
+        :dodge => AesDodgeX,
+    ])
+end
+
 function aesthetic_mapping(::Type{Violin}, ::Normal, ::Normal)
     dictionary([
         1 => :orientation => dictionary([
