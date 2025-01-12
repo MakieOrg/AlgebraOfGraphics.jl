@@ -1027,12 +1027,8 @@ reftest("waterfall") do
     )
     f = Figure()
     fg = draw!(f[1, 1], data(df) * visual(Waterfall, show_final=true) * mapping(:x, :y, color=:group, dodge=:group)) 
-    draw!(f[2, 1], data(df) * visual(Waterfall, show_direction=true) * mapping(:x, :y, color=:group, dodge=:group, stack=:group)) 
-    legend!(f[1:2, 2], fg)
+    legend!(f[1, 2], fg)
+    draw!(f[2, 1:2], data(df) * visual(Waterfall, show_direction=true) * mapping(:y))
     f
-end
-
-reftest("waterfall one arg") do
-    draw(visual(Waterfall) * mapping([-1, 3, 1, -2, -1, 2]))
 end
 
