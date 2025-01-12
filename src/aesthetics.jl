@@ -132,7 +132,6 @@ function aesthetic_mapping(::Type{Waterfall}, N::Int)
         :color => AesColor,
         :width => AesDeltaX,
         :dodge => AesDodgeX,
-        :stack => AesStack,
     ])
 end
 
