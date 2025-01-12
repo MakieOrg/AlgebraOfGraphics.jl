@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Support `Waterfall` plot type #583
+- Support `Waterfall` plot type [#583](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/583).
 
 ## v0.8.13 - 2024-10-21
 
