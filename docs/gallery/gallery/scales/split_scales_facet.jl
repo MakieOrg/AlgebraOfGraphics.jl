@@ -48,8 +48,7 @@ layer2 = mapping(
 ) * visual(Violin)
 
 layer3 = mapping(
-    # note X and Y are flipped here for a horizontal violin
-    weights,
+    weights, # note X and Y are flipped here for a horizontal violin
     taste,
     col = direct("col2"),
     row = direct("row1")
