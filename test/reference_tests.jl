@@ -1041,3 +1041,23 @@ reftest("split x scales across facet layout") do
 
     draw(spec, scales(X3 = (; label = "Third Categorical")))
 end
+
+reftest("split x and y scales row col layout") do
+    dat = data((;
+        cat1 = ["Apple", "Orange", "Pear"],
+        cont2 = [1.4, 5.1, 2.5],
+        cat3 = ["Heavy", "Light", "Medium"],
+        cont4 = [2.5, -0.2, 1.2],
+    ))
+
+    mappings = zerolayer()
+    for x in [:cat1, :cont2]
+        for y in [:cat3, :cont4]
+            mappings += mapping(x => scale(x), y => scale(y), col = direct("$x"), row = direct("$y"))
+        end
+    end
+
+    spec = dat * mappings * visual(Scatter)
+
+    draw(spec)
+end
