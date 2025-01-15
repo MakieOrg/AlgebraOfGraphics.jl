@@ -15,9 +15,9 @@ Colorbar and legend, should they be necessary, can be added separately with the
 All properties that decide how scales are visualized can be modified by passing scale options (using the `scales` function) as the second argument of `draw` .
 The properties that are accepted differ depending on the scale aesthetic type (for example `Color`, `Marker`, `LineStyle`) and whether the scale is categorical or continuous.
 
-### Categorical scale options
+### Shared categorical scale options
 
-All categorical scales take the same properties, independent of aesthetic type.
+The `palette` and `categories` options are implemented across all categorical scale types.
 
 #### `palette`
 
@@ -207,6 +207,27 @@ draw(spec, scales(Col = (;
 )))
 ```
 
+### Special categorical scale options
+
+#### Row, Col & Layout
+
+All three facetting scales have the option `show_labels` which is `true` by default and can be set to `false` to hide the facet labels.
+
+This example shows the behavior for `Col` only:
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((;
+    x = 1:16,
+    y = 17:32,
+    group1 = repeat(["A", "B"], inner = 8),
+    group2 = repeat(["C", "D"], 8))
+) * mapping(:x, :y, row = :group1, col = :group2) * visual(Scatter)
+
+draw(spec, scales(Col = (; show_labels = false)))
+```
 
 ### Continuous scale options
 
