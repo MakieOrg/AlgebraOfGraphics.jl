@@ -26,6 +26,19 @@ function Base.:*(a::AbstractAlgebraic, a′::AbstractAlgebraic)
 end
 
 """
+    zerolayer()
+
+Returns a `Layers` with an empty layer list which can act as a zero
+in the layer algebra.
+
+```
+layer * zerolayer() ~ zerolayer()
+layer + zerolayer() ~ layer
+```
+"""
+zerolayer() = Layers(Layer[])
+
+"""
     ProcessedLayers(layers::Vector{ProcessedLayer})
 
 Object encoding a list of [`AlgebraOfGraphics.ProcessedLayer`](@ref) objects.
