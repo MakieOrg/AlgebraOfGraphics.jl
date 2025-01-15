@@ -1018,3 +1018,26 @@ reftest("stairs") do
         visual(Stairs)
     draw(spec)
 end
+
+reftest("split x scales across facet layout") do
+    dat = data((;
+        cat1 = ["Apple", "Orange", "Pear"],
+        cat2 = ["Blue", "Green", "Red"],
+        cat3 = ["Heavy", "Light", "Medium"],
+        cont = [4.5, 7.6, 9.3],
+        y1 = [3.4, 5.2, 6],
+        y2 = [0.3, 0.2, 0.3],
+        y3 = [123, 82, 71],
+        y4 = [-10, 10, 0.4],
+    ))
+
+    cat_mappings = mapping(:cat1 => scale(:X1), :y1, layout = direct("A")) +
+        mapping(:cat2 => "Cat 2" => scale(:X2), :y2, layout = direct("B")) +
+        mapping(:cat3 => scale(:X3), :y3, layout = direct("C"))
+
+    cont_mapping = mapping(:cont => scale(:X4), :y4, layout = direct("D"))
+
+    spec = dat * (cat_mappings * visual(Scatter) + cont_mapping * visual(Lines))
+
+    draw(spec, scales(X3 = (; label = "Third Categorical")))
+end
