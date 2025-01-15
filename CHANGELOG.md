@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Increased compat to Makie 0.22 and GeometryBasics 0.5 [#587](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/587).
+
 ## v0.8.13 - 2024-10-21
 
 - Added aesthetics for `Stairs` [#573](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/573).
