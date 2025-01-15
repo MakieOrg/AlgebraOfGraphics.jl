@@ -15,3 +15,8 @@
 # ```
 #
 # After the above command completes, we are ready to go.
+
+using PalmerPenguins, DataFrames
+
+penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+first(penguins, 6)
