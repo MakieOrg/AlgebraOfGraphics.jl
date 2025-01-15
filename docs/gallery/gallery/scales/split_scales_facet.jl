@@ -63,7 +63,7 @@ layer4 = mapping(
 
 spec = dat * (layer1 + layer2 + layer3 + layer4)
 
-fg = draw(spec)
+fg = draw(spec, scales(Row = (; show_labels = false), Col = (; show_labels = false)))
 
 #
 
