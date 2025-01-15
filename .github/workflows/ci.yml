@@ -60,8 +60,8 @@ jobs:
             using AlgebraOfGraphics
             DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics); recursive=true)
             doctest(AlgebraOfGraphics)'
-      - run: julia --project=docs docs/make.jl
-        env:
-          JULIA_DEBUG: all
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+      # - run: julia --project=docs docs/make.jl
+      #   env:
+      #     JULIA_DEBUG: all
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
