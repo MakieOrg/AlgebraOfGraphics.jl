@@ -163,18 +163,7 @@ draw(plt; axis = axis)
 
 draw(plt, scales(Color = (; colormap = :grayC, colorrange = (0, 6))); axis = axis)
 
-# A `Heatmap` (the default visualization for a 2D density) is a bit unfortunate if
-# we want to mark species by color. In that case, one can use `visual` to change
-# the default visualization and, optionally, fine tune some arguments.
-# In this case, a `Wireframe` with thin lines looks quite nice. (Note that, for the
-# time being, we must specify explicitly that we require a 3D axis.)
-
-axis = (type = Axis3, width = 300, height = 300)
-layer = density() * visual(Wireframe, linewidth=0.05)
-plt = penguin_bill * layer * mapping(color = :species)
-draw(plt; axis = axis)
-
-# Of course, a more traditional approach would be to use a `Contour` plot instead:
+# We could also use a `Contour` plot instead:
 
 axis = (width = 225, height = 225)
 layer = density() * visual(Contour)
@@ -208,14 +197,6 @@ draw(plt; axis = axis)
 body_mass = :body_mass_g => (t -> t / 1000) => "body mass (kg)"
 layers = linear() * mapping(group = :species) + mapping(color = body_mass, marker = :species)
 plt = penguin_bill * layers
-draw(plt; axis = axis)
-
-# Naturally, within each species, heavier penguins have bigger bills, but perhaps
-# counter-intuitively the species with the shallowest bills features the heaviest penguins.
-# We could also try and see the interplay of these three variables in a 3D plot.
-
-axis = (type = Axis3, width = 300, height = 300)
-plt = penguin_bill * mapping(body_mass, color = :species)
 draw(plt; axis = axis)
 
 #
