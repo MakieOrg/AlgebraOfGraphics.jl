@@ -305,6 +305,7 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
             # create facet plots in which adjacent facets don't share X and Y scales at all,
             # like completely disjoint categories or categorical next to continuous data.
             used_scale_ids = get_used_scale_ids(ae, aes)
+            isempty(used_scale_ids) && continue
             if length(used_scale_ids) > 1
                 error("Found more than two scales of type $aes used in one AxesSpecGrid, this is currently not supported. Scales were: $used_scale_ids")
             end
