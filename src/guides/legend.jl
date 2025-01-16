@@ -321,7 +321,11 @@ function _legend_elements(processedlayer, scale_args::MixedArguments)
 end
 
 function legend_elements(p::ProcessedLayer, scale_args::MixedArguments)
-    legend_elements(p.plottype, p.attributes, scale_args)
+    els = legend_elements(p.plottype, p.attributes, scale_args)
+    for el in els
+        el.attributes[:alpha] = _get(p.plottype, p.attributes, scale_args, :alpha)
+    end
+    return els
 end
 
 function _get(plottype, scale_args, attributes, key)
