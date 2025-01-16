@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added automatic `alpha` forwarding to all legend elements which will have an effect from Makie 0.22.1 on [#588](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/588).
 - Added the ability to use multiple different X and Y scales within one facet layout. The requirement is that not more than one X and Y scale is used per facet. `Row`, `Col` and `Layout` scales got the ability to set `show_labels = false` in `scales`. Also added the `zerolayer` function which can be used as a basis to build up the required mappings iteratively [#586](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/586).
 - Increased compat to Makie 0.22 and GeometryBasics 0.5 [#587](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/587).
 
