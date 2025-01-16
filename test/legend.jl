@@ -147,10 +147,11 @@ end
         y = abs.(sin.(1:9)),
         z=["a", "a", "a", "b", "b", "b", "c", "c", "c"]
     )
-    spec = data(df) * mapping(:x, :y, color = :z) * (visual(Scatter, legend = (; alpha = 0.7)) + visual(BarPlot) + visual(Lines)) * visual(alpha = 0.5)
+    spec = data(df) * mapping(:x, :y, color = :z) * ((visual(Scatter, legend = (; alpha = 0.7)) + visual(BarPlot) + visual(Lines)) * visual(alpha = 0.5) + visual(Violin))
     leg_els, el_labels, group_labels = _compute_legend(spec)
     els = reduce(vcat, leg_els[])
     @test Makie.to_value(els[1].alpha) == 0.7
     @test Makie.to_value(els[2].alpha) == 0.5
     @test Makie.to_value(els[3].alpha) == 0.5
+    @test Makie.to_value(els[4].alpha) == 1.0
 end

@@ -323,7 +323,7 @@ end
 function legend_elements(p::ProcessedLayer, scale_args::MixedArguments)
     els = legend_elements(p.plottype, p.attributes, scale_args)
     for el in els
-        el.attributes[:alpha] = _get(p.plottype, p.attributes, scale_args, :alpha)
+        el.attributes[:alpha] = _get(p.plottype, p.attributes, scale_args, :alpha, 1.0)
     end
     return els
 end
@@ -332,6 +332,13 @@ function _get(plottype, scale_args, attributes, key)
     get(scale_args, key) do
         get(attributes, key) do 
             to_value(Makie.default_theme(nothing, plottype)[key])
+        end
+    end
+end
+function _get(plottype, scale_args, attributes, key, fallback)
+    get(scale_args, key) do
+        get(attributes, key) do
+            to_value(get(Makie.default_theme(nothing, plottype), key, fallback))
         end
     end
 end
