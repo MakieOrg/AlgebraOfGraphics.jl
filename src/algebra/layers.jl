@@ -26,6 +26,19 @@ function Base.:*(a::AbstractAlgebraic, a′::AbstractAlgebraic)
 end
 
 """
+    zerolayer()
+
+Returns a `Layers` with an empty layer list which can act as a zero
+in the layer algebra.
+
+```
+layer * zerolayer() ~ zerolayer()
+layer + zerolayer() ~ layer
+```
+"""
+zerolayer() = Layers(Layer[])
+
+"""
     ProcessedLayers(layers::Vector{ProcessedLayer})
 
 Object encoding a list of [`AlgebraOfGraphics.ProcessedLayer`](@ref) objects.
@@ -298,25 +311,31 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
         ndims = isaxis2d(ae) ? 2 : 3
         aesthetics = [AesX, AesY, AesZ]
         for (aes, var) in zip(aesthetics[1:ndims], (:x, :y, :z)[1:ndims])
-            if haskey(ae.categoricalscales, aes)
+            # Determine which scales of type AesX, AesY, AesZ have actually been
+            # used by the processed layers in the current AxisSpecEntries.
+            # We can allow the usage of multiple of these scales in a facetted figure
+            # as long as each facet only uses one kind. That makes it possible to
+            # create facet plots in which adjacent facets don't share X and Y scales at all,
+            # like completely disjoint categories or categorical next to continuous data.
+            used_scale_ids = get_used_scale_ids(ae, aes)
+            isempty(used_scale_ids) && continue
+            if length(used_scale_ids) > 1
+                error("Found more than two scales of type $aes used in one AxesSpecGrid, this is currently not supported. Scales were: $used_scale_ids")
+            end
+            used_scale_id = only(used_scale_ids)
+            if haskey(ae.categoricalscales, aes) && haskey(ae.categoricalscales[aes], used_scale_id)
                 catscales = ae.categoricalscales[aes]
-                if length(keys(catscales)) != 1 || only(keys(catscales)) !== nothing
-                    error("There should only be one $aes, found keys $(keys(catscales))")
-                end
-                scale = catscales[nothing]
+                scale = catscales[used_scale_id]
             elseif haskey(ae.continuousscales, aes)
                 conscales = ae.continuousscales[aes]
-                if length(keys(conscales)) != 1 || only(keys(conscales)) !== nothing
-                    error("There should only be one $aes, found keys $(keys(conscales))")
-                end
-                scale = conscales[nothing]
+                scale = conscales[used_scale_id]
             else
                 continue
             end
             label = getlabel(scale)
             # Use global scales for ticks for now
             # TODO: requires a nicer mechanism that takes into account axis linking
-            (scale isa ContinuousScale) && (scale = merged_continuousscales[aes][nothing])
+            (scale isa ContinuousScale) && (scale = merged_continuousscales[aes][used_scale_id])
             for (k, v) in pairs((label=label, ticks=ticks(scale)))
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand
@@ -328,10 +347,24 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
     return axes_grid
 end
 
+function get_used_scale_ids(ae::AxisSpecEntries, aestype)
+    scale_ids = Set{Union{Nothing,Symbol}}()
+    for p in ae.processedlayers
+        aes_map = aesthetic_mapping(p)
+        for (key, value) in pairs(aes_map)
+            if value === aestype
+                scale_id = get(p.scale_mapping, key, nothing)
+                push!(scale_ids, scale_id)
+            end
+        end
+    end
+    return scale_ids
+end
+
 function to_entry(p::ProcessedLayer, categoricalscales::Dictionary, continuousscales::Dictionary)
     entry = to_entry(p.plottype, p, categoricalscales, continuousscales)
     insert!(entry.named, :cycle, nothing)
-    for key in (:group, :layout, :row, :col, :dodge_x, :dodge_y)
+    for key in (:group, :layout, :row, :col, :dodge_x, :dodge_y, :legend)
         if haskey(entry.named, key)
             delete!(entry.named, key)
         end

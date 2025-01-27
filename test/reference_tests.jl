@@ -1001,3 +1001,81 @@ reftest("scatterlines legend") do
     spec2 = data((; x = 1:10, y = cos.(1:10) .+ 2)) * mapping(:x, :y) * visual(ScatterLines, color = :blue, markercolor = :cyan, label = "markercolor cyan")
     draw(spec1 + spec2)
 end
+
+reftest("legend element overrides") do
+    spec = mapping(1:10, 1:10, color = repeat(["A", "B"], inner = 5)) *
+        visual(Scatter, legend = (; markersize = 30))
+    draw(spec)
+end
+
+reftest("stairs") do
+    spec = mapping(
+        1:10,
+        [1, 4, 3, 7, 5, 3, 2, 4, 3, 7],
+        color = repeat(["A", "B"], inner = 5),
+        linestyle = repeat(["A", "B"], inner = 5),
+    ) *
+        visual(Stairs)
+    draw(spec)
+end
+
+reftest("split x scales across facet layout") do
+    dat = data((;
+        cat1 = ["Apple", "Orange", "Pear"],
+        cat2 = ["Blue", "Green", "Red"],
+        cat3 = ["Heavy", "Light", "Medium"],
+        cont = [4.5, 7.6, 9.3],
+        y1 = [3.4, 5.2, 6],
+        y2 = [0.3, 0.2, 0.3],
+        y3 = [123, 82, 71],
+        y4 = [-10, 10, 0.4],
+    ))
+
+    cat_mappings = mapping(:cat1 => scale(:X1), :y1, layout = direct("A")) +
+        mapping(:cat2 => "Cat 2" => scale(:X2), :y2, layout = direct("B")) +
+        mapping(:cat3 => scale(:X3), :y3, layout = direct("C"))
+
+    cont_mapping = mapping(:cont => scale(:X4), :y4, layout = direct("D"))
+
+    spec = dat * (cat_mappings * visual(Scatter) + cont_mapping * visual(Lines))
+
+    draw(spec, scales(X3 = (; label = "Third Categorical")))
+end
+
+reftest("split x and y scales row col layout") do
+    dat = data((;
+        cat1 = ["Apple", "Orange", "Pear"],
+        cont2 = [1.4, 5.1, 2.5],
+        cat3 = ["Heavy", "Light", "Medium"],
+        cont4 = [2.5, -0.2, 1.2],
+    ))
+
+    mappings = zerolayer()
+    for x in [:cat1, :cont2]
+        for y in [:cat3, :cont4]
+            mappings += mapping(x => scale(x), y => scale(y), col = direct("$x"), row = direct("$y"))
+        end
+    end
+
+    spec = dat * mappings * visual(Scatter)
+
+    draw(spec)
+end
+
+reftest("hide row col and layout labels") do
+    f = Figure(size = (600, 600))
+    d = data((;
+        x = 1:16,
+        y = 17:32,
+        group1 = repeat(["A", "B"], inner = 8),
+        group2 = repeat(["C", "D"], 8))
+    )
+    spec1 = d * mapping(:x, :y, row = :group1, col = :group2) * visual(Scatter)
+    spec2 = d * mapping(:x, :y, layout = (:group1, :group2) => tuple) * visual(Scatter)
+
+    draw!(f[1, 1], spec1, scales(Row = (; show_labels = false), Col = (; show_labels = false)))
+    draw!(f[1, 2], spec1, scales(Row = (; show_labels = true), Col = (; show_labels = true)))
+    draw!(f[2, 1], spec2, scales(Layout = (; show_labels = false)))
+    draw!(f[2, 2], spec2, scales(Layout = (; show_labels = true)))
+    f
+end
