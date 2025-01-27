@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Breaks up `mergeable(::ProcessedLayer)` into `mergeable(layer.plottype, layer.primary)` for dispatch purposes. This should enable mergeable to be extended by other packages that have recipes [#592](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/592).
 
 ## v0.8.14 - 2025-01-16
 
