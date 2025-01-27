@@ -427,7 +427,7 @@ end
 
 # Default fallback implementation
 """
-    mergeable(plottype::Type{<: Plot}, primary::AbstractDict)::Bool
+    mergeable(plottype::Type{<: Plot}, primary::Dictionaries.AbstractDictionary)::Bool
 
 Return whether the entries for the layer with `plottype` and `primary` should be merged.
 Merging means that all the data will be passed to a single plot call, instead of creating
@@ -439,7 +439,7 @@ Extending packages should also extend this function on their own plot types
 if they deem it necessary.  For example, beeswarm plots and violin plots
 need to be merged for correctness.
 """
-function mergeable(plottype::Type{<: Plot}, primary::AbstractDict)
+function mergeable(plottype::Type{<: Plot}, primary::AbstractDictionary)
     return false
 end
 
