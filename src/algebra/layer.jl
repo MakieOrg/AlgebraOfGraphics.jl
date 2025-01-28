@@ -439,7 +439,7 @@ Extending packages should also extend this function on their own plot types
 if they deem it necessary.  For example, beeswarm plots and violin plots
 need to be merged for correctness.
 """
-function mergeable(plottype::Type{<: Plot}, primary::AbstractDictionary)
+function mergeable(plottype::Type{<: Plot}, primary)
     return false
 end
 
