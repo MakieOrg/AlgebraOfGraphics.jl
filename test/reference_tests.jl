@@ -1079,3 +1079,53 @@ reftest("hide row col and layout labels") do
     draw!(f[2, 2], spec2, scales(Layout = (; show_labels = true)))
     f
 end
+
+let
+    df = (;
+        x = 0:24,
+        y = 0:24,
+        color = repeat(string.('A':'E'), inner = 5),
+    )
+
+    spec = data(df) * mapping(:x, :y, layout = :color, color = :color)
+
+    scl = scales(Layout = (; categories = cats -> reverse(uppercase.(cats))))
+
+    reftest("pagination layout unpaginated") do
+        draw(spec, scl)
+    end
+
+    paginated = AlgebraOfGraphics.paginate(spec, scl; layout = 3)
+    for i in 1:length(paginated)
+        reftest("pagination layout page $i") do
+            draw(paginated, i)
+        end
+    end
+end
+
+let
+    df = (;
+        x = 0:24,
+        y = 0:24,
+        group1 = repeat(string.('a':'e'), inner = 5),
+        group2 = repeat(string.('f':'j'), 5),
+    )
+
+    spec = data(df) * mapping(:x, :y, row = :group2, col = :group1, color = :group1)
+
+    scl = scales(;
+        Col = (; palette = ["a" => 1, 3, 5, 2, 4], categories = reverse),
+        Row = (; palette = ["g" => 1, 3, 5, 2, 4], categories = cats -> cats .=> uppercase.(cats)),
+    )
+
+    reftest("pagination row col unpaginated") do
+        draw(spec, scl)
+    end
+
+    paginated = AlgebraOfGraphics.paginate(spec, scl; row = 3, col = 2)
+    for i in 1:length(paginated)
+        reftest("pagination row col page $i") do
+            draw(paginated, i)
+        end
+    end
+end
