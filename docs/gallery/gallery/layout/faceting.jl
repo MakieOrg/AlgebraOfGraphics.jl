@@ -72,12 +72,11 @@ draw(plt)
 
 # ## Pagination
 #
-# If you have too many facets for one figure, you can use `paginate` to split the data into several subsets
+# If you have too many facets for one figure, you can use [`paginate`](@ref) to split the data into several subsets
 # given a maximum number of plots per layout, row or column.
 
-# Note that pagination is considered an experimental feature.
-# In the current implementation, scales and layouts are not synchronized across pages.
-# This means that, e.g., linked limits on one page are not influenced by limits of other pages.
+# Scales are synchronized across pages.
+# Note, however, that linked axis limits are currently not synchronized across pages.
 # The exact synchronization behavior can be subject to change in non-breaking versions.
 
 df = (x=rand(500), y=rand(500), l=rand(["a", "b", "c", "d", "e", "f", "g", "h"], 500))
