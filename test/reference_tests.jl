@@ -1129,3 +1129,27 @@ let
         end
     end
 end
+
+let 
+    df = (;
+        wres = 1:10,
+        age = 11:20,
+        gender = repeat(["m", "f"], 5),
+    )
+
+    layer1 = mapping(:age => scale(:Xage), :wres, layout = direct("A")) * visual(Scatter)
+    layer2 = mapping(:gender => scale(:Xgender), :wres, layout = direct("B")) * visual(Violin)
+
+    spec = data(df) * (layer1 + layer2)
+
+    reftest("pagination split x scales unpaginated") do
+        draw(spec)
+    end
+
+    paginated = AlgebraOfGraphics.paginate(spec; layout = 1)
+    for i in 1:length(paginated)
+        reftest("pagination split x scales page $i") do
+            draw(paginated, i)
+        end
+    end
+end
