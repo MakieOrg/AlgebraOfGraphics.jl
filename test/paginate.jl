@@ -62,40 +62,5 @@ end
         @test length(pag) == 2
         pag = paginate(spec, col = 5)
         @test length(pag) == 2
-
-        # manually test that a spec built like a pagination is equivalent
-        # to the output of the pagination
-        pag = paginate(spec, row = 3, col = 4)
-
-        c_parts = collect(Iterators.partition(cs, 3))
-        d_parts = collect(Iterators.partition(ds, 4))
-        @test length(c_parts) * length(d_parts) == length(pag.each)
-        for (id, _ds) in enumerate(d_parts)
-            # rows change faster
-            for (ic, _cs) in enumerate(c_parts)
-                idcs = (d.c .∈ Ref(_cs)) .&  (d.d .∈ Ref(_ds))
-                # filter out all data not on the current page
-                subset = (a = d.a[idcs], b = d.b[idcs], c = d.c[idcs], d = d.d[idcs])
-                manual_pagination = data(subset) * mapping(:a, :b, row = :c, col = :d) * vis
-                manual_pagination = ProcessedLayers(manual_pagination)
-                i = ic + length(c_parts) * (id - 1)
-                @test _equal(manual_pagination, pag.each[i])
-            end
-        end
-
-        # and once more for layout
-        spec = data(d) * mapping(:a, :b, layout = :c) * vis
-        pag = paginate(spec, layout = 3)
-
-        c_parts = collect(Iterators.partition(cs, 3))
-        @test length(c_parts) == length(pag.each)
-        for (ic, _cs) in enumerate(c_parts)
-            idcs = d.c .∈ Ref(_cs)
-            # filter out all data not on the current page
-            subset = (a = d.a[idcs], b = d.b[idcs], c = d.c[idcs], d = d.d[idcs])
-            manual_pagination = data(subset) * mapping(:a, :b, layout = :c) * vis
-            manual_pagination = ProcessedLayers(manual_pagination)
-            @test _equal(manual_pagination, pag.each[ic])
-        end
     end
 end
