@@ -79,7 +79,7 @@ draw(plt)
 
 df = (
     x = repeat(1:10, 36),
-    y = cumsum(randn(360)),
+    y = cumsum(sin.(range(0, 10pi, 360))),
     group = repeat(string.("Group ", 1:36), inner = 10),
     color = 1:360,
 )
@@ -88,7 +88,7 @@ draw(plt)
 
 # Scales are synchronized across pages.
 # Note, however, that linked axis limits are currently not synchronized across pages.
-# The exact synchronization behavior can be subject to change in non-breaking versions.
+# The exact synchronization behavior may be subject to change in non-breaking versions.
 
 
 
