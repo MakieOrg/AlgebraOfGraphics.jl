@@ -43,6 +43,10 @@ function draw(p::Pagination, i::Int; kws...)
     _draw(p.each[i]; kws...)
 end
 
+function draw(p::Pagination, ::Scales, args...; kws...)
+    throw(ArgumentError("Calling `draw` with a `Pagination` object and `scales` is invalid. The `scales` must be passed to `paginate` already and are baked into the `Pagination` output."))
+end
+
 """
     paginate(l, sc = scales(); layout=nothing, row=nothing, col=nothing)
 

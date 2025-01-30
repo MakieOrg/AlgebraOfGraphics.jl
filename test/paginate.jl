@@ -64,3 +64,17 @@ end
         @test length(pag) == 2
     end
 end
+
+@testset "pagination with scales" begin
+    spec = data((; x = 1:10, y = 11:20, group = repeat(["A", "B"]))) * mapping(:x, :y, layout = :group)
+    scl = scales(Layout = (; categories = ["B", "A"]))
+    p = paginate(spec, scl, layout = 1)
+    ae1 = only(p.each[1])
+    ae2 = only(p.each[2])
+    cat1 = AlgebraOfGraphics.extract_single(AlgebraOfGraphics.AesLayout, ae1.categoricalscales)
+    cat2 = AlgebraOfGraphics.extract_single(AlgebraOfGraphics.AesLayout, ae2.categoricalscales)
+    @test only(AlgebraOfGraphics.datavalues(cat1)) == "B"
+    @test only(AlgebraOfGraphics.datavalues(cat2)) == "A"
+
+    @test_throws_message "Calling `draw` with a `Pagination` object and `scales` is invalid." draw(p, scl)
+end
