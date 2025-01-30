@@ -307,6 +307,9 @@ function continuousscales(processedlayer::ProcessedLayer, scale_props)
 
     continuousscales = similar(keys(continuous), ContinuousScale)
     map!(continuousscales, keys(continuous), continuous) do key, val
+        if hardcoded_mapping(key) !== nothing
+            error("The `$key` mapping was used with continuous data but can only be used with categorical data. Consider using the `=> nonnumeric` modifier to turn numerical data into categorical.")
+        end
         aes = aes_mapping[key]
         scale_id = get(processedlayer.scale_mapping, key, nothing)
         props = get_scale_props(scale_props, aes, scale_id)
