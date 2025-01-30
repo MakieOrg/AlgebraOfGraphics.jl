@@ -72,17 +72,27 @@ draw(plt)
 
 # ## Pagination
 #
-# If you have too many facets for one figure, you can use `paginate` to split the data into several subsets
+# If you have too many facets for one figure, you can use [`paginate`](@ref) to split the data into several subsets
 # given a maximum number of plots per layout, row or column.
+#
+# We start with a normal facet plot, in this case a wrapped layout:
 
-# Note that pagination is considered an experimental feature.
-# In the current implementation, scales and layouts are not synchronized across pages.
-# This means that, e.g., linked limits on one page are not influenced by limits of other pages.
-# The exact synchronization behavior can be subject to change in non-breaking versions.
+df = (
+    x = repeat(1:10, 36),
+    y = cumsum(sin.(range(0, 10pi, 360))),
+    group = repeat(string.("Group ", 1:36), inner = 10),
+    color = 1:360,
+)
+plt = data(df) * mapping(:x, :y, color = :color, layout=:group) * visual(Lines)
+draw(plt)
 
-df = (x=rand(500), y=rand(500), l=rand(["a", "b", "c", "d", "e", "f", "g", "h"], 500))
-plt = data(df) * mapping(:x, :y, layout=:l)
-pag = paginate(plt, layout = 4)
+# Scales are synchronized across pages.
+# Note, however, that linked axis limits are currently not synchronized across pages.
+# The exact synchronization behavior may be subject to change in non-breaking versions.
+
+
+
+pag = paginate(plt, layout = 9)
 
 # The object returned from `draw` will be a `Vector{FigureGrid}`.
 
@@ -94,7 +104,7 @@ figuregrids[1]
 
 # or use `draw` with an optional second argument specifying the index of the page to draw.
 
-draw(pag, 2)
+draw(pag, 4)
 
 # save cover image #src
 mkpath("assets") #src
