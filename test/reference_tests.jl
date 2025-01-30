@@ -1153,3 +1153,25 @@ let
         end
     end
 end
+
+let 
+    df = (
+        x = repeat(1:10, 36),
+        y = cumsum(sin.(range(0, 10pi, 360))),
+        group = repeat(string.("Group ", 1:36), inner = 10),
+        color = 1:360,
+    )
+    spec = data(df) * mapping(:x, :y, color = :color, layout=:group) * visual(Lines)
+    scl = scales(Color = (; colormap = :plasma, label = "The color"))
+
+    reftest("pagination colorbar unpaginated") do
+        draw(spec, scl)
+    end
+
+    pag = paginate(spec, scl, layout = 9)
+    for page in [1, 4]
+        reftest("pagination colorbar page $page") do
+            draw(pag, page)
+        end
+    end
+end
