@@ -301,7 +301,7 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
             AxisSpec(c, axis),
             entries_grid[c],
             categoricalscales,
-            continuousscales_grid[c],
+            merged_continuousscales,
             pls_grid[c],
         )
     end
