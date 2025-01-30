@@ -1157,7 +1157,7 @@ end
 let 
     df = (
         x = repeat(1:10, 36),
-        y = cumsum(sin.(range(0, 10pi, 360))),
+        y = cumsum(sin.(range(0, 10pi, length = 360))),
         group = repeat(string.("Group ", 1:36), inner = 10),
         color = 1:360,
     )
