@@ -39,15 +39,17 @@ Base.@kwdef struct HistogramAnalysis{D, B}
     bins::B=automatic
     closed::Symbol=:left
     normalization::Symbol=:none
+    visual::Union{typeof(automatic), Layer}=automatic
 end
 
 function (h::HistogramAnalysis)(input::ProcessedLayer)
     datalimits = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
     options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
 
+    visual = h.visual
     N = length(input.positional)
     default_plottype = categoricalplottypes[N]
-    plottype = Makie.plottype(input.plottype, default_plottype)
+    plottype = Makie.plottype(input.plottype, visual === automatic ? default_plottype : (visual.transformation::Visual).plottype)
 
     output = map(input) do p, n
         hist = _histogram(Tuple(p); pairs(n)..., pairs(options)...)
@@ -68,16 +70,18 @@ function (h::HistogramAnalysis)(input::ProcessedLayer)
 
     label = h.normalization == :none ? "count" : string(h.normalization)
     labels = set(output.labels, N+1 => label)
-    attributes = if plottype == BarPlot
-        set(output.attributes, :gap => 0, :dodge_gap => 0)
-    else
-        output.attributes
+    attributes = output.attributes
+    if plottype == BarPlot
+        attributes = set(attributes, :gap => 0, :dodge_gap => 0)
+    end
+    if visual !== automatic
+        attributes = merge(attributes, (visual.transformation::Visual).attributes)
     end
     return ProcessedLayer(output; plottype, labels, attributes)
 end
 
 """
-    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none)
+    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none, visual=automatic)
 
 Compute a histogram.
 
