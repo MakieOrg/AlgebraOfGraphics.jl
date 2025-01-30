@@ -50,6 +50,12 @@ end
     @test_throws_message "not allowed to use arrays that are not one-dimensional" AlgebraOfGraphics.process_mappings(layer)
 end
 
+@testset "Invalid use of continuous for categorical hardcoded mapping" begin
+    df = (x = 1:4, y = 1:4, page = [1, 1, 2, 2], color = ["A", "B", "C", "D"])
+    spec = data(df) * mapping(:x, :y, color = :color, layout = :page) * visual(Scatter)
+    @test_throws_message "The `layout` mapping was used with continuous data" draw(spec)
+end
+
 @testset "shape" begin
     df = (x=rand(1000), y=rand(1000), z=rand(1000), c=rand(["a", "b", "c"], 1000))
     d = mapping(:x => exp, [:y, :z], color=:c, marker = dims(1) => renamer(["a", "b"]))

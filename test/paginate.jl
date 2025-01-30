@@ -62,40 +62,19 @@ end
         @test length(pag) == 2
         pag = paginate(spec, col = 5)
         @test length(pag) == 2
-
-        # manually test that a spec built like a pagination is equivalent
-        # to the output of the pagination
-        pag = paginate(spec, row = 3, col = 4)
-
-        c_parts = collect(Iterators.partition(cs, 3))
-        d_parts = collect(Iterators.partition(ds, 4))
-        @test length(c_parts) * length(d_parts) == length(pag.each)
-        for (id, _ds) in enumerate(d_parts)
-            # rows change faster
-            for (ic, _cs) in enumerate(c_parts)
-                idcs = (d.c .∈ Ref(_cs)) .&  (d.d .∈ Ref(_ds))
-                # filter out all data not on the current page
-                subset = (a = d.a[idcs], b = d.b[idcs], c = d.c[idcs], d = d.d[idcs])
-                manual_pagination = data(subset) * mapping(:a, :b, row = :c, col = :d) * vis
-                manual_pagination = ProcessedLayers(manual_pagination)
-                i = ic + length(c_parts) * (id - 1)
-                @test _equal(manual_pagination, pag.each[i])
-            end
-        end
-
-        # and once more for layout
-        spec = data(d) * mapping(:a, :b, layout = :c) * vis
-        pag = paginate(spec, layout = 3)
-
-        c_parts = collect(Iterators.partition(cs, 3))
-        @test length(c_parts) == length(pag.each)
-        for (ic, _cs) in enumerate(c_parts)
-            idcs = d.c .∈ Ref(_cs)
-            # filter out all data not on the current page
-            subset = (a = d.a[idcs], b = d.b[idcs], c = d.c[idcs], d = d.d[idcs])
-            manual_pagination = data(subset) * mapping(:a, :b, layout = :c) * vis
-            manual_pagination = ProcessedLayers(manual_pagination)
-            @test _equal(manual_pagination, pag.each[ic])
-        end
     end
+end
+
+@testset "pagination with scales" begin
+    spec = data((; x = 1:10, y = 11:20, group = repeat(["A", "B"]))) * mapping(:x, :y, layout = :group)
+    scl = scales(Layout = (; categories = ["B", "A"]))
+    p = paginate(spec, scl, layout = 1)
+    ae1 = only(p.each[1])
+    ae2 = only(p.each[2])
+    cat1 = AlgebraOfGraphics.extract_single(AlgebraOfGraphics.AesLayout, ae1.categoricalscales)
+    cat2 = AlgebraOfGraphics.extract_single(AlgebraOfGraphics.AesLayout, ae2.categoricalscales)
+    @test only(AlgebraOfGraphics.datavalues(cat1)) == "B"
+    @test only(AlgebraOfGraphics.datavalues(cat2)) == "A"
+
+    @test_throws_message "Calling `draw` with a `Pagination` object and `scales` is invalid." draw(p, scl)
 end

@@ -297,11 +297,22 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
 
     indices = CartesianIndices(pls_grid)
     axes_grid = map(indices) do c
+
+        # for the subsequent logic, the x,y,z scales are kept per-facet, while
+        # for all other scales the merged versions are picked (for example to keep
+        # colorbars synchronized in pagination)
+        mixed_continuousscales = copy(merged_continuousscales)
+        for aes in (AesX, AesY, AesZ)
+            if haskey(continuousscales_grid[c], aes)
+                mixed_continuousscales[aes] = continuousscales_grid[c][aes]
+            end
+        end
+
         return AxisSpecEntries(
             AxisSpec(c, axis),
             entries_grid[c],
             categoricalscales,
-            continuousscales_grid[c],
+            mixed_continuousscales,
             pls_grid[c],
         )
     end
