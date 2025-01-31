@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.9.1 - 2025-01-31
+
+- Fixed passing `axis` keyword to `draw(::Pagination, ...)` [#595](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/595).
+
 ## v0.9.0 - 2025-01-30
 
 - **Breaking**: `paginate` now splits facet plots into pages _after_ fitting scales and not _before_ [#593](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/593). This means that, e.g., categorical color mappings are consistent across pages where before each page could have a different mapping if some groups were not represented on a given page. This change also makes pagination work with the split X and Y scales feature enabled by version 0.8.14. `paginate`'s return type changes from `PaginatedLayers` to `Pagination` because no layers are stored in that type anymore. The interface to use `Pagination` with `draw` and other functions doesn't change compared to `PaginatedLayers`. `paginate` now also accepts an optional second positional argument which are the scales that are normally passed to `draw` when not paginating, but which must be available prior to pagination to fit all scales accordingly.
