@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## v0.9.0 - 2025-01-30
+
+- **Breaking**: `paginate` now splits facet plots into pages _after_ fitting scales and not _before_ [#593](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/593). This means that, e.g., categorical color mappings are consistent across pages where before each page could have a different mapping if some groups were not represented on a given page. This change also makes pagination work with the split X and Y scales feature enabled by version 0.8.14. `paginate`'s return type changes from `PaginatedLayers` to `Pagination` because no layers are stored in that type anymore. The interface to use `Pagination` with `draw` and other functions doesn't change compared to `PaginatedLayers`. `paginate` now also accepts an optional second positional argument which are the scales that are normally passed to `draw` when not paginating, but which must be available prior to pagination to fit all scales accordingly.
+
+## v0.8.14 - 2025-01-16
+
+- Added automatic `alpha` forwarding to all legend elements which will have an effect from Makie 0.22.1 on [#588](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/588).
+- Added the ability to use multiple different X and Y scales within one facet layout. The requirement is that not more than one X and Y scale is used per facet. `Row`, `Col` and `Layout` scales got the ability to set `show_labels = false` in `scales`. Also added the `zerolayer` function which can be used as a basis to build up the required mappings iteratively [#586](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/586).
+- Increased compat to Makie 0.22 and GeometryBasics 0.5 [#587](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/587).
+- Increased compat to Colors 0.13 [#589](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/589).
 
 ## v0.8.13 - 2024-10-21
 

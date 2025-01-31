@@ -154,12 +154,19 @@ end
 function _draw(d::AbstractDrawable, scales::Scales;
               axis, figure, facet, legend, colorbar)
 
+    ae = compute_axes_grid(d, scales; axis)
+    _draw(ae; figure, facet, legend, colorbar)
+end
+function _draw(ae::Matrix{AxisSpecEntries}; figure = (;), facet = (;), legend = (;), colorbar = (;))
+
     fs, remaining_figure_kw = figure_settings(; pairs(figure)...)
 
     _filter_nothings(; kwargs...) = (key => value for (key, value) in kwargs if value !== nothing)
 
     return update(Figure(; pairs(remaining_figure_kw)...)) do f
-        grid = plot!(f, d, scales; axis)
+        grid = map(x -> AxisEntries(x, f), ae)
+        foreach(plot!, grid)
+
         fg = FigureGrid(f, grid)
         facet!(fg; facet)
         if get(colorbar, :show, true)
