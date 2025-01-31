@@ -26,7 +26,14 @@ end
 Draw each element of `Pagination` `p` and return a `Vector{FigureGrid}`.
 Keywords `kws` are passed to the underlying `draw` calls.
 """
-draw(p::Pagination; kws...) = _draw.(p.each; kws...)
+function draw(p::Pagination; axis = (;), figure = (;), facet = (;), legend = (;), colorbar = (;))
+    axis = _kwdict(axis)
+    figure = _kwdict(figure)
+    facet = _kwdict(facet)
+    legend = _kwdict(legend)
+    colorbar = _kwdict(colorbar)
+    _draw.(p.each; axis, figure, facet, legend, colorbar)
+end
 
 """
     draw(p::Pagination, i::Int; kws...)
@@ -36,11 +43,16 @@ Keywords `kws` are passed to the underlying `draw` call.
 
 You can retrieve the number of elements using `length(p)`.
 """
-function draw(p::Pagination, i::Int; kws...)
+function draw(p::Pagination, i::Int; axis = (;), figure = (;), facet = (;), legend = (;), colorbar = (;))
     if i ∉ 1:length(p)
         throw(ArgumentError("Invalid index $i for Pagination with $(length(p)) entries."))
     end
-    _draw(p.each[i]; kws...)
+    axis = _kwdict(axis)
+    figure = _kwdict(figure)
+    facet = _kwdict(facet)
+    legend = _kwdict(legend)
+    colorbar = _kwdict(colorbar)
+    _draw(p.each[i]; axis, figure, facet, legend, colorbar)
 end
 
 function draw(p::Pagination, ::Scales, args...; kws...)

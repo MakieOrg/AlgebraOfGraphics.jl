@@ -157,7 +157,16 @@ function _draw(d::AbstractDrawable, scales::Scales;
     ae = compute_axes_grid(d, scales; axis)
     _draw(ae; figure, facet, legend, colorbar)
 end
-function _draw(ae::Matrix{AxisSpecEntries}; figure = (;), facet = (;), legend = (;), colorbar = (;))
+
+function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol,Any}(), figure = Dictionary{Symbol,Any}(), facet = Dictionary{Symbol,Any}(), legend = Dictionary{Symbol,Any}(), colorbar = Dictionary{Symbol,Any}())
+
+    if !isempty(axis)
+        # merge in axis attributes here because pagination runs `compute_axes_grid`
+        # which in the normal `draw` pipeline consumes `axis`
+        ae = map(ae) do ase
+            Accessors.@set ase.axis.attributes = merge(ase.axis.attributes, axis)
+        end
+    end
 
     fs, remaining_figure_kw = figure_settings(; pairs(figure)...)
 
