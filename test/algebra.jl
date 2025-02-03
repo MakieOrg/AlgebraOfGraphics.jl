@@ -41,6 +41,12 @@ end
     @test processedlayer.primary[:color] == fill(["x", "x", "x"])
     @test processedlayer.scale_mapping[:color] == :otherscale
 
+    layer = data(df) * mapping(:x => sqrt => "sqrt(X)" => scale(:X2))
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.positional[1] == fill(sqrt.(df.x))
+    @test processedlayer.labels[1] == fill("sqrt(X)")
+    @test processedlayer.scale_mapping[1] == :X2
+
     layer = data(df) * mapping(:x, direct(1:1000) => "y")
     processedlayer = AlgebraOfGraphics.process_mappings(layer)
     @test processedlayer.positional[2] == fill(1:1000)
