@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.9.2 - 2025-02-03
+
+- Fixed `data(...) * mapping(col => func => label => scale)` label-extraction bug [#596](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/596).
+
 ## v0.9.1 - 2025-01-31
 
 - Fixed passing `axis` keyword to `draw(::Pagination, ...)` [#595](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/595).
