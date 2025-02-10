@@ -5,6 +5,9 @@ docs/Manifest.toml
 docs/build
 docs/src/gallery
 docs/src/democards
+docs/node_modules
+docs/.DS_Store
+docs/package-lock.json
 .vscode/settings.json
 /scratch
 /_readme/Manifest.toml

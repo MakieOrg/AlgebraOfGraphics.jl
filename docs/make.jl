@@ -1,8 +1,8 @@
 using AlgebraOfGraphics
 using Documenter
+using DocumenterVitepress
 using Literate, Glob
 using CairoMakie
-using DemoCards
 
 CairoMakie.activate!(type="svg")
 
@@ -22,17 +22,16 @@ cp(joinpath(@__DIR__, "..", "CHANGELOG.md"), joinpath(@__DIR__, "src", "changelo
 makedocs(;
     modules=[AlgebraOfGraphics],
     authors="Pietro Vertechi",
-    repo=Documenter.Remotes.GitHub("MakieOrg", "AlgebraOfGraphics.jl"),
+    repo="https://github.com/MakieOrg/AlgebraOfGraphics.jl",
     sitename="Algebra of Graphics",
-    format=Documenter.HTML(;
-        prettyurls=get(ENV, "CI", "false") == "true",
-        assets=["assets/favicon.ico", gallery_assets],
+    format = DocumenterVitepress.MarkdownVitepress(
+        repo = "https://github.com/MakieOrg/AlgebraOfGraphics.jl",
     ),
     pages=Any[
         "Home" => "index.md",
         "Getting Started" => [
             "generated/penguins.md",
-            gallery
+            # gallery
         ],
         "Algebra of Layers" => [
             "layers/introduction.md",
