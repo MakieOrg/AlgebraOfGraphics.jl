@@ -1,4 +1,4 @@
-# Multiple color scale
+# Multiple color scales
 
 ````@example multiple_color_scales
 using AlgebraOfGraphics, CairoMakie
