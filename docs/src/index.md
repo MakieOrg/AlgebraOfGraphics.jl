@@ -13,4 +13,4 @@ julia> import Pkg; Pkg.add("AlgebraOfGraphics")
 ```
 in the Julia REPL.
 
-See the [Tutorial](@ref) to get started.
+See the [Getting started 🐧](@ref) tutorial for first steps.

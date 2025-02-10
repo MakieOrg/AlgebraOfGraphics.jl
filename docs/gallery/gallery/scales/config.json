@@ -1,4 +1,0 @@
-{
-    "description": "Some advanced keywords to tweak the plot",
-    "order": ["discrete_scales.jl", "continuous_scales.jl", "custom_scales.jl", "split_scales_facet.jl", "secondary_scales.jl", "multiple_color_scales.jl", "prescaled_data.jl", "legend_merging.jl", "dodging.jl"]
-}

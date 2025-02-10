@@ -2,7 +2,7 @@
 EditURL = "penguins.jl"
 ```
 
-# Tutorial 🐧
+# Getting started 🐧
 
 This is a gentle and lighthearted tutorial on how to use tools from AlgebraOfGraphics,
 using as example dataset a collection of measurements on penguins[^1]. See
