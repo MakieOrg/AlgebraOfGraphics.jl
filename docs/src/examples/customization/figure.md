@@ -1,4 +1,4 @@
-# Figure tweaking
+# Figure options
 
 ````@example figure
 using AlgebraOfGraphics, CairoMakie

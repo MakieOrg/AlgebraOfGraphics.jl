@@ -1,4 +1,4 @@
-# Axis tweaking
+# Axis options
 
 ````@example axis
 using AlgebraOfGraphics, CairoMakie

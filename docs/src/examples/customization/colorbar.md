@@ -1,4 +1,4 @@
-# Colorbar tweaking
+# Colorbar options
 
 ````@example colorbar
 using AlgebraOfGraphics, CairoMakie

@@ -1,4 +1,4 @@
-# Legend tweaking
+# Legend options
 
 
 ````@example legend
