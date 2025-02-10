@@ -33,8 +33,8 @@ makedocs(;
                 "examples/applications/time_series.md",
             ],
             "Basic Visualizations" => [
-                "examples/basic visualizations/lines_and_markers.md",
-                "examples/basic visualizations/statistical_visualizations.md",
+                "examples/basic_visualizations/lines_and_markers.md",
+                "examples/basic_visualizations/statistical_visualizations.md",
             ],
             "Customization" => [
                 "examples/customization/axis.md",
@@ -43,11 +43,11 @@ makedocs(;
                 "examples/customization/legend.md",
             ],
             "Data Manipulations" => [
-                "examples/data manipulations/new_columns_on_the_fly.md",
-                "examples/data manipulations/no_data.md",
-                "examples/data manipulations/pre_grouped_data.md",
-                "examples/data manipulations/presorted_data.md",
-                "examples/data manipulations/wide_data.md",
+                "examples/data_manipulations/new_columns_on_the_fly.md",
+                "examples/data_manipulations/no_data.md",
+                "examples/data_manipulations/pre_grouped_data.md",
+                "examples/data_manipulations/presorted_data.md",
+                "examples/data_manipulations/wide_data.md",
             ],
             "Layout" => [
                 "examples/layout/faceting.md",
@@ -65,9 +65,9 @@ makedocs(;
                 "examples/scales/split_scales_facet.md",
             ],
             "Statistical Analyses" => [
-                "examples/statistical analyses/density_plots.md",
-                "examples/statistical analyses/histograms.md",
-                "examples/statistical analyses/regression_plots.md",
+                "examples/statistical_analyses/density_plots.md",
+                "examples/statistical_analyses/histograms.md",
+                "examples/statistical_analyses/regression_plots.md",
             ],
         ],
         "Explanations" => [
