@@ -126,7 +126,5 @@ or use `draw` with an optional second argument specifying the index of the page 
 draw(pag, 4)
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

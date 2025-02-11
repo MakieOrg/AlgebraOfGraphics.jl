@@ -21,7 +21,5 @@ plt = data(df) * mapping(:x, :y) * histogram(bins=20)
 draw(plt)
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

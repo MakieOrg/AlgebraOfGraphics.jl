@@ -20,7 +20,5 @@ layers = smooth() + visual(Scatter)
 fg = draw(layers * xy)
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

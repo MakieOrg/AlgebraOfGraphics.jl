@@ -29,7 +29,5 @@ plt = data(t) * mapping(:geometry, color = :surface) * visual(Choropleth)
 fg = draw(plt; axis=(aspect=1,))
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

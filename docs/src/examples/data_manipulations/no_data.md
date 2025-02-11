@@ -20,7 +20,5 @@ plt = mapping(x, y, color = repeat(["high", "low"], inner = 50)) *
 fg = draw(plt, scales(secondary = (; palette = [:gray80])))
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

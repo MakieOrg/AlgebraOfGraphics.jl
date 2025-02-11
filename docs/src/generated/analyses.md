@@ -184,7 +184,5 @@ specs = data(df) * mapping(:x, :y, :z) * filled_contours(levels = 3:2:15)
 draw(specs)
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

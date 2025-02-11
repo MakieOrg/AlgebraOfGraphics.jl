@@ -23,7 +23,5 @@ plt = data(df) * mapping(:x, :y, text=:label => verbatim) * visual(Makie.Text)
 fg = draw(plt)
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

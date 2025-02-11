@@ -15,7 +15,5 @@ plt = data(df) * mapping(:x, color=:c) * density(bandwidth=0.5) * visual(orienta
 "Not yet supported" # hide
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

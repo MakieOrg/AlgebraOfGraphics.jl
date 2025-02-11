@@ -101,7 +101,5 @@ These are the attributes you can override (note that some of them have convenien
 
  More information about legend overrides can be found in [Makie's documentation](https://docs.makie.org/stable/reference/blocks/legend#Overriding-legend-entry-attributes).
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

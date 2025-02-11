@@ -38,7 +38,5 @@ plt = data(df) *
 fg = draw(plt, axis=(yscale=log,))
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

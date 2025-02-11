@@ -49,7 +49,5 @@ draw(plt, facet = (; linkxaxes = :all, linkyaxes = :all))
 fg = draw(plt, facet = (; linkxaxes = :none, linkyaxes = :none))
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

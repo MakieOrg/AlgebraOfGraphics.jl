@@ -41,7 +41,5 @@ layers = data(df1) * visual(Lines) + data(df2) * visual(Scatter)
 fg = draw(layers * mapping(:x, :y))
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

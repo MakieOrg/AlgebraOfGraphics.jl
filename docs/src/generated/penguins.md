@@ -343,7 +343,5 @@ draw(plt; axis = axis)
 We can conclude that the classifier is doing a reasonable job:
 it is mostly making mistakes on outlier penguins.
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

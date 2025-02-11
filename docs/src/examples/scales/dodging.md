@@ -54,7 +54,5 @@ draw!(f[3, 1], plt3, scales(DodgeX = (; width = 1.0)); axis = (; title = "DodgeX
 f
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 

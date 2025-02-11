@@ -53,7 +53,5 @@ plt = data(df) * mapping(:x, :y, color=:z)
 draw(plt, scales(Color = (; palette = from_continuous(:cividis))))
 ````
 
----
 
-*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 
