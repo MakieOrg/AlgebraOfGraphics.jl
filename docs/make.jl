@@ -70,14 +70,14 @@ makedocs(;
                 "examples/applications/time-series.md",
             ],
         ],
-        "Explanations" => [
-            "explanations/introduction.md",
-            "explanations/data.md",
-            "explanations/mapping.md",
-            "explanations/visual.md",
-            "explanations/analyses.md",
-            "explanations/operations.md",
-            "explanations/draw.md",
+        "Reference" => [
+            "reference/introduction.md",
+            "reference/data.md",
+            "reference/mapping.md",
+            "reference/visual.md",
+            "reference/analyses.md",
+            "reference/operations.md",
+            "reference/draw.md",
         ],
         "Resources" => [
             "FAQs.md",
