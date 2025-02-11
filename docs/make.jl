@@ -27,20 +27,9 @@ makedocs(;
             "generated/penguins.md",
         ],
         "Examples" => [
-            "Applications" => [
-                "examples/applications/geographic.md",
-                "examples/applications/geometries.md",
-                "examples/applications/time_series.md",
-            ],
             "Basic Visualizations" => [
                 "examples/basic_visualizations/lines_and_markers.md",
                 "examples/basic_visualizations/statistical_visualizations.md",
-            ],
-            "Customization" => [
-                "examples/customization/axis.md",
-                "examples/customization/colorbar.md",
-                "examples/customization/figure.md",
-                "examples/customization/legend.md",
             ],
             "Data Manipulations" => [
                 "examples/data_manipulations/new_columns_on_the_fly.md",
@@ -48,10 +37,6 @@ makedocs(;
                 "examples/data_manipulations/pre_grouped_data.md",
                 "examples/data_manipulations/presorted_data.md",
                 "examples/data_manipulations/wide_data.md",
-            ],
-            "Layout" => [
-                "examples/layout/faceting.md",
-                "examples/layout/nested_layouts.md",
             ],
             "Scales" => [
                 "examples/scales/continuous_scales.md",
@@ -68,6 +53,21 @@ makedocs(;
                 "examples/statistical_analyses/density_plots.md",
                 "examples/statistical_analyses/histograms.md",
                 "examples/statistical_analyses/regression_plots.md",
+            ],
+            "Customization" => [
+                "examples/customization/axis.md",
+                "examples/customization/colorbar.md",
+                "examples/customization/figure.md",
+                "examples/customization/legend.md",
+            ],
+            "Layout" => [
+                "examples/layout/faceting.md",
+                "examples/layout/nested_layouts.md",
+            ],
+            "Applications" => [
+                "examples/applications/geographic.md",
+                "examples/applications/geometries.md",
+                "examples/applications/time_series.md",
             ],
         ],
         "Explanations" => [
