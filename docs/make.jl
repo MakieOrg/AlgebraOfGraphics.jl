@@ -16,7 +16,7 @@ makedocs(;
     modules=[AlgebraOfGraphics],
     authors="Pietro Vertechi",
     repo="https://github.com/MakieOrg/AlgebraOfGraphics.jl",
-    sitename="Algebra of Graphics",
+    sitename="AlgebraOfGraphics",
     format = DocumenterVitepress.MarkdownVitepress(;
         repo = "https://github.com/MakieOrg/AlgebraOfGraphics.jl",
         deploy_url = "https://aog.makie.org",
