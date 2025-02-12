@@ -96,7 +96,7 @@ end
 apply_palette(p::Union{AbstractArray, AbstractColorList}, uv) = collect(Iterators.map(Cycler(p), uv))
 apply_palette(::Automatic, uv) = eachindex(uv)
 apply_palette(f::Function, uv) = f(uv)
-apply_palette(fc::FromContinuous, uv) = cgrad(fc.continuous, length(uv); categorical = true)
+apply_palette(fc::FromContinuous, uv) = cgrad(Makie.to_colormap(fc.continuous), length(uv); categorical = true)
 
 # TODO: add more customizations?
 struct Wrap end
