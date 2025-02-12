@@ -211,3 +211,7 @@
       user-select: none;
       margin: 0 0 8px;
   }
+  
+  .dark .VPHero .image-src {
+    content: url(/logo-dark.svg);
+  }
