@@ -48,6 +48,7 @@ spec =
 
 draw(spec)
 save("demo_hero.png", current_figure()) # hide
+nothing # hide
 ```
 
 ````@raw html
