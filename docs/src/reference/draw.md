@@ -17,7 +17,33 @@ The properties that are accepted differ depending on the scale aesthetic type (f
 
 ### Shared categorical scale options
 
-The `palette` and `categories` options are implemented across all categorical scale types.
+All categorical scales share the following options:
+    - `legend`
+    - `palette`
+    - `categories`
+
+#### `legend`
+
+Setting `legend = false` hides the legend for the respective scale.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:9, y = 1:9, group = repeat(["A", "B", "C"], inner = 3))) *
+    mapping(:x, :y, color = :group, marker = :group) *
+    visual(Scatter)
+
+f = Figure()
+
+fg1 = draw!(f[1, 1], spec, scales(Color = (; legend = false)))
+legend!(f[1, 2], fg1)
+
+fg2 = draw!(f[2, 1], spec, scales(Marker = (; legend = false)))
+legend!(f[2, 2], fg2)
+
+f
+```
 
 #### `palette`
 
@@ -290,6 +316,19 @@ f
 
 The `legend` keyword forwards most attributes to Makie's `Legend` function.
 The exceptions are listed here.
+
+### `show`
+
+Setting `show = false` hides the legend completely. This applies to `draw` and not `draw!` as the latter doesn't draw the legend automatically.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((x = 1:3, y = 1:3, group = ["A", "B", "C"])) * mapping(:x, :y, color = :group) * visual(Scatter)
+
+draw(spec; legend = (; show = false))
+```
 
 ### `order`
 
