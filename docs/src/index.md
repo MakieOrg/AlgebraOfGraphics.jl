@@ -47,8 +47,12 @@ spec =
     (visual(Scatter, alpha = 0.3) + linear())
 
 draw(spec)
+save("demo_hero.png", current_figure()) # hide
 ```
 
+````@raw html
+<img src="./demo_hero.png" style="max-width: 640px; width: 100%; height: auto;">
+````
 
 ## Installation
 
