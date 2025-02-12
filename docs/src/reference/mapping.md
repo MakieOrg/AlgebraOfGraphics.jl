@@ -46,6 +46,26 @@ There are a few aesthetics, however, which are hardcoded to belong to certain `m
 
 These are `layout`, `row` and `col` for facetting, `group` for creating a separate plot for each group (like separate lines instead of one long line) and `dodge_x` and `dodge_y` for dodging.
 
+### Grouping
+
+A common case is that multiple lines should be drawn for a population, but all with the same color. Without any grouping, the lines will all be connected in a zig-zag pattern. The `group` keyword can be used to create a separate plot per group, splitting up the lines.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((;
+   x = repeat(1:10, 8),
+   y = reduce(vcat, [(1:10) .+ i for i in 1:8]),
+   id = repeat(string.('A':'H'), inner = 10),
+)) * mapping(:x, :y) * visual(Lines)
+
+f = Figure()
+draw!(f[1, 1], spec; axis = (; title = "no group"))
+draw!(f[1, 2], spec * mapping(group = :id); axis = (; title = "group = :id"))
+f
+```
+
 ### Dodging
 
 Dodging refers to the shifting of plots on a (usually categorical) scale depending on the group they belong to.
