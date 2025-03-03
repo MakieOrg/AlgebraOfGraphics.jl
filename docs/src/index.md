@@ -66,4 +66,4 @@ Pkg.add("AlgebraOfGraphics")
 
 ## First steps
 
-Have a look at the [Getting started](@ref) tutorial to get to know AlgebraOfGraphics!
+Have a look at the [Basics of AlgebraOfGraphics](@ref) tutorial to get to know AlgebraOfGraphics!
