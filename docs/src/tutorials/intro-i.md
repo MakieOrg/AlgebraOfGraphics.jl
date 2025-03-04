@@ -313,7 +313,7 @@ draw(color_layer_categorical, scales(Color = (; palette = from_continuous(:virid
 For quick plotting, it can be inconvenient to pass labels separately via the `scales` function.
 This is why there's an alternative way to set labels, by pairing them directly to their column selectors within `mapping`:
 
-```@example
+```@example tut
 layer = data(penguins) *
     mapping(
         :bill_length_mm => "Bill length (mm)",
