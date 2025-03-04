@@ -1,4 +1,4 @@
-# Intro to AlgebraOfGraphics - I
+# Intro to AoG - I - Fundamentals
 
 Welcome to AlgebraOfGraphics! If you're new to this package, this tutorial will teach you the basic concepts you need to get started.
 
@@ -118,7 +118,7 @@ new_layer_legend = new_layer * visual(label = "Penguins", legend = (; alpha = 1)
 draw(new_layer_legend)
 ```
 
-## Continuous and categorical `color`
+## Continuous and categorical data
 
 If we want to color the scatter markers given some input data, we have to add the `color` keyword to the `mapping`. We can either use continuous or categorical data for `color`, continuous data will get a `Colorbar` and categorical a `Legend`.
 
@@ -140,7 +140,7 @@ draw(color_layer_categorical)
 
 As we've seen above, the `visual` function simply sets the `transformation` property of a layer to a `Visual` object, which passes the input data to a plain Makie plotting function without further modification.
 
-That's the simplest kind of `transformation`, but there are others which actually do transform the input data. Examples for built-in transformations are the [Analyses](@ref) functions, one of which, the `density()` we can demonstrate here:
+That's the simplest kind of `transformation`, but there are others which actually do transform the input data. Examples for built-in transformations are the [Analyses](@ref) functions, one of which, the `density()` we will demonstrate here:
 
 ```@example tut
 density_layer = data(penguins) * mapping(:bill_length_mm, :bill_depth_mm) * AlgebraOfGraphics.density()
@@ -160,7 +160,7 @@ draw(density_layer * visual(Contour))
 
 So far we've only seen the `*` operator in use, the other operator that completes the algebra is `+` which stacks layers on top of each other. Often, multiple layers will share the same `data` and maybe even `mapping`, and in this case we can use the distributive law to simplify our code.
 
-For example, note that our density contour and scatter plots used the same `data` and `mapping` components, so to combine the two, we can multiply them with a stack of contour and scatter:
+For example, note that our density contour and scatter plots used the same `data` and `mapping` components, so we can multiply them with a stack of contour and scatter to form two fully specified layers. First we create the two stacked partial layers:
 
 ```@example tut
 contour_layer = AlgebraOfGraphics.density() * visual(Contour)
@@ -278,7 +278,7 @@ no_adelie_scatter_layer = data(penguins_no_adelie) * shared_mapping * visual(Sca
 draw(contour_layer + no_adelie_scatter_layer)
 ```
 
-Even though the `Scatter` layer only directly sees Chinstarp and Gentoo penguins, a single color scale is merged across layers so that the colors for both plots match.
+Even though the `Scatter` layer only directly sees Chinstrap and Gentoo penguins, a single color scale is merged across layers so that the colors for both plots match.
 
 If the reduced scatter layer is drawn on its own, you can see that the colors are assigned differently:
 
@@ -308,5 +308,26 @@ Or a continuous colormap that is sampled end-to-end:
 draw(color_layer_categorical, scales(Color = (; palette = from_continuous(:viridis))))
 ```
 
-## Labels in `mapping`
+## Shortcut: Labels in `mapping`
 
+For quick plotting, it can be inconvenient to pass labels separately via the `scales` function.
+This is why there's an alternative way to set labels, by pairing them directly to their column selectors within `mapping`:
+
+```@example
+layer = data(penguins) *
+    mapping(
+        :bill_length_mm => "Bill length (mm)",
+        :bill_depth_mm => "Bill depth (mm)",
+        color = :species => "Species",
+    ) *
+    visual(Scatter)
+draw(layer)
+```
+
+Note that if there are multiple layers and different layers have different labels for the same scale, either because the column names or the paired labels don't match, the resulting label will be empty.
+In those cases it is again more convenient to assign a central label in the `scales` rather than affixing the same ones to each layer's `mapping` entries.
+
+## Summary
+
+This concludes the first tutorial. You have learned about the fundamental concepts of layers, aesthetics and scales, and how they come together to create AlgebraOfGraphics visualizations.
+In the following tutorials, we will go into each of these aspects in more detail.
