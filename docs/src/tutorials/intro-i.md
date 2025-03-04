@@ -20,7 +20,11 @@ Here's a short overview of similarities and differences between ggplot2 and Alge
 |`geom`s specify visual components and `stats` statistical transformations, but some `geoms` have default `stat`s and vice versa | Layers with the `visual` transformation feed their associated data directly to Makie plotting functions. Layers with other `transformation`s apply more complex modifications to the data first and can result in multiple output layers.|
 
 Now let's actually start plotting some things to see how AlgebraOfGraphics works!
-But before we can do that, we have to load the necessary packages and the `penguins` dataset from RDatasets. CairoMakie is one of [Makie's backend packages](https://docs.makie.org/stable/explanations/backends/backends) which we need to actually turn our plots into images. CairoMakie is the most commonly used backend with AlgebraOfGraphics because it focuses on 2D plots and vector graphics.
+But before we can do that, we have to load the necessary packages and the `penguins` dataset from `PalmerPenguins`[^1] (see the [Palmer penguins website](https://allisonhorst.github.io/palmerpenguins/index.html) for more information).
+
+CairoMakie is one of [Makie's backend packages](https://docs.makie.org/stable/explanations/backends/backends) which we need to actually turn our plots into images. CairoMakie is the most commonly used backend with AlgebraOfGraphics because it focuses on 2D plots and vector graphics.
+
+[^1]: Gorman KB, Williams TD, Fraser WR (2014) Ecological Sexual Dimorphism and Environmental Variability within a Community of Antarctic Penguins (Genus Pygoscelis). PLoS ONE 9(3): e90081. [DOI](https://doi.org/10.1371/journal.pone.0090081)
 
 ```@example tut
 using AlgebraOfGraphics
