@@ -23,6 +23,7 @@ makedocs(;
         "Home" => "index.md",
         "Tutorials" => [
             "tutorials/intro-i.md",
+            "tutorials/intro-ii.md",
             "tutorials/penguins.md",
         ],
         "Examples" => [
