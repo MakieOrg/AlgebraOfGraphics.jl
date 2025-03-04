@@ -22,7 +22,7 @@ makedocs(;
     pages=Any[
         "Home" => "index.md",
         "Tutorials" => [
-            "tutorials/getting-started.md",
+            "tutorials/intro-i.md",
             "tutorials/penguins.md",
         ],
         "Examples" => [
