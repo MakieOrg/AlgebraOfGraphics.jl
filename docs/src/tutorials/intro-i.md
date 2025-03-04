@@ -130,7 +130,7 @@ color_layer_categorical = layer * mapping(color = :species)
 draw(color_layer_categorical)
 ```
 
-## Analyses
+## Transformations and analyses
 
 As we've seen above, the `visual` function simply sets the `transformation` property of a layer to a `Visual` object, which passes the input data to a plain Makie plotting function without further modification.
 
@@ -142,9 +142,9 @@ draw(density_layer)
 ```
 
 You can see that the `density` function resulted in a heatmap in which continuous color visualizes the probability density function or `pdf` of our data.
-For transformations that only create a single layer, like the heatmap here, we can sometimes conveniently switch out the plotting function that is used with transformed data, by multiplying with a `visual`.
+For transformations that only create a single layer, like the heatmap here, we can sometimes conveniently switch out the plotting function that is used with transformed data, by multiplying with a `visual` that is compatible with the same arguments.
 
-For example, we can use a contour plot instead of a heatmap:
+For example, we can use a contour plot instead of a heatmap because they are both specified with three positional arguments:
 
 ```@example tut
 draw(density_layer * visual(Contour))
@@ -179,9 +179,9 @@ draw(complete_contour_plus_scatter)
 
 ## Aesthetics
 
-Not every attribute that a Makie plotting function supports can be used inside `mapping`, for example, `Scatter` doesn't support mapping columns to `glowcolor` or `alpha`.
+Not every attribute that a Makie plotting function supports can be used inside `mapping`, for example, `Scatter` doesn't support mapping columns to the attributes `glowcolor` or `alpha`.
 In order to use a Makie plotting function with AlgebraOfGraphics, AoG has to be told which positional arguments and which keyword arguments correspond to which "aesthetics".
-Aesthetics in AlgebraOfGraphics are pretty similar to ggplot2, they are abstractions of visual properties, like `X`, `Y`, `Color` or `Marker`, which tell AlgebraOfGraphics what labels and legends are appropriate when those aesthetics are used.
+Aesthetics in AlgebraOfGraphics are pretty similar to `aes` in ggplot2, they are abstractions of visual properties, like `X`, `Y`, `Color` or `Marker`, which tell AlgebraOfGraphics what labels and legends are appropriate when those aesthetics are used.
 
 For example, here are the aesthetics AoG supports for the `Scatter` visual when two continuous positional arguments are used:
 
@@ -189,7 +189,7 @@ For example, here are the aesthetics AoG supports for the `Scatter` visual when 
 AlgebraOfGraphics.aesthetic_mapping(Scatter, AlgebraOfGraphics.Continuous(), AlgebraOfGraphics.Continuous())
 ```
 
-You can see that the first two positional arguments correspond to `X` and `Y`, and we could also use `strokecolor`, `marker` and `markersize` in a `mapping`.
+You can see that the first two positional arguments correspond to `X` and `Y`, and we could also use `strokecolor`, `marker` and `markersize` in a `mapping`. You can also see that `color` and `strokecolor` both correspond to the `Color` aesthetic because on some level they both influence the color of the plot, even though they do it in slightly different ways.
 
 The first two arguments of a plotting function are not always `X` and `Y`, that depends on the implementation. A simple counterexample in Makie is `Violin` which can be vertical or horizontal, and which of the positional arguments is `X` and which is `Y` depends on the `orientation`. We can see that reflected in the aesthetic mapping of `Violin`:
 
@@ -210,4 +210,10 @@ When we change the orientation to `:horizontal`, the X and Y axes switch places:
 ```@example tut
 draw(violin_layer * visual(orientation = :horizontal))
 ```
+
+So AlgebraOfGraphics determines with the aesthetic mapping which arguments mapped to a plotting function correspond to which abstract visual property, and it decides what and where to label using that information.
+
+## Scales
+
+Another important concept in AoG which is closely related to aesthetics are scales.
 
