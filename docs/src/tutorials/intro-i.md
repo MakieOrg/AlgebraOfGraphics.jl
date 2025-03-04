@@ -29,6 +29,8 @@ using PalmerPenguins
 using DataFrames
 
 penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+
+first(penguins, 5)
 ```
 
 ## Layers: `data`, `mapping`, `visual` and `transformation`
@@ -82,7 +84,7 @@ And now we combine all three parts, forming a fully specified layer:
 layer = data(penguins) * mapping(:bill_length_mm, :bill_depth_mm) * visual(Scatter)
 ```
 
-## `draw`
+## The `draw` function
 
 Finally, we can turn our layer into Makie plot objects. This is done using the `draw` function. Contrary to the name, `draw` doesn't actually "draw" anything, that part is done by CairoMakie using the output from `draw`. Therefore, it could also be called `turn_into_makie_plot` or something like that.
 
@@ -94,7 +96,7 @@ draw(layer)
 
 Our first AlgebraOfGraphics plot!
 
-## `visual` attributes
+## Attributes for `visual`
 
 We have successfully passed two columns from our dataset to Makie's `scatter` function, but other than that we have left everything at its default. Like in base Makie, we can use lots of attributes to change how plotting functions are rendered. For example, we can modify the `marker`, `markersize`, `color` or `alpha` attributes. Every keyword attribute that we could usually pass to `scatter(...; )` in Makie (check the `scatter` docstring or its [docs page](https://docs.makie.org/stable/reference/plots/scatter#attributes)), we can pass with AlgebraOfGraphics as well, via the `visual` function:
 
@@ -150,7 +152,7 @@ For example, we can use a contour plot instead of a heatmap because they are bot
 draw(density_layer * visual(Contour))
 ```
 
-## Multiple layers with `+`
+## Stacking layers with `+`
 
 So far we've only seen the `*` operator in use, the other operator that completes the algebra is `+` which stacks layers on top of each other. Often, multiple layers will share the same `data` and maybe even `mapping`, and in this case we can use the distributive law to simplify our code.
 
@@ -216,4 +218,91 @@ So AlgebraOfGraphics determines with the aesthetic mapping which arguments mappe
 ## Scales
 
 Another important concept in AoG which is closely related to aesthetics are scales.
+A scale is basically the combination of an aesthetic with either categorical or continuous data.
+You can have a categorical `Color` scale, for example, or a continuous `X` scale.
+Not all combinations make sense, for example there can be no continuous `Marker` scale because markers are inherently categorical.
+
+Scales decide on a higher level how a given aesthetic is visualized. For example, a categorical `Color` scale will compute a set of colors, one for each encountered category, and pass these on to the plotting functions. So the final visual output will always depend on the scale and the plotting function used.
+
+### Scale properties
+
+Each scale computes its continuous or categorical transformations based on a bunch of properties which can be modified using the `scales` function. For example, we had seen a continuously colored scatter plot above:
+
+```@example tut
+draw(color_layer_continuous)
+```
+
+The most common thing to change in this case is the `colormap` that is being used. We can set a different colormap as one of the properties of the appropriate scale, in this case `Color`.
+Remember that `color` was mapped to the `AesColor` aesthetic for `Scatter`, we drop the `Aes` prefix that all aesthetics share and get the default scale identifier for this aesthetic.
+
+```@example tut
+draw(color_layer_continuous, scales(Color = (; colormap = :RdBu)))
+```
+
+Another thing we can change for each scale is the `label` which will set the colorbar label for a continuous `Color` scale:
+
+```@example tut
+draw(color_layer_continuous, scales(Color = (; label = "Body mass (g)")))
+```
+
+We can also label the `X` and `Y` scales this way:
+
+```@example tut
+draw(
+    color_layer_continuous,
+    scales(
+        Color = (; label = "Body mass (g)"),
+        X = (; label = "Bill length (mm)"),
+        Y = (; label = "Bill depth (mm)"),
+    ),
+)
+```
+
+### Categorical scales and merging
+
+One important aspect of scales is the fact that they are always fit to all data across the different layers that belongs to the same aesthetic (with some exceptions you will learn about later).
+For example, if you combine two layers that use different categorical data for the `Color` aesthetic, the final scale will reflect the merged set of categories.
+
+For this synthetic example, we make a second dataframe with one group of penguins removed:
+
+```@example tut
+penguins_no_adelie = subset(penguins, :species => ByRow(!=("Adelie")))
+
+shared_mapping = mapping(:bill_length_mm, :bill_depth_mm, color = :species)
+contour_layer = data(penguins) * shared_mapping * AlgebraOfGraphics.density() * visual(Contour)
+no_adelie_scatter_layer = data(penguins_no_adelie) * shared_mapping * visual(Scatter)
+draw(contour_layer + no_adelie_scatter_layer)
+```
+
+Even though the `Scatter` layer only directly sees Chinstarp and Gentoo penguins, a single color scale is merged across layers so that the colors for both plots match.
+
+If the reduced scatter layer is drawn on its own, you can see that the colors are assigned differently:
+
+```@example tut
+draw(no_adelie_scatter_layer)
+```
+
+### Categorical palettes
+
+A categorical scale usually accepts a `palette` keyword which specifies the set of values to pick from when assigning each category a different aesthetic value.
+The kinds of palettes you can specify differ between the aesthetics.
+Categorical colors, for example, can be specified using a vector of colors:
+
+```@example tut
+draw(color_layer_categorical, scales(Color = (; palette = [:tomato, :teal, :orange])))
+```
+
+Or one of Makie's predefined categorical colormaps:
+
+```@example tut
+draw(color_layer_categorical, scales(Color = (; palette = :Set1_3)))
+```
+
+Or a continuous colormap that is sampled end-to-end:
+
+```@example tut
+draw(color_layer_categorical, scales(Color = (; palette = from_continuous(:viridis))))
+```
+
+## Labels in `mapping`
 
