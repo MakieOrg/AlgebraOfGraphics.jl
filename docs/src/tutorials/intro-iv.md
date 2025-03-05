@@ -47,7 +47,7 @@ Note that AoG offers no mechanism to transform input data by-column instead of b
 We can actually select two or more columns together in a `mapping` by wrapping them in a tuple, and we can then apply a transformation function that returns a single value.
 For example, we can calculate an approximation of "bill area" by multiplying bill depth and length (we have to wrap the standalone `*` operator in parentheses so this parses correctly):
 
-```@example
+```@example tut
 area_spec = data(penguins) *
     mapping(
         :species,
