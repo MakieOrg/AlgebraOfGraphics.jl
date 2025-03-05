@@ -187,11 +187,14 @@ function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol,Any}(), fig
 
         base_fontsize = Makie.theme(fg.figure.scene)[:fontsize][]
 
+        halign = fs.titlealign === nothing ? :left : fs.titlealign
+        justification = halign
+
         if fs.subtitle !== nothing
-            Label(fg.figure[begin-1, :], fs.subtitle; tellwidth = false, halign = :left, _filter_nothings(; font = fs.subtitlefont, color = fs.subtitlecolor, fontsize = fs.subtitlesize, halign = fs.titlealign, lineheight = fs.subtitlelineheight)...)
+            Label(fg.figure[begin-1, :], fs.subtitle; tellwidth = false, halign, justification, _filter_nothings(; font = fs.subtitlefont, color = fs.subtitlecolor, fontsize = fs.subtitlesize, lineheight = fs.subtitlelineheight)...)
         end
         if fs.title !== nothing
-            Label(fg.figure[begin-1, :], fs.title; tellwidth = false, fontsize = base_fontsize * 1.15, font = :bold, halign = :left, _filter_nothings(; font = fs.titlefont, color = fs.titlecolor, fontsize = fs.titlesize, halign = fs.titlealign, lineheight = fs.titlelineheight)...)
+            Label(fg.figure[begin-1, :], fs.title; tellwidth = false, fontsize = base_fontsize * 1.15, font = :bold, halign, justification, _filter_nothings(; font = fs.titlefont, color = fs.titlecolor, fontsize = fs.titlesize, lineheight = fs.titlelineheight)...)
         end
         if fs.subtitle !== nothing
             fg.figure.layout.addedrowgaps[1] = Fixed(0)
