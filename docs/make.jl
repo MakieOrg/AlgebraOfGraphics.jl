@@ -24,6 +24,7 @@ makedocs(;
         "Tutorials" => [
             "tutorials/intro-i.md",
             "tutorials/intro-ii.md",
+            "tutorials/intro-iii.md",
             "tutorials/penguins.md",
         ],
         "Examples" => [
