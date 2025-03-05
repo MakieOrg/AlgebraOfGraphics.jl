@@ -24,7 +24,7 @@ AlgebraOfGraphics.aesthetic_mapping(Scatter, AlgebraOfGraphics.Continuous(), Alg
 ```
 
 There are, however, a few mappings that are not specific to each plotting function, but rather hardcoded into AlgebraOfGraphics and available for use with any plotting function.
-These are the three faceting mappings `layout`, `row` and `col` as well as the grouping mapping `group`.
+These are the three faceting mappings `layout`, `row` and `col` as well as the grouping mapping `group` and the dodging mappings `dodge_x` and `dodge_y`. We will look at the first four in this chapter.
 
 ## Faceting
 
