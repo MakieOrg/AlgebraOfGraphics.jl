@@ -207,5 +207,32 @@ You can also assign new titles to such merged groups using the `Pair` syntax:
 draw(two_legend_groups, legend = (; order = [[:Marker, :Color] => "Island &\nSpecies"]))
 ```
 
+## Summary
 
+Combining all the settings, it is easy to reach a high quality end product that should be suitable for publication:
+
+```@example tut
+draw(
+    spec,
+    scales(
+        X = (; label = "Bill length (mm)"),
+        Y = (; label = "Bill depth (mm)"),
+        Color = (; label = "Species"),
+    );
+    figure = (;
+        title = "Palmer Penguins",
+        subtitle = """
+            Ecological Sexual Dimorphism¹ and Environmental Variability
+            within a Community of Antarctic Penguins""",
+        footnotes = ["¹A trait that occurs in two distinct forms or morphs within a given species"]
+    ),
+    axis = (;
+        width = 140,
+        height = 140
+    ),
+    legend = (; position = :bottom, titleposition = :left, framevisible = false)
+)
+```
+
+Check out the next tutorial to learn more about on-the-fly data transformations with `mapping`.
 
