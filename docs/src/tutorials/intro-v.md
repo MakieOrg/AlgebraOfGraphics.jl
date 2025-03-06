@@ -213,3 +213,154 @@ In general, whether you use the stack-to-long or the wide workflow is mostly a m
 But it's nice to have options, and especially for multidimensional cases, the necessary `stack` and split operations can be more complex.
 
 ## Pregrouped data
+
+Wide data is still tabular data, but AlgebraOfGraphics has another trick up its sleeve when it comes to input data formats.
+Sometimes, you may have data in an array-of-arrays format, where each inner array contains data for a group.
+
+Let's start with a simple example. Here we have timestamps and measurements for some population.
+Each subject's data is already contained in its own array.
+
+```@example tut
+times = [
+    [1, 2, 5, 7, 8],
+    [3, 4, 7, 8],
+    [2, 3, 6, 9],
+]
+measurements = [
+    [0.2, 5.0, 3.0, 2.0, 1.2],
+    [0.3, 4.7, 1.5, 1.1],
+    [0.1, 5.9, 0.7, 0.3],
+]
+nothing # hide
+```
+
+We can plot this data directly using the `pregrouped` function. This function is equivalent to doing `data(AlgebraOfGraphics.Pregrouped()) * mapping(...)`, so it's essentially a special version of `mapping`:
+
+```@example tut
+pregrouped_spec = pregrouped(times, measurements) * visual(Lines)
+
+draw(pregrouped_spec)
+```
+
+Because it's `mapping` under the hood, we can pair labels in `pregrouped` like usual:
+
+```@example tut
+pregrouped_labeled = pregrouped(times => "Time", measurements => "Measurement") * visual(Lines)
+
+draw(pregrouped_labeled)
+```
+
+As you can see, each subject has a separate line, because the data are inherently grouped through the array structure. Compare to the same plot but with merged input arrays, which we can pass via `mapping`. Now there is a single line which zig-zags back and forth.
+
+```@example tut
+times_merged = reduce(vcat, times)
+measurements_merged = reduce(vcat, measurements)
+
+merged_spec = mapping(times_merged, measurements_merged) * visual(Lines)
+
+draw(merged_spec)
+```
+
+Because the pregrouped data already has a one-dimensional input shape (compare to the wide data above where we saw a one-dimensional and a two-dimensional input shape), we can even do a quick facet plot by using the `dims` helper:
+
+```@example tut
+pregrouped_faceted = pregrouped(
+    times => "Time",
+    measurements => "Measurement",
+    layout = dims(1),
+) * visual(Lines)
+
+draw(pregrouped_faceted)
+```
+
+Or the same thing with color, and renaming of the dims:
+
+```@example tut
+pregrouped_faceted = pregrouped(
+    times => "Time",
+    measurements => "Measurement",
+    color = dims(1) => renamer(string.("Subject ", 1:3)),
+) * visual(Lines)
+
+draw(pregrouped_faceted)
+```
+
+If we already have a vector of categorical values, we can also directly use that for one of the named arguments in `pregrouped`. For categorical values, due to the way that AlgebraOfGraphics structures grouped data, each group should have one entry, and not an array filled with the same value.
+
+So instead of this...
+
+```julia
+subjects = [
+    ["Subject 1", "Subject 1", "Subject 1", "Subject 1", "Subject 1"],
+    ["Subject 2", "Subject 2", "Subject 2", "Subject 2"],
+    ["Subject 3", "Subject 3", "Subject 3", "Subject 3"],
+]
+```
+
+...we need a simple structure like this:
+
+```@example tut
+subjects = ["Subject 1", "Subject 2", "Subject 3"]
+
+pregrouped_faceted_subjects = pregrouped(
+    times => "Time",
+    measurements => "Measurement",
+    color = subjects,
+) * visual(Lines)
+
+draw(pregrouped_faceted_subjects)
+```
+
+The categorical values don't need to be unique within the vectors, you will still get one plot per entry due to the array structure:
+
+```@example tut
+same_subjects = ["Subject 1", "Subject 1", "Subject 1"]
+
+pregrouped_faceted_same = pregrouped(
+    times => "Time",
+    measurements => "Measurement",
+    color = same_subjects,
+) * visual(Lines)
+
+draw(pregrouped_faceted_same)
+```
+
+### Even more dimensions
+
+Here's one more example for `pregrouped` data that can demonstrate the possibility for multidimensional structure even more.
+In this scenario, imagine you are profiling some code in a loop, testing three different algorithms on four different branches of a repo and three different Julia versions.
+The data could come from code like this:
+
+```@example tut
+algorithms = ["Quick", "Merge", "Bubble"]
+branches = ["master", "bugfix", "prerelease", "backport"]
+julia_versions = ["1.10", "1.11", "nightly"]
+
+timings = map(Iterators.product(algorithms, branches, enumerate(julia_versions))) do (algo, br, (i, jv))
+    # here you would profile, we just generate random data with some structure
+    20 .+ randn(100) .- 3 * i .+ randn()
+end
+
+size(timings)
+```
+
+As you can see, we have an array of arrays with shape `(3, 4, 3)`, so we can pass that directly via `pregrouped` and use `dims` to assign the three dimensions to different aesthetics:
+
+```@example tut
+multidim_pregrouped = pregrouped(
+    timings => "Timings (s)",
+    row = dims(1) => renamer(algorithms) => "Algorithm",
+    col = dims(2) => renamer(branches),
+    color = dims(3) => renamer(julia_versions) => "Julia version",
+) * visual(Density)
+
+draw(multidim_pregrouped)
+```
+
+Isn't that impressively little code to get a quick visualization out of multidimensional non-tabular data?
+
+## Summary
+
+In this chapter you have seen alternative ways of passing input data to AoG, circumventing `data` by passing columns to `mapping` directly, supplying additional columns using `direct`, as well as using multidimensional wide and pregrouped data.
+
+In the next chapter, we're going to see how we can combine AoG plots with elements from Makie, and how we can modify the Makie objects that AoG creates.
