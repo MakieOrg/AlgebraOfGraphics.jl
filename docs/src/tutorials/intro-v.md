@@ -166,7 +166,50 @@ draw(wide_spec_final)
 
 That looks much better!
 
-Whether you use the stack-to-long or the wide workflow is purely a matter of taste, you can always go back and forth.
-But it's always nice to have options.
+### More dimensions
+
+To drive the point about multidimensional column selections home, here's another example where we have even more wide columns.
+In this example, there's not only four seasons, but also three different years, which gives 12 columns overall.
+
+```@example tut
+seasons = ["spring", "summer", "autumn", "winter"]
+years = [2010, 2011, 2012]
+matrix_of_columns = string.("body_mass_", seasons, "_", years')
+
+years_penguins = transform(
+    penguins,
+    :body_mass_g .=>
+        [col -> col .* x * y for x in [0.8, 0.9, 1.1, 0.95], y in [0.8, 1.2, 1.0]] .=>
+        matrix_of_columns
+    )
+
+names(years_penguins)
+```
+
+We now have a matrix of columns with shape `(4, 3)`:
+
+```@example tut
+size(matrix_of_columns)
+```
+
+When we then set `col = dims(1)` and `row = dims(2)`, we get 4 columns for the seasons and 3 rows for the years.
+
+```@example tut
+spec = data(years_penguins) *
+    mapping(
+        :sex,
+        matrix_of_columns .=> "Body Mass (g)",
+        col = dims(1) => renamer(seasons),
+        row = dims(2) => renamer(years),
+    ) *
+    visual(Violin)
+
+draw(spec)
+```
+
+It is quite common for tabular datasets to encode some sort of multidimensional structure with similarly concatenated column names, so knowing about multidimensional wide data can come in handy.
+
+In general, whether you use the stack-to-long or the wide workflow is mostly a matter of taste, you should always be able to go back and forth between the representations.
+But it's nice to have options, and especially for multidimensional cases, the necessary `stack` and split operations can be more complex.
 
 ## Pregrouped data
