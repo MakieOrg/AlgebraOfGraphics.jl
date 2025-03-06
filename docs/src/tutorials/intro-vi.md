@@ -173,7 +173,7 @@ figure
 
 ## Free modifications
 
-One last example to really emphasize the flexibility of plotting with Makie and AlgebraOfGraphics home.
+One last example to really emphasize the flexibility of plotting with Makie and AlgebraOfGraphics.
 As the `Figure` is basically just a drawing canvas, we can freely plot into it wherever we want.
 You could imagine drawing connections between different axes or labels, annotations outside the margins, whatever you can think of.
 
