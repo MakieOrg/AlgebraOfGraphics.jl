@@ -89,6 +89,14 @@ You can use the `axis` keyword to forward attributes to all axes in an AoG plot.
 Keep in mind that some attributes are supposed to be controlled by AoG itself, for example setting the correct date ticks for a `DateTime` plot.
 So you should restrict your choice of `axis` keywords to those that don't interfere with the way AoG sets up the plot.
 
+### Limits
+
+To zoom in or out, you can specify manual limits using the `limits` keyword. You can pass either `(xmin, xmax, ymin, ymax)` where any element can be `nothing` to leave it automatic, or `(x_min_and_max, y_min_and_max)` where each element can either be a 2-tuple or `nothing` to leave that dimension automatic:
+
+```@example tut
+draw(spec; axis = (; limits = (nothing, (10, 30))))
+```
+
 ### Axis scales
 
 You can switch axes to any scale function that Makie supports. The most common example is the `log10` function:
