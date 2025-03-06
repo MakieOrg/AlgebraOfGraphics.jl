@@ -189,7 +189,7 @@ names(years_penguins)
 We now have a matrix of columns with shape `(4, 3)`:
 
 ```@example tut
-size(matrix_of_columns)
+matrix_of_columns
 ```
 
 When we then set `col = dims(1)` and `row = dims(2)`, we get 4 columns for the seasons and 3 rows for the years.
