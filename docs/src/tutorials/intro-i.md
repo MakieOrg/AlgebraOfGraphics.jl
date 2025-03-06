@@ -39,14 +39,23 @@ first(penguins, 5)
 
 ## Layers: `data`, `mapping`, `visual` and `transformation`
 
+One of the most common basic plots is the scatter plot which plots one variable on the x axis against another on the y axis.
+I'll show you first how we can express one with an AlgebraOfGraphics layer, then we'll have a look at the underlying concept:
+
+```@example
+xy_layer = data(penguins) * mapping(:bill_length_mm, :bill_depth_mm) * visual(Scatter)
+
+draw(xy_layer)
+```
+
+Ok, so now what's going on?
+
 Layers form the backbone of AoG plots. A layer combines the specification of three major components:
 - the input `data`
 - a `mapping` specifying which parts of the input data should be used as the arguments of Makie plotting functions or AoG transformations
 - the Makie plotting function used to visualize a layer's data (via `visual`) or some other `transformation` that should be applied (think statistical transformation plus possibly multiple `visual`s rolled into one)
 
-One of the most common basic plots is the scatter plot which plots one variable on the x axis against another on the y axis. Let's see how we can express this using AoG's layers.
-
-For reference, an empty layer looks like this, it has no input `data`, no positional or named arguments which form the `mapping`, and no `transformation` which would take the mapped input data and turn it into a plot:
+For reference, an empty layer looks like this, it has no input `data`, no positional or named arguments which form the `mapping`, and the `transformation` which would take the mapped input data and turn it into a plot is `identity`, which doesn't do anything:
 
 ```@example tut
 Layer()
@@ -58,7 +67,7 @@ To specify the input data, we use the `data` function which creates a partially 
 data(penguins)
 ```
 
-You can see that `positional` and `named` arguments are still unset, and the `transformation` component is set to the `identity` function which doesn't do anything.
+You can see that `positional` and `named` arguments are still unset, as is the `transformation`.
 The `data` component, however, reflects that we have added a `DataFrame` source.
 
 Next, we need to specify which columns from our data source we want to use as arguments to our layer's plotting function, the scatter plot (which we have also not specified, yet). A `Scatter` plot in Makie takes x as the first positional argument and y as the second. So what do we want our x and y to be? Let's pick `bill_length_mm` as x and `bill_depth_mm` as y. We can express that using `mapping`:
