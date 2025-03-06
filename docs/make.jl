@@ -28,6 +28,7 @@ makedocs(;
             "tutorials/intro-iv.md",
             "tutorials/intro-v.md",
             "tutorials/intro-vi.md",
+            "tutorials/intro-vii.md",
         ],
         "Examples" => [
             "Basic Visualizations" => [

@@ -191,3 +191,4 @@ figure
 
 In this chapter, you have seen how to draw compose multiple AlgebraOfGraphics plots in a Makie `Figure`, make layout, legend and axis modifications, and achieve even more unusual effects by plotting directly into the figure's main scene. Making use of all of these options can save you a lot of time that you would otherwise spend editing and re-editing your plots manually. For more techniques and possibilities, refer to sources like [Makie's documentation](https://docs.makie.org/stable/) or the gallery [Beautiful Makie](https://beautiful.makie.org/).
 
+In the next chapter, we'll have a look at one more special feature that `mapping` provides - the ability to have multiple scales of the same aesthetic in one plot.
