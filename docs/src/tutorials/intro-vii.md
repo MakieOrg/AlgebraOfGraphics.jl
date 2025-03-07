@@ -1,4 +1,4 @@
-# Intro to AoG - VI - Multiple scales for one aesthetic
+# Intro to AoG - VII - Multiple scales for one aesthetic
 
 In the previous tutorials, you have already learned about aesthetics and the categorical or continuous scales that use them.
 However, so far we've only used one scale of a given type within a plot, for example one color scale, or one set of markers.
