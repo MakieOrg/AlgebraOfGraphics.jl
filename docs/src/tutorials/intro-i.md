@@ -1,6 +1,13 @@
 # Intro to AoG - I - Fundamentals
 
-Welcome to AlgebraOfGraphics! If you're new to this package, this tutorial will teach you the basic concepts you need to get started.
+Welcome to AlgebraOfGraphics!
+
+This intro tutorial series will guide you as you take your first steps, going from simple scatter plots all the way up to complex compositions of multilayered facet plots.
+Along the way, you will learn about the philosophy behind AlgebraOfGraphics's approach to data visualization and how all its pieces fit together to form one coherent toolbox.
+
+To follow along, you only need a computer with Julia installed, an internet connection to download packages and example data, and ideally an environment such as VSCode, Pluto or Jupyter Notebooks which can display plots alongside the code. No familiarity with plotting or data analysis in Julia is required but basic familiarity with the Julia language is expected such that you can read and understand the code.
+
+If you encounter typos, confusing explanations or want to suggest other improvements, you're welcome to [open an issue on GitHub](https://github.com/MakieOrg/AlgebraOfGraphics.jl/issues/new). With that, let's get into it, starting with a little bit of background!
 
 ## What is AlgebraOfGraphics?
 
@@ -19,14 +26,24 @@ Here's a short overview of similarities and differences between ggplot2 and Alge
 |Defines all of the visual infrastructure itself, outputs low level graphics objects that are hard to modify directly.|Creates high-level Makie building blocks like `Figure`, `Axis` or `Legend` as well as plot objects like `Lines` or `Scatter` which can be modified more easily.|
 |`geom`s specify visual components and `stats` statistical transformations, but some `geoms` have default `stat`s and vice versa | Layers with the `visual` transformation feed their associated data directly to Makie plotting functions. Layers with other `transformation`s apply more complex modifications to the data first and can result in multiple output layers.|
 
-Now let's actually start plotting some things to see how AlgebraOfGraphics works!
-But before we can do that, we have to load the necessary packages and the `penguins` dataset from `PalmerPenguins`[^1] (see the [Palmer penguins website](https://allisonhorst.github.io/palmerpenguins/index.html) for more information).
+## Preparations
+
+Now, before we can start plotting, we have to load the necessary packages and the `penguins` dataset from `PalmerPenguins`[^1] (see the [Palmer penguins website](https://allisonhorst.github.io/palmerpenguins/index.html) for more information).
+
+Ideally, you should create a new Julia environment by `cd`ing to a directory of your choice in the Julia REPL, and then running `using Pkg; Pkg.activate(".")`. The dependencies can then be installed with
+
+```julia
+Pkg.add(["AlgebraOfGraphics", "CairoMakie", "PalmerPenguins", "DataFrames"])
+```
 
 CairoMakie is one of [Makie's backend packages](https://docs.makie.org/stable/explanations/backends/backends) which we need to actually turn our plots into images. CairoMakie is the most commonly used backend with AlgebraOfGraphics because it focuses on 2D plots and vector graphics.
+
 Whenever a Makie or AlgebraOfGraphics figure is returned from one of the code blocks in this tutorial, it is automatically displayed inline.
-For you running this code, display behavior will depend on your own IDE setup. As a fallback you can always `save("plot.png", a_plot)` and look at the resulting file.
+For you, as you're running this code, display behavior will depend on your own IDE setup. As a fallback you can always `save("plot.png", a_plot)` and look at the resulting file.
 
 [^1]: Gorman KB, Williams TD, Fraser WR (2014) Ecological Sexual Dimorphism and Environmental Variability within a Community of Antarctic Penguins (Genus Pygoscelis). PLoS ONE 9(3): e90081. [DOI](https://doi.org/10.1371/journal.pone.0090081)
+
+Once you have installed everything, the following code to load plotting packages and data should run without errors:
 
 ```@example tut
 using AlgebraOfGraphics
@@ -39,20 +56,22 @@ penguins = dropmissing(DataFrame(PalmerPenguins.load()))
 first(penguins, 5)
 ```
 
+Now we can start plotting!
+
 ## Layers: `data`, `mapping`, `visual` and `transformation`
 
 One of the most common basic plots is the scatter plot which plots one variable on the x axis against another on the y axis.
-I'll show you first how we can express one with an AlgebraOfGraphics layer, then we'll have a look at the underlying concept:
+I'll show you first how we can express such a plot with AlgebraOfGraphics, and then we'll have a look at the underlying concepts:
 
-```@example
+```@example tut
 xy_layer = data(penguins) * mapping(:bill_length_mm, :bill_depth_mm) * visual(Scatter)
 
 draw(xy_layer)
 ```
 
-Ok, so now what's going on?
+Ok, that worked, but why, and how?
 
-Layers form the backbone of AoG plots. A layer combines the specification of three major components:
+We have just created a layer and then drawn it. Layers form the backbone of AoG plots. A layer combines the specification of three major components:
 - the input `data`
 - a `mapping` specifying which parts of the input data should be used as the arguments of Makie plotting functions or AoG transformations
 - the Makie plotting function used to visualize a layer's data (via `visual`) or some other `transformation` that should be applied (think statistical transformation plus possibly multiple `visual`s rolled into one)
