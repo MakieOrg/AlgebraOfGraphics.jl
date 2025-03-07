@@ -4,8 +4,6 @@ using DocumenterVitepress
 using Literate, Glob
 using CairoMakie
 
-CairoMakie.activate!(type="svg")
-
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 
 DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics); recursive=true)
@@ -24,7 +22,13 @@ makedocs(;
     pages=Any[
         "Home" => "index.md",
         "Tutorials" => [
-            "tutorials/getting-started.md",
+            "tutorials/intro-i.md",
+            "tutorials/intro-ii.md",
+            "tutorials/intro-iii.md",
+            "tutorials/intro-iv.md",
+            "tutorials/intro-v.md",
+            "tutorials/intro-vi.md",
+            "tutorials/intro-vii.md",
         ],
         "Examples" => [
             "Basic Visualizations" => [
