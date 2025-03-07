@@ -1,4 +1,4 @@
-# Intro to AoG - VI - Modifying and composing with Makie
+# Intro to AoG - VI - Editing and composing AoG plots with Makie
 
 In the last chapters we have concentrated on creating standalong AlgebraOfGraphics figures, without focusing to much on fiddling with the visual results.
 However, in practice, many people spend a lot of time on tweaking their figures until they are satisfied with the smallest details.
