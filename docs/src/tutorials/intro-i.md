@@ -118,6 +118,8 @@ And now we combine all three parts, forming a fully specified layer:
 layer = data(penguins) * mapping(:bill_length_mm, :bill_depth_mm) * visual(Scatter)
 ```
 
+Note that Makie has many other plotting functions than `Scatter`, have a look at the [Makie docs for an overview](https://docs.makie.org/stable/reference/plots/overview). Most of these work with AlgebraOfGraphics, although some have not been ported over, yet.
+
 ## The `draw` function
 
 Finally, we can turn our layer into Makie plot objects. This is done using the `draw` function. Contrary to the name, `draw` doesn't actually "draw" anything, that part is done by CairoMakie using the output from `draw`. Therefore, it could also be called `turn_into_makie_plot` or something like that.
