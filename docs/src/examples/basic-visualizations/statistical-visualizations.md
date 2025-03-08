@@ -1,7 +1,7 @@
 # Statistical visualizations
 
 ````@example statistical_visualizations
-using AlgebraOfGraphics, CairoMakie, PalmerPenguins, DataFrames
+using AlgebraOfGraphics, CairoMakie, DataFrames
 
 penguins = DataFrame(AlgebraOfGraphics.penguins())
 
