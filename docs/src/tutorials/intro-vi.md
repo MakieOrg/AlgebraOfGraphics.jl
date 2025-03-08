@@ -1,6 +1,6 @@
 # Intro to AoG - VI - Editing and composing AoG plots with Makie
 
-In the last chapters we have concentrated on creating standalong AlgebraOfGraphics figures, without focusing to much on fiddling with the visual results.
+In the last chapters we have concentrated on creating standalone AlgebraOfGraphics figures, without focusing to much on fiddling with the visual results.
 However, in practice, many people spend a lot of time on tweaking their figures until they are satisfied with the smallest details.
 
 Too often, such edits still happen in vector graphics software like Inkscape these days, which is both time consuming and non-reproducible, and should therefore be avoided if at all possible. Luckily, AlgebraOfGraphics is built on Makie, and Makie has a special focus on layouting and interactive editing. This means that it is easy to combine multiple AoG plots in a figure, as well as changing the underlying plot objects programmatically if that's desired.
