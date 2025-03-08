@@ -28,12 +28,11 @@ Here's a short overview of similarities and differences between ggplot2 and Alge
 
 ## Preparations
 
-Now, before we can start plotting, we have to load the necessary packages and the `penguins` dataset from `PalmerPenguins`[^1] (see the [Palmer penguins website](https://allisonhorst.github.io/palmerpenguins/index.html) for more information).
-
+Now, before we can start plotting, we have to load the necessary packages.
 Ideally, you should create a new Julia environment by `cd`ing to a directory of your choice in the Julia REPL, and then running `using Pkg; Pkg.activate(".")`. The dependencies can then be installed with
 
 ```julia
-Pkg.add(["AlgebraOfGraphics", "CairoMakie", "PalmerPenguins", "DataFrames"])
+Pkg.add(["AlgebraOfGraphics", "CairoMakie", "DataFrames"])
 ```
 
 CairoMakie is one of [Makie's backend packages](https://docs.makie.org/stable/explanations/backends/backends) which we need to actually turn our plots into images. CairoMakie is the most commonly used backend with AlgebraOfGraphics because it focuses on 2D plots and vector graphics.
@@ -41,17 +40,18 @@ CairoMakie is one of [Makie's backend packages](https://docs.makie.org/stable/ex
 Whenever a Makie or AlgebraOfGraphics figure is returned from one of the code blocks in this tutorial, it is automatically displayed inline.
 For you, as you're running this code, display behavior will depend on your own IDE setup. As a fallback you can always `save("plot.png", a_plot)` and look at the resulting file.
 
+We're going to use the Palmer Penguins[^1] dataset (see the [Palmer penguins website](https://allisonhorst.github.io/palmerpenguins/index.html) for more information) which comes with AlgebraOfGraphics.
+
 [^1]: Gorman KB, Williams TD, Fraser WR (2014) Ecological Sexual Dimorphism and Environmental Variability within a Community of Antarctic Penguins (Genus Pygoscelis). PLoS ONE 9(3): e90081. [DOI](https://doi.org/10.1371/journal.pone.0090081)
 
-Once you have installed everything, the following code to load plotting packages and data should run without errors:
+Once you have installed everything, the following code should run without errors:
 
 ```@example tut
 using AlgebraOfGraphics
 using CairoMakie
-using PalmerPenguins
 using DataFrames
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = DataFrame(AlgebraOfGraphics.penguins())
 
 first(penguins, 5)
 ```

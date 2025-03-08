@@ -13,7 +13,7 @@ hero:
   actions:
     - theme: brand
       text: Getting started
-      link: /tutorials/getting-started
+      link: /tutorials/intro-i
     - theme: alt
       text: View on Github
       link: https://github.com/MakieOrg/AlgebraOfGraphics.jl
@@ -29,14 +29,12 @@ AlgebraOfGraphics (AoG) defines a language for data visualization, inspired by t
 In AlgebraOfGraphics, a few simple building blocks can be combined using `+` and `*` to quickly create complex visualizations, like this:
 
 ```@example
-using AlgebraOfGraphics, CairoMakie, PalmerPenguins, DataFrames
-
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+using AlgebraOfGraphics, CairoMakie
 set_aog_theme!() # hide
 update_theme!(Axis = (; width = 120, height = 120)) # hide
 
 spec =
-    data(penguins) *
+    data(AlgebraOfGraphics.penguins()) *
     mapping(
         :bill_length_mm => "Bill length (mm)",
         :bill_depth_mm => "Bill depth (mm)",

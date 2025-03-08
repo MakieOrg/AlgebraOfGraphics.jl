@@ -11,10 +11,9 @@ The first alternative is still about long-format data, but it omits the tables. 
 ```@example tut
 using AlgebraOfGraphics
 using CairoMakie
-using PalmerPenguins
 using DataFrames
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = DataFrame(AlgebraOfGraphics.penguins())
 
 bill_lengths = penguins.bill_length_mm
 bill_depths = penguins.bill_depth_mm

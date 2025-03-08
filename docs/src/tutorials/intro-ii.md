@@ -5,10 +5,9 @@ In the previous chapter, we learned how to create basic visualizations like this
 ```@example tut
 using AlgebraOfGraphics
 using CairoMakie
-using PalmerPenguins
 using DataFrames
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = DataFrame(AlgebraOfGraphics.penguins())
 
 spec = data(penguins) *
     mapping(:bill_length_mm, :bill_depth_mm, color = :species) *

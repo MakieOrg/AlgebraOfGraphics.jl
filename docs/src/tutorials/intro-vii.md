@@ -15,10 +15,9 @@ For that to work, we just have to take care that the facets of these layers don'
 ```@example tut
 using AlgebraOfGraphics
 using CairoMakie
-using PalmerPenguins
 using DataFrames
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = DataFrame(AlgebraOfGraphics.penguins())
 
 cols = [:flipper_length_mm, :island, :bill_depth_mm, :species]
 

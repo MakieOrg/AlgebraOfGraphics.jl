@@ -5,10 +5,9 @@ In the previous chapters, we have seen two different features of the `mapping` f
 ```@example tut
 using AlgebraOfGraphics
 using CairoMakie
-using PalmerPenguins
 using DataFrames
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = DataFrame(AlgebraOfGraphics.penguins())
 
 layer = data(penguins) *
     mapping(
