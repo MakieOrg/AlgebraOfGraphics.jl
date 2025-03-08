@@ -13,7 +13,7 @@ hero:
   actions:
     - theme: brand
       text: Getting started
-      link: /tutorials/getting-started
+      link: /tutorials/intro-i
     - theme: alt
       text: View on Github
       link: https://github.com/MakieOrg/AlgebraOfGraphics.jl
