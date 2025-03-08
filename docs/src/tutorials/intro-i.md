@@ -48,10 +48,9 @@ Once you have installed everything, the following code to load plotting packages
 ```@example tut
 using AlgebraOfGraphics
 using CairoMakie
-using PalmerPenguins
 using DataFrames
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = DataFrame(AlgebraOfGraphics.penguins())
 
 first(penguins, 5)
 ```

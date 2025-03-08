@@ -3,7 +3,7 @@
 ````@example statistical_visualizations
 using AlgebraOfGraphics, CairoMakie, PalmerPenguins, DataFrames
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = DataFrame(AlgebraOfGraphics.penguins())
 
 data(penguins) * visual(Violin) *
     mapping(:species, :bill_depth_mm, color=:sex, dodge=:sex) |> draw

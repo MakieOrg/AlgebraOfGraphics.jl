@@ -8,10 +8,9 @@ Let's use this version of our familiar penguin plot for modification:
 ```@example tut
 using AlgebraOfGraphics
 using CairoMakie
-using PalmerPenguins
 using DataFrames
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = DataFrame(AlgebraOfGraphics.penguins())
 
 spec = data(penguins) *
     mapping(

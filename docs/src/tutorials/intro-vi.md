@@ -10,10 +10,9 @@ Let's first bring our trusty old penguin dataset back in and draw a basic facet 
 ```@example tut
 using AlgebraOfGraphics
 using CairoMakie
-using PalmerPenguins
 using DataFrames
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = DataFrame(AlgebraOfGraphics.penguins())
 
 spec = data(penguins) *
     mapping(

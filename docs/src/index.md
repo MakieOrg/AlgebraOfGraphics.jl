@@ -31,7 +31,7 @@ In AlgebraOfGraphics, a few simple building blocks can be combined using `+` and
 ```@example
 using AlgebraOfGraphics, CairoMakie, PalmerPenguins, DataFrames
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = DataFrame(AlgebraOfGraphics.penguins())
 set_aog_theme!() # hide
 update_theme!(Axis = (; width = 120, height = 120)) # hide
 
