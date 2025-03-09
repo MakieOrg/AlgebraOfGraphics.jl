@@ -39,34 +39,49 @@ Base.@kwdef struct HistogramAnalysis{D, B}
     bins::B=automatic
     closed::Symbol=:left
     normalization::Symbol=:none
+    visual::Union{typeof(automatic), Layer}=automatic
 end
 
 function (h::HistogramAnalysis)(input::ProcessedLayer)
     datalimits = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
     options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
 
+    visual = h.visual
+    N = length(input.positional)
+    default_plottype = categoricalplottypes[N]
+    plottype = Makie.plottype(input.plottype, visual === automatic ? default_plottype : (visual.transformation::Visual).plottype)
+
     output = map(input) do p, n
         hist = _histogram(Tuple(p); pairs(n)..., pairs(options)...)
         edges, weights = hist.edges, hist.weights
-        named = length(edges) == 1 ? (; width=diff(first(edges))) : (;)
-        return (map(midpoints, edges)..., weights), named
+        named = plottype == BarPlot ? (; width=diff(first(edges))) : (;)
+        positional = if plottype == Stairs
+            edges = only(edges)
+            phantomedge = edges[end] # to bring step back to baseline
+            edges = vcat(edges, phantomedge)
+            z = zero(eltype(weights))
+            heights = vcat(z, weights, z)
+            (edges, heights)
+        else
+            (map(midpoints, edges)..., weights)
+        end
+        return positional, named
     end
 
-    N = length(input.positional)
     label = h.normalization == :none ? "count" : string(h.normalization)
     labels = set(output.labels, N+1 => label)
-    attributes = if N == 1
-        set(output.attributes, :gap => 0, :dodge_gap => 0)
-    else
-        output.attributes
+    attributes = output.attributes
+    if plottype == BarPlot
+        attributes = set(attributes, :gap => 0, :dodge_gap => 0)
     end
-    default_plottype = categoricalplottypes[N]
-    plottype = Makie.plottype(output.plottype, default_plottype)
+    if visual !== automatic
+        attributes = merge(attributes, (visual.transformation::Visual).attributes)
+    end
     return ProcessedLayer(output; plottype, labels, attributes)
 end
 
 """
-    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none)
+    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none, visual=automatic)
 
 Compute a histogram.
 
