@@ -468,3 +468,14 @@ function aesthetic_mapping(::Type{Hist}, ::Normal)
         :strokecolor => AesColor,
     ])
 end
+
+aesthetic_mapping(::Type{Stairs}, ::Normal) = aesthetic_mapping(Stairs, 1)
+aesthetic_mapping(::Type{Stairs}, ::Normal, ::Normal) = aesthetic_mapping(Stairs, 2)
+
+function aesthetic_mapping(::Type{Stairs}, N::Int)
+    dictionary([
+        pointlike_positionals(N)...,
+        :color => AesColor,
+        :linestyle => AesLineStyle,
+    ])
+end

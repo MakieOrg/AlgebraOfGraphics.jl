@@ -154,12 +154,28 @@ end
 function _draw(d::AbstractDrawable, scales::Scales;
               axis, figure, facet, legend, colorbar)
 
+    ae = compute_axes_grid(d, scales; axis)
+    _draw(ae; figure, facet, legend, colorbar)
+end
+
+function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol,Any}(), figure = Dictionary{Symbol,Any}(), facet = Dictionary{Symbol,Any}(), legend = Dictionary{Symbol,Any}(), colorbar = Dictionary{Symbol,Any}())
+
+    if !isempty(axis)
+        # merge in axis attributes here because pagination runs `compute_axes_grid`
+        # which in the normal `draw` pipeline consumes `axis`
+        ae = map(ae) do ase
+            Accessors.@set ase.axis.attributes = merge(ase.axis.attributes, axis)
+        end
+    end
+
     fs, remaining_figure_kw = figure_settings(; pairs(figure)...)
 
     _filter_nothings(; kwargs...) = (key => value for (key, value) in kwargs if value !== nothing)
 
     return update(Figure(; pairs(remaining_figure_kw)...)) do f
-        grid = plot!(f, d, scales; axis)
+        grid = map(x -> AxisEntries(x, f), ae)
+        foreach(plot!, grid)
+
         fg = FigureGrid(f, grid)
         facet!(fg; facet)
         if get(colorbar, :show, true)
@@ -171,11 +187,14 @@ function _draw(d::AbstractDrawable, scales::Scales;
 
         base_fontsize = Makie.theme(fg.figure.scene)[:fontsize][]
 
+        halign = fs.titlealign === nothing ? :left : fs.titlealign
+        justification = halign
+
         if fs.subtitle !== nothing
-            Label(fg.figure[begin-1, :], fs.subtitle; tellwidth = false, halign = :left, _filter_nothings(; font = fs.subtitlefont, color = fs.subtitlecolor, fontsize = fs.subtitlesize, halign = fs.titlealign, lineheight = fs.subtitlelineheight)...)
+            Label(fg.figure[begin-1, :], fs.subtitle; tellwidth = false, halign, justification, _filter_nothings(; font = fs.subtitlefont, color = fs.subtitlecolor, fontsize = fs.subtitlesize, lineheight = fs.subtitlelineheight)...)
         end
         if fs.title !== nothing
-            Label(fg.figure[begin-1, :], fs.title; tellwidth = false, fontsize = base_fontsize * 1.15, font = :bold, halign = :left, _filter_nothings(; font = fs.titlefont, color = fs.titlecolor, fontsize = fs.titlesize, halign = fs.titlealign, lineheight = fs.titlelineheight)...)
+            Label(fg.figure[begin-1, :], fs.title; tellwidth = false, fontsize = base_fontsize * 1.15, font = :bold, halign, justification, _filter_nothings(; font = fs.titlefont, color = fs.titlecolor, fontsize = fs.titlesize, lineheight = fs.titlelineheight)...)
         end
         if fs.subtitle !== nothing
             fg.figure.layout.addedrowgaps[1] = Fixed(0)

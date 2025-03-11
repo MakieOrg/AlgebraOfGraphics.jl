@@ -31,7 +31,7 @@ import Isoband
 import NaturalSort
 
 export hideinnerdecorations!, deleteemptyaxes!
-export Layer, Layers, ProcessedLayer, ProcessedLayers
+export Layer, Layers, ProcessedLayer, ProcessedLayers, zerolayer
 export Entry, AxisEntries
 export renamer, sorter, nonnumeric, verbatim, presorted
 export density, histogram, stephistogram, linear, smooth, expectation, frequency, contours, filled_contours
@@ -76,6 +76,7 @@ include("guides/legend.jl")
 include("guides/colorbar.jl")
 include("draw.jl")
 include("paginate.jl")
+include("testdata.jl")
 
 include("precompiles.jl")
 

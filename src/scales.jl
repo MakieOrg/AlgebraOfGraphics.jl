@@ -97,7 +97,7 @@ end
 apply_palette(p::Union{AbstractArray, AbstractColorList}, uv) = collect(Iterators.map(Cycler(p), uv))
 apply_palette(::Automatic, uv) = eachindex(uv)
 apply_palette(f::Function, uv) = f(uv)
-apply_palette(fc::FromContinuous, uv) = cgrad(fc.continuous, length(uv); categorical = true)
+apply_palette(fc::FromContinuous, uv) = cgrad(Makie.to_colormap(fc.continuous), length(uv); categorical = true)
 
 # TODO: add more customizations?
 struct Wrap end
@@ -190,9 +190,21 @@ end
 Base.@kwdef struct AesDodgeYCategoricalProps <: CategoricalAesProps
     width::Union{Nothing,Float64} = nothing
 end
+Base.@kwdef struct AesRowCategoricalProps <: CategoricalAesProps
+    show_labels::Bool = true
+end
+Base.@kwdef struct AesColCategoricalProps <: CategoricalAesProps
+    show_labels::Bool = true
+end
+Base.@kwdef struct AesLayoutCategoricalProps <: CategoricalAesProps
+    show_labels::Bool = true
+end
 
 categorical_aes_props_type(::Type{AesDodgeX}) = AesDodgeXCategoricalProps
 categorical_aes_props_type(::Type{AesDodgeY}) = AesDodgeYCategoricalProps
+categorical_aes_props_type(::Type{AesRow}) = AesRowCategoricalProps
+categorical_aes_props_type(::Type{AesCol}) = AesColCategoricalProps
+categorical_aes_props_type(::Type{AesLayout}) = AesLayoutCategoricalProps
 
 
 function CategoricalScale(aestype::Type{<:Aesthetic}, data, label::Union{AbstractString, Nothing}, props)

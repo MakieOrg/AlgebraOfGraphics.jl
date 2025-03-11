@@ -1007,3 +1007,171 @@ reftest("legend element overrides") do
         visual(Scatter, legend = (; markersize = 30))
     draw(spec)
 end
+
+reftest("stairs") do
+    spec = mapping(
+        1:10,
+        [1, 4, 3, 7, 5, 3, 2, 4, 3, 7],
+        color = repeat(["A", "B"], inner = 5),
+        linestyle = repeat(["A", "B"], inner = 5),
+    ) *
+        visual(Stairs)
+    draw(spec)
+end
+
+reftest("split x scales across facet layout") do
+    dat = data((;
+        cat1 = ["Apple", "Orange", "Pear"],
+        cat2 = ["Blue", "Green", "Red"],
+        cat3 = ["Heavy", "Light", "Medium"],
+        cont = [4.5, 7.6, 9.3],
+        y1 = [3.4, 5.2, 6],
+        y2 = [0.3, 0.2, 0.3],
+        y3 = [123, 82, 71],
+        y4 = [-10, 10, 0.4],
+    ))
+
+    cat_mappings = mapping(:cat1 => scale(:X1), :y1, layout = direct("A")) +
+        mapping(:cat2 => "Cat 2" => scale(:X2), :y2, layout = direct("B")) +
+        mapping(:cat3 => scale(:X3), :y3, layout = direct("C"))
+
+    cont_mapping = mapping(:cont => scale(:X4), :y4, layout = direct("D"))
+
+    spec = dat * (cat_mappings * visual(Scatter) + cont_mapping * visual(Lines))
+
+    draw(spec, scales(X3 = (; label = "Third Categorical")))
+end
+
+reftest("split x and y scales row col layout") do
+    dat = data((;
+        cat1 = ["Apple", "Orange", "Pear"],
+        cont2 = [1.4, 5.1, 2.5],
+        cat3 = ["Heavy", "Light", "Medium"],
+        cont4 = [2.5, -0.2, 1.2],
+    ))
+
+    mappings = zerolayer()
+    for x in [:cat1, :cont2]
+        for y in [:cat3, :cont4]
+            mappings += mapping(x => scale(x), y => scale(y), col = direct("$x"), row = direct("$y"))
+        end
+    end
+
+    spec = dat * mappings * visual(Scatter)
+
+    draw(spec)
+end
+
+reftest("hide row col and layout labels") do
+    f = Figure(size = (600, 600))
+    d = data((;
+        x = 1:16,
+        y = 17:32,
+        group1 = repeat(["A", "B"], inner = 8),
+        group2 = repeat(["C", "D"], 8))
+    )
+    spec1 = d * mapping(:x, :y, row = :group1, col = :group2) * visual(Scatter)
+    spec2 = d * mapping(:x, :y, layout = (:group1, :group2) => tuple) * visual(Scatter)
+
+    draw!(f[1, 1], spec1, scales(Row = (; show_labels = false), Col = (; show_labels = false)))
+    draw!(f[1, 2], spec1, scales(Row = (; show_labels = true), Col = (; show_labels = true)))
+    draw!(f[2, 1], spec2, scales(Layout = (; show_labels = false)))
+    draw!(f[2, 2], spec2, scales(Layout = (; show_labels = true)))
+    f
+end
+
+let
+    df = (;
+        x = 0:24,
+        y = 0:24,
+        color = repeat(string.('A':'E'), inner = 5),
+    )
+
+    spec = data(df) * mapping(:x, :y, layout = :color, color = :color)
+
+    scl = scales(Layout = (; categories = cats -> reverse(uppercase.(cats))))
+
+    reftest("pagination layout unpaginated") do
+        draw(spec, scl)
+    end
+
+    paginated = AlgebraOfGraphics.paginate(spec, scl; layout = 3)
+    for i in 1:length(paginated)
+        reftest("pagination layout page $i") do
+            draw(paginated, i)
+        end
+    end
+end
+
+let
+    df = (;
+        x = 0:24,
+        y = 0:24,
+        group1 = repeat(string.('a':'e'), inner = 5),
+        group2 = repeat(string.('f':'j'), 5),
+    )
+
+    spec = data(df) * mapping(:x, :y, row = :group2, col = :group1, color = :group1)
+
+    scl = scales(;
+        Col = (; palette = ["a" => 1, 3, 5, 2, 4], categories = reverse),
+        Row = (; palette = ["g" => 1, 3, 5, 2, 4], categories = cats -> cats .=> uppercase.(cats)),
+    )
+
+    reftest("pagination row col unpaginated") do
+        draw(spec, scl)
+    end
+
+    paginated = AlgebraOfGraphics.paginate(spec, scl; row = 3, col = 2)
+    for i in 1:length(paginated)
+        reftest("pagination row col page $i") do
+            draw(paginated, i)
+        end
+    end
+end
+
+let 
+    df = (;
+        wres = 1:10,
+        age = 11:20,
+        gender = repeat(["m", "f"], 5),
+    )
+
+    layer1 = mapping(:age => scale(:Xage), :wres, layout = direct("A")) * visual(Scatter)
+    layer2 = mapping(:gender => scale(:Xgender), :wres, layout = direct("B")) * visual(Violin)
+
+    spec = data(df) * (layer1 + layer2)
+
+    reftest("pagination split x scales unpaginated") do
+        draw(spec)
+    end
+
+    paginated = AlgebraOfGraphics.paginate(spec; layout = 1)
+    for i in 1:length(paginated)
+        reftest("pagination split x scales page $i") do
+            draw(paginated, i)
+        end
+    end
+end
+
+let 
+    df = (
+        x = repeat(1:10, 36),
+        y = cumsum(sin.(range(0, 10pi, length = 360))),
+        group = repeat(string.("Group ", 1:36), inner = 10),
+        color = 1:360,
+    )
+    spec = data(df) * mapping(:x, :y, color = :color, layout=:group) * visual(Lines)
+    scl = scales(Color = (; colormap = :plasma, label = "The color"))
+
+    reftest("pagination colorbar unpaginated") do
+        draw(spec, scl)
+    end
+
+    pag = paginate(spec, scl, layout = 9)
+    for page in [1, 4]
+        reftest("pagination colorbar page $page") do
+            draw(pag, page)
+        end
+    end
+end
