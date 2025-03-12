@@ -54,23 +54,23 @@ the remaining attributes are forwarded to Makie's `Figure` constructor.
 The `title`, `subtitle` and `footnotes` arguments accept objects of any kind that Makie's
 `Label` or `text` function can handle, such as `rich` text.
 
-    - `title`
-    - `subtitle`
-    - `titlesize::Union{Nothing,Float64}`
-    - `subtitlesize::Union{Nothing,Float64}`
-    - `titlealign::Union{Nothing,Symbol}`
-    - `titlecolor`
-    - `subtitlecolor`
-    - `titlefont`
-    - `subtitlefont`
-    - `titlelineheight`
-    - `subtitlelineheight`
-    - `footnotes::Union{Nothing,Vector{Any}}`
-    - `footnotesize::Union{Nothing,Float64}`
-    - `footnotefont`
-    - `footnotecolor`
-    - `footnotealign`
-    - `footnotelineheight`
+- `title`
+- `subtitle`
+- `titlesize::Union{Nothing,Float64}`
+- `subtitlesize::Union{Nothing,Float64}`
+- `titlealign::Union{Nothing,Symbol}`
+- `titlecolor`
+- `subtitlecolor`
+- `titlefont`
+- `subtitlefont`
+- `titlelineheight`
+- `subtitlelineheight`
+- `footnotes::Union{Nothing,Vector{Any}}`
+- `footnotesize::Union{Nothing,Float64}`
+- `footnotefont`
+- `footnotecolor`
+- `footnotealign`
+- `footnotelineheight`
 """
 function draw(d::AbstractDrawable, scales::Scales = scales();
               axis=NamedTuple(), figure=NamedTuple(),
