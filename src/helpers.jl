@@ -20,8 +20,23 @@ struct Renamer{U, L}
     labels::L
 end
 
+# for `dims(2)` and up, we get indices like `CartesianIndex(1, 4)` etc, which
+# by construction are always only non-1 in one dimension, but we can't know that
+# just from a single `CartesianIndex`. As long as we only drop all the ones, and error
+# if there are two non-ones, this should be fine.
+function linearize_cartesian_index(i::CartesianIndex)
+    t = Tuple(i)
+    linearized = reduce(t; init = 1) do a, b
+        a == 1 ? b : b == 1 ? a : error("Can't linearize $(i) because it has two indices that are not one")
+    end
+    return linearized
+end
+
+linearize_cartesian_index(x) = x
+
 function (r::Renamer{Nothing})(x)
-    i = LinearIndices(r.labels)[x]
+    lx = linearize_cartesian_index(x)
+    i = LinearIndices(r.labels)[lx]
     return Sorted(i, r.labels[i])
 end
 

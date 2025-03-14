@@ -78,3 +78,15 @@ end
 
     @test_throws_message "Calling `draw` with a `Pagination` object and `scales` is invalid." draw(p, scl)
 end
+
+@testset "Axis attributes when drawing pagination" begin
+    spec = data((; x = 1:10, y = 11:20, group = repeat(["A", "B"]))) * mapping(:x, :y, layout = :group)
+    p = paginate(spec, layout = 1)
+    fgrid = draw(p, 1; axis = (; xlabelcolor = :tomato))
+    ax = only(fgrid.grid).axis
+    @test ax.xlabelcolor[] == Makie.to_color(:tomato)
+    
+    fgrids = draw(p; axis = (; xlabelcolor = :tomato))
+    ax = only(fgrids[1].grid).axis
+    @test ax.xlabelcolor[] == Makie.to_color(:tomato)
+end

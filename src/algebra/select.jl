@@ -100,6 +100,12 @@ function select(data, x::Pair{<:Any, <:Pair{<:Any, ScaleID}})
     return vs => transf => label => x[2][2]
 end
 
+function select(data, x::Pair{<:Any, <:Pair{<:Any, <:Pair{<:Any, ScaleID}}})
+    (col, (f, (lbl, id))) = x
+    (vs, (transf, (label, _))) = select(data, col => f => lbl)
+    return vs => transf => label => id
+end
+
 function select(data, x::Pair{<:Any, ScaleID})
     (vs, (transf, (label, _))) = select(data, x[1])
     return vs => transf => label => x[2]

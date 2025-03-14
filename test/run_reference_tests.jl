@@ -4,13 +4,14 @@ import DelimitedFiles
 using Test
 using Statistics
 
-rgbf_convert(x::AbstractMatrix{<:Makie.RGB}) = convert(Matrix{RGBf}, x)
-rgbf_convert(x::AbstractMatrix{<:Makie.RGBA}) = convert(Matrix{RGBAf}, x)
+rgbaf_convert(x::AbstractMatrix{<:Makie.RGB}) = convert(Matrix{RGBAf}, x)
+rgbaf_convert(x::AbstractMatrix{<:Makie.RGBA}) = convert(Matrix{RGBAf}, x)
 
 function compare_images(a::AbstractMatrix{<:Union{Makie.RGB,Makie.RGBA}}, b::AbstractMatrix{<:Union{Makie.RGB,Makie.RGBA}})
 
-    a = rgbf_convert(a)
-    b = rgbf_convert(b)
+    # convert always to RGBA, as at some point CairoMakie output changed due to PNGFiles
+    a = rgbaf_convert(a)
+    b = rgbaf_convert(b)
 
     if size(a) != size(b)
         return Inf, nothing
