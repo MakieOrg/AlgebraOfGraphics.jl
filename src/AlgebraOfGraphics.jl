@@ -75,6 +75,7 @@ include("guides/legend.jl")
 include("guides/colorbar.jl")
 include("draw.jl")
 include("paginate.jl")
+include("testdata.jl")
 
 include("precompiles.jl")
 

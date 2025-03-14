@@ -27,9 +27,9 @@ capabilities available to tweak figures produced by AlgebraOfGraphics.
 ## Example
 
 ``` julia
-using AlgebraOfGraphics, CairoMakie, PalmerPenguins, DataFrames
+using AlgebraOfGraphics, CairoMakie
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = AlgebraOfGraphics.penguins()
 
 set_aog_theme!()
 update_theme!(Axis = (; width = 150, height = 150))
