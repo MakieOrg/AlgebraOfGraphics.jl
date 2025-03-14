@@ -258,3 +258,38 @@ function Base.showerror(io::IO, pe::PaletteError)
         """
     print(io, msg)
 end
+
+function draw_to_spec(spec, scales = scales())
+    agrid = compute_axes_grid(spec, scales)
+
+    S = Makie.SpecApi
+
+    axisspecs = map(vec(agrid)) do ase
+        ax = ase.axis
+        axtype = ax.type === Axis ? S.Axis : ax.type === Axis3 ? S.Axis3 : error()
+
+        isempty(ase.entries) && return nothing
+
+        plots::Vector{Makie.PlotSpec} = map(ase.entries) do entry
+            Makie.PlotSpec(entry.plottype, entry.positional...; pairs(entry.named)...)
+        end
+
+        ax.position => axtype(; plots, pairs(ax.attributes)...)
+    end
+
+    axisspecs_vec = [x for x in axisspecs if x !== nothing]
+
+    legend = compute_legend(agrid; order = nothing)
+    if legend !== nothing
+        gridsize = size(agrid)
+        legendpos = (:, gridsize[2] + 1)
+        legendspec = S.Legend(legend...)
+        axisspecs = [axisspecs; legendpos => legendspec]
+    end
+
+    return S.GridLayout(
+        axisspecs_vec,
+        xaxislinks = last.(axisspecs_vec),
+        yaxislinks = last.(axisspecs_vec),
+    )
+end
