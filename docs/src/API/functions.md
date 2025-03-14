@@ -39,6 +39,12 @@ from_continuous
 datetimeticks
 ```
 
+## Functions to be extended by other packages
+
+```@docs
+AlgebraOfGraphics.mergeable
+```
+
 ## Internal functions
 
 ```@docs
