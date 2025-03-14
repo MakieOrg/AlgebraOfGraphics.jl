@@ -39,34 +39,49 @@ Base.@kwdef struct HistogramAnalysis{D, B}
     bins::B=automatic
     closed::Symbol=:left
     normalization::Symbol=:none
+    visual::Visual=Visual()
 end
+
+histogram_preprocess_named(::Type{<:Plot}, edges, weights) = (;)
+histogram_preprocess_named(::Type{BarPlot}, edges, weights) = (; width=diff(first(edges)))
+histogram_preprocess_positional(::Type{<:Plot}, edges, weights) = (map(midpoints, edges)..., weights)
+function histogram_preprocess_positional(::Type{Stairs}, edges, weights)
+    edges = only(edges)
+    phantomedge = edges[end] # to bring step back to baseline
+    edges = vcat(edges, phantomedge)
+    z = zero(eltype(weights))
+    heights = vcat(z, weights, z)
+    return (edges, heights)
+end
+histogram_default_attributes(::Type{<:Plot}) = NamedArguments()
+histogram_default_attributes(::Type{BarPlot}) = NamedArguments((; :gap => 0, :dodge_gap => 0))
 
 function (h::HistogramAnalysis)(input::ProcessedLayer)
     datalimits = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
     options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
 
+    visual = h.visual
+    N = length(input.positional)
+    default_plottype = categoricalplottypes[N]
+    plottype = Makie.plottype(visual.plottype, input.plottype, default_plottype)
+
     output = map(input) do p, n
         hist = _histogram(Tuple(p); pairs(n)..., pairs(options)...)
         edges, weights = hist.edges, hist.weights
-        named = length(edges) == 1 ? (; width=diff(first(edges))) : (;)
-        return (map(midpoints, edges)..., weights), named
+        named = histogram_preprocess_named(plottype, edges, weights)
+        positional = histogram_preprocess_positional(plottype, edges, weights)
+        return positional, named
     end
 
-    N = length(input.positional)
     label = h.normalization == :none ? "count" : string(h.normalization)
     labels = set(output.labels, N+1 => label)
-    attributes = if N == 1
-        set(output.attributes, :gap => 0, :dodge_gap => 0)
-    else
-        output.attributes
-    end
-    default_plottype = categoricalplottypes[N]
-    plottype = Makie.plottype(output.plottype, default_plottype)
+    attributes = merge(output.attributes, histogram_default_attributes(plottype))
+    attributes = merge(attributes, visual.attributes)
     return ProcessedLayer(output; plottype, labels, attributes)
 end
 
 """
-    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none)
+    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none, visual=Visual())
 
 Compute a histogram.
 
@@ -97,5 +112,11 @@ Weighted data is supported via the keyword `weights` (passed to `mapping`).
 
     Normalizations are computed withing groups. For example, in the case of
     `normalization=:pdf`, sum of weights *within each group* will be equal to `1`.
+
+A `Visual` object containing a plot type and attributes can be passed via the
+`visual` argument controlling the type of plot the histogram is displayed as, e.g.
+`histogram(; visual=Visual(Stairs))` creates a stephist. The default plot type for
+1-dimensional histograms is `BarPlot`, `Heatmap` for 2d, and `Volume` for 3d
+histograms.
 """
 histogram(; options...) = transformation(HistogramAnalysis(; options...))
