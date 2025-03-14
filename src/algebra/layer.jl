@@ -425,17 +425,36 @@ end
 # Determine whether entries from a `ProcessedLayer` should be merged
 function mergeable(processedlayer::ProcessedLayer)
     plottype, primary = processedlayer.plottype, processedlayer.primary
-    # merge violins for correct renormalization
-    plottype <: Violin && return true
-    # merge stacked or dodged barplots
-    plottype <: Union{BarPlot,CrossBar} && return true
-    # merge waterfall plots
-    plottype <: Waterfall && return true
-    # merge dodged boxplots
-    plottype <: BoxPlot && haskey(primary, :dodge) && return true
-    # do not merge by default
+    return mergeable(plottype, primary)
+end
+
+# Default fallback implementation
+"""
+    mergeable(plottype::Type{<: Plot}, primary::Dictionaries.AbstractDictionary)::Bool
+
+Return whether the entries for the layer with `plottype` and `primary` should be merged.
+Merging means that all the data will be passed to a single plot call, instead of creating
+one plot object per scale.
+
+Return `true` if they **should** be merged, and `false` if **not** (the default).
+
+Extending packages should also extend this function on their own plot types 
+if they deem it necessary.  For example, beeswarm plots and violin plots
+need to be merged for correctness.
+"""
+function mergeable(plottype::Type{<: Plot}, primary)
     return false
 end
+
+# merge violins for correct renormalization
+mergeable(::Type{<: Violin}, primary) = true
+# merge stacked or dodged barplots
+mergeable(::Type{<: Union{BarPlot, CrossBar}}, primary) = true
+# merge waterfall plots
+mergeable(::Type{<: Waterfall}, primary) = true
+# merge dodged boxplots
+mergeable(::Type{<: BoxPlot}, primary) = haskey(primary, :dodge)
+
 
 # This method works on a list of "sliced" `ProcessedLayer`s
 function concatenate(pls::AbstractVector{ProcessedLayer})

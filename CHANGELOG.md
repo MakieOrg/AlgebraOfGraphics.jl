@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Breaks up `mergeable(::ProcessedLayer)` into `mergeable(layer.plottype, layer.primary)` for dispatch purposes. This should enable `mergeable` to be extended by other packages that define recipes [#592](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/592).
+
 ## v0.9.3 - 2025-02-12
 
 - Fixed use of `from_continuous` with colormap specifications like `(colormap, alpha)` [#603](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/603).
