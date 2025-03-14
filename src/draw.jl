@@ -297,16 +297,7 @@ function draw_to_spec(spec, scales = scales())
         ax.position => axtype(; plots, pairs(ax.attributes)...)
     end
 
-    axisspecs = [x for x in axisspecs if x !== nothing]
-
-    for axisspec in axisspecs[2:end]
-        axisspecs[1][2].then() do ax1
-            axisspec[2].then() do ax2
-                linkaxes!(ax1, ax2)
-            end
-            return
-        end
-    end
+    axisspecs_vec = [x for x in axisspecs if x !== nothing]
 
     legend = compute_legend(agrid; order = nothing)
     if legend !== nothing
@@ -316,5 +307,9 @@ function draw_to_spec(spec, scales = scales())
         axisspecs = [axisspecs; legendpos => legendspec]
     end
 
-    return S.GridLayout(axisspecs)
+    return S.GridLayout(
+        axisspecs_vec,
+        xaxislinks = last.(axisspecs_vec),
+        yaxislinks = last.(axisspecs_vec),
+    )
 end
