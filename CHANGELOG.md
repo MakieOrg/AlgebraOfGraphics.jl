@@ -1,7 +1,14 @@
 # Changelog
 
 ## Unreleased
-- Breaks up `mergeable(::ProcessedLayer)` into `mergeable(layer.plottype, layer.primary)` for dispatch purposes. This should enable `mergeable` to be extended by other packages that define recipes [#592](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/592).
+
+## v0.9.5 - 2025-03-14
+
+- Added `mergeable(layer.plottype, layer.primary)` function, intended for extension by third-party packages that define recipes [#592](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/592).
+
+## v0.9.4 - 2025-03-08
+
+- Added internal copy of the Palmer Penguins dataset to AoG to reduce friction in the intro tutorials, accessible via the `AlgebraOfGraphics.penguins()` function [#613](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/613).
 
 ## v0.9.3 - 2025-02-12
 
