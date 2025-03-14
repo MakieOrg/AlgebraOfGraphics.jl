@@ -39,8 +39,22 @@ Base.@kwdef struct HistogramAnalysis{D, B}
     bins::B=automatic
     closed::Symbol=:left
     normalization::Symbol=:none
-    visual::Union{typeof(automatic), Layer}=automatic
+    visual::Visual=Visual()
 end
+
+histogram_preprocess_named(::Type{<:Plot}, edges, weights) = (;)
+histogram_preprocess_named(::Type{BarPlot}, edges, weights) = (; width=diff(first(edges)))
+histogram_preprocess_positional(::Type{<:Plot}, edges, weights) = (map(midpoints, edges)..., weights)
+function histogram_preprocess_positional(::Type{Stairs}, edges, weights)
+    edges = only(edges)
+    phantomedge = edges[end] # to bring step back to baseline
+    edges = vcat(edges, phantomedge)
+    z = zero(eltype(weights))
+    heights = vcat(z, weights, z)
+    return (edges, heights)
+end
+histogram_default_attributes(::Type{<:Plot}) = NamedArguments()
+histogram_default_attributes(::Type{BarPlot}) = NamedArguments((; :gap => 0, :dodge_gap => 0))
 
 function (h::HistogramAnalysis)(input::ProcessedLayer)
     datalimits = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
@@ -49,34 +63,20 @@ function (h::HistogramAnalysis)(input::ProcessedLayer)
     visual = h.visual
     N = length(input.positional)
     default_plottype = categoricalplottypes[N]
-    plottype = Makie.plottype(input.plottype, visual === automatic ? default_plottype : (visual.transformation::Visual).plottype)
+    plottype = Makie.plottype(visual.plottype, input.plottype, default_plottype)
 
     output = map(input) do p, n
         hist = _histogram(Tuple(p); pairs(n)..., pairs(options)...)
         edges, weights = hist.edges, hist.weights
-        named = plottype == BarPlot ? (; width=diff(first(edges))) : (;)
-        positional = if plottype == Stairs
-            edges = only(edges)
-            phantomedge = edges[end] # to bring step back to baseline
-            edges = vcat(edges, phantomedge)
-            z = zero(eltype(weights))
-            heights = vcat(z, weights, z)
-            (edges, heights)
-        else
-            (map(midpoints, edges)..., weights)
-        end
+        named = histogram_preprocess_named(plottype, edges, weights)
+        positional = histogram_preprocess_positional(plottype, edges, weights)
         return positional, named
     end
 
     label = h.normalization == :none ? "count" : string(h.normalization)
     labels = set(output.labels, N+1 => label)
-    attributes = output.attributes
-    if plottype == BarPlot
-        attributes = set(attributes, :gap => 0, :dodge_gap => 0)
-    end
-    if visual !== automatic
-        attributes = merge(attributes, (visual.transformation::Visual).attributes)
-    end
+    attributes = merge(output.attributes, histogram_default_attributes(plottype))
+    attributes = merge(attributes, visual.attributes)
     return ProcessedLayer(output; plottype, labels, attributes)
 end
 
