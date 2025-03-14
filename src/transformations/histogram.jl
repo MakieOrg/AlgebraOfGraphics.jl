@@ -81,7 +81,7 @@ function (h::HistogramAnalysis)(input::ProcessedLayer)
 end
 
 """
-    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none, visual=automatic)
+    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none, visual=Visual())
 
 Compute a histogram.
 
@@ -112,5 +112,11 @@ Weighted data is supported via the keyword `weights` (passed to `mapping`).
 
     Normalizations are computed withing groups. For example, in the case of
     `normalization=:pdf`, sum of weights *within each group* will be equal to `1`.
+
+A `Visual` object containing a plot type and attributes can be passed via the
+`visual` argument controlling the type of plot the histogram is displayed as, e.g.
+`histogram(; visual=Visual(Stairs))` creates a stephist. The default plot type for
+1-dimensional histograms is `BarPlot`, `Heatmap` for 2d, and `Volume` for 3d
+histograms.
 """
 histogram(; options...) = transformation(HistogramAnalysis(; options...))
