@@ -49,7 +49,7 @@ function HistogramAnalysis{plottype}(;
     ) where {plottype <: Plot, D, B}
     return HistogramAnalysis{plottype, D, B}(datalimits, bins, closed, normalization)
 end
-HistogramAnalysis(; options...) = HistogramAnalysis{Plot}(; options...)
+HistogramAnalysis(; options...) = HistogramAnalysis{Plot{plot}}(; options...)
 
 histogram_preprocess_named(::Type{<:Plot}, edges, weights) = (;)
 histogram_preprocess_named(::Type{BarPlot}, edges, weights) = (; width=diff(first(edges)))
@@ -88,14 +88,13 @@ function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plotty
 end
 
 """
-    histogram(plottype::Type{<:Plot} = Plot; bins=automatic, datalimits=automatic, closed=:left, normalization=:none, visual=Visual())
+    histogram(plottype::Type{<:Plot} = Plot{plot}; bins=automatic, datalimits=automatic, closed=:left, normalization=:none)
 
 Compute a histogram.
 
 A plot type can be passed as the first argument controlling the type of plot the histogram
 is displayed as, e.g. `histogram(Stairs)` creates a stephist. The default plot type for
-1-dimensional histograms is `BarPlot`, `Heatmap` for 2d, and `Volume` for 3d
-histograms.
+1-dimensional histograms is `BarPlot`, `Heatmap` for 2d, and `Volume` for 3d histograms.
 
 The attribute `bins` can be an `Integer`, an `AbstractVector` (in particular, a range), or
 a `Tuple` of either integers or abstract vectors (useful for 2- or 3-dimensional histograms).
@@ -126,4 +125,4 @@ Weighted data is supported via the keyword `weights` (passed to `mapping`).
     `normalization=:pdf`, sum of weights *within each group* will be equal to `1`.
 
 """
-histogram(plottype::Type{<:Plot} = Plot; options...) = transformation(HistogramAnalysis{plottype}(; options...))
+histogram(plottype::Type{<:Plot} = Plot{plot}; options...) = transformation(HistogramAnalysis{plottype}(; options...))

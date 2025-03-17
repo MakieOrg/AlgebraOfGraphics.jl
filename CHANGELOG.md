@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added `visual` argument to `histogram` to allow for different plot types [#591](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/591).
+- Added `plottype` argument to `histogram` to allow for different plot types [#591](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/591).
 
 ## v0.9.5 - 2025-03-14
 
