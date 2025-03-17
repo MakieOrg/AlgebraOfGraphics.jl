@@ -34,13 +34,22 @@ function _histogram(vs::Tuple; bins=sturges(length(vs[1])), weights=automatic,
     return normalize(h, mode=normalization)
 end
 
-Base.@kwdef struct HistogramAnalysis{D, B}
-    datalimits::D=automatic
-    bins::B=automatic
-    closed::Symbol=:left
-    normalization::Symbol=:none
-    visual::Visual=Visual()
+struct HistogramAnalysis{plottype <: Plot, D, B}
+    datalimits::D
+    bins::B
+    closed::Symbol
+    normalization::Symbol
 end
+
+function HistogramAnalysis{plottype}(;
+        datalimits::D=automatic,
+        bins::B=automatic,
+        closed::Symbol=:left,
+        normalization::Symbol=:none,
+    ) where {plottype <: Plot, D, B}
+    return HistogramAnalysis{plottype, D, B}(datalimits, bins, closed, normalization)
+end
+HistogramAnalysis(; options...) = HistogramAnalysis{Plot}(; options...)
 
 histogram_preprocess_named(::Type{<:Plot}, edges, weights) = (;)
 histogram_preprocess_named(::Type{BarPlot}, edges, weights) = (; width=diff(first(edges)))
@@ -56,14 +65,13 @@ end
 histogram_default_attributes(::Type{<:Plot}) = NamedArguments()
 histogram_default_attributes(::Type{BarPlot}) = NamedArguments((; :gap => 0, :dodge_gap => 0))
 
-function (h::HistogramAnalysis)(input::ProcessedLayer)
+function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plottype}
     datalimits = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
     options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
 
-    visual = h.visual
     N = length(input.positional)
     default_plottype = categoricalplottypes[N]
-    plottype = Makie.plottype(visual.plottype, input.plottype, default_plottype)
+    plottype = Makie.plottype(_plottype, input.plottype, default_plottype)
 
     output = map(input) do p, n
         hist = _histogram(Tuple(p); pairs(n)..., pairs(options)...)
@@ -76,14 +84,18 @@ function (h::HistogramAnalysis)(input::ProcessedLayer)
     label = h.normalization == :none ? "count" : string(h.normalization)
     labels = set(output.labels, N+1 => label)
     attributes = merge(output.attributes, histogram_default_attributes(plottype))
-    attributes = merge(attributes, visual.attributes)
     return ProcessedLayer(output; plottype, labels, attributes)
 end
 
 """
-    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none, visual=Visual())
+    histogram(plottype::Type{<:Plot} = Plot; bins=automatic, datalimits=automatic, closed=:left, normalization=:none, visual=Visual())
 
 Compute a histogram.
+
+A plot type can be passed as the first argument controlling the type of plot the histogram
+is displayed as, e.g. `histogram(Stairs)` creates a stephist. The default plot type for
+1-dimensional histograms is `BarPlot`, `Heatmap` for 2d, and `Volume` for 3d
+histograms.
 
 The attribute `bins` can be an `Integer`, an `AbstractVector` (in particular, a range), or
 a `Tuple` of either integers or abstract vectors (useful for 2- or 3-dimensional histograms).
@@ -113,10 +125,5 @@ Weighted data is supported via the keyword `weights` (passed to `mapping`).
     Normalizations are computed withing groups. For example, in the case of
     `normalization=:pdf`, sum of weights *within each group* will be equal to `1`.
 
-A `Visual` object containing a plot type and attributes can be passed via the
-`visual` argument controlling the type of plot the histogram is displayed as, e.g.
-`histogram(; visual=Visual(Stairs))` creates a stephist. The default plot type for
-1-dimensional histograms is `BarPlot`, `Heatmap` for 2d, and `Volume` for 3d
-histograms.
 """
-histogram(; options...) = transformation(HistogramAnalysis(; options...))
+histogram(plottype::Type{<:Plot} = Plot; options...) = transformation(HistogramAnalysis{plottype}(; options...))

@@ -246,13 +246,13 @@ end
 
 reftest("histogram stairs cat color") do
     df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
-    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram(; visual = Visual(Stairs; alpha = 0.8, linewidth = 4))
+    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram(Stairs) * visual(alpha = 0.8, linewidth = 4)
     draw(specs)
 end
 
 reftest("histogram scatter cat color") do
     df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
-    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram(visual = Visual(Scatter; alpha = 0.8, marker = :cross, markersize = 20))
+    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram(Scatter) * visual(alpha = 0.8, marker = :cross, markersize = 20)
     draw(specs)
 end
 
