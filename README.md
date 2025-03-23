@@ -3,8 +3,7 @@
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="/docs/src/assets/logo-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="/docs/src/assets/logo.svg">
-    <img alt="AlgebraOfGraphics Logo" src="/docs/src/assets/logo.svg" width="350">
+    <img alt="AlgebraOfGraphics Logo" src="/docs/src/assets/logo.svg" height="100">
   </picture>
 </div>
 
@@ -80,4 +79,3 @@ Analyses rely on
 [GLM.jl](https://github.com/JuliaStats/GLM.jl). Some of their
 documentation is transcribed here.
 
-Logo and favicon made with 🧡 by @dyogurt.
