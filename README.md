@@ -7,8 +7,6 @@
   </picture>
 </div>
 
-# AlgebraOfGraphics
-
 [![CI](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml)
 [![codecov.io](https://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl/coverage.svg?branch=master)](http://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl?branch=master)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://aog.makie.org/stable)
