@@ -27,6 +27,8 @@ using GLM: GLM
 using Loess: Loess
 
 import Shapefile, GeometryBasics
+import Unitful
+import DynamicQuantities
 
 Random.seed!(1234)
 

@@ -1175,3 +1175,39 @@ let
         end
     end
 end
+
+let
+    U = Unitful
+    D = DynamicQuantities
+
+    df_u = DataFrame(
+        time = (1:24) .* U.u"hr",
+        size = range(0, 20, length = 24) .* U.u"cm",
+        weight = range(0, 70, length = 24) .* U.u"g",
+    )
+    df_d = DataFrame(
+        time = (1:24) .* D.us"hr",
+        size = range(0, 20, length = 24) .* D.us"cm",
+        weight = range(0, 70, length = 24) .* D.us"g",
+    )
+
+    reftest("units basic") do 
+        spec = mapping(:time, :size, color = :weight)
+        f = Figure()
+        fg_u = draw!(f[1, 1], spec * data(df_u))
+        colorbar!(f[1, 2], fg_u)
+        fg_d = draw!(f[2, 1], spec * data(df_d))
+        colorbar!(f[2, 2], fg_d)
+        f
+    end
+
+    reftest("units scale override") do 
+        spec = mapping(:time, :size, color = :weight)
+        f = Figure()
+        fg_u = draw!(f[1, 1], spec * data(df_u), scales(X = (; unit = U.u"wk"), Y = (; unit = U.u"m"), Color = (; unit = U.u"kg")))
+        colorbar!(f[1, 2], fg_u)
+        fg_d = draw!(f[2, 1], spec * data(df_d), scales(X = (; unit = D.us"wk"), Y = (; unit = D.us"m"), Color = (; unit = D.us"kg")))
+        colorbar!(f[2, 2], fg_d)
+        f
+    end
+end
