@@ -37,6 +37,8 @@ function compute_colorbar(grid::Matrix{AxisEntries})
     is_highclipped = limits[2] < colorscale.extrema[2]
     is_lowclipped = limits[1] > colorscale.extrema[1]
 
+    _, limits = strip_units(colorscale, collect(limits))
+
     colormap = @something colorscale.props.aesprops.colormap default_colormap()
     colormap_colors = Makie.to_colormap(colormap)
 

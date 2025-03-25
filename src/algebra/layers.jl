@@ -439,11 +439,18 @@ function get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     return scale
 end
 
+function strip_units(scale, data)
+    return scale, data
+end
+
 function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     hc_aes = hardcoded_mapping(key)
     aes = hc_aes === nothing ? aes_mapping[key] : hc_aes
     scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     scale === nothing && return data # verbatim data
+    if scale isa ContinuousScale
+        scale, data = strip_units(scale, data)
+    end
     return full_rescale(data, aes, scale)
 end
 

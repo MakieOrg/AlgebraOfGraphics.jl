@@ -319,7 +319,21 @@ function ContinuousScale(aestype::Type{<:Aesthetic}, extrema, label, props; forc
     return ContinuousScale(extrema, label, force, props_typed)
 end
 
-getlabel(c::Union{ContinuousScale,CategoricalScale}) = c.props.label === nothing ? something(c.label, "") : c.props.label
+unit_string(extrema) = nothing
+
+function append_unit_string(s::String, u::String)
+    s * " [$u]"
+end
+
+function getlabel(c::ContinuousScale)
+    l = c.props.label === nothing ? something(c.label, "") : c.props.label
+    suffixes = map(unit_string, c.extrema) # with DynamicQuantities we can only decide unit via value, not type, so we have to try both and error if it doesn't work
+    suffixes[1] == suffixes[2] || error("Got two different unit suffixes for $(c.extrema): $suffixes")
+    suffix = suffixes[1]
+    suffix === nothing ? l : append_unit_string(l, suffix)
+end
+
+getlabel(c::CategoricalScale) = c.props.label === nothing ? something(c.label, "") : c.props.label
 
 # recentering hack to avoid Float32 conversion errors on recent dates
 # TODO: remove once Makie supports dates
@@ -496,7 +510,7 @@ scientific_eltype(::Any) = categorical
 iscategoricalcontainer(u) = any(el -> scientific_eltype(el) === categorical, u)
 iscontinuous(u) = scientific_eltype(u) === continuous
 
-extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
+extend_extrema((l1, u1), (l2, u2)) = promote(min(l1, l2), max(u1, u2))
 
 function extrema_finite(v::AbstractArray)
     iter = Iterators.filter(isfinite, skipmissing(v))
