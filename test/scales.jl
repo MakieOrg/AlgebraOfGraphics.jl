@@ -219,4 +219,6 @@ end
         yscale = fg2.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
         @test AlgebraOfGraphics.getunit(yscale) == yoverride
     end
+
+    # TODO: X and DeltaX need to match in units
 end
