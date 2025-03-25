@@ -27,7 +27,7 @@ reftest("barplot cat color palette") do
         draw(scales(Color = (; palette = :Set1_3)))
 end
 
-reftest("barplot layout") do 
+reftest("barplot layout") do
     data((; x = ["A", "B", "C"], y = 1:3, z = ["X", "Y", "Z"])) * mapping(:x, :y; layout = :z) * visual(BarPlot) |> draw
 end
 
@@ -241,6 +241,18 @@ end
 reftest("histogram stack") do
     df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["b", "a"], inner = 500))
     specs = data(df) * mapping(:x, stack=:z, color = :z) * histogram()
+    draw(specs)
+end
+
+reftest("histogram stairs cat color") do
+    df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
+    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram(Stairs) * visual(alpha = 0.8, linewidth = 4)
+    draw(specs)
+end
+
+reftest("histogram scatter cat color") do
+    df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
+    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram(Scatter) * visual(alpha = 0.8, marker = :cross, markersize = 20)
     draw(specs)
 end
 
@@ -736,7 +748,7 @@ function presorted_plot(; with_missing::Bool)
     end
     group = ["2", "3", "1", "1", "3", "2"]
     some_value = sort(exp.(sin.(1:6)))
-    
+
     df = (; countries, group, some_value)
 
     m1 = mapping(:countries, :some_value, color = :group)
@@ -744,7 +756,7 @@ function presorted_plot(; with_missing::Bool)
     m3 = mapping(:countries => presorted, :some_value, color = :group => presorted)
 
     base = data(df) *  visual(BarPlot, direction = :x)
-    
+
     f = Figure()
     fg1 = draw!(f[1, 1], base * m1)
     fg2 = draw!(f[2, 1], base * m2)
@@ -795,7 +807,7 @@ reftest("categorical color from continuous") do
     f
 end
 
-reftest("title subtitle footnotes") do 
+reftest("title subtitle footnotes") do
     spec = pregrouped(
         fill(1:5, 6),
         fill(11:15, 6),
@@ -816,7 +828,7 @@ reftest("title subtitle footnotes") do
     )
 end
 
-reftest("title subtitle footnotes single unconstrained facet") do 
+reftest("title subtitle footnotes single unconstrained facet") do
     spec = data((; x = 1:10, y = 11:20)) * mapping(:x, :y) * visual(Scatter)
     draw(
         spec;
@@ -831,7 +843,7 @@ reftest("title subtitle footnotes single unconstrained facet") do
     )
 end
 
-reftest("title") do 
+reftest("title") do
     spec = pregrouped(
         fill(1:5, 6),
         fill(11:15, 6),
@@ -847,7 +859,7 @@ reftest("title") do
     )
 end
 
-reftest("title subtitle footnotes settings") do 
+reftest("title subtitle footnotes settings") do
     spec = pregrouped(
         fill(1:5, 6),
         fill(11:15, 6),
@@ -877,10 +889,10 @@ reftest("title subtitle footnotes settings") do
         ),
         axis = (; width = 100, height = 100)
     )
-    
+
 end
 
-reftest("title subtitle footnotes fontsize inherit") do 
+reftest("title subtitle footnotes fontsize inherit") do
     spec = pregrouped(
         fill(1:5, 6),
         fill(11:15, 6),
@@ -902,7 +914,7 @@ reftest("title subtitle footnotes fontsize inherit") do
     )
 end
 
-reftest("dodge barplot with errorbars") do 
+reftest("dodge barplot with errorbars") do
     f = Figure()
     df = (
         x = [1, 1, 2, 2],
@@ -960,7 +972,7 @@ reftest("dodge scatter with rangebars") do
         yhigh = cos.(range(0, 2pi, length = 20)) .+ 0.3,
         dodge = repeat(["A", "B"], 10)
     )
-    
+
     f = Figure()
     spec1 = data(df) * (mapping(:x, :y, dodge_x = :dodge, color = :dodge) * visual(Scatter) + mapping(:x, :ylow, :yhigh, dodge_x = :dodge, color = :dodge) * visual(Rangebars))
     spec2 = data(df) * (mapping(:y, :x, dodge_y = :dodge, color = :dodge) * visual(Scatter) + mapping(:x, :ylow, :yhigh, dodge_y = :dodge, color = :dodge) * visual(Rangebars, direction = :x))
@@ -974,10 +986,10 @@ end
 reftest("manual legend labels in visual") do
     df_subjects = (; x = repeat(1:10, 10), y = cos.(1:100), id = repeat(1:10, inner = 10))
     df_func = (; x = range(1, 10, length = 20), y = cos.(range(1, 10, length = 20)))
-    
+
     spec1 = data(df_subjects) * mapping(:x, :y, group = :id => nonnumeric) * visual(Lines, linestyle = :dash, color = (:black, 0.2), label = "Subject data")
     spec2 = data(df_func) * mapping(:x, :y) * (visual(Lines, color = :tomato) + visual(Scatter, markersize = 12, color = :tomato, strokewidth = 2)) * visual(label = L"\cos(x)")
-    
+
     draw(spec1 + spec2)
 end
 
@@ -986,7 +998,7 @@ reftest("manual legend order") do
     spec1 = data(df) * mapping(:x, :y, color = :group) * visual(Lines)
 
     spec2 = data((; x = 1:10, y = cos.(1:10) .+ 2)) * mapping(:x, :y) * visual(Scatter, color = :purple, label = "Scatter")
-    
+
     f = Figure()
     fg = draw!(f[1, 1], spec1 + spec2)
     legend!(f[1, 2], fg)
@@ -1130,7 +1142,7 @@ let
     end
 end
 
-let 
+let
     df = (;
         wres = 1:10,
         age = 11:20,
@@ -1154,7 +1166,7 @@ let
     end
 end
 
-let 
+let
     df = (
         x = repeat(1:10, 36),
         y = cumsum(sin.(range(0, 10pi, length = 360))),
