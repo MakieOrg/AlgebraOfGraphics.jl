@@ -439,9 +439,7 @@ function get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     return scale
 end
 
-function strip_units(scale, data)
-    return scale, data
-end
+strip_units(scale, data) = scale, data
 
 function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     hc_aes = hardcoded_mapping(key)

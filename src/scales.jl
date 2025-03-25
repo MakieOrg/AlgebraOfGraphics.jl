@@ -272,17 +272,24 @@ struct ContinuousScaleProps
     aesprops::ContinuousAesProps
     label # nothing or any type workable as a label
     legend::Bool
+    unit # nothing or any type workable as a unit
 end
+
+is_unit(::Nothing) = true
+is_unit(_) = false
 
 function ContinuousScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     props_copy = _dictcopy(props)
     legend = _pop!(props_copy, :legend, true)
     label = _pop!(props_copy, :label, nothing)
+    unit = _pop!(props_copy, :unit, nothing)
+    is_unit(unit) || error("`is_unit` returned false for unit = $unit passed to $aestype scale.")
     aes_props = continuous_aes_props(aestype, props_copy)
     ContinuousScaleProps(
         aes_props,
         label,
         legend,
+        unit,
     )
 end
 
@@ -319,18 +326,18 @@ function ContinuousScale(aestype::Type{<:Aesthetic}, extrema, label, props; forc
     return ContinuousScale(extrema, label, force, props_typed)
 end
 
-unit_string(extrema) = nothing
-
 function append_unit_string(s::String, u::String)
     s * " [$u]"
 end
 
+getunit(c::ContinuousScale) = nothing
+
 function getlabel(c::ContinuousScale)
     l = c.props.label === nothing ? something(c.label, "") : c.props.label
-    suffixes = map(unit_string, c.extrema) # with DynamicQuantities we can only decide unit via value, not type, so we have to try both and error if it doesn't work
-    suffixes[1] == suffixes[2] || error("Got two different unit suffixes for $(c.extrema): $suffixes")
-    suffix = suffixes[1]
-    suffix === nothing ? l : append_unit_string(l, suffix)
+    unit = getunit(c)
+    unit === nothing && return l
+    suffix = unit_string(unit)
+    return append_unit_string(l, suffix)
 end
 
 getlabel(c::CategoricalScale) = c.props.label === nothing ? something(c.label, "") : c.props.label
