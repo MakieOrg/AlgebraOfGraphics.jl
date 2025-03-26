@@ -1193,81 +1193,83 @@ let
     end
 end
 
-df_u = (
-    time = (1:24) .* U.u"hr",
-    size = range(0, 20, length = 24) .* U.u"cm",
-    weight = range(0, 70, length = 24) .* U.u"g",
-)
-df_d = (
-    time = (1:24) .* D.us"hr",
-    size = range(0, 20, length = 24) .* D.us"cm",
-    weight = range(0, 70, length = 24) .* D.us"g",
-)
-
-reftest("units basic", true) do 
-    spec = mapping(:time, :size, color = :weight, markersize = :weight)
-    f = Figure()
-    fg_u = draw!(f[1, 1], spec * data(df_u))
-    colorbar!(f[1, 2], fg_u)
-    legend!(f[1, 3], fg_u)
-    fg_d = draw!(f[2, 1], spec * data(df_d))
-    colorbar!(f[2, 2], fg_d)
-    legend!(f[2, 3], fg_d)
-    f
-end
-
-reftest("units scale override", true) do 
-    spec = mapping(:time, :size, color = :weight, markersize = :weight)
-    f = Figure()
-    fg_u = draw!(
-        f[1, 1],
-        spec * data(df_u),
-        scales(
-            X = (; unit = U.u"wk"),
-            Y = (; unit = U.u"m"),
-            Color = (; unit = U.u"kg"),
-            MarkerSize = (; unit = U.u"mg")
-        )
+if VERSION >= 1.9
+    df_u = (
+        time = (1:24) .* U.u"hr",
+        size = range(0, 20, length = 24) .* U.u"cm",
+        weight = range(0, 70, length = 24) .* U.u"g",
     )
-    colorbar!(f[1, 2], fg_u)
-    legend!(f[1, 3], fg_u)
-    fg_d = draw!(
-        f[2, 1],
-        spec * data(df_d),
-        scales(
-            X = (; unit = D.us"wk"),
-            Y = (; unit = D.us"m"),
-            Color = (; unit = D.us"kg"),
-            MarkerSize = (; unit = D.us"mg")
-        )
+    df_d = (
+        time = (1:24) .* D.us"hr",
+        size = range(0, 20, length = 24) .* D.us"cm",
+        weight = range(0, 70, length = 24) .* D.us"g",
     )
-    colorbar!(f[2, 2], fg_d)
-    legend!(f[2, 3], fg_d)
-    f
-end
 
-reftest("units alignment errorbars") do
-    f = Figure()
-    base_u = data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [10, 50, 100] .* U.u"cm")) 
-    spec_u = base_u * mapping(:id, :value, :err) * visual(Errorbars)
-    draw!(f[1, 1], spec_u)
-    spec_u2 = base_u * mapping(:value, :id, :err) * visual(Errorbars, direction = :x)
-    draw!(f[1, 2], spec_u2, scales(X = (; unit = U.u"cm")))
+    reftest("units basic", true) do 
+        spec = mapping(:time, :size, color = :weight, markersize = :weight)
+        f = Figure()
+        fg_u = draw!(f[1, 1], spec * data(df_u))
+        colorbar!(f[1, 2], fg_u)
+        legend!(f[1, 3], fg_u)
+        fg_d = draw!(f[2, 1], spec * data(df_d))
+        colorbar!(f[2, 2], fg_d)
+        legend!(f[2, 3], fg_d)
+        f
+    end
 
-    base_d = data((; id = 1:3, value = [1, 2, 3] .* D.us"m", err = [10, 50, 100] .* D.us"cm")) 
-    spec_d = base_d * mapping(:id, :value, :err) * visual(Errorbars)
-    draw!(f[2, 1], spec_d)
-    spec_d2 = base_d * mapping(:value, :id, :err) * visual(Errorbars, direction = :x)
-    draw!(f[2, 2], spec_d2, scales(X = (; unit = D.us"cm")))
+    reftest("units scale override", true) do 
+        spec = mapping(:time, :size, color = :weight, markersize = :weight)
+        f = Figure()
+        fg_u = draw!(
+            f[1, 1],
+            spec * data(df_u),
+            scales(
+                X = (; unit = U.u"wk"),
+                Y = (; unit = U.u"m"),
+                Color = (; unit = U.u"kg"),
+                MarkerSize = (; unit = U.u"mg")
+            )
+        )
+        colorbar!(f[1, 2], fg_u)
+        legend!(f[1, 3], fg_u)
+        fg_d = draw!(
+            f[2, 1],
+            spec * data(df_d),
+            scales(
+                X = (; unit = D.us"wk"),
+                Y = (; unit = D.us"m"),
+                Color = (; unit = D.us"kg"),
+                MarkerSize = (; unit = D.us"mg")
+            )
+        )
+        colorbar!(f[2, 2], fg_d)
+        legend!(f[2, 3], fg_d)
+        f
+    end
 
-    f
-end
+    reftest("units alignment errorbars") do
+        f = Figure()
+        base_u = data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [10, 50, 100] .* U.u"cm")) 
+        spec_u = base_u * mapping(:id, :value, :err) * visual(Errorbars)
+        draw!(f[1, 1], spec_u)
+        spec_u2 = base_u * mapping(:value, :id, :err) * visual(Errorbars, direction = :x)
+        draw!(f[1, 2], spec_u2, scales(X = (; unit = U.u"cm")))
 
-reftest("units wide labels") do
-    _df = (; group = repeat(["A", "B"], inner = 50), apples = (1:100) .* U.u"s", bananas = (101:200) .* 1000 .* U.u"ms") 
-    spec_wide = data(_df) *
-        mapping(:group, [:apples, :bananas], layout = dims(1)) *
-        visual(Violin)
+        base_d = data((; id = 1:3, value = [1, 2, 3] .* D.us"m", err = [10, 50, 100] .* D.us"cm")) 
+        spec_d = base_d * mapping(:id, :value, :err) * visual(Errorbars)
+        draw!(f[2, 1], spec_d)
+        spec_d2 = base_d * mapping(:value, :id, :err) * visual(Errorbars, direction = :x)
+        draw!(f[2, 2], spec_d2, scales(X = (; unit = D.us"cm")))
 
-    draw(spec_wide)
+        f
+    end
+
+    reftest("units wide labels") do
+        _df = (; group = repeat(["A", "B"], inner = 50), apples = (1:100) .* U.u"s", bananas = (101:200) .* 1000 .* U.u"ms") 
+        spec_wide = data(_df) *
+            mapping(:group, [:apples, :bananas], layout = dims(1)) *
+            visual(Violin)
+
+        draw(spec_wide)
+    end
 end
