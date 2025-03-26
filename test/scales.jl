@@ -196,45 +196,47 @@ end
     @test sort([("1", 1), ("10", 2), ("2",3)], lt = AlgebraOfGraphics.natural_lt) == [("1", 1), ("2", 3), ("10", 2)]
 end
 
-@testset "Units" begin
-    spec = data((; x1 = (1:10) .* D.us"m", x2 = (1:10) .* D.us"kg", y = 1:10)) * (mapping(:x1, :y) + mapping(:x2, :y)) * visual(Scatter)
-    @test_throws D.DimensionError draw(spec)
-    spec = data((; x1 = (1:10) .* U.u"m", x2 = (1:10) .* U.u"kg", y = 1:10)) * (mapping(:x1, :y) + mapping(:x2, :y)) * visual(Scatter)
-    @test_throws U.DimensionError draw(spec)
+if VERSION >= v"1.9"
+    @testset "Units" begin
+        spec = data((; x1 = (1:10) .* D.us"m", x2 = (1:10) .* D.us"kg", y = 1:10)) * (mapping(:x1, :y) + mapping(:x2, :y)) * visual(Scatter)
+        @test_throws D.DimensionError draw(spec)
+        spec = data((; x1 = (1:10) .* U.u"m", x2 = (1:10) .* U.u"kg", y = 1:10)) * (mapping(:x1, :y) + mapping(:x2, :y)) * visual(Scatter)
+        @test_throws U.DimensionError draw(spec)
 
-    for (xunit, yunit, xoverride, yoverride) in [(D.us"m", D.us"kg", D.us"cm", D.us"g"), (U.u"m", U.u"kg", U.u"cm", U.u"g")]
-        spec = data((; x = (1:10) .* xunit, y = (11:20) .* yunit)) * mapping(:x, :y) * visual(Scatter)
-        fg = draw(spec)
-        xscale = fg.grid[].continuousscales[AlgebraOfGraphics.AesX][nothing]
-        @test AlgebraOfGraphics.getunit(xscale) == xunit
-        yscale = fg.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
-        @test AlgebraOfGraphics.getunit(yscale) == yunit
+        for (xunit, yunit, xoverride, yoverride) in [(D.us"m", D.us"kg", D.us"cm", D.us"g"), (U.u"m", U.u"kg", U.u"cm", U.u"g")]
+            spec = data((; x = (1:10) .* xunit, y = (11:20) .* yunit)) * mapping(:x, :y) * visual(Scatter)
+            fg = draw(spec)
+            xscale = fg.grid[].continuousscales[AlgebraOfGraphics.AesX][nothing]
+            @test AlgebraOfGraphics.getunit(xscale) == xunit
+            yscale = fg.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
+            @test AlgebraOfGraphics.getunit(yscale) == yunit
 
-        fg2 = draw(spec, scales(X = (; unit = xoverride), Y = (; unit = yoverride)))
-        xscale = fg2.grid[].continuousscales[AlgebraOfGraphics.AesX][nothing]
-        @test AlgebraOfGraphics.getunit(xscale) == xoverride
-        yscale = fg2.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
-        @test AlgebraOfGraphics.getunit(yscale) == yoverride
+            fg2 = draw(spec, scales(X = (; unit = xoverride), Y = (; unit = yoverride)))
+            xscale = fg2.grid[].continuousscales[AlgebraOfGraphics.AesX][nothing]
+            @test AlgebraOfGraphics.getunit(xscale) == xoverride
+            yscale = fg2.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
+            @test AlgebraOfGraphics.getunit(yscale) == yoverride
+        end
+
+        @test AlgebraOfGraphics.dimensionally_compatible(nothing, nothing)
+        @test !AlgebraOfGraphics.dimensionally_compatible(U.u"kg", nothing)
+        @test !AlgebraOfGraphics.dimensionally_compatible(nothing, U.u"kg")
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", nothing)
+        @test !AlgebraOfGraphics.dimensionally_compatible(nothing, D.us"kg")
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", nothing)
+        @test !AlgebraOfGraphics.dimensionally_compatible(nothing, D.u"kg")
+
+        @test !AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"m")
+        @test AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"g")
+
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.u"m")
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.us"m")
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.us"m")
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.u"m")
+        @test AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.us"g")
+        @test AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.u"g")
+
+        @test_throws_message "incompatible dimensions for AesX and AesDeltaX scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:value, :id, :err) * visual(Errorbars, direction = :x))
+        @test_throws_message "incompatible dimensions for AesY and AesDeltaY scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:id, :value, :err) * visual(Errorbars))
     end
-
-    @test AlgebraOfGraphics.dimensionally_compatible(nothing, nothing)
-    @test !AlgebraOfGraphics.dimensionally_compatible(U.u"kg", nothing)
-    @test !AlgebraOfGraphics.dimensionally_compatible(nothing, U.u"kg")
-    @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", nothing)
-    @test !AlgebraOfGraphics.dimensionally_compatible(nothing, D.us"kg")
-    @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", nothing)
-    @test !AlgebraOfGraphics.dimensionally_compatible(nothing, D.u"kg")
-
-    @test !AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"m")
-    @test AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"g")
-
-    @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.u"m")
-    @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.us"m")
-    @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.us"m")
-    @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.u"m")
-    @test AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.us"g")
-    @test AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.u"g")
-
-    @test_throws_message "incompatible dimensions for AesX and AesDeltaX scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:value, :id, :err) * visual(Errorbars, direction = :x))
-    @test_throws_message "incompatible dimensions for AesY and AesDeltaY scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:id, :value, :err) * visual(Errorbars))
 end

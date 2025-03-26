@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added support for input data with units attached, either through Unitful.jl or DynamicQuantities.jl extensions which raise the Julia lower bound to 1.9 [#619](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/619).
+- Added support for input data with units attached, either through Unitful.jl or DynamicQuantities.jl extensions, available from Julia 1.9 on [#619](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/619).
 - The provisional `MarkerSize` tick calculation method is replaced with Makie's default tick finder `WilkinsonTicks`. Ticks and tickformat can be changed using the new `ticks` and `tickformat` scale options [#621](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/621).
 - Added `plottype` argument to `histogram` to allow for different plot types [#591](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/591).
 
