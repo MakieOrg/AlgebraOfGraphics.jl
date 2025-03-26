@@ -52,6 +52,7 @@ makedocs(;
                 "examples/scales/prescaled-data.md",
                 "examples/scales/secondary-scales.md",
                 "examples/scales/split-scales-facet.md",
+                "examples/scales/units.md",
             ],
             "Statistical Analyses" => [
                 "examples/statistical-analyses/density-plots.md",

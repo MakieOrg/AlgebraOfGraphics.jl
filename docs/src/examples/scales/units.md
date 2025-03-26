@@ -2,7 +2,7 @@
 ShareDefaultModule = true
 ```
 
-# Scales with units
+# Units
 
 AlgebraOfGraphics supports input data with units, currently [Unitful.jl](https://github.com/PainterQubits/Unitful.jl) and [DynamicQuantities.jl](https://github.com/SymbolicML/DynamicQuantities.jl) have extensions implemented.
 
