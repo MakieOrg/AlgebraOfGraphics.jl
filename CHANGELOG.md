@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- The provisional `MarkerSize` tick calculation method is replaced with Makie's default tick finder `WilkinsonTicks`. Ticks and tickformat can be changed using the new `ticks` and `tickformat` scale options [#621](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/621).
 - Added `plottype` argument to `histogram` to allow for different plot types [#591](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/591).
 
 ## v0.9.5 - 2025-03-14
