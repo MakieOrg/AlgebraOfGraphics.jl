@@ -255,7 +255,34 @@ spec = data((;
 draw(spec, scales(Col = (; show_labels = false)))
 ```
 
-### Continuous scale options
+### Shared categorical scale options
+
+#### Unit
+
+AlgebraOfGraphics supports input data with units, currently [Unitful.jl](https://github.com/PainterQubits/Unitful.jl) and [DynamicQuantities.jl](https://github.com/SymbolicML/DynamicQuantities.jl) have extensions implemented.
+
+If a continuous scale detects units, the units will be attached to the respective scale label.
+The display unit can be overridden using the `unit` scale keyword, which will appropriately rescale the data:
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+using Unitful
+using DataFrames
+
+df = DataFrame(AlgebraOfGraphics.penguins())
+df.bill_length = df.bill_length_mm .* u"mm"
+df.bill_depth = uconvert.(u"cm", df.bill_depth_mm .* u"mm")
+
+spec = data(df) * mapping(:bill_length, :bill_depth, color = :species) * visual(Scatter)
+
+f = Figure()
+draw!(f[1, 1], spec)
+draw!(f[1, 2], spec, scales(X = (; unit = u"m"), Y = (; unit = u"mm")))
+f
+```
+
+### Special continuous scale options
 
 #### Color
 
