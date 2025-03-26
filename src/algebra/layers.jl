@@ -375,7 +375,13 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
             else
                 continue
             end
-            label = getlabel(scale)
+            if scale isa CategoricalScale
+                label = getlabel(scale)
+            else
+                # the units are equalized in the merged scales, but the labels are in each separate scale
+                # so we have to assemble the label out of each component separately
+                label = getlabel_with_merged_unit(scale, merged_continuousscales[aes][used_scale_id])
+            end
             # Use global scales for ticks for now
             # TODO: requires a nicer mechanism that takes into account axis linking
             (scale isa ContinuousScale) && (scale = merged_continuousscales[aes][used_scale_id])

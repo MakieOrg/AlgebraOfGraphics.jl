@@ -364,6 +364,15 @@ function getlabel(c::ContinuousScale)
     return append_unit_string(l, suffix)
 end
 
+
+function getlabel_with_merged_unit(c::ContinuousScale, unit_from::ContinuousScale)
+    l = c.props.label === nothing ? something(c.label, "") : c.props.label
+    unit = getunit(unit_from)
+    unit === nothing && return l
+    suffix = unit_string(unit)
+    return append_unit_string(l, suffix)
+end
+
 getlabel(c::CategoricalScale) = c.props.label === nothing ? something(c.label, "") : c.props.label
 
 # recentering hack to avoid Float32 conversion errors on recent dates
