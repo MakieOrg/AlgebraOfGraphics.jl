@@ -1193,7 +1193,7 @@ let
     end
 end
 
-if VERSION >= 1.9
+if VERSION >= v"1.9"
     df_u = (
         time = (1:24) .* U.u"hr",
         size = range(0, 20, length = 24) .* U.u"cm",
