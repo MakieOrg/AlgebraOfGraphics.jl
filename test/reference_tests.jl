@@ -129,6 +129,11 @@ reftest("scatter markersize sizerange") do
         draw(scales(MarkerSize = (; sizerange = (10, 30))))
 end
 
+reftest("scatter markersize tick options") do
+    data((; x = 1:10, y = 1:10, z = 1:10)) * mapping(:x, :y, markersize = :z) * visual(Scatter) |>
+        draw(scales(MarkerSize = (; ticks = [1, 5, 10], tickformat = "{:.2f}")))
+end
+
 reftest("violin cat color") do
     data((; x = ["A", "B", "C", "D"], y = [1, 2, 5, 9], z = ["U", "V", "W", "X"])) * mapping(:x, :y; color = :z) * visual(Violin) |> draw
 end
