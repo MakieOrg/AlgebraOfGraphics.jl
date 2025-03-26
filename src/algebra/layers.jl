@@ -124,14 +124,19 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
             lead = extract_single(aes_lead, scales)
             follow = extract_single(aes_follow, scales)
             if lead !== nothing && follow !== nothing
+                local err
                 follow_aligned = try
                     align_scale_unit(lead, follow)
-                catch err
-                    if err isa DimensionMismatch
-                        error("While aligning the units of continuous scales, found units with incompatible dimensions for $(nameof(aes_lead)) and $(nameof(aes_follow)) scales. $(nameof(aes_lead)) had unit \"$(err.x1)\" and $(nameof(aes_follow)) had unit \"$(err.x2)\". Such an alignment error could happen if, for example, an errorbar layer had incompatible units for the errorbar position (AesY) and error size (AesDeltaY).")
+                catch e
+                    if e isa DimensionMismatch
+                        err = e
+                        nothing
                     else
-                        rethrow(err)
+                        rethrow(e)
                     end
+                end
+                if follow_aligned === nothing
+                    error("While aligning the units of continuous scales, found units with incompatible dimensions for $(nameof(aes_lead)) and $(nameof(aes_follow)) scales. $(nameof(aes_lead)) had unit \"$(err.x1)\" and $(nameof(aes_follow)) had unit \"$(err.x2)\". Such an alignment error could happen if, for example, an errorbar layer had incompatible units for the errorbar position (AesY) and error size (AesDeltaY).")
                 end
                 dict = scales[aes_follow]
                 key = only(keys(dict))
