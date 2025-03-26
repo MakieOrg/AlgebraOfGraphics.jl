@@ -299,11 +299,14 @@ end
 
 datavalues_plotvalues_datalabels(aes, scale::CategoricalScale) = datavalues(scale), plotvalues(scale), datalabels(scale)
 function datavalues_plotvalues_datalabels(aes::Type{AesMarkerSize}, scale::ContinuousScale)
-    n = 5
-    datavalues = range(scale.extrema..., length = n)
     props = scale.props.aesprops::AesMarkerSizeContinuousProps
-    markersizes = values_to_markersizes(datavalues, props.sizerange, scale.extrema)
-    datavalues, markersizes, string.(datavalues)
+    tickvalues, ticklabels = Makie.get_ticks(props.ticks, identity, props.tickformat, scale.extrema...)
+    t_extrema = extrema(tickvalues)
+    if t_extrema[1] < scale.extrema[1] || t_extrema[2] > scale.extrema[2]
+        error("Range of tick values for MarkerSize scale $(t_extrema) exceeds data range $(scale.extrema)")
+    end
+    markersizes = values_to_markersizes(tickvalues, props.sizerange, scale.extrema)
+    tickvalues, markersizes, ticklabels
 end
 
 function _legend_elements(processedlayer, scale_args::MixedArguments)

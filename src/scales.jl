@@ -297,6 +297,8 @@ end
 
 Base.@kwdef struct AesMarkerSizeContinuousProps <: ContinuousAesProps
     sizerange::Tuple{Float64,Float64} = (5.0, 20.0)
+    ticks = WilkinsonTicks(5; k_min = 4, k_max = 6)
+    tickformat = Makie.automatic
 end
 
 continuous_aes_props_type(::Type{<:Aesthetic}) = EmptyContinuousProps
