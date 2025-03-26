@@ -1262,3 +1262,12 @@ reftest("units alignment errorbars") do
 
     f
 end
+
+reftest("units wide labels") do
+    _df = (; group = repeat(["A", "B"], inner = 50), apples = (1:100) .* U.u"s", bananas = (101:200) .* 1000 .* U.u"ms") 
+    spec_wide = data(_df) *
+        mapping(:group, [:apples, :bananas], layout = dims(1)) *
+        visual(Violin)
+
+    draw(spec_wide)
+end
