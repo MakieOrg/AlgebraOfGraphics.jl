@@ -302,8 +302,12 @@ Base.@kwdef struct AesColorContinuousProps <: ContinuousAesProps
     nan_color = nothing
 end
 
+const _default_markersize_ticks = WilkinsonTicks(5; k_min = 4, k_max = 6)
+
 Base.@kwdef struct AesMarkerSizeContinuousProps <: ContinuousAesProps
     sizerange::Tuple{Float64,Float64} = (5.0, 20.0)
+    ticks = _default_markersize_ticks # if we construct the ticks here, we get mismatching props errors later because WilkinsonTicks(5) != WilkinsonTicks(5)
+    tickformat = Makie.automatic
 end
 
 continuous_aes_props_type(::Type{<:Aesthetic}) = EmptyContinuousProps

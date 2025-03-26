@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The provisional `MarkerSize` tick calculation method is replaced with Makie's default tick finder `WilkinsonTicks`. Ticks and tickformat can be changed using the new `ticks` and `tickformat` scale options [#621](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/621).
+- Added `plottype` argument to `histogram` to allow for different plot types [#591](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/591).
+
 ## v0.9.5 - 2025-03-14
 
 - Added `mergeable(layer.plottype, layer.primary)` function, intended for extension by third-party packages that define recipes [#592](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/592).
@@ -121,7 +124,7 @@
 
 ## v0.6.11 - 2022-08-08
 
-- Added `paginate` for pagination of large facet plots. 
+- Added `paginate` for pagination of large facet plots.
 
 ## v0.6.8 - 2022-06-14
 

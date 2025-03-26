@@ -312,6 +312,32 @@ legend!(f[2, 2], grid2)
 f
 ```
 
+The values which are chosen for the legend can be controlled with the `ticks` and `tickformat` scale properties.
+Ticks and ticklabels are computed using Makie's `Axis` infrastructure and therefore work with all objects that Makie supports for `Axis` attributes `xticks`/`yticks` and `xtickformat`/`ytickformat`.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = 10:10:100)) *
+    mapping(:x, :y, markersize = :z) *
+    visual(Scatter)
+
+draw(spec, scales(MarkerSize = (; ticks = [10, 50, 100])))
+```
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = 10:10:100)) *
+    mapping(:x, :y, markersize = :z) *
+    visual(Scatter)
+
+draw(spec, scales(MarkerSize = (; tickformat = "{:.1f} mg")))
+```
+
+
 ## Legend options
 
 The `legend` keyword forwards most attributes to Makie's `Legend` function.
