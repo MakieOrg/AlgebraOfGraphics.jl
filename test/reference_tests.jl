@@ -1249,4 +1249,21 @@ let
         legend!(f[2, 3], fg_d)
         f
     end
+
+    reftest("units alignment errorbars") do
+        f = Figure()
+        base_u = data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [10, 50, 100] .* U.u"cm")) 
+        spec_u = base_u * mapping(:id, :value, :err) * visual(Errorbars)
+        draw!(f[1, 1], spec_u)
+        spec_u2 = base_u * mapping(:value, :id, :err) * visual(Errorbars, direction = :x)
+        draw!(f[1, 2], spec_u2, scales(X = (; unit = U.u"cm")))
+
+        base_d = data((; id = 1:3, value = [1, 2, 3] .* D.us"m", err = [10, 50, 100] .* D.us"cm")) 
+        spec_d = base_d * mapping(:id, :value, :err) * visual(Errorbars)
+        draw!(f[2, 1], spec_d)
+        spec_d2 = base_d * mapping(:value, :id, :err) * visual(Errorbars, direction = :x)
+        draw!(f[2, 2], spec_d2, scales(X = (; unit = D.us"cm")))
+
+        f
+    end
 end

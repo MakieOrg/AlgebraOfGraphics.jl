@@ -29,4 +29,8 @@ function AlgebraOfGraphics.getunit(scale::AlgebraOfGraphics.ContinuousScale{T}) 
     end
 end
 
+function AlgebraOfGraphics.dimensionally_compatible(u1::Unitful.FreeUnits, u2::Unitful.FreeUnits)
+    Unitful.dimension(u1) == Unitful.dimension(u2)
+end
+
 end

@@ -220,5 +220,24 @@ end
         @test AlgebraOfGraphics.getunit(yscale) == yoverride
     end
 
-    # TODO: X and DeltaX need to match in units
+    @test AlgebraOfGraphics.dimensionally_compatible(nothing, nothing)
+    @test !AlgebraOfGraphics.dimensionally_compatible(U.u"kg", nothing)
+    @test !AlgebraOfGraphics.dimensionally_compatible(nothing, U.u"kg")
+    @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", nothing)
+    @test !AlgebraOfGraphics.dimensionally_compatible(nothing, D.us"kg")
+    @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", nothing)
+    @test !AlgebraOfGraphics.dimensionally_compatible(nothing, D.u"kg")
+
+    @test !AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"m")
+    @test AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"g")
+
+    @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.u"m")
+    @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.us"m")
+    @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.us"m")
+    @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.u"m")
+    @test AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.us"g")
+    @test AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.u"g")
+
+    @test_throws_message "incompatible dimensions for AesX and AesDeltaX scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:value, :id, :err) * visual(Errorbars, direction = :x))
+    @test_throws_message "incompatible dimensions for AesY and AesDeltaY scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:id, :value, :err) * visual(Errorbars))
 end

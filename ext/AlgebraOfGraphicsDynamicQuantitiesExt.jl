@@ -39,18 +39,25 @@ function AlgebraOfGraphics.getunit(scale::AlgebraOfGraphics.ContinuousScale{T}) 
     if scale.props.unit === nothing
         return o
     else
-        try
-            # because we can't uconvert to Dimensions its not super straightforward
-            # to check if the units are compatible, so we reuse the conversion mechanism
-            _ = dimensionless(scale.props.unit, o)
-        catch err
-            if err isa DimensionMismatch
-                error("Incompatible units in continuous scale properties: Unit from scale extrema is \"$o\" and from scale properties \"$(scale.props.unit)\" which are not dimensionally compatible.")
-            else
-                rethrow(err)
-            end
+        if !AlgebraOfGraphics.dimensionally_compatible(o, scale.props.unit)
+            error("Incompatible units in continuous scale properties: Unit from scale extrema is \"$o\" and from scale properties \"$(scale.props.unit)\" which are not dimensionally compatible.")
         end
         return scale.props.unit
+    end
+end
+
+function AlgebraOfGraphics.dimensionally_compatible(q1::DynamicQuantities.Quantity, q2::DynamicQuantities.Quantity)
+    try
+        # because we can't uconvert to Dimensions its not super straightforward
+        # to check if the units are compatible, so we reuse the conversion mechanism
+        dimensionless(q1, q2)
+        true
+    catch err
+        if err isa DimensionMismatch || err isa DQ.DimensionError
+            false
+        else
+            rethrow(err)
+        end
     end
 end
 

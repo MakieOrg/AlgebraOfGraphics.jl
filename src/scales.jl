@@ -338,6 +338,24 @@ getunit(c::ContinuousScale) = nothing
 
 function unit_string end
 
+dimensionally_compatible(::Nothing, ::Nothing) = true
+dimensionally_compatible(_, _) = false
+
+struct DimensionMismatch{X1,X2} <: Exception
+    x1::X1
+    x2::X2
+end
+
+function align_scale_unit(lead::ContinuousScale, follow::ContinuousScale)
+    ulead = getunit(lead)
+    ufollow = getunit(follow)
+    if dimensionally_compatible(ulead, ufollow)
+        return Accessors.@set follow.props.unit = ulead
+    else
+       throw(DimensionMismatch(ulead, ufollow))
+    end
+end
+
 function getlabel(c::ContinuousScale)
     l = c.props.label === nothing ? something(c.label, "") : c.props.label
     unit = getunit(c)

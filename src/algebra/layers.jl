@@ -114,6 +114,33 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
         push!(rescaled_pls_grid[idx], ProcessedLayer(pl; positional, named))
     end
 
+    # there are some scales that must match in unit or the plot will be incorrect,
+    # in all of these pairings there is one scale that is the "lead" and one which is the "follow"
+    # scale. For example, AesX is lead and AesDeltaX is follow. If those two appear together in a facet,
+    # we force AesDeltaX to take the unit of AesX.
+    for i in eachindex(continuousscales_grid)
+        scales = continuousscales_grid[i]
+        for (aes_lead, aes_follow) in [(AesX, AesDeltaX), (AesY, AesDeltaY), (AesZ, AesDeltaZ)]
+            lead = extract_single(aes_lead, scales)
+            follow = extract_single(aes_follow, scales)
+            if lead !== nothing && follow !== nothing
+                follow_aligned = try
+                    align_scale_unit(lead, follow)
+                catch err
+                    if err isa DimensionMismatch
+                        error("While aligning the units of continuous scales, found units with incompatible dimensions for $(nameof(aes_lead)) and $(nameof(aes_follow)) scales. $(nameof(aes_lead)) had unit \"$(err.x1)\" and $(nameof(aes_follow)) had unit \"$(err.x2)\". Such an alignment error could happen if, for example, an errorbar layer had incompatible units for the errorbar position (AesY) and error size (AesDeltaY).")
+                    else
+                        rethrow(err)
+                    end
+                end
+                dict = scales[aes_follow]
+                key = only(keys(dict))
+                dict[key] = follow_aligned
+            end
+        end
+    end
+
+
     # Compute merged continuous scales, as it may be needed to use global extrema
     merged_continuousscales = MultiAesScaleDict{ContinuousScale}()
     for multiaesscaledict in continuousscales_grid
