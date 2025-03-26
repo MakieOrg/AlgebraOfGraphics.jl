@@ -87,7 +87,3 @@ function reftest(f::Function, name::String, update::Bool = get(ENV, "UPDATE_REFI
     end
     return fig # so running a block interactively shows the image
 end
-
-@testset "Reference tests" begin
-    include("reference_tests.jl")
-end

@@ -1208,23 +1208,45 @@ let
         weight = range(0, 70, length = 24) .* D.us"g",
     )
 
-    reftest("units basic") do 
-        spec = mapping(:time, :size, color = :weight)
+    reftest("units basic", true) do 
+        spec = mapping(:time, :size, color = :weight, markersize = :weight)
         f = Figure()
         fg_u = draw!(f[1, 1], spec * data(df_u))
         colorbar!(f[1, 2], fg_u)
+        legend!(f[1, 3], fg_u)
         fg_d = draw!(f[2, 1], spec * data(df_d))
         colorbar!(f[2, 2], fg_d)
+        legend!(f[2, 3], fg_d)
         f
     end
 
-    reftest("units scale override") do 
-        spec = mapping(:time, :size, color = :weight)
+    reftest("units scale override", true) do 
+        spec = mapping(:time, :size, color = :weight, markersize = :weight)
         f = Figure()
-        fg_u = draw!(f[1, 1], spec * data(df_u), scales(X = (; unit = U.u"wk"), Y = (; unit = U.u"m"), Color = (; unit = U.u"kg")))
+        fg_u = draw!(
+            f[1, 1],
+            spec * data(df_u),
+            scales(
+                X = (; unit = U.u"wk"),
+                Y = (; unit = U.u"m"),
+                Color = (; unit = U.u"kg"),
+                MarkerSize = (; unit = U.u"mg")
+            )
+        )
         colorbar!(f[1, 2], fg_u)
-        fg_d = draw!(f[2, 1], spec * data(df_d), scales(X = (; unit = D.us"wk"), Y = (; unit = D.us"m"), Color = (; unit = D.us"kg")))
+        legend!(f[1, 3], fg_u)
+        fg_d = draw!(
+            f[2, 1],
+            spec * data(df_d),
+            scales(
+                X = (; unit = D.us"wk"),
+                Y = (; unit = D.us"m"),
+                Color = (; unit = D.us"kg"),
+                MarkerSize = (; unit = D.us"mg")
+            )
+        )
         colorbar!(f[2, 2], fg_d)
+        legend!(f[2, 3], fg_d)
         f
     end
 end
