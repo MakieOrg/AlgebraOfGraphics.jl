@@ -197,9 +197,6 @@ end
 end
 
 @testset "Units" begin
-    D = DynamicQuantities
-    U = Unitful
-
     spec = data((; x1 = (1:10) .* D.us"m", x2 = (1:10) .* D.us"kg", y = 1:10)) * (mapping(:x1, :y) + mapping(:x2, :y)) * visual(Scatter)
     @test_throws D.DimensionError draw(spec)
     spec = data((; x1 = (1:10) .* U.u"m", x2 = (1:10) .* U.u"kg", y = 1:10)) * (mapping(:x1, :y) + mapping(:x2, :y)) * visual(Scatter)

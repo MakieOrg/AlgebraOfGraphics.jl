@@ -29,6 +29,8 @@ using Loess: Loess
 import Shapefile, GeometryBasics
 import Unitful
 import DynamicQuantities
+const U = Unitful
+const D = DynamicQuantities
 
 Random.seed!(1234)
 
