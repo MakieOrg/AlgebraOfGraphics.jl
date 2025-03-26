@@ -336,6 +336,8 @@ end
 
 getunit(c::ContinuousScale) = nothing
 
+function unit_string end
+
 function getlabel(c::ContinuousScale)
     l = c.props.label === nothing ? something(c.label, "") : c.props.label
     unit = getunit(c)
