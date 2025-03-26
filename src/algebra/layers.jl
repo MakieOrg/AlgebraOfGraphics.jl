@@ -114,6 +114,38 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
         push!(rescaled_pls_grid[idx], ProcessedLayer(pl; positional, named))
     end
 
+    # there are some scales that must match in unit or the plot will be incorrect,
+    # in all of these pairings there is one scale that is the "lead" and one which is the "follow"
+    # scale. For example, AesX is lead and AesDeltaX is follow. If those two appear together in a facet,
+    # we force AesDeltaX to take the unit of AesX.
+    for i in eachindex(continuousscales_grid)
+        scales = continuousscales_grid[i]
+        for (aes_lead, aes_follow) in [(AesX, AesDeltaX), (AesY, AesDeltaY), (AesZ, AesDeltaZ)]
+            lead = extract_single(aes_lead, scales)
+            follow = extract_single(aes_follow, scales)
+            if lead !== nothing && follow !== nothing
+                local err
+                follow_aligned = try
+                    align_scale_unit(lead, follow)
+                catch e
+                    if e isa DimensionMismatch
+                        err = e
+                        nothing
+                    else
+                        rethrow(e)
+                    end
+                end
+                if follow_aligned === nothing
+                    error("While aligning the units of continuous scales, found units with incompatible dimensions for $(nameof(aes_lead)) and $(nameof(aes_follow)) scales. $(nameof(aes_lead)) had unit \"$(err.x1)\" and $(nameof(aes_follow)) had unit \"$(err.x2)\". Such an alignment error could happen if, for example, an errorbar layer had incompatible units for the errorbar position (AesY) and error size (AesDeltaY).")
+                end
+                dict = scales[aes_follow]
+                key = only(keys(dict))
+                dict[key] = follow_aligned
+            end
+        end
+    end
+
+
     # Compute merged continuous scales, as it may be needed to use global extrema
     merged_continuousscales = MultiAesScaleDict{ContinuousScale}()
     for multiaesscaledict in continuousscales_grid
@@ -343,7 +375,13 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
             else
                 continue
             end
-            label = getlabel(scale)
+            if scale isa CategoricalScale
+                label = getlabel(scale)
+            else
+                # the units are equalized in the merged scales, but the labels are in each separate scale
+                # so we have to assemble the label out of each component separately
+                label = getlabel_with_merged_unit(scale, merged_continuousscales[aes][used_scale_id])
+            end
             # Use global scales for ticks for now
             # TODO: requires a nicer mechanism that takes into account axis linking
             (scale isa ContinuousScale) && (scale = merged_continuousscales[aes][used_scale_id])
@@ -439,11 +477,16 @@ function get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     return scale
 end
 
+strip_units(scale, data) = scale, data
+
 function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     hc_aes = hardcoded_mapping(key)
     aes = hc_aes === nothing ? aes_mapping[key] : hc_aes
     scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     scale === nothing && return data # verbatim data
+    if scale isa ContinuousScale
+        scale, data = strip_units(scale, data)
+    end
     return full_rescale(data, aes, scale)
 end
 

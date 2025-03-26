@@ -300,12 +300,13 @@ end
 datavalues_plotvalues_datalabels(aes, scale::CategoricalScale) = datavalues(scale), plotvalues(scale), datalabels(scale)
 function datavalues_plotvalues_datalabels(aes::Type{AesMarkerSize}, scale::ContinuousScale)
     props = scale.props.aesprops::AesMarkerSizeContinuousProps
-    tickvalues, ticklabels = Makie.get_ticks(props.ticks, identity, props.tickformat, scale.extrema...)
+    _, s_extrema = strip_units(scale, collect(scale.extrema))
+    tickvalues, ticklabels = Makie.get_ticks(props.ticks, identity, props.tickformat, s_extrema...)
     t_extrema = extrema(tickvalues)
-    if t_extrema[1] < scale.extrema[1] || t_extrema[2] > scale.extrema[2]
-        error("Range of tick values for MarkerSize scale $(t_extrema) exceeds data range $(scale.extrema)")
+    if t_extrema[1] < s_extrema[1] || t_extrema[2] > s_extrema[2]
+        error("Range of tick values for MarkerSize scale $(t_extrema) exceeds data range $(s_extrema)")
     end
-    markersizes = values_to_markersizes(tickvalues, props.sizerange, scale.extrema)
+    markersizes = values_to_markersizes(tickvalues, props.sizerange, s_extrema)
     tickvalues, markersizes, ticklabels
 end
 

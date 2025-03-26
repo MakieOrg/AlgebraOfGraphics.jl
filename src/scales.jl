@@ -272,17 +272,24 @@ struct ContinuousScaleProps
     aesprops::ContinuousAesProps
     label # nothing or any type workable as a label
     legend::Bool
+    unit # nothing or any type workable as a unit
 end
+
+is_unit(::Nothing) = true
+is_unit(_) = false
 
 function ContinuousScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     props_copy = _dictcopy(props)
     legend = _pop!(props_copy, :legend, true)
     label = _pop!(props_copy, :label, nothing)
+    unit = _pop!(props_copy, :unit, nothing)
+    is_unit(unit) || error("`is_unit` returned false for unit = $unit passed to $aestype scale.")
     aes_props = continuous_aes_props(aestype, props_copy)
     ContinuousScaleProps(
         aes_props,
         label,
         legend,
+        unit,
     )
 end
 
@@ -323,7 +330,50 @@ function ContinuousScale(aestype::Type{<:Aesthetic}, extrema, label, props; forc
     return ContinuousScale(extrema, label, force, props_typed)
 end
 
-getlabel(c::Union{ContinuousScale,CategoricalScale}) = c.props.label === nothing ? something(c.label, "") : c.props.label
+function append_unit_string(s::String, u::String)
+    s * " [$u]"
+end
+
+getunit(c::ContinuousScale) = nothing
+
+function unit_string end
+
+dimensionally_compatible(::Nothing, ::Nothing) = true
+dimensionally_compatible(_, _) = false
+
+struct DimensionMismatch{X1,X2} <: Exception
+    x1::X1
+    x2::X2
+end
+
+function align_scale_unit(lead::ContinuousScale, follow::ContinuousScale)
+    ulead = getunit(lead)
+    ufollow = getunit(follow)
+    if dimensionally_compatible(ulead, ufollow)
+        return Accessors.@set follow.props.unit = ulead
+    else
+       throw(DimensionMismatch(ulead, ufollow))
+    end
+end
+
+function getlabel(c::ContinuousScale)
+    l = c.props.label === nothing ? something(c.label, "") : c.props.label
+    unit = getunit(c)
+    unit === nothing && return l
+    suffix = unit_string(unit)
+    return append_unit_string(l, suffix)
+end
+
+
+function getlabel_with_merged_unit(c::ContinuousScale, unit_from::ContinuousScale)
+    l = c.props.label === nothing ? something(c.label, "") : c.props.label
+    unit = getunit(unit_from)
+    unit === nothing && return l
+    suffix = unit_string(unit)
+    return append_unit_string(l, suffix)
+end
+
+getlabel(c::CategoricalScale) = c.props.label === nothing ? something(c.label, "") : c.props.label
 
 # recentering hack to avoid Float32 conversion errors on recent dates
 # TODO: remove once Makie supports dates
@@ -500,7 +550,7 @@ scientific_eltype(::Any) = categorical
 iscategoricalcontainer(u) = any(el -> scientific_eltype(el) === categorical, u)
 iscontinuous(u) = scientific_eltype(u) === continuous
 
-extend_extrema((l1, u1), (l2, u2)) = min(l1, l2), max(u1, u2)
+extend_extrema((l1, u1), (l2, u2)) = promote(min(l1, l2), max(u1, u2))
 
 function extrema_finite(v::AbstractArray)
     iter = Iterators.filter(isfinite, skipmissing(v))

@@ -27,6 +27,10 @@ using GLM: GLM
 using Loess: Loess
 
 import Shapefile, GeometryBasics
+import Unitful
+import DynamicQuantities
+const U = Unitful
+const D = DynamicQuantities
 
 Random.seed!(1234)
 
@@ -45,6 +49,8 @@ macro test_throws_message(message::String, exp)
     end
 end
 
+include("reference_tests_utils.jl")
+
 include("utils.jl")
 include("visual.jl")
 include("algebra.jl")
@@ -55,4 +61,7 @@ include("facet.jl")
 include("legend.jl")
 include("geometry.jl")
 include("paginate.jl")
-include("run_reference_tests.jl")
+
+@testset "Reference tests" begin
+    include("reference_tests.jl")
+end
