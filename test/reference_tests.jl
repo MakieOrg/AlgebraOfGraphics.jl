@@ -1273,3 +1273,14 @@ if VERSION >= v"1.9"
         draw(spec_wide)
     end
 end
+
+reftest("hidden axis labels col row") do
+    f = Figure()
+    colspec = data((; x = 1:2, y = 1:2, group = string.('A':'B'))) *
+        mapping(:x, :y, col = :group)
+    draw!(f[1, 1], colspec, facet = (; linkyaxes = false))
+    rowspec = data((; x = 1:2, y = 1:2, group = string.('A':'B'))) *
+        mapping(:x, :y, row = :group)
+    draw!(f[1, 2], rowspec, facet = (; linkxaxes = false))
+    f
+end
