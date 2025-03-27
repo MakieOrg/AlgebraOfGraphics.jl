@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed hiding of duplicate axis labels in unlinked layouts of either only col or only row [#623](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/623).
+
 ## v0.9.6 - 2025-03-26
 
 - Added support for input data with units attached, either through Unitful.jl or DynamicQuantities.jl extensions, available from Julia 1.9 on [#619](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/619).
