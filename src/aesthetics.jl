@@ -166,6 +166,14 @@ function aesthetic_mapping(::Type{ScatterLines}, N::Int)
     ])
 end
 
+function aesthetic_mapping(::Type{Stairs}, ::Normal, ::Normal)
+    dictionary([
+        pointlike_positionals(2)...,
+        :color => AesColor,
+        :linestyle => AesLineStyle,
+    ])
+end
+
 function aesthetic_mapping(::Type{HLines}, ::Normal)
     dictionary([
         1 => AesY,
@@ -215,6 +223,15 @@ function aesthetic_mapping(::Type{Heatmap}, ::Normal, ::Normal, ::Normal)
         1 => AesX,
         2 => AesY,
         3 => AesColor,
+    ])
+end
+
+function aesthetic_mapping(::Type{Volume}, ::Normal, ::Normal, ::Normal, ::Normal)
+    dictionary([
+        1 => AesX,
+        2 => AesY,
+        3 => AesZ,
+        4 => AesVolumeColor, # set to AesColor would not work
     ])
 end
 
