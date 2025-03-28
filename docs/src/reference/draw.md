@@ -156,16 +156,56 @@ draw(spec, scales(X = (; palette = [1, 2, 3, 5, 6, "Unknown" => 8])))
 ##### Layout
 
 Normally, with the `Layout` aesthetic, rows wrap automatically such that an approximately square distribution of facets is attained.
-You can overwrite these values, however, to place axes at manually chosen positions:
+The [`wrapped`](@ref) function is a convenient helper to control the shape of the layout. You can control the maximum rows or columns, and the direction in which the layout is filled, which is row-by-row by default.
+
+Here we cap the number of columns and leave the order by row:
 
 ```@example
 using AlgebraOfGraphics
 using CairoMakie
 
 df = (;
-    group = repeat(["A", "B", "C", "D", "E", "F", "G", "H"], inner = 20),
-    x = randn(160),
-    y = randn(160)
+    group = repeat(["A", "B", "C", "D", "E", "F", "G", "H", "I"], inner =20),
+    x = repeat(1:20, 9),
+    y = cumsum(randn(180)),
+)
+
+spec = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter)
+
+draw(spec, scales(Layout = (; palette = wrapped(cols = 4)));
+    figure = (; title = "wrapped(cols = 4))", titlealign = :center)
+)
+```
+
+Here we cap the number of rows instead and change the order with `by_col`:
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+df = (;
+    group = repeat(["A", "B", "C", "D", "E", "F", "G", "H", "I"], inner =20),
+    x = repeat(1:20, 9),
+    y = cumsum(randn(180)),
+)
+
+spec = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter)
+
+draw(spec, scales(Layout = (; palette = wrapped(rows = 4, by_col = true)));
+    figure = (; title = "wrapped(rows = 4, by_col = true))", titlealign = :center)
+)
+```
+
+You can also pass completely custom positions as a vector of tuples (you could also compute these values on the fly by passing a `Function` to `palette`):
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+df = (;
+    group = repeat(["A", "B", "C", "D", "E", "F", "G", "H"], inner =20),
+    x = repeat(1:20, 8),
+    y = cumsum(randn(160)),
 )
 
 spec = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter)
