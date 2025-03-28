@@ -79,7 +79,7 @@ function draw(d::AbstractDrawable, scales::Scales = scales();
     axis = _kwdict(axis)
     figure = _kwdict(figure)
     facet = _kwdict(facet)
-    legend = _kwdict(legend)
+    legend = (!isa(legend, NamedTuple)) ? throw(DomainError("legend provided is not a NamedTuple. If you specified a single name-value pair, add a hanging comma like so: (name = value, )")) : _kwdict(legend)
     colorbar = _kwdict(colorbar)
 
     return _draw(d, scales; axis, figure, facet, legend, colorbar)

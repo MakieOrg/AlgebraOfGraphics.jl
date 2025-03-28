@@ -155,3 +155,10 @@ end
     @test Makie.to_value(els[3].alpha) == 0.5
     @test Makie.to_value(els[4].alpha) == 1.0
 end
+
+@testset "legend named tuple #PR #617" begin
+    dat = DataFrame(grp = ["A", "B", "C"], x = [1., 2., 3.], y = [1., 2., 3.])
+    plt = data(dat) * mapping(:x, :y, color = :grp) * visual(Scatter)
+    @test_throws DomainError draw(plt, legend = (position = :bottom))
+    @test isa(draw(plt, legend = (position = :bottom,)), AlgebraOfGraphics.FigureGrid)
+end
