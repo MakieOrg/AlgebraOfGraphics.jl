@@ -65,6 +65,15 @@ end
     p = cgrad(:Accent_3)
     uv = [:a, :b, :c, :d, :e]
     @test apply_palette(p, uv) == [p[1], p[2], p[3], p[1], p[2]]
+
+    uv = 1:9
+    @test apply_palette(wrapped(), uv) == [(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3)]
+    @test apply_palette(wrapped(by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (1, 2), (2, 2), (3, 2), (1, 3), (2, 3), (3, 3)]
+    @test apply_palette(wrapped(cols = 4), uv) == [(1, 1), (1, 2), (1, 3), (1, 4), (2, 1), (2, 2), (2, 3), (2, 4), (3, 1)]
+    @test apply_palette(wrapped(cols = 4, by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (1, 2), (2, 2), (3, 2), (1, 3), (2, 3), (3, 3)]
+    @test apply_palette(wrapped(rows = 4), uv) == [(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3)]
+    @test apply_palette(wrapped(rows = 4, by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (4, 1), (1, 2), (2, 2), (3, 2), (4, 2), (1, 3)]
+    @test_throws_message "`cols` and `rows` can't both be fixed" apply_palette(wrapped(rows = 4, cols = 5), uv) 
 end
 
 @testset "datetimes" begin

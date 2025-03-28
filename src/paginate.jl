@@ -131,7 +131,8 @@ function paginate_axes_grid(agrid::Matrix{AxisSpecEntries}; layout = nothing, ro
         dvalues = datavalues(scale)
         pvalues = plotvalues(scale)
         for groupindices in Iterators.partition(eachindex(dvalues, pvalues), layout)
-            wrapped_positions = apply_palette(wrap, 1:length(groupindices))
+            # TODO: should the original wrap style be preserved? may depend on type, not everything will work
+            wrapped_positions = apply_palette(wrapped(), 1:length(groupindices))
 
             props = scale.props
             sliced_scale = CategoricalScale(

@@ -45,6 +45,7 @@ export scale, scales
 export pregrouped
 export direct
 export from_continuous
+export wrapped
 
 include("dict.jl")
 include("theme.jl")
