@@ -1097,6 +1097,24 @@ reftest("hide row col and layout labels") do
     f
 end
 
+reftest("hide row col and layout labels legendkw") do
+    f = Figure(size = (600, 600))
+    d = data((;
+        x = 1:16,
+        y = 17:32,
+        group1 = repeat(["A", "B"], inner = 8),
+        group2 = repeat(["C", "D"], 8))
+    )
+    spec1 = d * mapping(:x, :y, row = :group1, col = :group2) * visual(Scatter)
+    spec2 = d * mapping(:x, :y, layout = (:group1, :group2) => tuple) * visual(Scatter)
+
+    draw!(f[1, 1], spec1, scales(Row = (; legend = false), Col = (; legend = false)))
+    draw!(f[1, 2], spec1, scales(Row = (; legend = true), Col = (; legend = true)))
+    draw!(f[2, 1], spec2, scales(Layout = (; legend = false)))
+    draw!(f[2, 2], spec2, scales(Layout = (; legend = true)))
+    f
+end
+
 let
     df = (;
         x = 0:24,

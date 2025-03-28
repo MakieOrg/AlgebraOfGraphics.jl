@@ -169,7 +169,18 @@ _dictcopy(dict::T) where {T<:Dictionary} = T(copy(keys(dict)), copy(values(dict)
 
 function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     props_copy = _dictcopy(props)
-    legend = _pop!(props_copy, :legend, true)
+    if aestype <: Union{AesRow,AesCol,AesLayout}
+        if haskey(props_copy, :show_labels) && haskey(props_copy, :legend)
+            error("Found `show_labels` and `legend` keyword for the $aestype scale, these are aliases and may not be set at the same time. Use of `legend` is suggested for consistency with other scales.")
+        elseif haskey(props_copy, :show_labels)
+            legend = props_copy[:show_labels]
+            delete!(props_copy, :show_labels)
+        else
+            legend = _pop!(props_copy, :legend, true)
+        end
+    else
+        legend = _pop!(props_copy, :legend, true)
+    end
     label = _pop!(props_copy, :label, nothing)
     categories = _pop!(props_copy, :categories, nothing)
     palette = _pop!(props_copy, :palette, nothing)
@@ -189,21 +200,9 @@ end
 Base.@kwdef struct AesDodgeYCategoricalProps <: CategoricalAesProps
     width::Union{Nothing,Float64} = nothing
 end
-Base.@kwdef struct AesRowCategoricalProps <: CategoricalAesProps
-    show_labels::Bool = true
-end
-Base.@kwdef struct AesColCategoricalProps <: CategoricalAesProps
-    show_labels::Bool = true
-end
-Base.@kwdef struct AesLayoutCategoricalProps <: CategoricalAesProps
-    show_labels::Bool = true
-end
 
 categorical_aes_props_type(::Type{AesDodgeX}) = AesDodgeXCategoricalProps
 categorical_aes_props_type(::Type{AesDodgeY}) = AesDodgeYCategoricalProps
-categorical_aes_props_type(::Type{AesRow}) = AesRowCategoricalProps
-categorical_aes_props_type(::Type{AesCol}) = AesColCategoricalProps
-categorical_aes_props_type(::Type{AesLayout}) = AesLayoutCategoricalProps
 
 
 function CategoricalScale(aestype::Type{<:Aesthetic}, data, label::Union{AbstractString, Nothing}, props)
