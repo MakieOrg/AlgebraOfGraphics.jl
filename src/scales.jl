@@ -98,14 +98,44 @@ apply_palette(::Automatic, uv) = eachindex(uv)
 apply_palette(f::Function, uv) = f(uv)
 apply_palette(fc::FromContinuous, uv) = cgrad(Makie.to_colormap(fc.continuous), length(uv); categorical = true)
 
-# TODO: add more customizations?
-struct Wrap end
+struct Wrap{T<:Union{Makie.Automatic,@NamedTuple{n::Int64, cols::Bool}}}
+    size_restriction::T
+    by_col::Bool
+end
 
-const wrap = Wrap()
+"""
+    wrapped(; cols = automatic, rows = automatic, by_col = false)
 
-function apply_palette(::Wrap, uv)
+Create an object that can be passed to the `Layout` scale `palette` which controls how many
+rows or columns are allowed at maximum in the wrapped layout. Only one of `cols` or `rows` may
+be set to an integer at the same time. If both are `automatic`, a squareish configuration is chosen.
+If `by_col` is to `true`, the layout is filled top to bottom first and then column by column.
+"""
+function wrapped(;
+        cols::Union{Integer,Makie.Automatic} = Makie.automatic,
+        rows::Union{Integer,Makie.Automatic} = Makie.automatic,
+        by_col::Bool = false
+    )
+    if cols !== Makie.automatic && rows !== Makie.automatic
+        throw(ArgumentError("`cols` and `rows` can't both be fixed in a wrapped layout."))
+    elseif cols === Makie.automatic && rows === Makie.automatic
+        Wrap(Makie.automatic, by_col)
+    elseif cols === Makie.automatic
+        Wrap((n = rows, cols = false), by_col)
+    else
+        Wrap((n = cols, cols = true), by_col)
+    end
+end
+
+function apply_palette(w::Wrap{Automatic}, uv)
     ncols = ceil(Int, sqrt(length(uv)))
-    return [fldmod1(idx, ncols) for idx in eachindex(uv)]
+    return apply_palette(Wrap((n = ncols, cols = true), w.by_col), uv)
+end
+
+function apply_palette(w::Wrap{@NamedTuple{n::Int64, cols::Bool}}, uv)
+    n = w.size_restriction.cols != w.by_col ? w.size_restriction.n : ceil(Int, length(uv) / w.size_restriction.n)
+    f(ij) = w.by_col ? reverse(ij) : ij
+    return [f(fldmod1(idx, n)) for idx in eachindex(uv)]
 end
 
 abstract type CategoricalAesProps end

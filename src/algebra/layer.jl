@@ -221,7 +221,7 @@ _default_categorical_palette(::Type{<:Union{AesX,AesY}}) = Makie.automatic
 _default_categorical_palette(::Type{AesColor}) = _default_categorical_colors
 _default_categorical_palette(::Type{AesMarker}) = to_value(Makie.current_default_theme()[:palette][:marker])
 _default_categorical_palette(::Type{AesLineStyle}) = to_value(Makie.current_default_theme()[:palette][:linestyle])
-_default_categorical_palette(::Type{AesLayout}) = wrap
+_default_categorical_palette(::Type{AesLayout}) = Wrap(Makie.automatic, true)
 _default_categorical_palette(::Type{<:Union{AesRow,AesCol}}) = Makie.automatic
 _default_categorical_palette(::Type{AesGroup}) = Makie.automatic
 _default_categorical_palette(::Type{AesDodgeX}) = Makie.automatic
@@ -248,11 +248,8 @@ function get_categorical_palette(scale_props, aestype, scale_id)
 end
 
 get_categorical_palette(anytype::Type{<:Aesthetic}, ::Nothing) = _default_categorical_palette(anytype)
-get_categorical_palette(_, func::Function) = func
+get_categorical_palette(::Type{<:Aesthetic}, any) = any
 get_categorical_palette(::Type{AesColor}, colormap::Symbol) = Makie.to_colormap(colormap)
-get_categorical_palette(::Type{AesColor}, grad::Makie.PlotUtils.CategoricalColorGradient) = grad
-get_categorical_palette(::Type{AesColor}, fc::FromContinuous) = fc
-get_categorical_palette(anytype::Type{<:Aesthetic}, palettevalues::AbstractVector) = palettevalues
 
 const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
 
