@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added `wrapped` convenience function for the `Layout` scale palette which allows to cap either rows or columns and change layout direction [#625](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/625).
 - Replaced unnecessary `show_labels` keyword for `Row`, `Col` and `Layout` scales with 
 - Fixed hiding of duplicate axis labels in unlinked layouts of either only col or only row [#623](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/623).
 
