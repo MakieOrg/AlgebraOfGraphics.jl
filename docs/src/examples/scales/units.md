@@ -91,6 +91,6 @@ draw(spec_wide)
 Again, we can force a different display unit via the scale options.
 
 ```@example
-draw(spec_wide, scales(Y = (; unit = u"cm"), Layout = (; show_labels = false)))
+draw(spec_wide, scales(Y = (; unit = u"cm"), Layout = (; legend = false)))
 ```
 
