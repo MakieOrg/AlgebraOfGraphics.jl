@@ -156,6 +156,35 @@ function apply_palette(w::Wrap{@NamedTuple{n::Int64, cols::Bool}}, uv)
     return [f(fldmod1(idx, n)) for idx in eachindex(uv)]
 end
 
+struct Clipped{C}
+    palette::C
+    high::Union{Nothing,RGBAf}
+    low::Union{Nothing,RGBAf}
+end
+
+function apply_palette(c::Clipped, uv::AbstractVector{Bin})
+    @assert issorted(uv, by = x -> x.range[1])
+
+    lowclip = c.low !== nothing && !isfinite(uv[1].range[1])
+    inner_start = lowclip ? 2 : 1
+    highclip = c.high !== nothing && !isfinite(uv[end].range[2])
+    inner_end = highclip ? length(uv) - 1 : length(uv)
+    
+    colors = apply_palette(c.palette, @view uv[inner_start:inner_end])
+    lowclip && pushfirst!(colors, c.low)
+    highclip && push!(colors, c.high)
+    return colors
+end
+
+"""
+    clipped(palette; high = nothing, low = nothing)
+
+Wrap a color palette such that, when used with a categorical scale made of ordered
+`Bin`s, the end bins get the clip colors if they extend to plus/minus infinity. The
+inner bins then pick their colors from the wrapped palette.
+"""
+clipped(palette; high = nothing, low = nothing) = Clipped(palette, high === nothing ? nothing : Makie.to_color(high), low === nothing ? nothing : Makie.to_color(low))
+
 abstract type CategoricalAesProps end
 struct CategoricalScaleProps
     aesprops::CategoricalAesProps
