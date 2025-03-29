@@ -231,7 +231,7 @@ Base.@kwdef struct AesDodgeYCategoricalProps <: CategoricalAesProps
     width::Union{Nothing,Float64} = nothing
 end
 Base.@kwdef struct AesColorCategoricalProps <: CategoricalAesProps
-    colorbar::Bool = false
+    colorbar::Union{Makie.Automatic,Bool} = Makie.automatic
 end
 
 categorical_aes_props_type(::Type{AesDodgeX}) = AesDodgeXCategoricalProps

@@ -53,7 +53,7 @@ function legendable_scales(kind::Val, scales)
     in_principle_legendable = filterkeys(aes -> scale_is_legendable(kind, aes), scales)
     disabled_legends_filtered = map(pairs(in_principle_legendable)) do (aes, dict)
         filter(dict) do scale
-            scale.props.legend && !(aes === AesColor && scale.props.aesprops.colorbar)
+            scale.props.legend && !(aes === AesColor && should_use_colorbar(scale))
         end
     end
     remaining = filter(!isempty, disabled_legends_filtered)
