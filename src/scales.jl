@@ -100,7 +100,7 @@ apply_palette(fc::FromContinuous, uv) = cgrad(Makie.to_colormap(fc.continuous), 
 function apply_palette(fc::FromContinuous, uv::AbstractVector{Bin})
     @assert issorted(uv, by = x -> x.range[1])
     cmap = Makie.to_colormap(fc.continuous)
-    if fc.weighted
+    if fc.relative
         endpoint_values = (uv[1].range[2], uv[end].range[1])
         width = endpoint_values[2] - endpoint_values[1]
         fractions = map(uv[2:end-1]) do bin

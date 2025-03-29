@@ -548,7 +548,7 @@ reftest("contours analysis") do
         contours(; levels = 10) |> draw(scales(Color = (; colormap = :plasma)))
 end
 
-reftest("filled contours analysis") do
+function filled_contours_spec(; contours_kw = (;))
     volcano = DelimitedFiles.readdlm(Makie.assetpath("volcano.csv"), ',', Float64)
 
     x = repeat(range(3, 17, length = size(volcano, 1)), size(volcano, 2))
@@ -557,7 +557,37 @@ reftest("filled contours analysis") do
 
     data((; x, y, z)) *
         mapping(:x => "The X", :y, :z, row = :x => >(10)) *
-        filled_contours(; bands = 10) |> draw
+        filled_contours(; bands = 10, contours_kw...)
+end
+
+reftest("filled contours analysis") do
+    draw(filled_contours_spec(), scales(Color = (; colorbar = false)))
+end
+
+reftest("filled contours analysis colorbar") do
+    draw(filled_contours_spec(), scales(Color = (; colorbar = true)))
+end
+
+reftest("filled contours analysis colorbar levels") do
+    draw(filled_contours_spec(; contours_kw = (; bands = nothing, levels = [100, 120, 160, 170, 180, 190])))
+end
+
+reftest("filled contours analysis colorbar levels relative false") do
+    draw(
+        filled_contours_spec(; contours_kw = (; bands = nothing, levels = [100, 120, 160, 170, 180, 190])),
+        scales(Color = (; palette = from_continuous(:viridis, relative = false)))
+    )
+end
+
+reftest("filled contours analysis colorbar levels infinity") do
+    draw(filled_contours_spec(; contours_kw = (; bands = nothing, levels = [-Inf, 100, 120, 160, 170, 180, 190, Inf])))
+end
+
+reftest("filled contours analysis colorbar levels infinity clipped") do
+    draw(
+        filled_contours_spec(; contours_kw = (; bands = nothing, levels = [-Inf, 100, 120, 160, 170, 180, 190, Inf])),
+        scales(Color = (; palette = clipped(from_continuous(:viridis), low = :red, high = :cyan)))
+    )
 end
 
 reftest("longpoly con color") do
