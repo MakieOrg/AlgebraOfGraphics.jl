@@ -51,9 +51,9 @@ compute_legend(fg::FigureGrid; order) = compute_legend(fg.grid; order)
 # ignore positional scales and keywords that don't support legends
 function legendable_scales(kind::Val, scales)
     in_principle_legendable = filterkeys(aes -> scale_is_legendable(kind, aes), scales)
-    disabled_legends_filtered = map(in_principle_legendable) do dict
+    disabled_legends_filtered = map(pairs(in_principle_legendable)) do (aes, dict)
         filter(dict) do scale
-            scale.props.legend
+            scale.props.legend && !(aes === AesColor && scale.props.aesprops.colorbar)
         end
     end
     remaining = filter(!isempty, disabled_legends_filtered)
@@ -116,6 +116,8 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
         v = get!(Vector{Any}, labelled_layers, label)
         push!(v, pl)
     end
+
+    @show scales
 
     # if there are no legendable scales or labelled layers, we don't need a legend
     isempty(scales) && isempty(labelled_layers) && return nothing

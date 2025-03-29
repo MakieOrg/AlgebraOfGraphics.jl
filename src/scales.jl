@@ -230,9 +230,13 @@ end
 Base.@kwdef struct AesDodgeYCategoricalProps <: CategoricalAesProps
     width::Union{Nothing,Float64} = nothing
 end
+Base.@kwdef struct AesColorCategoricalProps <: CategoricalAesProps
+    colorbar::Bool = false
+end
 
 categorical_aes_props_type(::Type{AesDodgeX}) = AesDodgeXCategoricalProps
 categorical_aes_props_type(::Type{AesDodgeY}) = AesDodgeYCategoricalProps
+categorical_aes_props_type(::Type{AesColor}) = AesColorCategoricalProps
 
 
 function CategoricalScale(aestype::Type{<:Aesthetic}, data, label::Union{AbstractString, Nothing}, props)
