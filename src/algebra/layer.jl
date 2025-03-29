@@ -231,7 +231,7 @@ _default_categorical_palette(::Type{AesViolinSide}) = [:left, :right]
 
 function _default_categorical_colors(categories::AbstractVector{Bin})
     cmap = to_value(Makie.current_default_theme()[:colormap])
-    return cgrad(cmap, length(categories); categorical = true)
+    return from_continuous(cmap)
 end
 function _default_categorical_colors(categories::AbstractVector)
     cycler = Cycler(to_value(Makie.current_default_theme()[:palette][:color]))
