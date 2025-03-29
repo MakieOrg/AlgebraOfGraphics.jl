@@ -117,8 +117,6 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
         push!(v, pl)
     end
 
-    @show scales
-
     # if there are no legendable scales or labelled layers, we don't need a legend
     isempty(scales) && isempty(labelled_layers) && return nothing
 
