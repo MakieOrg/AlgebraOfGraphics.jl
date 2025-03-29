@@ -97,6 +97,24 @@ apply_palette(p::Union{AbstractArray, AbstractColorList}, uv) = collect(Iterator
 apply_palette(::Automatic, uv) = eachindex(uv)
 apply_palette(f::Function, uv) = f(uv)
 apply_palette(fc::FromContinuous, uv) = cgrad(Makie.to_colormap(fc.continuous), length(uv); categorical = true)
+function apply_palette(fc::FromContinuous, uv::AbstractVector{Bin})
+    @assert issorted(uv, by = x -> x.range[1])
+    cmap = Makie.to_colormap(fc.continuous)
+    if fc.weighted
+        endpoint_values = (uv[1].range[2], uv[end].range[1])
+        width = endpoint_values[2] - endpoint_values[1]
+        fractions = map(uv[2:end-1]) do bin
+            midpoint = (bin.range[1] + bin.range[2]) / 2
+            fraction = (midpoint - endpoint_values[1]) / width
+            return fraction
+        end
+
+        colors = Makie.interpolated_getindex.(Ref(cmap), [0.0; fractions; 1.0])
+    else
+        colors = Makie.interpolated_getindex.(Ref(cmap), range(0, 1, length = length(uv)))
+    end
+    return colors
+end
 
 struct Wrap{T<:Union{Makie.Automatic,@NamedTuple{n::Int64, cols::Bool}}}
     size_restriction::T
