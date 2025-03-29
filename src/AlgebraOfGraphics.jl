@@ -46,6 +46,7 @@ export pregrouped
 export direct
 export from_continuous
 export wrapped
+export clipped
 
 include("dict.jl")
 include("theme.jl")

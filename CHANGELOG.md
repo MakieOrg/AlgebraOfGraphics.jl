@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- **Breaking**: The `colorbar!` function now returns a `Vector{Colorbar}` with zero or more entries. Before it would return `Union{Nothing,Colorbar}`, but now it's possible to draw more than one colorbar if there are multiple colorscales.
+- **Breaking**: `filled_contours` does not create a legend by default but a colorbar. The colorbar can be disabled again by setting, e.g., `scales(Color = (; colorbar = false))`.
+- **Breaking**: Changed the behavior of the `from_continuous` palette in combination with a scale consisting of `Bin`s. Colors will now be sampled relative to the positions of their bins' midpoints, meaning that smaller bins that lie closer together have more similar colors. The previous behavior with colors sampled evenly can be regained by using `from_continuous(cmap; relative = false)`.
+- Added the ability to display a colorbar for categorical color scales. The colorbar normally consists of evenly spaced, labelled sections, one for each category. In the special case that the data values of the categorical scale are of type `Bin`, the colorbar displays each bin's color at the correct numerical positions.
+- Added the `clipped` function which is primarily meant to set highclip and lowclip colors on top of categorical color palettes, for use with categorical scales with `Bin`s if those bins extend to plus/minus infinity.
+
 ## v0.9.7 - 2025-03-28
 
 - Added `wrapped` convenience function for the `Layout` scale palette which allows to cap either rows or columns and change layout direction [#625](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/625).
