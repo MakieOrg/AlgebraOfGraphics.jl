@@ -17,7 +17,7 @@ Attributes allowed in `kwargs` are the same as `MakieLayout.Colorbar`.
     because multiple colorbars in a single figure were not supported. The name of the
     function was kept singular **colorbar** to be less breaking.
 """
-function colorbar!(figpos, grid; vertical, kwargs...)
+function colorbar!(figpos, grid; vertical = true, kwargs...)
     colorbars = compute_colorbars(grid)
     return [Colorbar(figpos[(vertical ? (1, i) : (i, 1))...]; colorbar..., vertical, kwargs...) for (i, colorbar) in enumerate(colorbars)]
 end
