@@ -8,45 +8,43 @@ end
 """
     colorbar!(figpos, grid; kwargs...)
 
-Compute colorbar for `grid` (which should be the output of [`draw!`](@ref)) and draw it in
-position `figpos`. Attributes allowed in `kwargs` are the same as `MakieLayout.Colorbar`.
+Compute zero or more colorbars for `grid` (which should be the output of [`draw!`](@ref)) and draw them in a
+nested `GridLayout` in position `figpos`. Attributes allowed in `kwargs` are the same as `MakieLayout.Colorbar`.
 """
-function colorbar!(figpos, grid; kwargs...)
-    colorbar = compute_colorbar(grid)
-    return isnothing(colorbar) ? nothing : Colorbar(figpos; colorbar..., kwargs...)
+function colorbar!(figpos, grid; vertical, kwargs...)
+    colorbars = compute_colorbars(grid)
+    return [Colorbar(figpos[(vertical ? (1, i) : (i, 1))...]; colorbar..., vertical, kwargs...) for (i, colorbar) in enumerate(colorbars)]
 end
 
-compute_colorbar(fg::FigureGrid) = compute_colorbar(fg.grid)
+compute_colorbars(fg::FigureGrid) = compute_colorbars(fg.grid)
 
 function should_use_colorbar(colorscale::CategoricalScale)::Bool
     aesprops::CategoricalAesProps = colorscale.props.aesprops
     return aesprops.colorbar === Makie.automatic ? is_binned(colorscale) : aesprops.colorbar
 end
 
-function compute_colorbar(grid::Matrix{AxisEntries})
+function compute_colorbars(grid::Matrix{AxisEntries})
+    colorbars = []
     catscales = get(first(grid).categoricalscales, AesColor, nothing)
     if catscales !== nothing
         for catscale in catscales
             if should_use_colorbar(catscale)
-                return categorical_colorbar(catscale)
+                push!(colorbars, categorical_colorbar(catscale))
             end
         end
     end
+    
     colorscales = filter(!isnothing, [get(ae.continuousscales, AesColor, nothing) for ae in grid])
-    isempty(colorscales) && return
 
-    # colorscale = reduce(mergescales, colorscales)
     colorscale_dict = reduce(colorscales, init=Dictionary{Union{Nothing,Symbol},ContinuousScale}()) do c1, c2
         mergewith!(mergescales, c1, c2)
     end
 
-    if length(colorscale_dict) > 1
-        error("Cannot yet handle multiple colorscales, found $colorscale_dict")
+    for colorscale in values(colorscale_dict)
+        push!(colorbars, continuous_colorbar(colorscale))
     end
 
-    colorscale = only(values(colorscale_dict))
-    
-    return continuous_colorbar(colorscale)
+    return colorbars
 end
 
 function continuous_colorbar(colorscale::ContinuousScale)
