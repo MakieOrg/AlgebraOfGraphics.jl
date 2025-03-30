@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added better error messages for the common case of failing to construct single element NamedTuples in calls like `draw(axis = (key = value))` [#630](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/630).
+
 ## v0.10.0 - 2025-03-30
 
 - **Breaking**: The `colorbar!` function now returns a `Vector{Colorbar}` with zero or more entries. Before it would return `Union{Nothing,Colorbar}`, but now it's possible to draw more than one colorbar if there are multiple colorscales [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).

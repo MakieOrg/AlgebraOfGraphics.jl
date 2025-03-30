@@ -61,7 +61,7 @@ The values attached to the keywords must be dict-like, with `Symbol`s as keys (s
 function scales(; kwargs...)
     dict = Dictionary{Symbol,Dictionary{Symbol,Any}}()
     for (kw, value) in pairs(kwargs)
-        insert!(dict, kw, _kwdict(value))
+        insert!(dict, kw, _kwdict(value, kw))
     end
     return Scales(dict)
 end
