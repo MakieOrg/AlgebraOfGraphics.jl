@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.10.0 - 2025-03-30
+
 - **Breaking**: The `colorbar!` function now returns a `Vector{Colorbar}` with zero or more entries. Before it would return `Union{Nothing,Colorbar}`, but now it's possible to draw more than one colorbar if there are multiple colorscales [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
 - **Breaking**: `filled_contours` does not create a legend by default but a colorbar. The colorbar can be disabled again by setting, e.g., `scales(Color = (; colorbar = false))` [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
 - **Breaking**: Changed the behavior of the `from_continuous` palette in combination with a scale consisting of `Bin`s. Colors will now be sampled relative to the positions of their bins' midpoints, meaning that smaller bins that lie closer together have more similar colors. The previous behavior with colors sampled evenly can be regained by using `from_continuous(cmap; relative = false)` [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
