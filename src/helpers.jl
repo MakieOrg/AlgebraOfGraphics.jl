@@ -231,10 +231,11 @@ Base.hash(p::Presorted) = hash(p.x)
 
 struct FromContinuous{T}
     continuous::T
+    relative::Bool
 end
 
 """
-    from_continuous(x)
+    from_continuous(x; relative = true)
 
 Mark a colormap as continuous such that AlgebraOfGraphics will sample
 a categorical palette from start to end in n steps, and not by using the first
@@ -244,10 +245,16 @@ You could also use `cgrad(colormap, n; categorical = true)`, however,
 this requires you to specify how many levels there are, which
 `from_continuous` detects automatically.
 
+The `relative` option applies only when the datavalues of the palette are of type `Bin`.
+In this case, if `relative = true`, the continuous colormap is sampled at the relative
+midpoints of the bins, which means that neighboring bins that are smaller have more similar
+colors because their midpoints are closer together. If `relative = false`, the colormap
+is sampled evenly.
+
 Example:
 
 ```julia
 draw(scales(Color = (; palette = from_continuous(:viridis))))
 ```
 """
-from_continuous(x) = FromContinuous(x)
+from_continuous(x; relative = true) = FromContinuous(x, relative)
