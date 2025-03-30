@@ -29,8 +29,20 @@ function Makie.plot(d::AbstractDrawable, scales::Scales = scales();
     return FigureGrid(fig, grid)
 end
 
-function _kwdict(prs)::Dictionary{Symbol,Any}
-    isempty(prs) ? Dictionary{Symbol,Any}() : dictionary(pairs(prs))
+function _kwdict(prs, keyword::Symbol)::Dictionary{Symbol,Any}
+    err = nothing
+    dict = try
+        _dict::Dictionary{Symbol,Any} = dictionary(pairs(prs))
+    catch _err
+        err = _err
+    end
+    if err !== nothing
+        io = IOBuffer()
+        Base.showerror(io, err)
+        errmsg = String(take!(io))
+        throw(ArgumentError("Can't convert value passed via the keyword `$keyword` to a `Dictionary{Symbol,Any}`. If you intended to pass a single-element `NamedTuple`, check that you didn't write `$keyword = (key = value)` as this expression resolves to just `value`. Use either `$keyword = (; key = value)` or `$keyword = (key = value,)`. The invalid value that was passed was:\n\n$(repr(prs))\n\nThe underlying error message was:\n\n$errmsg"))
+    end
+    return dict
 end
 
 """
@@ -76,11 +88,11 @@ function draw(d::AbstractDrawable, scales::Scales = scales();
               axis=NamedTuple(), figure=NamedTuple(),
               facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple(), palette=nothing)
     check_palette_kw(palette)
-    axis = _kwdict(axis)
-    figure = _kwdict(figure)
-    facet = _kwdict(facet)
-    legend = _kwdict(legend)
-    colorbar = _kwdict(colorbar)
+    axis = _kwdict(axis, :axis)
+    figure = _kwdict(figure, :figure)
+    facet = _kwdict(facet, :facet)
+    legend = _kwdict(legend, :legend)
+    colorbar = _kwdict(colorbar, :colorbar)
 
     return _draw(d, scales; axis, figure, facet, legend, colorbar)
 end
@@ -228,8 +240,8 @@ The output can be customized by passing named tuples or dictionaries with settin
 function draw!(fig, d::AbstractDrawable, scales::Scales = scales();
                axis=NamedTuple(), facet=NamedTuple(), palette=nothing)
     check_palette_kw(palette)
-    axis = _kwdict(axis)
-    facet = _kwdict(facet)
+    axis = _kwdict(axis, :axis)
+    facet = _kwdict(facet, :facet)
     _draw!(fig, d, scales; axis, facet)
 end
 
