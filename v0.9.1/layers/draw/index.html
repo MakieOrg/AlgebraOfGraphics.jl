@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Drawing Layers · Algebra of Graphics</title><meta name="title" content="Drawing Layers · Algebra of Graphics"/><meta property="og:title" content="Drawing Layers · Algebra of Graphics"/><meta property="twitter:title" content="Drawing Layers · Algebra of Graphics"/><meta name="description" content="Documentation for Algebra of Graphics."/><meta property="og:description" content="Documentation for Algebra of Graphics."/><meta property="twitter:description" content="Documentation for Algebra of Graphics."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/favicon.ico" rel="icon" type="image/x-icon"/><link href="../../democards/bulmagridtheme.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img class="docs-light-only" src="../../assets/logo.svg" alt="Algebra of Graphics logo"/><img class="docs-dark-only" src="../../assets/logo-dark.svg" alt="Algebra of Graphics logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">Algebra of Graphics</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Getting Started</span><ul><li><a class="tocitem" href="../../generated/penguins/">Tutorial 🐧</a></li><li><a class="tocitem" href="../../gallery/">Gallery</a></li></ul></li><li><span class="tocitem">Algebra of Layers</span><ul><li><a class="tocitem" href="../introduction/">Introduction</a></li><li><a class="tocitem" href="../data/">Data</a></li><li><a class="tocitem" href="../mapping/">Mapping</a></li><li><a class="tocitem" href="../../generated/visual/">Visual</a></li><li><a class="tocitem" href="../../generated/analyses/">Analyses</a></li><li><a class="tocitem" href="../operations/">Algebraic Operations</a></li><li class="is-active"><a class="tocitem" href>Drawing Layers</a><ul class="internal"><li><a class="tocitem" href="#Scale-options"><span>Scale options</span></a></li><li><a class="tocitem" href="#Legend-options"><span>Legend options</span></a></li><li><a class="tocitem" href="#Figure-options"><span>Figure options</span></a></li></ul></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../API/types/">Types</a></li><li><a class="tocitem" href="../../API/functions/">Functions</a></li><li><a class="tocitem" href="../../API/recipes/">Recipes</a></li></ul></li><li><a class="tocitem" href="../../FAQs/">Frequently Asked Questions</a></li><li><a class="tocitem" href="../../philosophy/">Philosophy</a></li><li><a class="tocitem" href="../../changelog/">Changelog</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Algebra of Layers</a></li><li class="is-active"><a href>Drawing Layers</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Drawing Layers</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/MakieOrg/AlgebraOfGraphics.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/MakieOrg/AlgebraOfGraphics.jl/blob/master/docs/src/layers/draw.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Drawing-Layers"><a class="docs-heading-anchor" href="#Drawing-Layers">Drawing Layers</a><a id="Drawing-Layers-1"></a><a class="docs-heading-anchor-permalink" href="#Drawing-Layers" title="Permalink"></a></h1><p>A <a href="../../API/types/#AlgebraOfGraphics.Layer"><code>AlgebraOfGraphics.Layer</code></a> or <a href="../../API/types/#AlgebraOfGraphics.Layers"><code>AlgebraOfGraphics.Layers</code></a> object can be plotted using the functions <a href="../../API/functions/#AlgebraOfGraphics.draw"><code>draw</code></a> or <a href="../../API/functions/#AlgebraOfGraphics.draw!"><code>draw!</code></a>.</p><p>Whereas <code>draw</code> automatically adds colorbar and legend, <code>draw!</code> does not, as it would be hard to infer a good default placement that works in all scenarios.</p><p>Colorbar and legend, should they be necessary, can be added separately with the <a href="../../API/functions/#AlgebraOfGraphics.colorbar!"><code>colorbar!</code></a> and <a href="../../API/functions/#AlgebraOfGraphics.legend!"><code>legend!</code></a> helper functions. See also <a href="../../gallery/gallery/layout/nested_layouts/#Nested-layouts">Nested layouts</a> for a complex example.</p><h2 id="Scale-options"><a class="docs-heading-anchor" href="#Scale-options">Scale options</a><a id="Scale-options-1"></a><a class="docs-heading-anchor-permalink" href="#Scale-options" title="Permalink"></a></h2><p>All properties that decide how scales are visualized can be modified by passing scale options (using the <code>scales</code> function) as the second argument of <code>draw</code> . The properties that are accepted differ depending on the scale aesthetic type (for example <code>Color</code>, <code>Marker</code>, <code>LineStyle</code>) and whether the scale is categorical or continuous.</p><h3 id="Shared-categorical-scale-options"><a class="docs-heading-anchor" href="#Shared-categorical-scale-options">Shared categorical scale options</a><a id="Shared-categorical-scale-options-1"></a><a class="docs-heading-anchor-permalink" href="#Shared-categorical-scale-options" title="Permalink"></a></h3><p>The <code>palette</code> and <code>categories</code> options are implemented across all categorical scale types.</p><h4 id="palette"><a class="docs-heading-anchor" href="#palette"><code>palette</code></a><a id="palette-1"></a><a class="docs-heading-anchor-permalink" href="#palette" title="Permalink"></a></h4><p>The palette decides which attribute values are passed to Makie&#39;s plotting functions for each categorical value in the scale.</p><h5 id="Color"><a class="docs-heading-anchor" href="#Color">Color</a><a id="Color-1"></a><a class="docs-heading-anchor-permalink" href="#Color" title="Permalink"></a></h5><p>A <code>Symbol</code> is converted to a colormap with <code>Makie.to_colormap</code>. </p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = &#39;A&#39;:&#39;J&#39;)) *
+    mapping(:x, :y, color = :z) *
+    visual(BarPlot)
+draw(spec, scales(Color = (; palette = :tab10)))</code></pre><img src="b49e0aef.svg" alt="Example block output"/><p>It&#39;s also possible to directly specify a vector of colors, each of which <code>Makie.to_color</code> can handle:</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+using CairoMakie.Colors: RGB, RGBA, Gray, HSV
+
+spec = data((; x = 1:10, y = 1:10, z = &#39;A&#39;:&#39;J&#39;)) *
+    mapping(:x, :y, color = :z) *
+    visual(BarPlot)
+draw(spec, scales(Color = (; palette = [:red, :green, :blue, RGB(1, 0, 1), RGB(1, 1, 0), &quot;#abcff0&quot;, &quot;#c88cbccc&quot;, HSV(0.9, 0.3, 0.7), RGBA(0.7, 0.9, 0.6, 0.5), Gray(0.5)])))</code></pre><img src="f53024bb.svg" alt="Example block output"/><p>If you want to use a continuous colormap for categorical data, you can use the <code>from_continuous</code> helper function. It automatically takes care that the continuous colormap is sampled evenly from start to end depending on the number of categories. Any colormap that Makie understands can be passed, including named colormaps such as <code>:viridis</code>.</p><p>This example shows the difference in behavior when the two-element colormap <code>[:red, :blue]</code> is used with or without <code>from_continuous</code>:</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = &#39;A&#39;:&#39;J&#39;)) *
+    mapping(:x, :y, color = :z) *
+    visual(BarPlot)
+
+f = Figure()
+fg1 = draw!(f[1, 1], spec, scales(Color = (; palette = [:red, :blue])))
+legend!(f[1, 2], fg1)
+fg2 = draw!(f[1, 3], spec, scales(Color = (; palette = from_continuous([:red, :blue]))))
+legend!(f[1, 4], fg2)
+f</code></pre><img src="bea0fdb5.svg" alt="Example block output"/><h5 id="Marker"><a class="docs-heading-anchor" href="#Marker">Marker</a><a id="Marker-1"></a><a class="docs-heading-anchor-permalink" href="#Marker" title="Permalink"></a></h5><p>A vector of values that <code>Makie.to_spritemarker</code> can handle.</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = &#39;A&#39;:&#39;J&#39;)) *
+    mapping(:x, :y, marker = :z) *
+    visual(Scatter, markersize = 20)
+
+draw(
+    spec,
+    scales(
+        Marker = (; palette = [:rect, :circle, :utriangle, :dtriangle, :diamond, :hline, :vline, :star5, :star6, :hexagon])
+    )
+)</code></pre><img src="4df7b00c.svg" alt="Example block output"/><h5 id="LineStyle"><a class="docs-heading-anchor" href="#LineStyle">LineStyle</a><a id="LineStyle-1"></a><a class="docs-heading-anchor-permalink" href="#LineStyle" title="Permalink"></a></h5><p>A vector of values that <code>Makie.to_linestyle</code> can handle.</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = repeat(&#39;A&#39;:&#39;E&#39;, inner = 2))) *
+    mapping(:x, :y, linestyle = :z) *
+    visual(Lines, linewidth = 2)
+
+draw(spec, scales(
+    LineStyle = (; palette = [:solid, :dash, :dot, (:dot, :loose), Linestyle([0, 1, 2, 3, 4, 8])])
+))</code></pre><img src="7690f088.svg" alt="Example block output"/><h5 id="X-and-Y"><a class="docs-heading-anchor" href="#X-and-Y">X &amp; Y</a><a id="X-and-Y-1"></a><a class="docs-heading-anchor-permalink" href="#X-and-Y" title="Permalink"></a></h5><p>The &quot;palette&quot; values for X and Y axes are by default simply the numbers from 1 to N, the number of categories. In some circumstances, it might be useful to change these values, for example to visualize that one category is different than others. The palette values are normally assigned category-by-category in the sorted order, or in the order provided manually through the <code>categories</code> keyword. However, if you pass a vector of values, you can always use the <code>category =&gt; value</code> pair option to assign a specific category directly to a value, while the others cycle. Here, we do this with <code>&quot;Unknown&quot;</code> as it would otherwise be sorted before <code>&quot;X&quot;</code>.</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+df = (; group = [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;X&quot;, &quot;Y&quot;, &quot;Unknown&quot;], count = [45, 10, 20, 32, 54, 72])
+
+spec = data(df) * mapping(:group, :count) * visual(BarPlot)
+
+draw(spec, scales(X = (; palette = [1, 2, 3, 5, 6, &quot;Unknown&quot; =&gt; 8])))</code></pre><img src="7ae821be.svg" alt="Example block output"/><h5 id="Layout"><a class="docs-heading-anchor" href="#Layout">Layout</a><a id="Layout-1"></a><a class="docs-heading-anchor-permalink" href="#Layout" title="Permalink"></a></h5><p>Normally, with the <code>Layout</code> aesthetic, rows wrap automatically such that an approximately square distribution of facets is attained. You can overwrite these values, however, to place axes at manually chosen positions:</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+df = (;
+    group = repeat([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;, &quot;E&quot;, &quot;F&quot;, &quot;G&quot;, &quot;H&quot;], inner = 20),
+    x = randn(160),
+    y = randn(160)
+)
+
+spec = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter)
+
+clockwise = [(1, 1), (1, 2), (1, 3), (2, 3), (3, 3), (3, 2), (3, 1), (2, 1)]
+
+draw(spec, scales(Layout = (; palette = clockwise)))</code></pre><img src="55b58732.svg" alt="Example block output"/><h4 id="categories"><a class="docs-heading-anchor" href="#categories"><code>categories</code></a><a id="categories-1"></a><a class="docs-heading-anchor-permalink" href="#categories" title="Permalink"></a></h4><p>The <code>categories</code> keyword can be used to reorder, label and even add categorical values.</p><p>Some reordering and renaming can be done using the <code>sorter</code> and <code>renamer</code> helper functions applied directly to columns in <code>mapping</code>. However, this works less well when several <code>data</code> sources are combined where not all categories appear in each column. Also, no categories can be added this way, which is something that can be useful if the existence of categories should be shown even though there is no data for them.</p><p>New labels can be assigned using the <code>value =&gt; label</code> pair syntax.</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; group = [&quot;A&quot;, &quot;C&quot;, &quot;D&quot;], value = [1, 3, 4])) *
+    mapping(:group, :value) * visual(BarPlot)
+
+f = Figure()
+
+draw!(f[1, 1], spec, scales(
+    X = (; categories = [&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;])
+))
+draw!(f[1, 2], spec, scales(
+    X = (; categories = [&quot;D&quot;, &quot;A&quot;, &quot;C&quot;])
+))
+draw!(f[1, 3], spec, scales(
+    X = (; categories = [&quot;A&quot; =&gt; &quot;a&quot;, &quot;C&quot; =&gt; &quot;c&quot;, &quot;D&quot; =&gt; &quot;d&quot;])
+))
+
+f</code></pre><img src="02f8d521.svg" alt="Example block output"/><p>You can also pass a <code>Function</code> to <code>categories</code> which should take the vector of category values and return a new vector of categories or category/label pairs.</p><p>For example, you could add summary statistics to the facet layout titles this way, by grabbing them from a dictionary computed separately.</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+summary_stats = Dict(&quot;A&quot; =&gt; 1.32, &quot;B&quot; =&gt; 4.19, &quot;C&quot; =&gt; 0.04)
+
+df = (;
+    x = randn(90),
+    y = randn(90) .+ repeat([0, 5, 10], inner = 30),
+    group = repeat([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], inner = 30)
+)
+
+spec = data(df) * mapping(:x, :y, col = :group) * visual(Scatter)
+
+draw(spec, scales(Col = (;
+    categories = cats -&gt; [
+        cat =&gt; rich(&quot;$cat\n&quot;, rich(&quot;λ = $(summary_stats[cat])&quot;, font = :italic))
+            for cat in reverse(cats)
+        ]
+)))</code></pre><img src="92dd59e1.svg" alt="Example block output"/><h3 id="Special-categorical-scale-options"><a class="docs-heading-anchor" href="#Special-categorical-scale-options">Special categorical scale options</a><a id="Special-categorical-scale-options-1"></a><a class="docs-heading-anchor-permalink" href="#Special-categorical-scale-options" title="Permalink"></a></h3><h4 id="Row,-Col-and-Layout"><a class="docs-heading-anchor" href="#Row,-Col-and-Layout">Row, Col &amp; Layout</a><a id="Row,-Col-and-Layout-1"></a><a class="docs-heading-anchor-permalink" href="#Row,-Col-and-Layout" title="Permalink"></a></h4><p>All three facetting scales have the option <code>show_labels</code> which is <code>true</code> by default and can be set to <code>false</code> to hide the facet labels.</p><p>This example shows the behavior for <code>Col</code> only:</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((;
+    x = 1:16,
+    y = 17:32,
+    group1 = repeat([&quot;A&quot;, &quot;B&quot;], inner = 8),
+    group2 = repeat([&quot;C&quot;, &quot;D&quot;], 8))
+) * mapping(:x, :y, row = :group1, col = :group2) * visual(Scatter)
+
+draw(spec, scales(Col = (; show_labels = false)))</code></pre><img src="218aea56.svg" alt="Example block output"/><h3 id="Continuous-scale-options"><a class="docs-heading-anchor" href="#Continuous-scale-options">Continuous scale options</a><a id="Continuous-scale-options-1"></a><a class="docs-heading-anchor-permalink" href="#Continuous-scale-options" title="Permalink"></a></h3><h4 id="Color-2"><a class="docs-heading-anchor" href="#Color-2">Color</a><a class="docs-heading-anchor-permalink" href="#Color-2" title="Permalink"></a></h4><p>Continuous color scales can be modified using the familiar Makie attributes <code>colormap</code>, <code>colorrange</code>, <code>highclip</code>, <code>lowclip</code> and <code>nan_color</code>. By default, <code>colorrange</code> is set to the extrema of the encountered values, so no clipping occurs.</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = [1:4; NaN; 6:10])) *
+    mapping(:x, :y, color = :z) *
+    visual(Scatter, markersize = 20)
+
+draw(spec, scales(
+    Color = (;
+        colormap = :plasma,
+        nan_color = :cyan,
+        lowclip = :lime,
+        highclip = :red,
+        colorrange = (2, 9)
+    )
+))</code></pre><img src="4eb0a651.svg" alt="Example block output"/><h4 id="MarkerSize"><a class="docs-heading-anchor" href="#MarkerSize">MarkerSize</a><a id="MarkerSize-1"></a><a class="docs-heading-anchor-permalink" href="#MarkerSize" title="Permalink"></a></h4><p>The range of marker sizes can be set with the <code>sizerange</code> attribute. Marker sizes are computed such that their area, and not <code>markersize</code> itself, grows linearly with the scale values. </p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = 10:10:100)) *
+    mapping(:x, :y, markersize = :z) *
+    visual(Scatter)
+
+f = Figure()
+
+grid = draw!(f[1, 1], spec, scales(
+    MarkerSize = (;
+        sizerange = (5, 15)
+    )
+))
+legend!(f[1, 2], grid)
+
+grid2 = draw!(f[2, 1], spec, scales(
+    MarkerSize = (;
+        sizerange = (5, 30)
+    )
+))
+legend!(f[2, 2], grid2)
+
+f</code></pre><img src="2f9d55c1.svg" alt="Example block output"/><h2 id="Legend-options"><a class="docs-heading-anchor" href="#Legend-options">Legend options</a><a id="Legend-options-1"></a><a class="docs-heading-anchor-permalink" href="#Legend-options" title="Permalink"></a></h2><p>The <code>legend</code> keyword forwards most attributes to Makie&#39;s <code>Legend</code> function. The exceptions are listed here.</p><h3 id="order"><a class="docs-heading-anchor" href="#order"><code>order</code></a><a id="order-1"></a><a class="docs-heading-anchor-permalink" href="#order" title="Permalink"></a></h3><p>By default, the legend order depends on the order in which layers and mappings have been defined, as well as whether scales are categorical or continuous.</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+df = (;
+    x = 1:12,
+    y = 1:12,
+    z = 1:12,
+    group1 = repeat([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], inner = 4),
+    group2 = repeat([&quot;X&quot;, &quot;Y&quot;], 6),
+)
+
+spec = data(df) *
+    mapping(:x, :y, markersize = :z, color = :group1, marker = :group2) *
+    visual(Scatter)
+
+draw(spec)</code></pre><img src="65df7988.svg" alt="Example block output"/><p>You can reorder the legend with the <code>order</code> keyword. This expects a vector with either <code>Symbol</code>s or <code>Vector{Symbol}</code>s as elements, where each <code>Symbol</code> is the identifier for a scale that&#39;s represented in the legend.</p><p>Plain <code>Symbol</code>s can be used for simple reordering:</p><pre><code class="language-julia hljs">draw(spec; legend = (; order = [:MarkerSize, :Color, :Marker]))</code></pre><img src="cd407268.svg" alt="Example block output"/><p><code>Symbol</code>s that are grouped into <code>Vector</code>s indicate that their groups should be merged together. For example, consider this plot that features two color scales, but one for a scatter plot and one for a line plot.</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+df_a = (; x = 1:9, y = [1, 2, 3, 5, 6, 7, 9, 10, 11], group = repeat([&quot;A&quot;, &quot;B&quot;, &quot;C&quot;], inner = 3))
+
+spec1 = data(df_a) * mapping(:x, :y, strokecolor = :group) * visual(Scatter, color = :transparent, strokewidth = 3, markersize = 15)
+
+df_b = (; y = [4, 8], threshold = [&quot;first&quot;, &quot;second&quot;])
+
+spec2_custom_scale = data(df_b) * mapping(:y, color = :threshold =&gt; scale(:color2)) * visual(HLines)
+
+draw(spec1 + spec2_custom_scale)</code></pre><img src="3709afeb.svg" alt="Example block output"/><p>You can group the two scales together using <code>order</code>. The titles are dropped.</p><pre><code class="language-julia hljs">draw(spec1 + spec2_custom_scale; legend = (; order = [[:Color, :color2]]))</code></pre><img src="3fbd515a.svg" alt="Example block output"/><p>If you want to add a title to a merged group, you can add it with the <code>group =&gt; title</code> pair syntax:</p><pre><code class="language-julia hljs">draw(spec1 + spec2_custom_scale; legend = (; order = [[:Color, :color2] =&gt; &quot;Title&quot;]))</code></pre><img src="4daa6b47.svg" alt="Example block output"/><h2 id="Figure-options"><a class="docs-heading-anchor" href="#Figure-options">Figure options</a><a id="Figure-options-1"></a><a class="docs-heading-anchor-permalink" href="#Figure-options" title="Permalink"></a></h2><p>AlgebraOfGraphics can add a title, subtitle and footnotes to a figure automatically. Settings for these must be passed to the <code>figure</code> keyword. Check the <a href="../../API/functions/#AlgebraOfGraphics.draw"><code>draw</code></a> function for a complete list.</p><pre><code class="language-julia hljs">using AlgebraOfGraphics
+using CairoMakie
+
+spec = pregrouped(
+    fill(1:5, 6),
+    fill(11:15, 6),
+    [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
+    layout = 1:6 =&gt; nonnumeric) * visual(Heatmap)
+
+draw(
+    spec;
+    figure = (;
+        title = &quot;Numbers in square configuration&quot;,
+        subtitle = &quot;Arbitrary data exhibits sinusoidal properties&quot;,
+        footnotes = [
+            rich(superscript(&quot;1&quot;), &quot;First footnote&quot;),
+            rich(superscript(&quot;2&quot;), &quot;Second &quot;, rich(&quot;footnote&quot;, color = :red)),
+        ],
+    ),
+    axis = (; width = 100, height = 100)
+)</code></pre><img src="6c4d0cf2.svg" alt="Example block output"/></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../operations/">« Algebraic Operations</a><a class="docs-footer-nextpage" href="../../API/types/">Types »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Friday 31 January 2025 10:59">Friday 31 January 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
