@@ -1332,3 +1332,20 @@ reftest("hidden axis labels col row") do
     draw!(f[1, 2], rowspec, facet = (; linkxaxes = false))
     f
 end
+
+reftest("singular color and markersize limits", true) do
+    f = Figure(size = (500, 600))
+    fg = draw!(f[1, 1], pregrouped([1:3], [1:2], [ones(3, 2)]) * visual(Heatmap))
+    colorbar!(f[1, 2], fg)
+    fg2 = draw!(f[2, 1], pregrouped([1:3], [1:2], [zeros(3, 2)]) * visual(Heatmap))
+    colorbar!(f[2, 2], fg2)
+    fg3 = draw!(f[3, 1], pregrouped([1:3], [1:2], [-2 .* ones(3, 2)]) * visual(Heatmap))
+    colorbar!(f[3, 2], fg3)
+    fg4 = draw!(f[1, 3], mapping(1:5, 1:5, markersize = ones(5)) * visual(Scatter))
+    legend!(f[1, 4], fg4)
+    fg5 = draw!(f[2, 3], mapping(1:5, 1:5, markersize = zeros(5)) * visual(Scatter))
+    legend!(f[2, 4], fg5)
+    fg6 = draw!(f[3, 3], mapping(1:5, 1:5, markersize = -2 .* ones(5)) * visual(Scatter))
+    legend!(f[3, 4], fg6)
+    f
+end

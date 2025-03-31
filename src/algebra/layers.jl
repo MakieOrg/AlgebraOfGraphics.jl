@@ -496,10 +496,35 @@ end
 
 full_rescale(data, aes, scale::CategoricalScale) = rescale(data, scale)
 
+function nonsingular_colorrange(scale::ContinuousScale)
+    props = scale.props.aesprops::AesColorContinuousProps
+    cr = @something(props.colorrange, scale.extrema)
+    nonsingular_limits(cr)
+end
+
+# expand singular limits to (0, v) or (v, 0) if singular value v is nonzero
+# or to (0, 1) if it is, which should be easier to read than choosing a middle
+# value like it's done in Makie with axis limits
+function nonsingular_limits(r)
+    if r[1] == r[2]
+        if r[1] == 0
+            return (r[1], oneunit(r[1]))
+        else
+            if r[1] < 0
+                return (r[1], false * r[1])
+            else
+                return (false * r[1], r[1])
+            end
+        end
+    else
+        return r
+    end
+end
+
 function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     props = scale.props.aesprops::AesColorContinuousProps
     colormap = Makie.to_colormap(@something(props.colormap, default_colormap()))
-    colorrange = Makie.Vec2(@something(props.colorrange, scale.extrema))
+    colorrange = Makie.Vec2(nonsingular_colorrange(scale))
     lowclip = Makie.to_color(@something(props.lowclip, first(colormap)))
     highclip = Makie.to_color(@something(props.highclip, last(colormap)))
     nan_color = Makie.to_color(@something(props.nan_color, RGBAf(0, 0, 0, 0)))
@@ -514,9 +539,9 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     )
 end
 
-function full_rescale(data, aes::Type{AesMarkerSize}, scale::ContinuousScale)
+function full_rescale(data, ::Type{AesMarkerSize}, scale::ContinuousScale)
     props = scale.props.aesprops::AesMarkerSizeContinuousProps
-    values_to_markersizes(data, props.sizerange, scale.extrema)
+    values_to_markersizes(data, props.sizerange, nonsingular_limits(scale.extrema))
 end
 
 full_rescale(data, aes::Type{<:Union{AesContourColor,AesABIntercept,AesABSlope}}, scale::ContinuousScale) = data # passthrough, this aes is a mock one anyway
@@ -568,7 +593,7 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
     else
         color_attributes = dictionary([
             :colormap => @something(scale.props.aesprops.colormap, default_colormap()),
-            :colorrange => @something(scale.props.aesprops.colorrange, scale.extrema),
+            :colorrange => nonsingular_colorrange(scale),
             :nan_color => @something(scale.props.aesprops.nan_color, :transparent),
             :lowclip => @something(scale.props.aesprops.lowclip, Makie.automatic),
             :highclip => @something(scale.props.aesprops.highclip, Makie.automatic),
