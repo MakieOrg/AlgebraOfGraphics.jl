@@ -175,25 +175,14 @@ draw(specs)
 filled_contours
 ```
 
-```@example analyses
+````@example analyses
 x = repeat(1:10, 10)
 y = repeat(11:20, inner = 10)
 z = sqrt.(x .* y)
 df = (; x, y, z)
 specs = data(df) * mapping(:x, :y, :z) * filled_contours(levels = 3:2:15)
 draw(specs)
-```
+````
 
-Because `filled_contours` bands are represented as categories of `Bin`s under the hood, you cannot use the settings `colormap`, `highclip` and `lowclip` as known from continuous colors. The `clipped` helper can be used to turn a palette into one that will set high and low clip colors on top of another palette.
-In combination with `from_continuous`, this works well with `filled_contours` when bands reach to minus or plus infinity:
 
-```@example analyses
-x = repeat(1:10, 10)
-y = repeat(11:20, inner = 10)
-z = sqrt.(x .* y)
-df = (; x, y, z)
-specs = data(df) *
-    mapping(:x, :y, :z) *
-    filled_contours(levels = [-Inf, 5, 8, 10, 12, 13, 14, Inf])
-draw(specs, scales(Color = (; palette = clipped(from_continuous(:plasma), low = :cyan, high = :red))))
-```
+

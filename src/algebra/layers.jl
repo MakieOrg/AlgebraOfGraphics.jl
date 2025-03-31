@@ -377,6 +377,9 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
             end
             if scale isa CategoricalScale
                 label = getlabel(scale)
+                # Makie might cut off parts of a categorical scale if no data is plotted there, so we plot
+                # that data ourselves in the form of invisible scatters
+                categorical_limits_pseudo_entry!(ae, aes, scale)
             else
                 # the units are equalized in the merged scales, but the labels are in each separate scale
                 # so we have to assemble the label out of each component separately
@@ -394,6 +397,19 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
     end
 
     return axes_grid
+end
+
+function categorical_limits_pseudo_entry!(ae::AxisSpecEntries, aes, scale::CategoricalScale)
+    lims = extrema(plotvalues(scale)) .+ (-0.5, 0.5)
+    # currently we don't have a VLines or HLines for z but giving NaN to the other dimensions in
+    # let's say Scatter causes the dimensions we care about to be ignored as well by Makie, which
+    # was my first implementation attempt
+    aes === AesZ && return
+    positional = Any[collect(lims)]
+    named = NamedArguments((; color = :transparent))
+    ptype(::Type{AesX}) = VLines
+    ptype(::Type{AesY}) = HLines
+    push!(ae.entries, Entry(ptype(aes), positional, named))
 end
 
 function get_used_scale_ids(ae::AxisSpecEntries, aestype)
