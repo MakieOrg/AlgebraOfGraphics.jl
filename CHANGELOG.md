@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added better error messages for the common case of failing to construct single element NamedTuples in calls like `draw(axis = (key = value))` [#630](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/630).
+- Fixed bug when color or markersize mappings had singular limits by expanding the limits to `(0, v)`, `(-v, 0)` or `(0, 1)` [#634](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/634).
 
 ## v0.10.0 - 2025-03-30
 
