@@ -22,6 +22,7 @@ nonnumeric
 verbatim
 scale
 presorted
+dims
 ```
 
 ## Theming & Palettes
