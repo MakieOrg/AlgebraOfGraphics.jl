@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.10.2 - 2025-03-31
+
+- Revert accidental docstring changes [#638](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/638).
+
 ## v0.10.1 - 2025-03-31
 
 - Changed default limits of categorical axes such that all categories are always visible and widthless plots are not squished into the borders [#636](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/636).
