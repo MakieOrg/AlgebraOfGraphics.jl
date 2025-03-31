@@ -95,7 +95,7 @@ makedocs(;
             ],
         ],
     ],
-    warnonly=get(ENV, "CI", "false") != "true",
+    warnonly=true,#get(ENV, "CI", "false") != "true",
     pagesonly = true,
 )
 
