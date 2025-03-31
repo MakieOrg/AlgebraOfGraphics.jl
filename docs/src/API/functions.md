@@ -32,6 +32,7 @@ set_aog_theme!
 AlgebraOfGraphics.aog_theme
 from_continuous
 wrapped
+clipped
 ```
 
 

@@ -273,7 +273,57 @@ draw(spec, scales(Col = (;
 )))
 ```
 
-### Shared categorical scale options
+### Special categorical scale options
+
+#### Color
+
+##### colorbar
+
+The `colorbar` property is `automatic` by default and can be set to `true` or `false`. In `automatic` mode, a colorbar is used for categorical scales with datavalues of type `Bin`, and a legend for all other datavalues. The `filled_contours` analysis is an example function that uses a `Bin` categorical scale and therefore receives a `Colorbar` reflecting the selected levels:
+
+```@example contour
+using AlgebraOfGraphics
+using CairoMakie
+using DelimitedFiles
+volcano = DelimitedFiles.readdlm(Makie.assetpath("volcano.csv"), ',', Float64)
+
+x = repeat(range(3, 17, length = size(volcano, 1)), size(volcano, 2))
+y = repeat(range(52, 79, length = size(volcano, 2)), inner = size(volcano, 1))
+z = vec(volcano)
+
+contour_spec = data((; x, y, z)) *
+    mapping(:x, :y, :z) *
+    filled_contours(levels = [120, 140, 160, 170, 175, 180, 185, 190, Inf])
+
+draw(contour_spec)
+```
+
+The colorbar can be disabled to receive a legend instead:
+
+```@example contour
+draw(contour_spec, scales(Color = (; colorbar = false)))
+```
+
+Similarly, a normal categorical color scale is represented with a legend:
+
+```@example catlegend
+using AlgebraOfGraphics
+using CairoMakie
+
+cat_color = data(AlgebraOfGraphics.penguins()) *
+    mapping(:flipper_length_mm, :bill_depth_mm, color = (:species, :island) => (x, y) -> "$x on $y") *
+    visual(Scatter)
+
+draw(cat_color)
+```
+
+But can be switched to a colorbar representation by setting `colorbar = true`:
+
+```@example catlegend
+draw(cat_color, scales(Color = (; colorbar = true)))
+```
+
+### Shared continuous scale options
 
 #### Unit
 
