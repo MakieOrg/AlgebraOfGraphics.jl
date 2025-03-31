@@ -26,9 +26,9 @@ const navTemp = {
 
 const nav = [
   ...navTemp.nav,
-  {
-    component: 'VersionPicker'
-  }
+  // {
+  //   component: 'VersionPicker'
+  // }
 ]
 
 const sidebarTemp = {
