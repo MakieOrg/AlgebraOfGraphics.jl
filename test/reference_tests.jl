@@ -389,6 +389,14 @@ reftest("category addition middle") do
         )))
 end
 
+reftest("category addition sides") do
+    data((; group = repeat(["B", "C"], 10), weight = 1:20)) *
+        mapping(:group, :weight) *
+        visual(Scatter) |> draw(scales(X = (;
+            categories = ["A", "B", "C", "D"],
+        )))
+end
+
 reftest("x palette override") do
     data((; category = ["A", "B", "C", missing], y = [4, 5, 6, 2])) *
         mapping(:category, :y) *
