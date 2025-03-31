@@ -55,7 +55,7 @@ end
 
 function continuous_colorbar(colorscale::ContinuousScale)
     label = getlabel(colorscale)
-    limits = @something colorscale.props.aesprops.colorrange colorscale.extrema
+    limits = nonsingular_colorrange(colorscale)
     is_highclipped = limits[2] < colorscale.extrema[2]
     is_lowclipped = limits[1] > colorscale.extrema[1]
 
