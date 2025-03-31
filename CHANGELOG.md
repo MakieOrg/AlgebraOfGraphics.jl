@@ -2,7 +2,6 @@
 
 ## Unreleased
 
-- Fixes version dropdown menu [#632](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/632).
 - Added better error messages for the common case of failing to construct single element NamedTuples in calls like `draw(axis = (key = value))` [#630](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/630).
 
 ## v0.10.0 - 2025-03-30
