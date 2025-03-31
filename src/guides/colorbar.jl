@@ -6,16 +6,10 @@ function colorbar!(fg::FigureGrid; position=:right,
 end
 
 """
-    colorbar!(figpos, grid; kwargs...)::Vector{Colorbar}
+    colorbar!(figpos, grid; kwargs...)
 
-Compute zero or more colorbars for `grid` (which should be the output of [`draw!`](@ref)) and draw them in a
-nested `GridLayout` in position `figpos`. One colorbar will be drawn for each applicable scale.
-Attributes allowed in `kwargs` are the same as `MakieLayout.Colorbar`.
-
-!!! note
-    Before AlgebraOfGraphics v0.10, this function returned `Union{Nothing,Colorbar}`
-    because multiple colorbars in a single figure were not supported. The name of the
-    function was kept singular **colorbar** to be less breaking.
+Compute colorbar for `grid` (which should be the output of [`draw!`](@ref)) and draw it in
+position `figpos`. Attributes allowed in `kwargs` are the same as `MakieLayout.Colorbar`.
 """
 function colorbar!(figpos, grid; vertical = true, kwargs...)
     colorbars = compute_colorbars(grid)
