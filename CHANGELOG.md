@@ -1,5 +1,45 @@
 # Changelog
 
+## Unreleased
+
+## v0.10.2 - 2025-03-31
+
+- Revert accidental docstring changes [#638](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/638).
+
+## v0.10.1 - 2025-03-31
+
+- Changed default limits of categorical axes such that all categories are always visible and widthless plots are not squished into the borders [#636](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/636).
+- Added better error messages for the common case of failing to construct single element NamedTuples in calls like `draw(axis = (key = value))` [#630](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/630).
+- Fixed bug when color or markersize mappings had singular limits by expanding the limits to `(0, v)`, `(-v, 0)` or `(0, 1)` [#634](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/634).
+
+## v0.10.0 - 2025-03-30
+
+- **Breaking**: The `colorbar!` function now returns a `Vector{Colorbar}` with zero or more entries. Before it would return `Union{Nothing,Colorbar}`, but now it's possible to draw more than one colorbar if there are multiple colorscales [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
+- **Breaking**: `filled_contours` does not create a legend by default but a colorbar. The colorbar can be disabled again by setting, e.g., `scales(Color = (; colorbar = false))` [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
+- **Breaking**: Changed the behavior of the `from_continuous` palette in combination with a scale consisting of `Bin`s. Colors will now be sampled relative to the positions of their bins' midpoints, meaning that smaller bins that lie closer together have more similar colors. The previous behavior with colors sampled evenly can be regained by using `from_continuous(cmap; relative = false)` [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
+- Added the ability to display a colorbar for categorical color scales. The colorbar normally consists of evenly spaced, labelled sections, one for each category. In the special case that the data values of the categorical scale are of type `Bin`, the colorbar displays each bin's color at the correct numerical positions [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
+- Added the `clipped` function which is primarily meant to set highclip and lowclip colors on top of categorical color palettes, for use with categorical scales with `Bin`s if those bins extend to plus/minus infinity [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
+
+## v0.9.7 - 2025-03-28
+
+- Added `wrapped` convenience function for the `Layout` scale palette which allows to cap either rows or columns and change layout direction [#625](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/625).
+- Replaced unnecessary `show_labels` keyword for `Row`, `Col` and `Layout` scales with 
+- Fixed hiding of duplicate axis labels in unlinked layouts of either only col or only row [#623](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/623).
+
+## v0.9.6 - 2025-03-26
+
+- Added support for input data with units attached, either through Unitful.jl or DynamicQuantities.jl extensions, available from Julia 1.9 on [#619](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/619).
+- The provisional `MarkerSize` tick calculation method is replaced with Makie's default tick finder `WilkinsonTicks`. Ticks and tickformat can be changed using the new `ticks` and `tickformat` scale options [#621](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/621).
+- Added `plottype` argument to `histogram` to allow for different plot types [#591](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/591).
+
+## v0.9.5 - 2025-03-14
+
+- Added `mergeable(layer.plottype, layer.primary)` function, intended for extension by third-party packages that define recipes [#592](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/592).
+
+## v0.9.4 - 2025-03-08
+
+- Added internal copy of the Palmer Penguins dataset to AoG to reduce friction in the intro tutorials, accessible via the `AlgebraOfGraphics.penguins()` function [#613](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/613).
+
 ## v0.9.3 - 2025-02-12
 
 - Fixed use of `from_continuous` with colormap specifications like `(colormap, alpha)` [#603](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/603).
@@ -111,7 +151,7 @@
 
 ## v0.6.11 - 2022-08-08
 
-- Added `paginate` for pagination of large facet plots. 
+- Added `paginate` for pagination of large facet plots.
 
 ## v0.6.8 - 2022-06-14
 

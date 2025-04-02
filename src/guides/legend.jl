@@ -51,9 +51,9 @@ compute_legend(fg::FigureGrid; order) = compute_legend(fg.grid; order)
 # ignore positional scales and keywords that don't support legends
 function legendable_scales(kind::Val, scales)
     in_principle_legendable = filterkeys(aes -> scale_is_legendable(kind, aes), scales)
-    disabled_legends_filtered = map(in_principle_legendable) do dict
+    disabled_legends_filtered = map(pairs(in_principle_legendable)) do (aes, dict)
         filter(dict) do scale
-            scale.props.legend
+            scale.props.legend && !(aes === AesColor && should_use_colorbar(scale))
         end
     end
     remaining = filter(!isempty, disabled_legends_filtered)
@@ -299,11 +299,15 @@ end
 
 datavalues_plotvalues_datalabels(aes, scale::CategoricalScale) = datavalues(scale), plotvalues(scale), datalabels(scale)
 function datavalues_plotvalues_datalabels(aes::Type{AesMarkerSize}, scale::ContinuousScale)
-    n = 5
-    datavalues = range(scale.extrema..., length = n)
     props = scale.props.aesprops::AesMarkerSizeContinuousProps
-    markersizes = values_to_markersizes(datavalues, props.sizerange, scale.extrema)
-    datavalues, markersizes, string.(datavalues)
+    _, s_extrema = strip_units(scale, collect(nonsingular_limits(scale.extrema)))
+    tickvalues, ticklabels = Makie.get_ticks(props.ticks, identity, props.tickformat, s_extrema...)
+    t_extrema = extrema(tickvalues)
+    if t_extrema[1] < s_extrema[1] || t_extrema[2] > s_extrema[2]
+        error("Range of tick values for MarkerSize scale $(t_extrema) exceeds data range $(s_extrema)")
+    end
+    markersizes = values_to_markersizes(tickvalues, props.sizerange, s_extrema)
+    tickvalues, markersizes, ticklabels
 end
 
 function _legend_elements(processedlayer, scale_args::MixedArguments)

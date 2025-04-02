@@ -123,7 +123,7 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     deleteemptyaxes!(aes)
 
     # add facet labels
-    scale.props.aesprops.show_labels && panel_labels!(fig, aes, scale)
+    scale.props.legend && panel_labels!(fig, aes, scale)
 
     # span axis labels if appropriate
     is2d = all(isaxis2d, nonemptyaxes(aes))
@@ -151,13 +151,14 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     # span axis labels if appropriate
     is2d = all(isaxis2d, nonemptyaxes(aes))
 
+    is2d && consistent_ylabels(aes) && span_ylabel!(fig, aes)
+    is2d && consistent_xlabels(aes) && span_xlabel!(fig, aes)
+
     if !isnothing(row_scale)
-        is2d && consistent_ylabels(aes) && span_ylabel!(fig, aes)
-        row_scale.props.aesprops.show_labels && row_labels!(fig, aes, row_scale)
+        row_scale.props.legend && row_labels!(fig, aes, row_scale)
     end
     if !isnothing(col_scale)
-        is2d && consistent_xlabels(aes) && span_xlabel!(fig, aes)
-        col_scale.props.aesprops.show_labels && col_labels!(fig, aes, col_scale)
+        col_scale.props.legend && col_labels!(fig, aes, col_scale)
     end
     return
 end

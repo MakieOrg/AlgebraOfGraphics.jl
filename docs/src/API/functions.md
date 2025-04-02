@@ -22,14 +22,17 @@ nonnumeric
 verbatim
 scale
 presorted
+dims
 ```
 
-## Theming
+## Theming & Palettes
 
 ```@docs
 set_aog_theme!
 AlgebraOfGraphics.aog_theme
 from_continuous
+wrapped
+clipped
 ```
 
 
@@ -37,6 +40,12 @@ from_continuous
 
 ```@docs
 datetimeticks
+```
+
+## Functions to be extended by other packages
+
+```@docs
+AlgebraOfGraphics.mergeable
 ```
 
 ## Internal functions

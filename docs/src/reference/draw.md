@@ -24,7 +24,7 @@ All categorical scales share the following options:
 
 #### `legend`
 
-Setting `legend = false` hides the legend for the respective scale.
+Setting `legend = false` hides the legend for the respective scale. For `Row`, `Col` and `Layout` this refers to the facet labels.
 
 ```@example
 using AlgebraOfGraphics
@@ -156,16 +156,56 @@ draw(spec, scales(X = (; palette = [1, 2, 3, 5, 6, "Unknown" => 8])))
 ##### Layout
 
 Normally, with the `Layout` aesthetic, rows wrap automatically such that an approximately square distribution of facets is attained.
-You can overwrite these values, however, to place axes at manually chosen positions:
+The [`wrapped`](@ref) function is a convenient helper to control the shape of the layout. You can control the maximum rows or columns, and the direction in which the layout is filled, which is row-by-row by default.
+
+Here we cap the number of columns and leave the order by row:
 
 ```@example
 using AlgebraOfGraphics
 using CairoMakie
 
 df = (;
-    group = repeat(["A", "B", "C", "D", "E", "F", "G", "H"], inner = 20),
-    x = randn(160),
-    y = randn(160)
+    group = repeat(["A", "B", "C", "D", "E", "F", "G", "H", "I"], inner =20),
+    x = repeat(1:20, 9),
+    y = cumsum(randn(180)),
+)
+
+spec = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter)
+
+draw(spec, scales(Layout = (; palette = wrapped(cols = 4)));
+    figure = (; title = "wrapped(cols = 4))", titlealign = :center)
+)
+```
+
+Here we cap the number of rows instead and change the order with `by_col`:
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+df = (;
+    group = repeat(["A", "B", "C", "D", "E", "F", "G", "H", "I"], inner =20),
+    x = repeat(1:20, 9),
+    y = cumsum(randn(180)),
+)
+
+spec = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter)
+
+draw(spec, scales(Layout = (; palette = wrapped(rows = 4, by_col = true)));
+    figure = (; title = "wrapped(rows = 4, by_col = true))", titlealign = :center)
+)
+```
+
+You can also pass completely custom positions as a vector of tuples (you could also compute these values on the fly by passing a `Function` to `palette`):
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+df = (;
+    group = repeat(["A", "B", "C", "D", "E", "F", "G", "H"], inner =20),
+    x = repeat(1:20, 8),
+    y = cumsum(randn(160)),
 )
 
 spec = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter)
@@ -235,27 +275,82 @@ draw(spec, scales(Col = (;
 
 ### Special categorical scale options
 
-#### Row, Col & Layout
+#### Color
 
-All three facetting scales have the option `show_labels` which is `true` by default and can be set to `false` to hide the facet labels.
+##### colorbar
 
-This example shows the behavior for `Col` only:
+The `colorbar` property is `automatic` by default and can be set to `true` or `false`. In `automatic` mode, a colorbar is used for categorical scales with datavalues of type `Bin`, and a legend for all other datavalues. The `filled_contours` analysis is an example function that uses a `Bin` categorical scale and therefore receives a `Colorbar` reflecting the selected levels:
+
+```@example contour
+using AlgebraOfGraphics
+using CairoMakie
+using DelimitedFiles
+volcano = DelimitedFiles.readdlm(Makie.assetpath("volcano.csv"), ',', Float64)
+
+x = repeat(range(3, 17, length = size(volcano, 1)), size(volcano, 2))
+y = repeat(range(52, 79, length = size(volcano, 2)), inner = size(volcano, 1))
+z = vec(volcano)
+
+contour_spec = data((; x, y, z)) *
+    mapping(:x, :y, :z) *
+    filled_contours(levels = [120, 140, 160, 170, 175, 180, 185, 190, Inf])
+
+draw(contour_spec)
+```
+
+The colorbar can be disabled to receive a legend instead:
+
+```@example contour
+draw(contour_spec, scales(Color = (; colorbar = false)))
+```
+
+Similarly, a normal categorical color scale is represented with a legend:
+
+```@example catlegend
+using AlgebraOfGraphics
+using CairoMakie
+
+cat_color = data(AlgebraOfGraphics.penguins()) *
+    mapping(:flipper_length_mm, :bill_depth_mm, color = (:species, :island) => (x, y) -> "$x on $y") *
+    visual(Scatter)
+
+draw(cat_color)
+```
+
+But can be switched to a colorbar representation by setting `colorbar = true`:
+
+```@example catlegend
+draw(cat_color, scales(Color = (; colorbar = true)))
+```
+
+### Shared continuous scale options
+
+#### Unit
+
+AlgebraOfGraphics supports input data with units, currently [Unitful.jl](https://github.com/PainterQubits/Unitful.jl) and [DynamicQuantities.jl](https://github.com/SymbolicML/DynamicQuantities.jl) have extensions implemented.
+
+If a continuous scale detects units, the units will be attached to the respective scale label.
+The display unit can be overridden using the `unit` scale keyword, which will appropriately rescale the data:
 
 ```@example
 using AlgebraOfGraphics
 using CairoMakie
+using Unitful
+using DataFrames
 
-spec = data((;
-    x = 1:16,
-    y = 17:32,
-    group1 = repeat(["A", "B"], inner = 8),
-    group2 = repeat(["C", "D"], 8))
-) * mapping(:x, :y, row = :group1, col = :group2) * visual(Scatter)
+df = DataFrame(AlgebraOfGraphics.penguins())
+df.bill_length = df.bill_length_mm .* u"mm"
+df.bill_depth = uconvert.(u"cm", df.bill_depth_mm .* u"mm")
 
-draw(spec, scales(Col = (; show_labels = false)))
+spec = data(df) * mapping(:bill_length, :bill_depth, color = :species) * visual(Scatter)
+
+f = Figure()
+draw!(f[1, 1], spec)
+draw!(f[1, 2], spec, scales(X = (; unit = u"m"), Y = (; unit = u"mm")))
+f
 ```
 
-### Continuous scale options
+### Special continuous scale options
 
 #### Color
 
@@ -311,6 +406,32 @@ legend!(f[2, 2], grid2)
 
 f
 ```
+
+The values which are chosen for the legend can be controlled with the `ticks` and `tickformat` scale properties.
+Ticks and ticklabels are computed using Makie's `Axis` infrastructure and therefore work with all objects that Makie supports for `Axis` attributes `xticks`/`yticks` and `xtickformat`/`ytickformat`.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = 10:10:100)) *
+    mapping(:x, :y, markersize = :z) *
+    visual(Scatter)
+
+draw(spec, scales(MarkerSize = (; ticks = [10, 50, 100])))
+```
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = 10:10:100)) *
+    mapping(:x, :y, markersize = :z) *
+    visual(Scatter)
+
+draw(spec, scales(MarkerSize = (; tickformat = "{:.1f} mg")))
+```
+
 
 ## Legend options
 

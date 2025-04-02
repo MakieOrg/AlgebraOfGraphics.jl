@@ -27,7 +27,7 @@ reftest("barplot cat color palette") do
         draw(scales(Color = (; palette = :Set1_3)))
 end
 
-reftest("barplot layout") do 
+reftest("barplot layout") do
     data((; x = ["A", "B", "C"], y = 1:3, z = ["X", "Y", "Z"])) * mapping(:x, :y; layout = :z) * visual(BarPlot) |> draw
 end
 
@@ -127,6 +127,11 @@ end
 reftest("scatter markersize sizerange") do
     data((; x = 1:10, y = 1:10, z = 1:10)) * mapping(:x, :y, markersize = :z) * visual(Scatter) |>
         draw(scales(MarkerSize = (; sizerange = (10, 30))))
+end
+
+reftest("scatter markersize tick options") do
+    data((; x = 1:10, y = 1:10, z = 1:10)) * mapping(:x, :y, markersize = :z) * visual(Scatter) |>
+        draw(scales(MarkerSize = (; ticks = [1, 5, 10], tickformat = "{:.2f}")))
 end
 
 reftest("violin cat color") do
@@ -241,6 +246,18 @@ end
 reftest("histogram stack") do
     df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["b", "a"], inner = 500))
     specs = data(df) * mapping(:x, stack=:z, color = :z) * histogram()
+    draw(specs)
+end
+
+reftest("histogram stairs cat color") do
+    df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
+    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram(Stairs) * visual(alpha = 0.8, linewidth = 4)
+    draw(specs)
+end
+
+reftest("histogram scatter cat color") do
+    df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
+    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram(Scatter) * visual(alpha = 0.8, marker = :cross, markersize = 20)
     draw(specs)
 end
 
@@ -369,6 +386,14 @@ reftest("category addition middle") do
         mapping(:sex, :weight) *
         visual(Scatter) |> draw(scales(X = (;
             categories = ["m", "d" => rich("diverse", color = :fuchsia), "f"],
+        )))
+end
+
+reftest("category addition sides") do
+    data((; group = repeat(["B", "C"], 10), weight = 1:20)) *
+        mapping(:group, :weight) *
+        visual(Scatter) |> draw(scales(X = (;
+            categories = ["A", "B", "C", "D"],
         )))
 end
 
@@ -531,7 +556,7 @@ reftest("contours analysis") do
         contours(; levels = 10) |> draw(scales(Color = (; colormap = :plasma)))
 end
 
-reftest("filled contours analysis") do
+function filled_contours_spec(; contours_kw = (;))
     volcano = DelimitedFiles.readdlm(Makie.assetpath("volcano.csv"), ',', Float64)
 
     x = repeat(range(3, 17, length = size(volcano, 1)), size(volcano, 2))
@@ -540,7 +565,37 @@ reftest("filled contours analysis") do
 
     data((; x, y, z)) *
         mapping(:x => "The X", :y, :z, row = :x => >(10)) *
-        filled_contours(; bands = 10) |> draw
+        filled_contours(; bands = 10, contours_kw...)
+end
+
+reftest("filled contours analysis") do
+    draw(filled_contours_spec(), scales(Color = (; colorbar = false)))
+end
+
+reftest("filled contours analysis colorbar") do
+    draw(filled_contours_spec(), scales(Color = (; colorbar = true)))
+end
+
+reftest("filled contours analysis colorbar levels") do
+    draw(filled_contours_spec(; contours_kw = (; bands = nothing, levels = [100, 120, 160, 170, 180, 190])))
+end
+
+reftest("filled contours analysis colorbar levels relative false") do
+    draw(
+        filled_contours_spec(; contours_kw = (; bands = nothing, levels = [100, 120, 160, 170, 180, 190])),
+        scales(Color = (; palette = from_continuous(:viridis, relative = false)))
+    )
+end
+
+reftest("filled contours analysis colorbar levels infinity") do
+    draw(filled_contours_spec(; contours_kw = (; bands = nothing, levels = [-Inf, 100, 120, 160, 170, 180, 190, Inf])))
+end
+
+reftest("filled contours analysis colorbar levels infinity clipped") do
+    draw(
+        filled_contours_spec(; contours_kw = (; bands = nothing, levels = [-Inf, 100, 120, 160, 170, 180, 190, Inf])),
+        scales(Color = (; palette = clipped(from_continuous(:viridis), low = :red, high = :cyan)))
+    )
 end
 
 reftest("longpoly con color") do
@@ -736,7 +791,7 @@ function presorted_plot(; with_missing::Bool)
     end
     group = ["2", "3", "1", "1", "3", "2"]
     some_value = sort(exp.(sin.(1:6)))
-    
+
     df = (; countries, group, some_value)
 
     m1 = mapping(:countries, :some_value, color = :group)
@@ -744,7 +799,7 @@ function presorted_plot(; with_missing::Bool)
     m3 = mapping(:countries => presorted, :some_value, color = :group => presorted)
 
     base = data(df) *  visual(BarPlot, direction = :x)
-    
+
     f = Figure()
     fg1 = draw!(f[1, 1], base * m1)
     fg2 = draw!(f[2, 1], base * m2)
@@ -795,7 +850,7 @@ reftest("categorical color from continuous") do
     f
 end
 
-reftest("title subtitle footnotes") do 
+reftest("title subtitle footnotes") do
     spec = pregrouped(
         fill(1:5, 6),
         fill(11:15, 6),
@@ -816,7 +871,7 @@ reftest("title subtitle footnotes") do
     )
 end
 
-reftest("title subtitle footnotes single unconstrained facet") do 
+reftest("title subtitle footnotes single unconstrained facet") do
     spec = data((; x = 1:10, y = 11:20)) * mapping(:x, :y) * visual(Scatter)
     draw(
         spec;
@@ -831,7 +886,7 @@ reftest("title subtitle footnotes single unconstrained facet") do
     )
 end
 
-reftest("title") do 
+reftest("title") do
     spec = pregrouped(
         fill(1:5, 6),
         fill(11:15, 6),
@@ -847,7 +902,7 @@ reftest("title") do
     )
 end
 
-reftest("title subtitle footnotes settings") do 
+reftest("title subtitle footnotes settings") do
     spec = pregrouped(
         fill(1:5, 6),
         fill(11:15, 6),
@@ -877,10 +932,10 @@ reftest("title subtitle footnotes settings") do
         ),
         axis = (; width = 100, height = 100)
     )
-    
+
 end
 
-reftest("title subtitle footnotes fontsize inherit") do 
+reftest("title subtitle footnotes fontsize inherit") do
     spec = pregrouped(
         fill(1:5, 6),
         fill(11:15, 6),
@@ -902,7 +957,7 @@ reftest("title subtitle footnotes fontsize inherit") do
     )
 end
 
-reftest("dodge barplot with errorbars") do 
+reftest("dodge barplot with errorbars") do
     f = Figure()
     df = (
         x = [1, 1, 2, 2],
@@ -960,7 +1015,7 @@ reftest("dodge scatter with rangebars") do
         yhigh = cos.(range(0, 2pi, length = 20)) .+ 0.3,
         dodge = repeat(["A", "B"], 10)
     )
-    
+
     f = Figure()
     spec1 = data(df) * (mapping(:x, :y, dodge_x = :dodge, color = :dodge) * visual(Scatter) + mapping(:x, :ylow, :yhigh, dodge_x = :dodge, color = :dodge) * visual(Rangebars))
     spec2 = data(df) * (mapping(:y, :x, dodge_y = :dodge, color = :dodge) * visual(Scatter) + mapping(:x, :ylow, :yhigh, dodge_y = :dodge, color = :dodge) * visual(Rangebars, direction = :x))
@@ -974,10 +1029,10 @@ end
 reftest("manual legend labels in visual") do
     df_subjects = (; x = repeat(1:10, 10), y = cos.(1:100), id = repeat(1:10, inner = 10))
     df_func = (; x = range(1, 10, length = 20), y = cos.(range(1, 10, length = 20)))
-    
+
     spec1 = data(df_subjects) * mapping(:x, :y, group = :id => nonnumeric) * visual(Lines, linestyle = :dash, color = (:black, 0.2), label = "Subject data")
     spec2 = data(df_func) * mapping(:x, :y) * (visual(Lines, color = :tomato) + visual(Scatter, markersize = 12, color = :tomato, strokewidth = 2)) * visual(label = L"\cos(x)")
-    
+
     draw(spec1 + spec2)
 end
 
@@ -986,7 +1041,7 @@ reftest("manual legend order") do
     spec1 = data(df) * mapping(:x, :y, color = :group) * visual(Lines)
 
     spec2 = data((; x = 1:10, y = cos.(1:10) .+ 2)) * mapping(:x, :y) * visual(Scatter, color = :purple, label = "Scatter")
-    
+
     f = Figure()
     fg = draw!(f[1, 1], spec1 + spec2)
     legend!(f[1, 2], fg)
@@ -1080,6 +1135,24 @@ reftest("hide row col and layout labels") do
     f
 end
 
+reftest("hide row col and layout labels legendkw") do
+    f = Figure(size = (600, 600))
+    d = data((;
+        x = 1:16,
+        y = 17:32,
+        group1 = repeat(["A", "B"], inner = 8),
+        group2 = repeat(["C", "D"], 8))
+    )
+    spec1 = d * mapping(:x, :y, row = :group1, col = :group2) * visual(Scatter)
+    spec2 = d * mapping(:x, :y, layout = (:group1, :group2) => tuple) * visual(Scatter)
+
+    draw!(f[1, 1], spec1, scales(Row = (; legend = false), Col = (; legend = false)))
+    draw!(f[1, 2], spec1, scales(Row = (; legend = true), Col = (; legend = true)))
+    draw!(f[2, 1], spec2, scales(Layout = (; legend = false)))
+    draw!(f[2, 2], spec2, scales(Layout = (; legend = true)))
+    f
+end
+
 let
     df = (;
         x = 0:24,
@@ -1130,7 +1203,7 @@ let
     end
 end
 
-let 
+let
     df = (;
         wres = 1:10,
         age = 11:20,
@@ -1154,7 +1227,7 @@ let
     end
 end
 
-let 
+let
     df = (
         x = repeat(1:10, 36),
         y = cumsum(sin.(range(0, 10pi, length = 360))),
@@ -1174,4 +1247,113 @@ let
             draw(pag, page)
         end
     end
+end
+
+if VERSION >= v"1.9"
+    df_u = (
+        time = (1:24) .* U.u"hr",
+        size = range(0, 20, length = 24) .* U.u"cm",
+        weight = range(0, 70, length = 24) .* U.u"g",
+    )
+    df_d = (
+        time = (1:24) .* D.us"hr",
+        size = range(0, 20, length = 24) .* D.us"cm",
+        weight = range(0, 70, length = 24) .* D.us"g",
+    )
+
+    reftest("units basic", true) do 
+        spec = mapping(:time, :size, color = :weight, markersize = :weight)
+        f = Figure()
+        fg_u = draw!(f[1, 1], spec * data(df_u))
+        colorbar!(f[1, 2], fg_u)
+        legend!(f[1, 3], fg_u)
+        fg_d = draw!(f[2, 1], spec * data(df_d))
+        colorbar!(f[2, 2], fg_d)
+        legend!(f[2, 3], fg_d)
+        f
+    end
+
+    reftest("units scale override", true) do 
+        spec = mapping(:time, :size, color = :weight, markersize = :weight)
+        f = Figure()
+        fg_u = draw!(
+            f[1, 1],
+            spec * data(df_u),
+            scales(
+                X = (; unit = U.u"wk"),
+                Y = (; unit = U.u"m"),
+                Color = (; unit = U.u"kg"),
+                MarkerSize = (; unit = U.u"mg")
+            )
+        )
+        colorbar!(f[1, 2], fg_u)
+        legend!(f[1, 3], fg_u)
+        fg_d = draw!(
+            f[2, 1],
+            spec * data(df_d),
+            scales(
+                X = (; unit = D.us"wk"),
+                Y = (; unit = D.us"m"),
+                Color = (; unit = D.us"kg"),
+                MarkerSize = (; unit = D.us"mg")
+            )
+        )
+        colorbar!(f[2, 2], fg_d)
+        legend!(f[2, 3], fg_d)
+        f
+    end
+
+    reftest("units alignment errorbars") do
+        f = Figure()
+        base_u = data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [10, 50, 100] .* U.u"cm")) 
+        spec_u = base_u * mapping(:id, :value, :err) * visual(Errorbars)
+        draw!(f[1, 1], spec_u)
+        spec_u2 = base_u * mapping(:value, :id, :err) * visual(Errorbars, direction = :x)
+        draw!(f[1, 2], spec_u2, scales(X = (; unit = U.u"cm")))
+
+        base_d = data((; id = 1:3, value = [1, 2, 3] .* D.us"m", err = [10, 50, 100] .* D.us"cm")) 
+        spec_d = base_d * mapping(:id, :value, :err) * visual(Errorbars)
+        draw!(f[2, 1], spec_d)
+        spec_d2 = base_d * mapping(:value, :id, :err) * visual(Errorbars, direction = :x)
+        draw!(f[2, 2], spec_d2, scales(X = (; unit = D.us"cm")))
+
+        f
+    end
+
+    reftest("units wide labels") do
+        _df = (; group = repeat(["A", "B"], inner = 50), apples = (1:100) .* U.u"s", bananas = (101:200) .* 1000 .* U.u"ms") 
+        spec_wide = data(_df) *
+            mapping(:group, [:apples, :bananas], layout = dims(1)) *
+            visual(Violin)
+
+        draw(spec_wide)
+    end
+end
+
+reftest("hidden axis labels col row") do
+    f = Figure()
+    colspec = data((; x = 1:2, y = 1:2, group = string.('A':'B'))) *
+        mapping(:x, :y, col = :group)
+    draw!(f[1, 1], colspec, facet = (; linkyaxes = false))
+    rowspec = data((; x = 1:2, y = 1:2, group = string.('A':'B'))) *
+        mapping(:x, :y, row = :group)
+    draw!(f[1, 2], rowspec, facet = (; linkxaxes = false))
+    f
+end
+
+reftest("singular color and markersize limits", true) do
+    f = Figure(size = (500, 600))
+    fg = draw!(f[1, 1], pregrouped([1:3], [1:2], [ones(3, 2)]) * visual(Heatmap))
+    colorbar!(f[1, 2], fg)
+    fg2 = draw!(f[2, 1], pregrouped([1:3], [1:2], [zeros(3, 2)]) * visual(Heatmap))
+    colorbar!(f[2, 2], fg2)
+    fg3 = draw!(f[3, 1], pregrouped([1:3], [1:2], [-2 .* ones(3, 2)]) * visual(Heatmap))
+    colorbar!(f[3, 2], fg3)
+    fg4 = draw!(f[1, 3], mapping(1:5, 1:5, markersize = ones(5)) * visual(Scatter))
+    legend!(f[1, 4], fg4)
+    fg5 = draw!(f[2, 3], mapping(1:5, 1:5, markersize = zeros(5)) * visual(Scatter))
+    legend!(f[2, 4], fg5)
+    fg6 = draw!(f[3, 3], mapping(1:5, 1:5, markersize = -2 .* ones(5)) * visual(Scatter))
+    legend!(f[3, 4], fg6)
+    f
 end

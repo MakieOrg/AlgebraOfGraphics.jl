@@ -221,7 +221,7 @@ _default_categorical_palette(::Type{<:Union{AesX,AesY}}) = Makie.automatic
 _default_categorical_palette(::Type{AesColor}) = _default_categorical_colors
 _default_categorical_palette(::Type{AesMarker}) = to_value(Makie.current_default_theme()[:palette][:marker])
 _default_categorical_palette(::Type{AesLineStyle}) = to_value(Makie.current_default_theme()[:palette][:linestyle])
-_default_categorical_palette(::Type{AesLayout}) = wrap
+_default_categorical_palette(::Type{AesLayout}) = wrapped()
 _default_categorical_palette(::Type{<:Union{AesRow,AesCol}}) = Makie.automatic
 _default_categorical_palette(::Type{AesGroup}) = Makie.automatic
 _default_categorical_palette(::Type{AesDodgeX}) = Makie.automatic
@@ -231,7 +231,7 @@ _default_categorical_palette(::Type{AesViolinSide}) = [:left, :right]
 
 function _default_categorical_colors(categories::AbstractVector{Bin})
     cmap = to_value(Makie.current_default_theme()[:colormap])
-    return cgrad(cmap, length(categories); categorical = true)
+    return apply_palette(from_continuous(cmap), categories)
 end
 function _default_categorical_colors(categories::AbstractVector)
     cycler = Cycler(to_value(Makie.current_default_theme()[:palette][:color]))
@@ -248,11 +248,8 @@ function get_categorical_palette(scale_props, aestype, scale_id)
 end
 
 get_categorical_palette(anytype::Type{<:Aesthetic}, ::Nothing) = _default_categorical_palette(anytype)
-get_categorical_palette(_, func::Function) = func
+get_categorical_palette(::Type{<:Aesthetic}, any) = any
 get_categorical_palette(::Type{AesColor}, colormap::Symbol) = Makie.to_colormap(colormap)
-get_categorical_palette(::Type{AesColor}, grad::Makie.PlotUtils.CategoricalColorGradient) = grad
-get_categorical_palette(::Type{AesColor}, fc::FromContinuous) = fc
-get_categorical_palette(anytype::Type{<:Aesthetic}, palettevalues::AbstractVector) = palettevalues
 
 const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
 
@@ -425,17 +422,36 @@ end
 # Determine whether entries from a `ProcessedLayer` should be merged
 function mergeable(processedlayer::ProcessedLayer)
     plottype, primary = processedlayer.plottype, processedlayer.primary
-    # merge violins for correct renormalization
-    plottype <: Violin && return true
-    # merge stacked or dodged barplots
-    plottype <: Union{BarPlot,CrossBar} && return true
-    # merge waterfall plots
-    plottype <: Waterfall && return true
-    # merge dodged boxplots
-    plottype <: BoxPlot && haskey(primary, :dodge) && return true
-    # do not merge by default
+    return mergeable(plottype, primary)
+end
+
+# Default fallback implementation
+"""
+    mergeable(plottype::Type{<: Plot}, primary::Dictionaries.AbstractDictionary)::Bool
+
+Return whether the entries for the layer with `plottype` and `primary` should be merged.
+Merging means that all the data will be passed to a single plot call, instead of creating
+one plot object per scale.
+
+Return `true` if they **should** be merged, and `false` if **not** (the default).
+
+Extending packages should also extend this function on their own plot types 
+if they deem it necessary.  For example, beeswarm plots and violin plots
+need to be merged for correctness.
+"""
+function mergeable(plottype::Type{<: Plot}, primary)
     return false
 end
+
+# merge violins for correct renormalization
+mergeable(::Type{<: Violin}, primary) = true
+# merge stacked or dodged barplots
+mergeable(::Type{<: Union{BarPlot, CrossBar}}, primary) = true
+# merge waterfall plots
+mergeable(::Type{<: Waterfall}, primary) = true
+# merge dodged boxplots
+mergeable(::Type{<: BoxPlot}, primary) = haskey(primary, :dodge)
+
 
 # This method works on a list of "sliced" `ProcessedLayer`s
 function concatenate(pls::AbstractVector{ProcessedLayer})

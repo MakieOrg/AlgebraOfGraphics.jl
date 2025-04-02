@@ -83,3 +83,8 @@ end
         Presorted("a", 0x0002),
     ]
 end
+
+@testset "_kwdict errors" begin
+    spec = mapping()
+    @test_throws_message "Can't convert value passed via the keyword `axis`" draw(spec, axis = (key = :value))
+end

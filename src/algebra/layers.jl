@@ -114,6 +114,38 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
         push!(rescaled_pls_grid[idx], ProcessedLayer(pl; positional, named))
     end
 
+    # there are some scales that must match in unit or the plot will be incorrect,
+    # in all of these pairings there is one scale that is the "lead" and one which is the "follow"
+    # scale. For example, AesX is lead and AesDeltaX is follow. If those two appear together in a facet,
+    # we force AesDeltaX to take the unit of AesX.
+    for i in eachindex(continuousscales_grid)
+        scales = continuousscales_grid[i]
+        for (aes_lead, aes_follow) in [(AesX, AesDeltaX), (AesY, AesDeltaY), (AesZ, AesDeltaZ)]
+            lead = extract_single(aes_lead, scales)
+            follow = extract_single(aes_follow, scales)
+            if lead !== nothing && follow !== nothing
+                local err
+                follow_aligned = try
+                    align_scale_unit(lead, follow)
+                catch e
+                    if e isa DimensionMismatch
+                        err = e
+                        nothing
+                    else
+                        rethrow(e)
+                    end
+                end
+                if follow_aligned === nothing
+                    error("While aligning the units of continuous scales, found units with incompatible dimensions for $(nameof(aes_lead)) and $(nameof(aes_follow)) scales. $(nameof(aes_lead)) had unit \"$(err.x1)\" and $(nameof(aes_follow)) had unit \"$(err.x2)\". Such an alignment error could happen if, for example, an errorbar layer had incompatible units for the errorbar position (AesY) and error size (AesDeltaY).")
+                end
+                dict = scales[aes_follow]
+                key = only(keys(dict))
+                dict[key] = follow_aligned
+            end
+        end
+    end
+
+
     # Compute merged continuous scales, as it may be needed to use global extrema
     merged_continuousscales = MultiAesScaleDict{ContinuousScale}()
     for multiaesscaledict in continuousscales_grid
@@ -343,7 +375,16 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
             else
                 continue
             end
-            label = getlabel(scale)
+            if scale isa CategoricalScale
+                label = getlabel(scale)
+                # Makie might cut off parts of a categorical scale if no data is plotted there, so we plot
+                # that data ourselves in the form of invisible scatters
+                categorical_limits_pseudo_entry!(ae, aes, scale)
+            else
+                # the units are equalized in the merged scales, but the labels are in each separate scale
+                # so we have to assemble the label out of each component separately
+                label = getlabel_with_merged_unit(scale, merged_continuousscales[aes][used_scale_id])
+            end
             # Use global scales for ticks for now
             # TODO: requires a nicer mechanism that takes into account axis linking
             (scale isa ContinuousScale) && (scale = merged_continuousscales[aes][used_scale_id])
@@ -356,6 +397,19 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
     end
 
     return axes_grid
+end
+
+function categorical_limits_pseudo_entry!(ae::AxisSpecEntries, aes, scale::CategoricalScale)
+    lims = extrema(plotvalues(scale)) .+ (-0.5, 0.5)
+    # currently we don't have a VLines or HLines for z but giving NaN to the other dimensions in
+    # let's say Scatter causes the dimensions we care about to be ignored as well by Makie, which
+    # was my first implementation attempt
+    aes === AesZ && return
+    positional = Any[collect(lims)]
+    named = NamedArguments((; color = :transparent))
+    ptype(::Type{AesX}) = VLines
+    ptype(::Type{AesY}) = HLines
+    push!(ae.entries, Entry(ptype(aes), positional, named))
 end
 
 function get_used_scale_ids(ae::AxisSpecEntries, aestype)
@@ -439,11 +493,16 @@ function get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     return scale
 end
 
+strip_units(scale, data) = scale, data
+
 function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     hc_aes = hardcoded_mapping(key)
     aes = hc_aes === nothing ? aes_mapping[key] : hc_aes
     scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     scale === nothing && return data # verbatim data
+    if scale isa ContinuousScale
+        scale, data = strip_units(scale, data)
+    end
     return full_rescale(data, aes, scale)
 end
 
@@ -453,10 +512,35 @@ end
 
 full_rescale(data, aes, scale::CategoricalScale) = rescale(data, scale)
 
+function nonsingular_colorrange(scale::ContinuousScale)
+    props = scale.props.aesprops::AesColorContinuousProps
+    cr = @something(props.colorrange, scale.extrema)
+    nonsingular_limits(cr)
+end
+
+# expand singular limits to (0, v) or (v, 0) if singular value v is nonzero
+# or to (0, 1) if it is, which should be easier to read than choosing a middle
+# value like it's done in Makie with axis limits
+function nonsingular_limits(r)
+    if r[1] == r[2]
+        if r[1] == 0
+            return (r[1], oneunit(r[1]))
+        else
+            if r[1] < 0
+                return (r[1], false * r[1])
+            else
+                return (false * r[1], r[1])
+            end
+        end
+    else
+        return r
+    end
+end
+
 function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     props = scale.props.aesprops::AesColorContinuousProps
     colormap = Makie.to_colormap(@something(props.colormap, default_colormap()))
-    colorrange = Makie.Vec2(@something(props.colorrange, scale.extrema))
+    colorrange = Makie.Vec2(nonsingular_colorrange(scale))
     lowclip = Makie.to_color(@something(props.lowclip, first(colormap)))
     highclip = Makie.to_color(@something(props.highclip, last(colormap)))
     nan_color = Makie.to_color(@something(props.nan_color, RGBAf(0, 0, 0, 0)))
@@ -471,9 +555,9 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     )
 end
 
-function full_rescale(data, aes::Type{AesMarkerSize}, scale::ContinuousScale)
+function full_rescale(data, ::Type{AesMarkerSize}, scale::ContinuousScale)
     props = scale.props.aesprops::AesMarkerSizeContinuousProps
-    values_to_markersizes(data, props.sizerange, scale.extrema)
+    values_to_markersizes(data, props.sizerange, nonsingular_limits(scale.extrema))
 end
 
 full_rescale(data, aes::Type{<:Union{AesContourColor,AesABIntercept,AesABSlope}}, scale::ContinuousScale) = data # passthrough, this aes is a mock one anyway
@@ -525,7 +609,7 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
     else
         color_attributes = dictionary([
             :colormap => @something(scale.props.aesprops.colormap, default_colormap()),
-            :colorrange => @something(scale.props.aesprops.colorrange, scale.extrema),
+            :colorrange => nonsingular_colorrange(scale),
             :nan_color => @something(scale.props.aesprops.nan_color, :transparent),
             :lowclip => @something(scale.props.aesprops.lowclip, Makie.automatic),
             :highclip => @something(scale.props.aesprops.highclip, Makie.automatic),
