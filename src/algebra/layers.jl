@@ -31,7 +31,7 @@ end
 Returns a `Layers` with an empty layer list which can act as a zero
 in the layer algebra.
 
-```
+```julia
 layer * zerolayer() ~ zerolayer()
 layer + zerolayer() ~ layer
 ```
