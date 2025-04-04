@@ -154,6 +154,14 @@ reftest("vlines cat color") do
     data((; x = 1:4, q = ["A", "A", "B", "B"])) * mapping(:x, color = :q) * visual(VLines) |> draw
 end
 
+reftest("vlines linestyle") do
+    data((; x = 1:4, q = ["A", "A", "B", "B"])) * mapping(:x, linestyle = :q) * visual(VLines) |> draw
+end
+
+reftest("vlines linewidth") do
+    data((; x = 1:4)) * mapping(:x, linewidth = :x) * visual(VLines) |> draw
+end
+
 reftest("second scale barplot hlines") do
     data((; x1 = 1:4, x2 = 5:8, y = ["A", "B", "C", "D"], z1 = ["X", "X", "Y", "Y"], z2 = ["Q", "Q", "U", "U"])) *
         (mapping(:x1, :y, color = :z1) * visual(BarPlot) +

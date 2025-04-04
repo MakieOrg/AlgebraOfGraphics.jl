@@ -177,6 +177,8 @@ function aesthetic_mapping(::Type{VLines}, ::Normal)
     dictionary([
         1 => AesX,
         :color => AesColor,
+        :linestyle => AesLineStyle,
+        :linewidth => AesLineWidth,
     ])
 end
 

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v0.11.0 - 2025-04-04
+
+- Added `AesLineWidth <: Aesthetic`
+- Added the `linestyle` and `linewidth` mappings to the `VLines` visual
+
 ## v0.10.2 - 2025-03-31
 
 - Revert accidental docstring changes [#638](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/638).
