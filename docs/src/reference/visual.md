@@ -93,11 +93,27 @@ draw(spec)
 These are the attributes you can override (note that some of them have convenience aliases like `color` which applies to all elements while `polycolor` only applies to `PolyElement`s):
 
 - `MarkerElement`
-  - `[marker]points`, `markersize`, `[marker]strokewidth`, `[marker]color`, `[marker]strokecolor`, `[marker]colorrange`, `[marker]colormap`
+  - `[marker]points`
+  - `markersize`
+  - `[marker]strokewidth`
+  - `[marker]color`
+  - `[marker]strokecolor`
+  - `[marker]colorrange`
+  - `[marker]colormap`
 - `LineElement`
-  - `[line]points`, `linewidth`, `[line]color`, `linestyle`, `[line]colorrange`, `[line]colormap`
+  - `[line]points`
+  - `linewidth`
+  - `[line]color`
+  - `linestyle`
+  - `[line]colorrange`
+  - `[line]colormap`
 - `PolyElement`
-  - `[poly]points`, `[poly]strokewidth`, `[poly]color`, `[poly]strokecolor`, `[poly]colorrange`, `[poly]colormap`
+  - `[poly]points`
+  - `[poly]strokewidth`
+  - `[poly]color`
+  - `[poly]strokecolor`
+  - `[poly]colorrange`
+  - `[poly]colormap`
 
  More information about legend overrides can be found in [Makie's documentation](https://docs.makie.org/stable/reference/blocks/legend#Overriding-legend-entry-attributes).
 
