@@ -2,7 +2,6 @@ name: Doc Preview Cleanup
 
 on:
   workflow_dispatch:
-  push:
   schedule:
     - cron: "0 0 * * *"
 
