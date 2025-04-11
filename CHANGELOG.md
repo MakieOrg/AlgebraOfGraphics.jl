@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.10.3 -2024-04-11
+
+- Fixed breakage due to change of internal function in Makie 0.22.3 [#646](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/646).
+
 ## v0.10.2 - 2025-03-31
 
 - Revert accidental docstring changes [#638](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/638).
