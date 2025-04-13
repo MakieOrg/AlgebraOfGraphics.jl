@@ -544,6 +544,7 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     lowclip = Makie.to_color(@something(props.lowclip, first(colormap)))
     highclip = Makie.to_color(@something(props.highclip, last(colormap)))
     nan_color = Makie.to_color(@something(props.nan_color, RGBAf(0, 0, 0, 0)))
+    interpolate = true
     Makie.numbers_to_colors(
         Makie.convert_single_argument(collect(data)),
         colormap,
@@ -551,7 +552,8 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
         colorrange,
         lowclip,
         highclip,
-        nan_color
+        nan_color,
+        interpolate,
     )
 end
 
