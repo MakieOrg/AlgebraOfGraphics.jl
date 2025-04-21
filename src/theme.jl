@@ -142,7 +142,7 @@ For more information about setting themes, see the `Theming`
 section of the `Makie.jl` docs.
 
 # Examples
-```julia
+```julia-repl
 julia> using CairoMakie, AlgebraOfGraphics
 
 julia> set_aog_theme!()                # Sets a prefedined theme
