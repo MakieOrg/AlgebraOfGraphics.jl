@@ -85,7 +85,7 @@ to specify facets in `mapping`:
 
 ## Example
 
-```
+```julia
 d = data((
     x = rand(1000),
     y = rand(1000),
