@@ -215,4 +215,24 @@ end
     @test e.named[:color] == colors
 
     @test_nowarn draw(layer)
+
+    layer2 = mapping(
+        1:10,
+        1:10,
+        layout = repeat(["A", "B"], inner = 5),
+        text = "hi" => verbatim,
+        color = colors => verbatim,
+        fontsize = fontsizes => verbatim,
+        align = aligns => verbatim,
+    ) * visual(Makie.Text)
+    
+    ag = AlgebraOfGraphics.compute_axes_grid(layer2, scales())
+    e = only(ag[1].entries)
+    @test e.named[:fontsize] == fontsizes[1:5]
+    @test e.named[:align] == aligns[1:5]
+    @test e.named[:color] == colors[1:5]
+    e2 = only(ag[2].entries)
+    @test e2.named[:fontsize] == fontsizes[6:10]
+    @test e2.named[:align] == aligns[6:10]
+    @test e2.named[:color] == colors[6:10]
 end
