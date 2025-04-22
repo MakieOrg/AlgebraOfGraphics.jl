@@ -194,3 +194,25 @@ end
     @test pls[1].positional == [[1, 2, 3], [4, 5, 6]]
     @test pls[2].positional == [[11, 12, 13], [14, 15, 16]]
 end
+
+@testset "verbatim works without scales" begin
+    colors = RGBf.(range(0, 1, length = 10), 0.5, 0.5)
+    fontsizes = range(20, 40, length = 10)
+    aligns = tuple.(range(0, 1, length = 10), range(0, 1, length = 10))
+    layer = mapping(
+        1:10,
+        1:10,
+        text = "hi" => verbatim,
+        color = colors => verbatim,
+        fontsize = fontsizes => verbatim,
+        align = aligns => verbatim,
+    ) * visual(Makie.Text)
+
+    ag = AlgebraOfGraphics.compute_axes_grid(layer, scales())
+    e = only(ag[1].entries)
+    @test e.named[:fontsize] == fontsizes
+    @test e.named[:align] == aligns
+    @test e.named[:color] == colors
+
+    @test_nowarn draw(layer)
+end
