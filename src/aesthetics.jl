@@ -114,7 +114,6 @@ function aesthetic_mapping(::Type{BarPlot}, N::Int)
             :y => AesY,
             :x => AesX,
         ]),
-        :bar_labels => AesText,
     ])
 end
 
@@ -274,7 +273,6 @@ function aesthetic_mapping(::Type{Makie.Text}, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
-        :text => AesText,
         :color => AesColor,
     ])
 end

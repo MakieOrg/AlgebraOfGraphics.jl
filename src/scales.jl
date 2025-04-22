@@ -19,7 +19,6 @@ struct AesDodgeX <: Aesthetic end
 struct AesDodgeY <: Aesthetic end
 struct AesStack <: Aesthetic end
 struct AesLineStyle <: Aesthetic end
-struct AesText <: Aesthetic end
 # all these plot specific ones seem kind of unnecessary, but not sure what to do with them yet,
 # maybe aesthetics that completely avoid scales 
 struct AesViolinSide <: Aesthetic end
