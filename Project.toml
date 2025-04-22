@@ -1,7 +1,7 @@
 name = "AlgebraOfGraphics"
 uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
 authors = ["Pietro Vertechi", "Julius Krumbiegel"]
-version = "0.10.3"
+version = "0.10.4"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"

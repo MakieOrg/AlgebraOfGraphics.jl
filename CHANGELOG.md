@@ -2,10 +2,12 @@
 
 ## Unreleased
 
+## v0.10.4 - 2025-04-22
+
 - Any attribute can now be used with a `=> verbatim` mapping, not just those that are registered aesthetics for the used plot type. This makes it possible to use array-valued attributes which are sliced correctly using facet groupings, unlike attributes passed via `visual` [#652](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/652).
 - Fixed bug with `mapping` without `data` when passing `arr => f` or `value => f` [#651](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/651).
 
-## v0.10.3 -2024-04-11
+## v0.10.3 - 2025-04-11
 
 - Fixed breakage due to change of internal function in Makie 0.22.3 [#646](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/646).
 
