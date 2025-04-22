@@ -56,6 +56,20 @@ end
     @test_throws_message "not allowed to use arrays that are not one-dimensional" AlgebraOfGraphics.process_mappings(layer)
 end
 
+@testset "plain `mapping`" begin
+    layer = mapping(1:3, 4:6, text = fill("hello", 3) => verbatim)
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.positional[1] == fill(1:3)
+    @test processedlayer.positional[2] == fill(4:6)
+    @test processedlayer.named[:text] == fill(verbatim.(fill("hello", 3)))
+
+    layer = mapping(1:3, 4:6 => -, text = "hello" => verbatim)
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.positional[1] == fill(1:3)
+    @test processedlayer.positional[2] == fill(.-(4:6))
+    @test processedlayer.named[:text] == fill(verbatim.(fill("hello", 3)))
+end
+
 @testset "Invalid use of continuous for categorical hardcoded mapping" begin
     df = (x = 1:4, y = 1:4, page = [1, 1, 2, 2], color = ["A", "B", "C", "D"])
     spec = data(df) * mapping(:x, :y, color = :color, layout = :page) * visual(Scatter)

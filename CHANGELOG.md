@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed bug with `mapping` without `data` when passing `arr => f` or `value => f` [#651](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/651).
+
 ## v0.10.3 -2024-04-11
 
 - Fixed breakage due to change of internal function in Makie 0.22.3 [#646](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/646).
