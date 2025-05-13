@@ -17,11 +17,16 @@ $(ATTRIBUTES)
         fillalpha=0.15,
         lower=automatic,
         upper=automatic,
+        direction=:x,
     )
 end
 
 function Makie.plot!(p::LinesFill)
-    lines!(p, p[1:2]...;
+    lineargs = lift(p[1], p[2], p.direction) do x, y, direction
+        direction in (:x, :y) || error("Invalid direction $(repr(direction)), only :x and :y are allowed.")
+        direction === :x ? Makie.Point.(x, y) : Makie.Point.(y, x)
+    end
+    lines!(p, lineargs;
         color = p.color,
         linestyle = p.linestyle,
         linewidth = p.linewidth,
@@ -35,5 +40,5 @@ function Makie.plot!(p::LinesFill)
         return upper === automatic ? y : upper
     end
     meshcolor = lift(to_color∘tuple, p.color, p.fillalpha)
-    band!(p, p[1], lower, upper; color = meshcolor)
+    band!(p, p[1], lower, upper; color = meshcolor, p.direction)
 end

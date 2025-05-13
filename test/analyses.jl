@@ -42,7 +42,7 @@
 
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
     @test isempty(processedlayer.named)
-    @test processedlayer.attributes == NamedArguments()
+    @test processedlayer.attributes == NamedArguments((; direction = :x))
     @test processedlayer.plottype == AlgebraOfGraphics.LinesFill
 
     labels = MixedArguments()
@@ -511,7 +511,7 @@ end
     @test upper[2] ≈ upper2
     
     @test processedlayer.primary == NamedArguments((color=["a", "b"],))
-    @test isempty(processedlayer.attributes)
+    @test processedlayer.attributes == NamedArguments((; direction = :x))
     
     @test processedlayer.plottype == LinesFill
 
