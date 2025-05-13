@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added handling for the new `direction` keyword to the aesthetics for `Band` [#655](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/655).
+
 ## v0.10.4 - 2025-04-22
 
 - Any attribute can now be used with a `=> verbatim` mapping, not just those that are registered aesthetics for the used plot type. This makes it possible to use array-valued attributes which are sliced correctly using facet groupings, unlike attributes passed via `visual` [#652](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/652).
