@@ -472,7 +472,11 @@ reftest("band") do
     x = 1:10
     lower = sin.(range(0, 2pi, length = 10))
     upper = cos.(range(0, 2pi, length = 10)) .+ 3
-    data((; x, lower, upper)) * mapping(:x, :lower, :upper) * visual(Band) |> draw
+    f = Figure()
+    spec = data((; x, lower, upper)) * mapping(:x, :lower, :upper) * visual(Band)
+    draw!(f[1, 1], spec)
+    draw!(f[1, 2], spec * visual(direction = :y))
+    f
 end
 
 reftest("band cat color") do
