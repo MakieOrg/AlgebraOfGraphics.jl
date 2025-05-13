@@ -47,10 +47,18 @@ AlgebraOfGraphics.density
 ```
 
 ````@example analyses
-df = (x=randn(5000), y=randn(5000), z=rand(["a", "b", "c", "d"], 5000))
-specs = data(df) * mapping(:x, layout=:z) * AlgebraOfGraphics.density(datalimits=((-2.5, 2.5),))
+df = (x=randn(5000) .+ repeat([0, 2, 4, 6], inner = 1250), y=randn(5000), z=repeat(["a", "b", "c", "d"], inner = 1250))
+specs = data(df) * mapping(:x, layout=:z) * AlgebraOfGraphics.density()
 
 draw(specs)
+````
+
+```@example analyses
+data(df) * mapping(:x, layout=:z) * AlgebraOfGraphics.density(datalimits = (0, 8)) |> draw
+```
+
+````@example analyses
+draw(specs * visual(direction = :y))
 ````
 
 ````@example analyses
