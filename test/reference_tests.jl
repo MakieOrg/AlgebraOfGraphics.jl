@@ -1379,3 +1379,20 @@ reftest("hspan and vspan") do
     legend!(f[2, 2], fg2)
     f
 end
+
+reftest("rainclouds") do
+    groups = repeat(1:3, inner = 300)
+    values = sin.(1:900) .* groups
+    spec = mapping(
+        groups => "Group",
+        values => "Value",
+        color = groups => nonnumeric
+    ) * visual(RainClouds)
+    
+    f = Figure()
+    fg1 = draw!(f[1, 1], spec)
+    legend!(f[1, 2], fg1)
+    fg2 = draw!(f[2, 1], spec * visual(orientation = :horizontal))
+    legend!(f[2, 2], fg2)
+    f
+end
