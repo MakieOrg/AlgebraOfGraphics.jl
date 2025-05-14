@@ -4,22 +4,20 @@ using DocumenterVitepress
 using Literate, Glob
 using CairoMakie
 
-ENV["DATADEPS_ALWAYS_ACCEPT"] = true
-
 DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics); recursive=true)
 
 cp(joinpath(@__DIR__, "..", "CHANGELOG.md"), joinpath(@__DIR__, "src", "changelog.md"), force = true)
 
 makedocs(;
-    modules=[AlgebraOfGraphics],
-    authors="Pietro Vertechi",
-    repo="https://github.com/MakieOrg/AlgebraOfGraphics.jl",
-    sitename="AlgebraOfGraphics",
+    modules = [AlgebraOfGraphics],
+    authors = "Pietro Vertechi",
+    repo = "https://github.com/MakieOrg/AlgebraOfGraphics.jl",
+    sitename = "AlgebraOfGraphics",
     format = DocumenterVitepress.MarkdownVitepress(;
         repo = "https://github.com/MakieOrg/AlgebraOfGraphics.jl",
         deploy_url = "https://aog.makie.org",
     ),
-    pages=Any[
+    pages = Any[
         "Home" => "index.md",
         "Tutorials" => [
             "tutorials/intro-i.md",
@@ -95,11 +93,14 @@ makedocs(;
             ],
         ],
     ],
-    warnonly=get(ENV, "CI", "false") != "true",
+    warnonly = get(ENV, "CI", "false") != "true",
     pagesonly = true,
 )
 
-deploydocs(;
-    repo="github.com/MakieOrg/AlgebraOfGraphics.jl",
-    push_preview=true,
+DocumenterVitepress.deploydocs(;
+    repo = "github.com/MakieOrg/AlgebraOfGraphics.jl",
+    target = joinpath(@__DIR__, "build"),
+    branch = "gh-pages",
+    devbranch = "master",
+    push_preview = true,
 )
