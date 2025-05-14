@@ -9,21 +9,6 @@ struct Entry
     named::NamedArguments
 end
 
-function Base.get(entry::Entry, key::Int, default)
-    return get(entry.positional, key, default)
-end
-
-function Base.get(entry::Entry, key::Symbol, default)
-    return get(entry.named, key, default)
-end
-
-function Base.append!(e1::Entry, e2::Entry)
-    plottype = assert_equal(e1.plottype, e2.plottype)
-    positional = map(append!, e1.positional, e2.positional)
-    named = map(append_or_assertequal!, e1.named, e2.named)
-    return Entry(plottype, positional, named)
-end
-
 # Use technique from https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/289
 # to encode all axis information without creating the axis.
 struct AxisSpec
