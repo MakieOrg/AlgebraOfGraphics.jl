@@ -568,6 +568,24 @@ function full_rescale(data, ::Type{AesMarkerSize}, scale::ContinuousScale)
     values_to_markersizes(data, props.sizerange, nonsingular_limits(scale.extrema))
 end
 
+function full_rescale(data, ::Type{AesLineWidth}, scale::ContinuousScale)
+    props = scale.props.aesprops::AesLineWidthContinuousProps
+    values_to_linewidth(data, props.sizerange, nonsingular_limits(scale.extrema))
+end
+
+function values_to_linewidth(data, sizerange, extrema)
+    # we scale the width linearly with the values
+    widthmin, widthmax = sizerange
+    widthspan = widthmax - widthmin
+    scalemin, scalemax = extrema
+    scalewidth = scalemax - scalemin
+    map(data) do value
+        fraction = ((value - scalemin) / scalewidth)
+        linewidth = widthmin + fraction * widthspan
+        return linewidth
+    end
+end
+
 full_rescale(data, aes::Type{<:Union{AesContourColor,AesABIntercept,AesABSlope}}, scale::ContinuousScale) = data # passthrough, this aes is a mock one anyway
 
 function values_to_markersizes(data, sizerange, extrema)

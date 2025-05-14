@@ -432,6 +432,74 @@ spec = data((; x = 1:10, y = 1:10, z = 10:10:100)) *
 draw(spec, scales(MarkerSize = (; tickformat = "{:.1f} mg")))
 ```
 
+#### LineWidth
+
+The range of line widths can be set with the `sizerange` attribute.
+Line widths are proportional to scale values.
+Note that in CairoMakie, line widths are not allowed to change continuously,
+so you either have to ensure that there are NaN gaps, or use the `group` mapping
+to split the line up by the same variable, just `nonnumeric`.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+x = repeat(range(0, 1.5, length = 30), 5)
+y = x .^ repeat(range(0.5, 3, length = 5), inner = 30)
+z = repeat([1, 2, 5, 10, 20], inner = 30)
+
+spec = data((; x, y, z)) *
+    mapping(:x, :y, linewidth = :z, group = :z => nonnumeric) *
+    visual(Lines)
+
+f = Figure()
+
+grid = draw!(f[1, 1], spec)
+legend!(f[1, 2], grid)
+
+grid2 = draw!(f[2, 1], spec, scales(
+    LineWidth = (;
+        sizerange = (1, 8),
+    )
+))
+legend!(f[2, 2], grid2)
+
+f
+```
+
+The values which are chosen for the legend can be controlled with the `ticks` and `tickformat` scale properties.
+Ticks and ticklabels are computed using Makie's `Axis` infrastructure and therefore work with all objects that Makie supports for `Axis` attributes `xticks`/`yticks` and `xtickformat`/`ytickformat`.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+x = repeat(range(0, 1.5, length = 30), 5)
+y = x .^ repeat(range(0.5, 3, length = 5), inner = 30)
+z = repeat([1, 2, 5, 10, 20], inner = 30)
+
+spec = data((; x, y, z)) *
+    mapping(:x, :y, linewidth = :z, group = :z => nonnumeric) *
+    visual(Lines)
+
+draw(spec, scales(LineWidth = (; ticks = [1, 2, 5, 10, 20])))
+```
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+x = repeat(range(0, 1.5, length = 30), 5)
+y = x .^ repeat(range(0.5, 3, length = 5), inner = 30)
+z = repeat([1, 2, 5, 10, 20], inner = 30)
+
+spec = data((; x, y, z)) *
+    mapping(:x, :y, linewidth = :z, group = :z => nonnumeric) *
+    visual(Lines)
+
+draw(spec, scales(LineWidth = (; tickformat = "{:.1f} mg")))
+```
+
 
 ## Legend options
 

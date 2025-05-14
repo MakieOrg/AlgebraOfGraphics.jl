@@ -66,6 +66,8 @@ scale_is_legendable(kind::Val{:categorical}, ::Type{AesMarker}) = true
 scale_is_legendable(kind::Val{:categorical}, ::Type{AesLineStyle}) = true
 scale_is_legendable(kind::Val{:categorical}, ::Type{AesMarkerSize}) = true
 scale_is_legendable(kind::Val{:continuous}, ::Type{AesMarkerSize}) = true
+scale_is_legendable(kind::Val{:categorical}, ::Type{AesLineWidth}) = true
+scale_is_legendable(kind::Val{:continuous}, ::Type{AesLineWidth}) = true
 
 function unique_by(f, collection)
     s = Set() # type constraining this via `return_type` had some stack overflow problem on 1.6
@@ -308,6 +310,17 @@ function datavalues_plotvalues_datalabels(aes::Type{AesMarkerSize}, scale::Conti
     end
     markersizes = values_to_markersizes(tickvalues, props.sizerange, s_extrema)
     tickvalues, markersizes, ticklabels
+end
+function datavalues_plotvalues_datalabels(aes::Type{AesLineWidth}, scale::ContinuousScale)
+    props = scale.props.aesprops::AesLineWidthContinuousProps
+    _, s_extrema = strip_units(scale, collect(nonsingular_limits(scale.extrema)))
+    tickvalues, ticklabels = Makie.get_ticks(props.ticks, identity, props.tickformat, s_extrema...)
+    t_extrema = extrema(tickvalues)
+    if t_extrema[1] < s_extrema[1] || t_extrema[2] > s_extrema[2]
+        error("Range of tick values for LineWidth scale $(t_extrema) exceeds data range $(s_extrema)")
+    end
+    linewidths = values_to_linewidth(tickvalues, props.sizerange, s_extrema)
+    tickvalues, linewidths, ticklabels
 end
 
 function _legend_elements(processedlayer, scale_args::MixedArguments)

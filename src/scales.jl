@@ -19,6 +19,8 @@ struct AesDodgeX <: Aesthetic end
 struct AesDodgeY <: Aesthetic end
 struct AesStack <: Aesthetic end
 struct AesLineStyle <: Aesthetic end
+struct AesLineWidth <: Aesthetic end
+
 # all these plot specific ones seem kind of unnecessary, but not sure what to do with them yet,
 # maybe aesthetics that completely avoid scales 
 struct AesViolinSide <: Aesthetic end
@@ -389,9 +391,16 @@ Base.@kwdef struct AesMarkerSizeContinuousProps <: ContinuousAesProps
     tickformat = Makie.automatic
 end
 
+Base.@kwdef struct AesLineWidthContinuousProps <: ContinuousAesProps
+    sizerange::Tuple{Float64,Float64} = (0.5, 5.0)
+    ticks = _default_markersize_ticks # if we construct the ticks here, we get mismatching props errors later because WilkinsonTicks(5) != WilkinsonTicks(5)
+    tickformat = Makie.automatic
+end
+
 continuous_aes_props_type(::Type{<:Aesthetic}) = EmptyContinuousProps
 continuous_aes_props_type(::Type{AesColor}) = AesColorContinuousProps
 continuous_aes_props_type(::Type{AesMarkerSize}) = AesMarkerSizeContinuousProps
+continuous_aes_props_type(::Type{AesLineWidth}) = AesLineWidthContinuousProps
 
 continuous_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any}) = aes_props(Val(:continuous), type, props_dict)
 

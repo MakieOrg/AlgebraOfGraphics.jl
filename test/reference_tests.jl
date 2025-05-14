@@ -89,6 +89,21 @@ reftest("lines linestyle") do
         visual(Lines) |> draw
 end
 
+reftest("lines continuous linewidth") do
+    spec = data((;
+        x = repeat(0:1, 5),
+        y = repeat(0:1, 5) .+ repeat(1:5, inner = 2),
+        z = repeat([1, 2, 5, 10, 20], inner = 2),
+    )) * mapping(:x, :y, linewidth = :z, group = :z => nonnumeric) *
+        visual(Lines)
+    f = Figure()
+    fg1 = draw!(f[1, 1], spec)
+    legend!(f[1, 2], fg1)
+    fg2 = draw!(f[2, 1], spec, scales(LineWidth = (; sizerange = (2, 10), ticks = [1, 2, 5, 10])))
+    legend!(f[2, 2], fg2)
+    f
+end
+
 reftest("scatter strokecolor") do
     data((; x = 1:4, y = 5:8, z = ["A", "B", "C", "D"])) *
         mapping(:x, :y, strokecolor = :z) *
@@ -152,6 +167,26 @@ end
 
 reftest("vlines cat color") do
     data((; x = 1:4, q = ["A", "A", "B", "B"])) * mapping(:x, color = :q) * visual(VLines) |> draw
+end
+
+reftest("vlines hlines linestyle") do
+    spec = data((; x = 1:4, q = ["A", "B", "C", "D"])) * mapping(:x, linestyle = :q)
+    f = Figure()
+    fg1 = draw!(f[1, 1], spec * visual(VLines))
+    legend!(f[1, 2], fg1)
+    fg2 = draw!(f[2, 1], spec * visual(HLines))
+    legend!(f[2, 2], fg2)
+    f
+end
+
+reftest("vlines hlines cat linewidth") do
+    spec = data((; x = 1:4)) * mapping(:x, linewidth = :x => nonnumeric)
+    f = Figure()
+    fg1 = draw!(f[1, 1], spec * visual(VLines))
+    legend!(f[1, 2], fg1)
+    fg2 = draw!(f[2, 1], spec * visual(HLines), scales(LineWidth = (; palette = [1, 2, 5, 8])))
+    legend!(f[2, 2], fg2)
+    f
 end
 
 reftest("second scale barplot hlines") do
