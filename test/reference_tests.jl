@@ -291,6 +291,14 @@ reftest("density layout") do
         draw
 end
 
+reftest("density layout visual direction y") do
+    x = sin.(1:40) .+ repeat([0, 2], inner = 20)
+    z = repeat(["A", "B"], inner = 20)
+    data((; x, z)) *
+        mapping(:x, row=:z) * AlgebraOfGraphics.density() * visual(direction = :y) |>
+        draw
+end
+
 reftest("density layout datalimits extrema") do
     x = sin.(1:40) .+ repeat([0, 2], inner = 20)
     z = repeat(["A", "B"], inner = 20)
@@ -480,7 +488,11 @@ reftest("band") do
     x = 1:10
     lower = sin.(range(0, 2pi, length = 10))
     upper = cos.(range(0, 2pi, length = 10)) .+ 3
-    data((; x, lower, upper)) * mapping(:x, :lower, :upper) * visual(Band) |> draw
+    f = Figure()
+    spec = data((; x, lower, upper)) * mapping(:x, :lower, :upper) * visual(Band)
+    draw!(f[1, 1], spec)
+    draw!(f[1, 2], spec * visual(direction = :y))
+    f
 end
 
 reftest("band cat color") do

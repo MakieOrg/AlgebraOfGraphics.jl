@@ -197,7 +197,12 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
     for processedlayer in processedlayers
         aes_mapping = aesthetic_mapping(processedlayer)
 
-        function p!(key)
+        function p!((key, value))
+            # verbatim doesn't need an aesthetic because verbatim values are always
+            # passed through and never rescaled
+            if value isa AbstractArray{<:AbstractArray{<:Verbatim}}
+                return
+            end
             if haskey(processedlayer.scale_mapping, key)
                 symbol = processedlayer.scale_mapping[key]
                 existing_aes = get(named_scales, symbol, nothing)
@@ -213,9 +218,9 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
                 push!(unnamed_aes, aes)
             end
         end
-        foreach(p!, keys(processedlayer.positional))
-        foreach(p!, keys(processedlayer.primary))
-        foreach(p!, keys(processedlayer.named))
+        foreach(p!, pairs(processedlayer.positional))
+        foreach(p!, pairs(processedlayer.primary))
+        foreach(p!, pairs(processedlayer.named))
     end
 
     dict = MultiAesScaleDict{Any}()
@@ -497,7 +502,8 @@ strip_units(scale, data) = scale, data
 
 function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     hc_aes = hardcoded_mapping(key)
-    aes = hc_aes === nothing ? aes_mapping[key] : hc_aes
+    aes = hc_aes === nothing ? get(aes_mapping, key, nothing) : hc_aes
+    aes === nothing && return data # verbatim data
     scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     scale === nothing && return data # verbatim data
     if scale isa ContinuousScale
@@ -544,6 +550,7 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     lowclip = Makie.to_color(@something(props.lowclip, first(colormap)))
     highclip = Makie.to_color(@something(props.highclip, last(colormap)))
     nan_color = Makie.to_color(@something(props.nan_color, RGBAf(0, 0, 0, 0)))
+    interpolate = true
     Makie.numbers_to_colors(
         Makie.convert_single_argument(collect(data)),
         colormap,
@@ -551,7 +558,8 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
         colorrange,
         lowclip,
         highclip,
-        nan_color
+        nan_color,
+        interpolate,
     )
 end
 

@@ -56,6 +56,20 @@ end
     @test_throws_message "not allowed to use arrays that are not one-dimensional" AlgebraOfGraphics.process_mappings(layer)
 end
 
+@testset "plain `mapping`" begin
+    layer = mapping(1:3, 4:6, text = fill("hello", 3) => verbatim)
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.positional[1] == fill(1:3)
+    @test processedlayer.positional[2] == fill(4:6)
+    @test processedlayer.named[:text] == fill(verbatim.(fill("hello", 3)))
+
+    layer = mapping(1:3, 4:6 => -, text = "hello" => verbatim)
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.positional[1] == fill(1:3)
+    @test processedlayer.positional[2] == fill(.-(4:6))
+    @test processedlayer.named[:text] == fill(verbatim.(fill("hello", 3)))
+end
+
 @testset "Invalid use of continuous for categorical hardcoded mapping" begin
     df = (x = 1:4, y = 1:4, page = [1, 1, 2, 2], color = ["A", "B", "C", "D"])
     spec = data(df) * mapping(:x, :y, color = :color, layout = :page) * visual(Scatter)
@@ -179,4 +193,46 @@ end
     @test pls[2].plottype == BarPlot
     @test pls[1].positional == [[1, 2, 3], [4, 5, 6]]
     @test pls[2].positional == [[11, 12, 13], [14, 15, 16]]
+end
+
+@testset "verbatim works without scales" begin
+    colors = RGBf.(range(0, 1, length = 10), 0.5, 0.5)
+    fontsizes = range(20, 40, length = 10)
+    aligns = tuple.(range(0, 1, length = 10), range(0, 1, length = 10))
+    layer = mapping(
+        1:10,
+        1:10,
+        text = "hi" => verbatim,
+        color = colors => verbatim,
+        fontsize = fontsizes => verbatim,
+        align = aligns => verbatim,
+    ) * visual(Makie.Text)
+
+    ag = AlgebraOfGraphics.compute_axes_grid(layer, scales())
+    e = only(ag[1].entries)
+    @test e.named[:fontsize] == fontsizes
+    @test e.named[:align] == aligns
+    @test e.named[:color] == colors
+
+    @test_nowarn draw(layer)
+
+    layer2 = mapping(
+        1:10,
+        1:10,
+        layout = repeat(["A", "B"], inner = 5),
+        text = "hi" => verbatim,
+        color = colors => verbatim,
+        fontsize = fontsizes => verbatim,
+        align = aligns => verbatim,
+    ) * visual(Makie.Text)
+    
+    ag = AlgebraOfGraphics.compute_axes_grid(layer2, scales())
+    e = only(ag[1].entries)
+    @test e.named[:fontsize] == fontsizes[1:5]
+    @test e.named[:align] == aligns[1:5]
+    @test e.named[:color] == colors[1:5]
+    e2 = only(ag[2].entries)
+    @test e2.named[:fontsize] == fontsizes[6:10]
+    @test e2.named[:align] == aligns[6:10]
+    @test e2.named[:color] == colors[6:10]
 end

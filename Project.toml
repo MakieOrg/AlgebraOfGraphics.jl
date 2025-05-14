@@ -1,7 +1,7 @@
 name = "AlgebraOfGraphics"
 uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
 authors = ["Pietro Vertechi", "Julius Krumbiegel"]
-version = "0.10.2"
+version = "0.10.4"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -48,7 +48,7 @@ GridLayoutBase = "0.6, 0.7, 0.8, 0.9, 0.10, 0.11"
 Isoband = "0.1"
 KernelDensity = "0.6"
 Loess = "0.5.1, 0.6.1"
-Makie = "0.21.13, 0.22"
+Makie = "0.22.5"
 NaturalSort = "1"
 PlotUtils = "1"
 PolygonOps = "0.1.1"

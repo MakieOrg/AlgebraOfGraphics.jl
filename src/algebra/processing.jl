@@ -82,7 +82,7 @@ function getlabeledarray(layer::Layer, s)
         arr = isprim ? map(fill∘f, vs...) : map(x -> map(f, x...), zip(vs...)) 
     elseif data === nothing
         vs, (f, (label, scaleid)) = select(data, axs, s)
-        arr = fill(map(x -> map(f, x...), zip(vs...)))
+        arr = fill(map(f, vs...))
         label = fill(label)
         scaleid = fill(scaleid)
     else

@@ -3,7 +3,7 @@
 Mappings determine how the data is translated into a plot.
 For example, this `mapping` maps columns `weight` and `height` to positional arguments 1 and 2, and `age` to the `markersize` attribute of the `Scatter` plotting function:
 
-```
+```julia
 mapping(:weight, :height, markersize = :age)
 ```
 

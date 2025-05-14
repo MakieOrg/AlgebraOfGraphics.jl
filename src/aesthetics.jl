@@ -6,7 +6,7 @@
 # be the same value that the plot type also sets in its default theme.
 mandatory_attributes(T) = NamedArguments()
 mandatory_attributes(::Type{<:Union{BarPlot,Rangebars,Errorbars,Hist}}) = dictionary([:direction => :y])
-mandatory_attributes(::Type{Density}) = dictionary([:direction => :x])
+mandatory_attributes(::Type{<:Union{Density,Band,LinesFill}}) = dictionary([:direction => :x])
 mandatory_attributes(::Type{<:Union{Violin,RainClouds,BoxPlot,CrossBar}}) = dictionary([:orientation => :vertical])
 
 # this function needs to be defined for any plot type that should work with AoG, because it tells
@@ -114,7 +114,6 @@ function aesthetic_mapping(::Type{BarPlot}, N::Int)
             :y => AesY,
             :x => AesX,
         ]),
-        :bar_labels => AesText,
     ])
 end
 
@@ -222,10 +221,22 @@ end
 
 function aesthetic_mapping(::Type{LinesFill}, ::Normal, ::Normal)
     dictionary([
-        1 => AesX,
-        2 => AesY,
-        :lower => AesY,
-        :upper => AesY,
+        1 => :direction => dictionary([
+            :x => AesX,
+            :y => AesY,
+        ]),
+        2 => :direction => dictionary([
+            :x => AesY,
+            :y => AesX,
+        ]),
+        :lower => :direction => dictionary([
+            :x => AesY,
+            :y => AesX,
+        ]),
+        :upper => :direction => dictionary([
+            :x => AesY,
+            :y => AesX,
+        ]),
         :color => AesColor,
     ])
 end
@@ -276,7 +287,6 @@ function aesthetic_mapping(::Type{Makie.Text}, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
-        :text => AesText,
         :color => AesColor,
     ])
 end
@@ -409,9 +419,18 @@ end
 
 function aesthetic_mapping(::Type{Band}, ::Normal, ::Normal, ::Normal)
     dictionary([
-        1 => AesX,
-        2 => AesY,
-        3 => AesY,
+        1 => :direction => dictionary([
+            :x => AesX,
+            :y => AesY,
+        ]),
+        2 => :direction => dictionary([
+            :x => AesY,
+            :y => AesX,
+        ]),
+        3 => :direction => dictionary([
+            :x => AesY,
+            :y => AesX,
+        ]),
         :color => AesColor,
     ])
 end

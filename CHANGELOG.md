@@ -2,10 +2,18 @@
 
 ## Unreleased
 
-## v0.11.0 - 2025-04-04
-
 - Added `AesLineWidth <: Aesthetic`
 - Added the `linestyle` and `linewidth` mappings to the `VLines` visual
+- Added handling for the new `direction` keyword of `Band` to the aesthetics for `Band`. Also added a `direction` keyword to the internal `LinesFill` recipe which uses `Band` and now allows to use `AlgebraOfGraphics.density() * visual(direction = :y)` [#655](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/655).
+
+## v0.10.4 - 2025-04-22
+
+- Any attribute can now be used with a `=> verbatim` mapping, not just those that are registered aesthetics for the used plot type. This makes it possible to use array-valued attributes which are sliced correctly using facet groupings, unlike attributes passed via `visual` [#652](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/652).
+- Fixed bug with `mapping` without `data` when passing `arr => f` or `value => f` [#651](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/651).
+
+## v0.10.3 - 2025-04-11
+
+- Fixed breakage due to change of internal function in Makie 0.22.3 [#646](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/646).
 
 ## v0.10.2 - 2025-03-31
 
