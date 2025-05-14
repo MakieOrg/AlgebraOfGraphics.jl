@@ -84,9 +84,6 @@ function Makie.plot!(ae::AxisEntries)
     return ae
 end
 
-entries(grid::AbstractMatrix{AxisEntries}) = Iterators.flatten(ae.entries for ae in grid)
-entries(grid::AbstractMatrix{AxisSpecEntries}) = Iterators.flatten(ae.entries for ae in grid)
-
 struct FigureGrid
     figure::Figure
     grid::Matrix{AxisEntries}
