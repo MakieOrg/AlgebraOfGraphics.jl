@@ -1404,3 +1404,30 @@ reftest("singular color and markersize limits", true) do
     legend!(f[3, 4], fg6)
     f
 end
+
+reftest("hspan and vspan") do
+    f = Figure()
+    spec = mapping([0, 1, 2, 4, 8], [0.25, 1.5, 3, 6, 12], color = 'A':'E')
+    fg1 = draw!(f[1, 1], spec * visual(HSpan))
+    legend!(f[1, 2], fg1)
+    fg2 = draw!(f[2, 1], spec * visual(VSpan))
+    legend!(f[2, 2], fg2)
+    f
+end
+
+reftest("rainclouds") do
+    groups = repeat(1:3, inner = 300)
+    values = sin.(1:900) .* groups
+    spec = mapping(
+        groups => "Group",
+        values => "Value",
+        color = groups => nonnumeric
+    ) * visual(RainClouds)
+    
+    f = Figure()
+    fg1 = draw!(f[1, 1], spec)
+    legend!(f[1, 2], fg1)
+    fg2 = draw!(f[2, 1], spec * visual(orientation = :horizontal))
+    legend!(f[2, 2], fg2)
+    f
+end
