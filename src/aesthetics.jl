@@ -355,14 +355,6 @@ function aesthetic_mapping(::Type{QQPlot}, ::Normal, ::Normal)
     ])
 end
 
-function aesthetic_mapping(::Type{QQNorm}, ::Normal)
-    dictionary([
-        1 => AesY,
-        :color => AesColor,
-        :linestyle => AesLineStyle,
-    ])
-end
-
 function aesthetic_mapping(::Type{Arrows}, ::Normal, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
