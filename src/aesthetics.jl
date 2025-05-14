@@ -71,6 +71,7 @@ function aesthetic_mapping(::Type{Lines}, N::Int)
         pointlike_positionals(N)...,
         :color => AesColor,
         :linestyle => AesLineStyle,
+        :linewidth => AesLineWidth,
     ])
 end
 
@@ -162,6 +163,7 @@ function aesthetic_mapping(::Type{ScatterLines}, N::Int)
         :marker => AesMarker,
         :markersize => AesMarkerSize,
         :linestyle => AesLineStyle,
+        :linewidth => AesLineWidth,
     ])
 end
 
@@ -169,6 +171,8 @@ function aesthetic_mapping(::Type{HLines}, ::Normal)
     dictionary([
         1 => AesY,
         :color => AesColor,
+        :linestyle => AesLineStyle,
+        :linewidth => AesLineWidth,
     ])
 end
 
