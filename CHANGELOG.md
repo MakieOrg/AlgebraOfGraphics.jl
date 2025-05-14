@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.10.5 - 2025-05-14
+
 - Added a new `AesLineWidth` aesthetic for `Lines`, `ScatterLines`, `HLines` and `VLines` [#656](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/656).
 - Added the `linestyle` aesthetic to `HLines` and `VLines` [#656](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/656).
 - Added handling for the new `direction` keyword of `Band` to the aesthetics for `Band`. Also added a `direction` keyword to the internal `LinesFill` recipe which uses `Band` and now allows to use `AlgebraOfGraphics.density() * visual(direction = :y)` [#655](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/655).
