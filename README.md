@@ -5,12 +5,18 @@
     <source media="(prefers-color-scheme: dark)" srcset="/docs/src/assets/logo_with_text_dark.svg">
     <img alt="AlgebraOfGraphics Logo" src="/docs/src/assets/logo_with_text.svg" height="100">
   </picture>
+
+  <p>
+    
+  [![CI](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml)
+  [![codecov.io](https://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl/coverage.svg?branch=master)](http://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl?branch=master)
+  [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://aog.makie.org/stable)
+  [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://aog.makie.org/dev)
+  
+  </p>
 </div>
 
-[![CI](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml)
-[![codecov.io](https://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl/coverage.svg?branch=master)](http://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl?branch=master)
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://aog.makie.org/stable)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://aog.makie.org/dev)
+
 
 Visualize your data using a few simple building blocks that can be
 composed using `+` and `*`. AlgebraOfGraphics puts a new algebraic spin
