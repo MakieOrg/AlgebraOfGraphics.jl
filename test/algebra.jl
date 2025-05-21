@@ -56,6 +56,37 @@ end
     @test_throws_message "not allowed to use arrays that are not one-dimensional" AlgebraOfGraphics.process_mappings(layer)
 end
 
+@testset "column labels processing" begin
+    df = DataFrames.DataFrame(
+        t = 1:10,
+        v = sin.(1:10),
+        c = sqrt.(1:10),
+    )
+
+    layer = data(df) * mapping(:t, :v, color = :c) * visual(Scatter)
+
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.labels[1] == fill("t")
+    @test processedlayer.labels[2] == fill("v")
+    @test processedlayer.labels[:color] == fill("c")
+
+    DataFrames.colmetadata!(df, :t, "label", "Time")
+    DataFrames.colmetadata!(df, :v, "label", "Volume")
+    DataFrames.colmetadata!(df, :c, "label", "Concentration")
+
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.labels[1] == fill("Time")
+    @test processedlayer.labels[2] == fill("Volume")
+    @test processedlayer.labels[:color] == fill("Concentration")
+
+    layer = data(df) * mapping(:t => "T", :v => "V", color = :c => "C") * visual(Scatter)
+
+    processedlayer = AlgebraOfGraphics.process_mappings(layer)
+    @test processedlayer.labels[1] == fill("T")
+    @test processedlayer.labels[2] == fill("V")
+    @test processedlayer.labels[:color] == fill("C")
+end
+
 @testset "plain `mapping`" begin
     layer = mapping(1:3, 4:6, text = fill("hello", 3) => verbatim)
     processedlayer = AlgebraOfGraphics.process_mappings(layer)

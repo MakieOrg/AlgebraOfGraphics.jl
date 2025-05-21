@@ -23,6 +23,7 @@ using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, normalize, sturges, StatsBase
 
 import Accessors
+import DataAPI
 import GLM, Loess
 import FileIO
 import RelocatableFolders
