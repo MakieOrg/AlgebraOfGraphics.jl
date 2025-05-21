@@ -49,7 +49,8 @@ select(data, d::DimsSelector) = (d,) => identity => "" => nothing
 
 function select(data::Columns, name::Union{Symbol, AbstractString})
     v = getcolumn(data.columns, Symbol(name))
-    label = if "label" in DataAPI.colmetadatakeys(data.columns, name)
+    supports_colmetadata = DataAPI.colmetadatasupport(typeof(data.columns)).read
+    label = if supports_colmetadata && "label" in DataAPI.colmetadatakeys(data.columns, name)
         to_string(DataAPI.colmetadata(data.columns, name, "label"))
     else
         to_string(name)
