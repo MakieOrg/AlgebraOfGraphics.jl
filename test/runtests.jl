@@ -31,6 +31,7 @@ import Unitful
 import DynamicQuantities
 const U = Unitful
 const D = DynamicQuantities
+import DataFrames
 
 Random.seed!(1234)
 
