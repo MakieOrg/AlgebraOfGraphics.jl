@@ -586,7 +586,7 @@ function values_to_linewidth(data, sizerange, extrema)
     end
 end
 
-full_rescale(data, aes::Type{<:Union{AesContourColor,AesABIntercept,AesABSlope}}, scale::ContinuousScale) = data # passthrough, this aes is a mock one anyway
+full_rescale(data, aes::Type{<:Union{AesContourColor,AesABIntercept,AesABSlope,AesVolumeColor}}, scale::ContinuousScale) = data # passthrough, this aes is a mock one anyway
 
 function values_to_markersizes(data, sizerange, extrema)
     # we scale the area linearly with the values

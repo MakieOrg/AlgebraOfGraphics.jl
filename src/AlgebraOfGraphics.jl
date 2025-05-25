@@ -35,7 +35,7 @@ export hideinnerdecorations!, deleteemptyaxes!
 export Layer, Layers, ProcessedLayer, ProcessedLayers, zerolayer
 export Entry, AxisEntries
 export renamer, sorter, nonnumeric, verbatim, presorted
-export density, histogram, linear, smooth, expectation, frequency, contours, filled_contours
+export density, histogram, stephistogram, linear, smooth, expectation, frequency, contours, filled_contours
 export visual, data, geodata, dims, mapping
 export datetimeticks
 export draw, draw!
@@ -73,6 +73,7 @@ include("transformations/frequency.jl")
 include("transformations/expectation.jl")
 include("transformations/contours.jl")
 include("transformations/filled_contours.jl")
+include("transformations/stephistogram.jl")
 include("guides/guides.jl")
 include("guides/legend.jl")
 include("guides/colorbar.jl")
