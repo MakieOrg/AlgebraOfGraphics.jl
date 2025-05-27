@@ -1221,6 +1221,18 @@ let
             draw(paginated, i)
         end
     end
+
+    paginated_2 = AlgebraOfGraphics.paginate(
+        spec,
+        scales(Layout = (; categories = cats -> reverse(cats) .=> ["Eee", "Ddd", "Ccc", "Bbb", "Aaa"]));
+        layout = 3
+    )
+
+    for i in 1:length(paginated_2)
+        reftest("pagination category labels layout page $i") do
+            draw(paginated_2, i)
+        end
+    end
 end
 
 let
