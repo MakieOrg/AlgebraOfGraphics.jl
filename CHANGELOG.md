@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.10.7 - 2025-05-27
+
+- Fixed facet labels in paginated plots with a `Layout` scale in which categories were also relabeled using the `categories = pairs` mechanism [#661](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/661).
+
 ## v0.10.6 - 2025-05-21
 
 - If available, column metadata with the key `"label"` will be used instead of the column name for determining a mapping's label [#660](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/660).
