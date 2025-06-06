@@ -160,23 +160,31 @@ draw(spec_nonnumeric)
 
 ### `verbatim`
 
-As you already know, string columns are treated as categorical by AlgebraOfGraphics. But sometimes we may want to just pass strings as they are to Makie's plotting functions. The main situation where this happens is when we are adding `Text` plots because the `Text` plot type expects a vector of string-like objects as its `text` attribute.
+As you already know, string columns are treated as categorical by AlgebraOfGraphics. But sometimes we may want to just pass strings as they are to Makie's plotting functions. The main situation where this happens is when we are adding `Annotation` or `Text` plots because they expect a vector of string-like objects as their `text` attribute.
 
 For example, we can label a couple of our penguins with their body weight, by making a subset dataframe, and applying both a string formatting function and the `verbatim` function to the `body_mass_g` column:
 
 ```@example tut
 smallest_largest = sort(penguins, :body_mass_g)[[1, end], :]
+smallest_largest.x_offset = [-80, 20]
+smallest_largest.y_offset = [-20, -80]
 
 base_mapping = mapping(:bill_length_mm, :bill_depth_mm, color = :species)
 
-penguin_layer = data(penguins) * base_mapping * visual(Scatter, alpha = 0.2)
+penguin_layer = data(penguins) * base_mapping * visual(Scatter, alpha = 0.4)
 
 text_layer = data(smallest_largest) *
-    base_mapping *
     mapping(
+        # from
+        :x_offset,
+        :y_offset,
+        # to
+        :bill_length_mm,
+        :bill_depth_mm,
+        color = :species,
         text = :body_mass_g => x -> verbatim("$(x)g"),
     ) *
-    visual(Makie.Text, fontsize = 20)
+    visual(Annotation, style = Ann.Styles.LineArrow())
 
 draw(penguin_layer + text_layer)
 ```
