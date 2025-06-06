@@ -290,7 +290,7 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_map
     hardcoded = hardcoded_mapping(key)
     hardcoded !== nothing && return hardcoded
     if !haskey(aes_mapping, key)
-        throw(ArgumentError("ProcessedLayer with plot type $(processedlayer.plottype) did not have $(repr(key)) in its AestheticMapping. The mapping was $aes_mapping"))
+        throw(ArgumentError("ProcessedLayer with plot type $(processedlayer.plottype) did not have $(repr(key)) in its AestheticMapping. That means AlgebraOfGraphics does not know how to handle this attribute in its scale system. Note that you can use any array-valued attribute in a `mapping` if you bypass the scale system using the `=> verbatim` helper. The available mapping dictionary was:\n $(sprint(print, aes_mapping))"))
     end
     return aes_mapping[key]
 end
@@ -602,7 +602,7 @@ function values_to_markersizes(data, sizerange, extrema)
     end
 end
 
-function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ,AesDeltaX,AesDeltaY,AesDeltaZ}}, scale::ContinuousScale)
+function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ,AesDeltaX,AesDeltaY,AesDeltaZ,AesAnnotationOffsetX,AesAnnotationOffsetY}}, scale::ContinuousScale)
     return data
 end
 

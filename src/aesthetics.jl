@@ -479,3 +479,38 @@ function aesthetic_mapping(::Type{Stairs}, N::Int)
         :linestyle => AesLineStyle,
     ])
 end
+
+aesthetic_mapping(::Type{Annotation}, ::Normal, ::Normal) = aesthetic_mapping(Annotation, 2)
+aesthetic_mapping(::Type{Annotation}, ::Normal, ::Normal, ::Normal, ::Normal) = aesthetic_mapping(Annotation, 4)
+
+
+function aesthetic_mapping(::Type{Annotation}, N::Int)
+    @assert N in (2, 4)
+    positionals = if N == 4
+        [
+            1 => :labelspace => dictionary([
+                :data => AesX,
+                :relative_pixel => AesAnnotationOffsetX,
+            ]),
+            2 => :labelspace => dictionary([
+                :data => AesY,
+                :relative_pixel => AesAnnotationOffsetY,
+            ]),
+            3 => AesX,
+            4 => AesY,
+        ]
+    else
+        [
+            1 => AesX,
+            2 => AesY,
+        ]
+    end
+
+    dictionary([
+        positionals...,
+        :color => AesColor,
+        :textcolor => AesColor,
+    ])
+end
+
+mandatory_attributes(::Type{Annotation}) = dictionary([:labelspace => :relative_pixel])

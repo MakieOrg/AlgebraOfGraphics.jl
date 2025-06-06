@@ -441,7 +441,7 @@ function legend_elements(T::Type{LinesFill}, attributes, scale_args::MixedArgume
     ]
 end
 
-function legend_elements(T::Type{Makie.Text}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Type{<:Union{Makie.Text,Annotation}}, attributes, scale_args::MixedArguments)
     [PolyElement(
         color = _get(T, scale_args, attributes, :color),
     )]

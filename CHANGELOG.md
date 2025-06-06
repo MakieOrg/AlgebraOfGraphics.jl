@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.10.8 - 2025-06-06
+
+- Added support for the Makie's new `Annotation` recipe [#663](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/663).
+
 ## v0.10.7 - 2025-05-27
 
 - Fixed facet labels in paginated plots with a `Layout` scale in which categories were also relabeled using the `categories = pairs` mechanism [#661](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/661).
