@@ -1443,3 +1443,46 @@ reftest("rainclouds") do
     legend!(f[2, 2], fg2)
     f
 end
+
+reftest("annotation", true) do
+    f = Figure(size = (600, 450))
+    text = string.(range('A', length = 5)) => verbatim
+    spec1 = mapping(1:5, 1:5) *
+        (
+            visual(Annotation) * mapping(; text) +
+            visual(Scatter)
+        )
+    draw!(f[1, 1], spec1)
+    spec2 = mapping(1:5, 1:5, color = 1:5) *
+        (
+            visual(Annotation) * mapping(; text) +
+            visual(Scatter)
+        )
+    draw!(f[1, 2], spec2)
+    spec3 = mapping(1:5, 1:5, color = 1:5 => nonnumeric) *
+        (
+            visual(Annotation) * mapping(; text) +
+            visual(Scatter)
+        )
+    fg = draw!(f[2, 1][1, 1], spec3)
+    legend!(f[2, 1][1, 2], fg)
+    spec4 = mapping(
+        [30, 15, 0],
+        [100, 50, 30],
+        1:3,
+        1:3;
+        text = ["A", "B", "C"] => verbatim,
+    ) * visual(Annotation) +
+        mapping(1:5, 1:5) * visual(Scatter) +
+        mapping(50, -50, 3, 3, text = "point" => verbatim) *
+            visual(Annotation, style = Ann.Styles.LineArrow(), path = Ann.Paths.Arc(height = -0.3)) +
+        mapping(
+            [4, 4.5],
+            [3, 4],
+            4:5,
+            4:5;
+            text = ["D", "E"] => verbatim,
+        ) * visual(Annotation; labelspace = :data)
+    draw!(f[2, 2], spec4)
+    f
+end
