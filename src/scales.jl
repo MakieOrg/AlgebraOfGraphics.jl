@@ -28,6 +28,8 @@ struct AesContourColor <: Aesthetic end # this is just so the third contour argu
 struct AesPlaceholder <: Aesthetic end # choropleth for example takes as first arg only geometries which avoid scales, but for now we still have to give an aes to 1, so this can serve for that purpose
 struct AesABIntercept <: Aesthetic end
 struct AesABSlope <: Aesthetic end
+struct AesAnnotationOffsetX <: Aesthetic end
+struct AesAnnotationOffsetY <: Aesthetic end
 
 # helper to dissociate scales belonging to the same Aesthetic type
 struct ScaleID
