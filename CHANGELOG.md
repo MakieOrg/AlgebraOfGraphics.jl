@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.10.9 - 2025-06-12
+
+- Added Makie 0.23 compat [#666](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/666).
+
 ## v0.10.8 - 2025-06-06
 
 - Added support for the Makie's new `Annotation` recipe [#663](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/663).
