@@ -1,14 +1,14 @@
 Base.@kwdef struct SmoothAnalysis
-    npoints::Int=200
-    span::Float64=0.75
-    degree::Int=2
+    npoints::Int = 200
+    span::Float64 = 0.75
+    degree::Int = 2
 end
 
 function (l::SmoothAnalysis)(input::ProcessedLayer)
     output = map(input) do p, _
         x, y = p
         model = Loess.loess(x, y; l.span, l.degree)
-        x̂ = range(extrema(x)..., length=l.npoints)
+        x̂ = range(extrema(x)..., length = l.npoints)
         ŷ = Loess.predict(model, x̂)
         return (x̂, ŷ), (;)
     end

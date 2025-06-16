@@ -1,5 +1,7 @@
-function legend!(fg::FigureGrid; position=:right,
-                 orientation=default_orientation(position), kwargs...)
+function legend!(
+        fg::FigureGrid; position = :right,
+        orientation = default_orientation(position), kwargs...
+    )
 
     guide_pos = guides_position(fg.figure, position)
     return legend!(guide_pos, fg; orientation, kwargs...)
@@ -60,7 +62,7 @@ function legendable_scales(kind::Val, scales)
     return remaining
 end
 
-scale_is_legendable(kind::Union{Val{:categorical},Val{:continuous}}, _) = false
+scale_is_legendable(kind::Union{Val{:categorical}, Val{:continuous}}, _) = false
 scale_is_legendable(kind::Val{:categorical}, ::Type{AesColor}) = true
 scale_is_legendable(kind::Val{:categorical}, ::Type{AesMarker}) = true
 scale_is_legendable(kind::Val{:categorical}, ::Type{AesLineStyle}) = true
@@ -84,17 +86,17 @@ end
 
 struct ScaleWithMeta
     aes::Type{<:Aesthetic}
-    scale_id::Union{Nothing,Symbol}
-    scale::Union{CategoricalScale,ContinuousScale}
+    scale_id::Union{Nothing, Symbol}
+    scale::Union{CategoricalScale, ContinuousScale}
 end
 
 function categorical_scales_mergeable(c1::CategoricalScale, c2::CategoricalScale)
-    getlabel(c1) == getlabel(c2) && datavalues(c1) == datavalues(c2) && datalabels(c1) == datalabels(c2)
+    return getlabel(c1) == getlabel(c2) && datavalues(c1) == datavalues(c2) && datalabels(c1) == datalabels(c2)
 end
 
 categorical_scales_mergeable(c1, c2) = false # there can be continuous scales in the mix, like markersize
 
-function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,AbstractVector})
+function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing, AbstractVector})
     # gather valid named scales
     scales_categorical = legendable_scales(Val(:categorical), first(grid).categoricalscales)
     scales_continuous = legendable_scales(Val(:continuous), first(grid).continuousscales)
@@ -110,7 +112,7 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
 
     # some layers might have been explicitly labelled with `visual(label = "some label")`
     # and these need to get their own legend section
-    labelled_layers = Dictionary{Any,Vector{Any}}()
+    labelled_layers = Dictionary{Any, Vector{Any}}()
     for pl in unique_processedlayers
         haskey(pl.attributes, :label) || continue
         label = pl.attributes[:label]
@@ -122,9 +124,9 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
     # if there are no legendable scales or labelled layers, we don't need a legend
     isempty(scales) && isempty(labelled_layers) && return nothing
 
-    scales_by_symbol = Dictionary{Symbol,ScaleWithMeta}()
+    scales_by_symbol = Dictionary{Symbol, ScaleWithMeta}()
 
-    _aes_sym(::Type{A}) where A<:Aesthetic = Symbol(replace(string(nameof(A)), r"^Aes" => ""))
+    _aes_sym(::Type{A}) where {A <: Aesthetic} = Symbol(replace(string(nameof(A)), r"^Aes" => ""))
 
     for (aes, scaledict) in scales
         for (scale_id, scale) in pairs(scaledict)
@@ -145,7 +147,7 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
         while i <= length(basic_order)
             sc = basic_order[i]
             firstscale = scales_by_symbol[sc].scale
-            mergeable_indices = filter(i+1:length(basic_order)) do k
+            mergeable_indices = filter((i + 1):length(basic_order)) do k
                 sym = basic_order[k]
                 otherscale = scales_by_symbol[sym].scale
                 return categorical_scales_mergeable(firstscale, otherscale)
@@ -168,16 +170,16 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
 
     syms_or_symgroups_and_title(sym::Symbol) = [sym], sym === :Label ? nothing : getlabel(scales_by_symbol[sym].scale)
     syms_or_symgroups_and_title(syms::AbstractVector{Symbol}) = syms, nothing
-    syms_or_symgroups_and_title(syms_title::Pair{<:AbstractVector{Symbol},<:Any}) = syms_title
+    syms_or_symgroups_and_title(syms_title::Pair{<:AbstractVector{Symbol}, <:Any}) = syms_title
     syms_or_symgroups_and_title(any) = throw(ArgumentError("Invalid legend order element $any"))
-    syms_or_symgroups_and_title(symgroup_title::Pair{<:NTuple{N,Symbol},<:Any}) where N = syms_or_symgroups_and_title(symgroup_title[1], symgroup_title[2])
-    function syms_or_symgroups_and_title(symgroup::NTuple{N,Symbol}, title = nothing) where N
+    syms_or_symgroups_and_title(symgroup_title::Pair{<:NTuple{N, Symbol}, <:Any}) where {N} = syms_or_symgroups_and_title(symgroup_title[1], symgroup_title[2])
+    function syms_or_symgroups_and_title(symgroup::NTuple{N, Symbol}, title = nothing) where {N}
         symgroups = [[symgroup...]]
         _titles = unique([getlabel(scales_by_symbol[sym].scale) for sym in symgroup])
         title = title !== nothing ? title : if length(_titles) != 1
-            nothing
+                nothing
         else
-            only(_titles)
+                only(_titles)
         end
         return symgroups, title
     end
@@ -195,9 +197,11 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
             if sym_or_symgroup === :Label
                 push!(used_scales, :Label)
                 for (label, processedlayers) in pairs(labelled_layers)
-                    push!(legend_els, mapreduce(vcat, processedlayers) do p
-                        _legend_elements(p, MixedArguments())
-                    end)
+                    push!(
+                        legend_els, mapreduce(vcat, processedlayers) do p
+                            _legend_elements(p, MixedArguments())
+                        end
+                    )
                     push!(datalabs, label)
                 end
             else
@@ -225,7 +229,8 @@ function compute_legend(grid::Matrix{AxisEntries}; order::Union{Nothing,Abstract
                 for (k, kind) in zip([1, 3], ["values", "labels"])
                     for i in 2:length(symgroup)
                         if dpds[1][k] != dpds[i][k]
-                            error("""
+                            error(
+                                """
                                 Got passed scales $(repr(symgroup[1])) and $(repr(symgroup[i])) as a mergeable legend group but their data $kind don't match.
                                 Data $kind for $(repr(symgroup[1])) are $(dpds[1][k])
                                 Data $kind for $(repr(symgroup[i])) are $(dpds[i][k])
@@ -309,7 +314,7 @@ function datavalues_plotvalues_datalabels(aes::Type{AesMarkerSize}, scale::Conti
         error("Range of tick values for MarkerSize scale $(t_extrema) exceeds data range $(s_extrema)")
     end
     markersizes = values_to_markersizes(tickvalues, props.sizerange, s_extrema)
-    tickvalues, markersizes, ticklabels
+    return tickvalues, markersizes, ticklabels
 end
 function datavalues_plotvalues_datalabels(aes::Type{AesLineWidth}, scale::ContinuousScale)
     props = scale.props.aesprops::AesLineWidthContinuousProps
@@ -320,7 +325,7 @@ function datavalues_plotvalues_datalabels(aes::Type{AesLineWidth}, scale::Contin
         error("Range of tick values for LineWidth scale $(t_extrema) exceeds data range $(s_extrema)")
     end
     linewidths = values_to_linewidth(tickvalues, props.sizerange, s_extrema)
-    tickvalues, linewidths, ticklabels
+    return tickvalues, linewidths, ticklabels
 end
 
 function _legend_elements(processedlayer, scale_args::MixedArguments)
@@ -346,14 +351,14 @@ function legend_elements(p::ProcessedLayer, scale_args::MixedArguments)
 end
 
 function _get(plottype, scale_args, attributes, key)
-    get(scale_args, key) do
-        get(attributes, key) do 
+    return get(scale_args, key) do
+        get(attributes, key) do
             to_value(Makie.default_theme(nothing, plottype)[key])
         end
     end
 end
 function _get(plottype, scale_args, attributes, key, fallback)
-    get(scale_args, key) do
+    return get(scale_args, key) do
         get(attributes, key) do
             to_value(get(Makie.default_theme(nothing, plottype), key, fallback))
         end
@@ -361,20 +366,22 @@ function _get(plottype, scale_args, attributes, key, fallback)
 end
 
 function legend_elements(T::Type{Scatter}, attributes, scale_args::MixedArguments)
-    [MarkerElement(
-        color = _get(T, scale_args, attributes, :color),
-        markerpoints = [Point2f(0.5, 0.5)],
-        marker = _get(T, scale_args, attributes, :marker),
-        markerstrokewidth = _get(T, scale_args, attributes, :strokewidth),
-        markersize = _get(T, scale_args, attributes, :markersize),
-        markerstrokecolor = _get(T, scale_args, attributes, :strokecolor),
-    )]
+    return [
+        MarkerElement(
+            color = _get(T, scale_args, attributes, :color),
+            markerpoints = [Point2f(0.5, 0.5)],
+            marker = _get(T, scale_args, attributes, :marker),
+            markerstrokewidth = _get(T, scale_args, attributes, :strokewidth),
+            markersize = _get(T, scale_args, attributes, :markersize),
+            markerstrokecolor = _get(T, scale_args, attributes, :strokecolor),
+        ),
+    ]
 end
 
 function legend_elements(T::Type{ScatterLines}, attributes, scale_args::MixedArguments)
     color = _get(T, scale_args, attributes, :color)
     markercolor = _get(T, scale_args, attributes, :markercolor)
-    [
+    return [
         LineElement(
             color = color,
             linestyle = _get(T, scale_args, attributes, :linestyle),
@@ -388,48 +395,56 @@ function legend_elements(T::Type{ScatterLines}, attributes, scale_args::MixedArg
             markerstrokewidth = _get(T, scale_args, attributes, :strokewidth),
             markersize = _get(T, scale_args, attributes, :markersize),
             markerstrokecolor = _get(T, scale_args, attributes, :strokecolor),
-        )
+        ),
     ]
 end
 
-function legend_elements(T::Type{<:Union{BarPlot,Violin,BoxPlot,Choropleth,Poly,LongPoly,Density,Hist,CrossBar}}, attributes, scale_args::MixedArguments)
-    [PolyElement(
-        color = _get(T, scale_args, attributes, :color),
-        polystrokecolor = _get(T, scale_args, attributes, :strokecolor),
-        polystrokewidth = _get(T, scale_args, attributes, :strokewidth),
-    )]
+function legend_elements(T::Type{<:Union{BarPlot, Violin, BoxPlot, Choropleth, Poly, LongPoly, Density, Hist, CrossBar}}, attributes, scale_args::MixedArguments)
+    return [
+        PolyElement(
+            color = _get(T, scale_args, attributes, :color),
+            polystrokecolor = _get(T, scale_args, attributes, :strokecolor),
+            polystrokewidth = _get(T, scale_args, attributes, :strokewidth),
+        ),
+    ]
 end
 
 function legend_elements(T::Type{RainClouds}, attributes, scale_args::MixedArguments)
-    [PolyElement(
-        color = _get(T, scale_args, attributes, :color),
-    )]
+    return [
+        PolyElement(
+            color = _get(T, scale_args, attributes, :color),
+        ),
+    ]
 end
 
 function legend_elements(T::Type{Heatmap}, attributes, scale_args::MixedArguments)
-    [PolyElement(
-        color = _get(T, scale_args, attributes, 3),
-    )]
+    return [
+        PolyElement(
+            color = _get(T, scale_args, attributes, 3),
+        ),
+    ]
 end
 
-function legend_elements(T::Type{<:Union{HLines,VLines,Lines,LineSegments,Errorbars,Rangebars,Wireframe,ABLines,ECDFPlot,Stairs}}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Type{<:Union{HLines, VLines, Lines, LineSegments, Errorbars, Rangebars, Wireframe, ABLines, ECDFPlot, Stairs}}, attributes, scale_args::MixedArguments)
 
-    is_vertical = T === VLines || (T <: Union{Errorbars,Rangebars} && _get(T, scale_args, attributes, :direction) === :y)
+    is_vertical = T === VLines || (T <: Union{Errorbars, Rangebars} && _get(T, scale_args, attributes, :direction) === :y)
     # TODO: seems errorbars and rangebars are missing linestyle in Makie, once this is fixed, remove this
-    kwargs = T <: Union{Errorbars,Rangebars} ? (;) : (; linestyle = _get(T, scale_args, attributes, :linestyle))
-    [LineElement(;
-        color = _get(T, scale_args, attributes, :color),
-        linewidth = _get(T, scale_args, attributes, :linewidth),
-        linepoints = is_vertical ? [Point2f(0.5, 0), Point2f(0.5, 1)] : [Point2f(0, 0.5), Point2f(1, 0.5)],
-        kwargs...
-    )]
+    kwargs = T <: Union{Errorbars, Rangebars} ? (;) : (; linestyle = _get(T, scale_args, attributes, :linestyle))
+    return [
+        LineElement(;
+            color = _get(T, scale_args, attributes, :color),
+            linewidth = _get(T, scale_args, attributes, :linewidth),
+            linepoints = is_vertical ? [Point2f(0.5, 0), Point2f(0.5, 1)] : [Point2f(0, 0.5), Point2f(1, 0.5)],
+            kwargs...
+        ),
+    ]
 end
 
 function legend_elements(T::Type{LinesFill}, attributes, scale_args::MixedArguments)
     fillalpha = _get(T, scale_args, attributes, :fillalpha)
     base_color = _get(T, scale_args, attributes, :color)
 
-    [
+    return [
         PolyElement(
             color = (base_color, fillalpha),
         ),
@@ -437,32 +452,38 @@ function legend_elements(T::Type{LinesFill}, attributes, scale_args::MixedArgume
             color = base_color,
             linewidth = _get(T, scale_args, attributes, :linewidth),
             linestyle = _get(T, scale_args, attributes, :linestyle),
-        )
+        ),
     ]
 end
 
-function legend_elements(T::Type{<:Union{Makie.Text,Annotation}}, attributes, scale_args::MixedArguments)
-    [PolyElement(
-        color = _get(T, scale_args, attributes, :color),
-    )]
+function legend_elements(T::Type{<:Union{Makie.Text, Annotation}}, attributes, scale_args::MixedArguments)
+    return [
+        PolyElement(
+            color = _get(T, scale_args, attributes, :color),
+        ),
+    ]
 end
 
 function legend_elements(T::Type{Contour}, attributes, scale_args::MixedArguments)
-    [LineElement(
-        color = _get(T, scale_args, attributes, :color),
-        linestyle = _get(T, scale_args, attributes, :linestyle),
-        linewidth = _get(T, scale_args, attributes, :linewidth),
-    )]
+    return [
+        LineElement(
+            color = _get(T, scale_args, attributes, :color),
+            linestyle = _get(T, scale_args, attributes, :linestyle),
+            linewidth = _get(T, scale_args, attributes, :linewidth),
+        ),
+    ]
 end
 
-function legend_elements(T::Type{<:Union{Band,VSpan,HSpan}}, attributes, scale_args::MixedArguments)
-    [PolyElement(
-        color = _get(T, scale_args, attributes, :color),
-    )]
+function legend_elements(T::Type{<:Union{Band, VSpan, HSpan}}, attributes, scale_args::MixedArguments)
+    return [
+        PolyElement(
+            color = _get(T, scale_args, attributes, :color),
+        ),
+    ]
 end
 
 function legend_elements(T::Type{Arrows2D}, attributes, scale_args::MixedArguments)
-    [
+    return [
         LineElement(
             color = _get(T, scale_args, attributes, :color),
             linepoints = [Point2(0.5, 0), Point2(0.5, 0.75)]

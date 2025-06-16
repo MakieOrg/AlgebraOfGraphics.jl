@@ -17,7 +17,7 @@ function Base.show(io::IO, p::Pagination)
         join(("$key = $value" for (key, value) in _info), ", ")
     n = length(p)
     entry_str = n == 1 ? "1 entry" : "$n entries"
-    print(io, "Pagination with $entry_str ($_info_str)")
+    return print(io, "Pagination with $entry_str ($_info_str)")
 end
 
 """
@@ -32,7 +32,7 @@ function draw(p::Pagination; axis = (;), figure = (;), facet = (;), legend = (;)
     facet = _kwdict(facet, :facet)
     legend = _kwdict(legend, :legend)
     colorbar = _kwdict(colorbar, :colorbar)
-    _draw.(p.each; axis, figure, facet, legend, colorbar)
+    return _draw.(p.each; axis, figure, facet, legend, colorbar)
 end
 
 """
@@ -52,7 +52,7 @@ function draw(p::Pagination, i::Int; axis = (;), figure = (;), facet = (;), lege
     facet = _kwdict(facet, :facet)
     legend = _kwdict(legend, :legend)
     colorbar = _kwdict(colorbar, :colorbar)
-    _draw(p.each[i]; axis, figure, facet, legend, colorbar)
+    return _draw(p.each[i]; axis, figure, facet, legend, colorbar)
 end
 
 function draw(p::Pagination, ::Scales, args...; kws...)
@@ -105,9 +105,9 @@ figuregrid = draw(paginated_2, 1) # draw only the first grid
 function paginate(
         l::Union{Layer, Layers},
         sc = scales();
-        layout::Union{Int,Nothing} = nothing,
-        row::Union{Int,Nothing} = nothing,
-        col::Union{Int,Nothing} = nothing,
+        layout::Union{Int, Nothing} = nothing,
+        row::Union{Int, Nothing} = nothing,
+        col::Union{Int, Nothing} = nothing,
     )
     axgrid = compute_axes_grid(l, sc)
     pag_axgrids = paginate_axes_grid(axgrid; layout, row, col)
@@ -126,7 +126,7 @@ function paginate_axes_grid(agrid::Matrix{AxisSpecEntries}; layout = nothing, ro
     if layout !== nothing
         scale = extract_single(AesLayout, catscales)
         scale === nothing && error("Pagination by `layout` failed because no corresponding scale is present in the spec.")
-        
+
         paginated = Matrix{AxisSpecEntries}[]
         dvalues = datavalues(scale)
         pvalues = plotvalues(scale)
@@ -147,14 +147,16 @@ function paginate_axes_grid(agrid::Matrix{AxisSpecEntries}; layout = nothing, ro
             new_catscales = merge_in_scale(catscales, AesLayout, sliced_scale)
 
             mat_dimensions = (maximum(first.(wrapped_positions)), maximum(last.(wrapped_positions)))
-            mat = [AxisSpecEntries(
-                    AxisSpec(representative.axis.type, Tuple(idx), NamedArguments()),
-                    Entry[],
-                    new_catscales,
-                    representative.continuousscales,
-                    ProcessedLayer[]
-                )
-                for idx in CartesianIndices(mat_dimensions)]
+            mat = [
+                AxisSpecEntries(
+                        AxisSpec(representative.axis.type, Tuple(idx), NamedArguments()),
+                        Entry[],
+                        new_catscales,
+                        representative.continuousscales,
+                        ProcessedLayer[]
+                    )
+                    for idx in CartesianIndices(mat_dimensions)
+            ]
 
             for (paginated_position, original_position) in zip(wrapped_positions, pvalues[groupindices])
                 original = agrid[original_position...]
@@ -230,7 +232,7 @@ function merge_in_scale(m::MultiAesScaleDict, key::Type{<:Aesthetic}, scale)
     @assert haskey(m, key)
     for aes in keys(m)
         if aes === key
-            insert!(new_m, key, Dictionary{Union{Nothing,Symbol},CategoricalScale}([only(keys(m[key]))], [scale]))
+            insert!(new_m, key, Dictionary{Union{Nothing, Symbol}, CategoricalScale}([only(keys(m[key]))], [scale]))
         else
             insert!(new_m, aes, m[aes])
         end
@@ -239,7 +241,7 @@ function merge_in_scale(m::MultiAesScaleDict, key::Type{<:Aesthetic}, scale)
 end
 
 function modified_scale(cat::CategoricalScale, newdata, newplot)
-    CategoricalScale(
+    return CategoricalScale(
         newdata,
         newplot,
         cat.label,

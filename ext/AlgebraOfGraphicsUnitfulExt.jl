@@ -11,12 +11,12 @@ function AlgebraOfGraphics.strip_units(scale, data::AbstractVector{<:Unitful.Qua
 end
 
 function AlgebraOfGraphics.unit_string(u::Unitful.FreeUnits)
-    string(u)
+    return string(u)
 end
 
 AlgebraOfGraphics.is_unit(::Unitful.FreeUnits) = true
 
-function AlgebraOfGraphics.getunit(scale::AlgebraOfGraphics.ContinuousScale{T}) where T <: Unitful.Quantity
+function AlgebraOfGraphics.getunit(scale::AlgebraOfGraphics.ContinuousScale{T}) where {T <: Unitful.Quantity}
     u = Unitful.unit(eltype(scale.extrema))
     if scale.props.unit === nothing
         return u
@@ -30,7 +30,7 @@ function AlgebraOfGraphics.getunit(scale::AlgebraOfGraphics.ContinuousScale{T}) 
 end
 
 function AlgebraOfGraphics.dimensionally_compatible(u1::Unitful.FreeUnits, u2::Unitful.FreeUnits)
-    Unitful.dimension(u1) == Unitful.dimension(u2)
+    return Unitful.dimension(u1) == Unitful.dimension(u2)
 end
 
 end

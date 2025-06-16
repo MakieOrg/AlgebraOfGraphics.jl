@@ -1,7 +1,7 @@
 @testset "visual attributes" begin
     attrs = NamedArguments([:color, :marker], ["red", :circle])
-    pl = ProcessedLayer(attributes=attrs)
-    v = visual(Any, color="blue", linewidth=2)
+    pl = ProcessedLayer(attributes = attrs)
+    v = visual(Any, color = "blue", linewidth = 2)
     pl′ = v.transformation(pl)
     @test pl′.plottype === Plot{plot}
     @test collect(keys(pl′.attributes)) == [:color, :marker, :linewidth]
@@ -15,7 +15,7 @@ end
     @test visual(Plot{plot}).transformation.plottype === Plot{plot}
 
     v1, v2 = visual(), visual(BarPlot)
-    pl1, pl2 = ProcessedLayer(), ProcessedLayer(plottype=Scatter)
+    pl1, pl2 = ProcessedLayer(), ProcessedLayer(plottype = Scatter)
 
     @test v1.transformation.plottype === Plot{plot}
     @test v2.transformation.plottype === BarPlot

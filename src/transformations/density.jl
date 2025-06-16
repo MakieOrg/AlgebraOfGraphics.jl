@@ -1,8 +1,8 @@
 Base.@kwdef struct DensityAnalysis{D, K, B}
-    datalimits::D=automatic
-    npoints::Int=200
-    kernel::K=automatic
-    bandwidth::B=automatic
+    datalimits::D = automatic
+    npoints::Int = 200
+    kernel::K = automatic
+    bandwidth::B = automatic
 end
 
 # Work around lack of length 1 tuple method
@@ -12,14 +12,14 @@ _kde(data::Tuple; kwargs...) = kde(data; kwargs...)
 defaultdatalimits(positional) = map(nested_extrema_finite, Tuple(positional))
 
 applydatalimits(f::Function, d) = map(f, d)
-applydatalimits(limits::Tuple{Real,Real}, d) = map(_ -> limits, d)
+applydatalimits(limits::Tuple{Real, Real}, d) = map(_ -> limits, d)
 applydatalimits(limits::Tuple, _) = limits
 
 function _density(vs::Tuple; datalimits, npoints, kwargs...)
     k = _kde(vs; kwargs...)
     intervals = applydatalimits(datalimits, vs)
     rgs = map(intervals) do (min, max)
-        return range(min, max; length=npoints)
+        return range(min, max; length = npoints)
     end
     res = pdf(k, rgs...)
     return (rgs..., res)
@@ -32,7 +32,7 @@ function (d::DensityAnalysis)(input::ProcessedLayer)
         return _density(Tuple(p); pairs(n)..., pairs(options)...), (;)
     end
     N = length(input.positional)
-    labels = set(input.labels, N+1 => "pdf")
+    labels = set(input.labels, N + 1 => "pdf")
     plottypes = [LinesFill, Heatmap, Volume]
     default_plottype = plottypes[N]
     plottype = Makie.plottype(input.plottype, default_plottype)

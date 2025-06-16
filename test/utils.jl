@@ -26,19 +26,19 @@ end
     @test t == ["key 1 and value 10", "key 2 and value 20", "key 3 and value 30"]
 
     s = NamedArguments([:a, :b, :c], [10, 20, 30])
-    @test s == NamedArguments((a=10, b=20, c=30))
+    @test s == NamedArguments((a = 10, b = 20, c = 30))
     t = map(keys(s), s) do k, v
         return "key $k and value $v"
     end
     @test t == NamedArguments(
-        [:a, :b, :c],    
+        [:a, :b, :c],
         ["key a and value 10", "key b and value 20", "key c and value 30"]
     )
 
     s = NamedArguments([:a, :b, :c], [1, 2, 3])
     odd, even = separate(isodd, s)
-    @test odd == NamedArguments((a=1, c=3))
-    @test even == NamedArguments((b=2,))
+    @test odd == NamedArguments((a = 1, c = 3))
+    @test even == NamedArguments((b = 2,))
 
     t = AlgebraOfGraphics.set(s, :d => 5, :a => 3)
     @test t == NamedArguments([:a, :b, :c, :d], [3, 2, 3, 5])

@@ -156,14 +156,14 @@ Base.print(io::IO, v::Verbatim) = print(io, v.x)
 end
 
 struct Bin
-    range::Tuple{Float64,Float64}
-    inclusive::Tuple{Bool,Bool}
+    range::Tuple{Float64, Float64}
+    inclusive::Tuple{Bool, Bool}
 end
 
 Base.isless(b1::Bin, b2::Bin) = isless(b1.range, b2.range)
 
 function Base.show(io::IO, b::Bin)
-    print(io, b.inclusive[1] ? "[" : "(", b.range[1], ", ", b.range[2], b.inclusive[2] ? "]" : ")")
+    return print(io, b.inclusive[1] ? "[" : "(", b.range[1], ", ", b.range[2], b.inclusive[2] ? "]" : ")")
 end
 
 struct Pregrouped end

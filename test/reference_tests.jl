@@ -79,8 +79,8 @@ end
 
 reftest("lines group") do
     data((; x = 1:4, y = 2:5, z = string.([1, 1, 2, 2]))) *
-    mapping(:x, :y, group = :z) *
-    visual(Lines) |> draw
+        mapping(:x, :y, group = :z) *
+        visual(Lines) |> draw
 end
 
 reftest("lines linestyle") do
@@ -90,11 +90,13 @@ reftest("lines linestyle") do
 end
 
 reftest("lines continuous linewidth") do
-    spec = data((;
-        x = repeat(0:1, 5),
-        y = repeat(0:1, 5) .+ repeat(1:5, inner = 2),
-        z = repeat([1, 2, 5, 10, 20], inner = 2),
-    )) * mapping(:x, :y, linewidth = :z, group = :z => nonnumeric) *
+    spec = data(
+        (;
+            x = repeat(0:1, 5),
+            y = repeat(0:1, 5) .+ repeat(1:5, inner = 2),
+            z = repeat([1, 2, 5, 10, 20], inner = 2),
+        )
+    ) * mapping(:x, :y, linewidth = :z, group = :z => nonnumeric) *
         visual(Lines)
     f = Figure()
     fg1 = draw!(f[1, 1], spec)
@@ -120,8 +122,10 @@ end
 
 reftest("scatter con color highclip lowclip") do
     data((; x1 = 1:4, x2 = 5:8, y = 1:4, z1 = 1:4, z2 = 5:8)) *
-        (mapping(:x1, :y, color = :z1) * visual(Scatter, markersize = 20, colormap = :plasma) +
-        mapping(:x2, :y, color = :z2) * visual(Scatter, markersize = 20)) |>
+        (
+        mapping(:x1, :y, color = :z1) * visual(Scatter, markersize = 20, colormap = :plasma) +
+            mapping(:x2, :y, color = :z2) * visual(Scatter, markersize = 20)
+    ) |>
         draw(scales(Color = (; colormap = :viridis, colorrange = (2, 7), lowclip = :red, highclip = :cyan)))
 end
 
@@ -191,8 +195,10 @@ end
 
 reftest("second scale barplot hlines") do
     data((; x1 = 1:4, x2 = 5:8, y = ["A", "B", "C", "D"], z1 = ["X", "X", "Y", "Y"], z2 = ["Q", "Q", "U", "U"])) *
-        (mapping(:x1, :y, color = :z1) * visual(BarPlot) +
-        mapping(:y, color = :z2 => scale(:second)) * visual(HLines)) |>
+        (
+        mapping(:x1, :y, color = :z1) * visual(BarPlot) +
+            mapping(:y, color = :z2 => scale(:second)) * visual(HLines)
+    ) |>
         draw(scales(second = (; palette = [:red, :green])))
 end
 
@@ -261,43 +267,43 @@ reftest("errorbars low high") do
 end
 
 reftest("histogram cat color") do
-    df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
-    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram()
+    df = (x = [sin.(1:500); sin.(1:500) .* 2], z = repeat(["a", "b"], inner = 500))
+    specs = data(df) * mapping(:x, layout = :z, color = :z) * histogram()
     draw(specs)
 end
 
 reftest("histogram dodge") do
-    df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
-    specs = data(df) * mapping(:x, dodge=:z, color = :z) * histogram()
+    df = (x = [sin.(1:500); sin.(1:500) .* 2], z = repeat(["a", "b"], inner = 500))
+    specs = data(df) * mapping(:x, dodge = :z, color = :z) * histogram()
     draw(specs)
 end
 
 reftest("histogram dodge direction x") do
-    df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
-    specs = data(df) * mapping(:x, dodge=:z, color = :z) * histogram() * visual(direction = :x)
+    df = (x = [sin.(1:500); sin.(1:500) .* 2], z = repeat(["a", "b"], inner = 500))
+    specs = data(df) * mapping(:x, dodge = :z, color = :z) * histogram() * visual(direction = :x)
     draw(specs)
 end
 
 reftest("histogram stack") do
-    df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["b", "a"], inner = 500))
-    specs = data(df) * mapping(:x, stack=:z, color = :z) * histogram()
+    df = (x = [sin.(1:500); sin.(1:500) .* 2], z = repeat(["b", "a"], inner = 500))
+    specs = data(df) * mapping(:x, stack = :z, color = :z) * histogram()
     draw(specs)
 end
 
 reftest("histogram stairs cat color") do
-    df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
-    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram(Stairs) * visual(alpha = 0.8, linewidth = 4)
+    df = (x = [sin.(1:500); sin.(1:500) .* 2], z = repeat(["a", "b"], inner = 500))
+    specs = data(df) * mapping(:x, layout = :z, color = :z) * histogram(Stairs) * visual(alpha = 0.8, linewidth = 4)
     draw(specs)
 end
 
 reftest("histogram scatter cat color") do
-    df = (x=[sin.(1:500); sin.(1:500) .* 2], z=repeat(["a", "b"], inner = 500))
-    specs = data(df) * mapping(:x, layout=:z, color = :z) * histogram(Scatter) * visual(alpha = 0.8, marker = :cross, markersize = 20)
+    df = (x = [sin.(1:500); sin.(1:500) .* 2], z = repeat(["a", "b"], inner = 500))
+    specs = data(df) * mapping(:x, layout = :z, color = :z) * histogram(Scatter) * visual(alpha = 0.8, marker = :cross, markersize = 20)
     draw(specs)
 end
 
 reftest("histogram 2d") do
-    df = (x=sin.(1:300), y=cos.(1:300))
+    df = (x = sin.(1:300), y = cos.(1:300))
     specs = data(df) * mapping(:x, :y) * histogram()
     draw(specs)
 end
@@ -314,7 +320,7 @@ reftest("density layout") do
     x = sin.(1:40) .+ repeat([0, 2], inner = 20)
     z = repeat(["A", "B"], inner = 20)
     data((; x, z)) *
-        mapping(:x, layout=:z) * AlgebraOfGraphics.density() |>
+        mapping(:x, layout = :z) * AlgebraOfGraphics.density() |>
         draw
 end
 
@@ -322,7 +328,7 @@ reftest("density layout visual direction y") do
     x = sin.(1:40) .+ repeat([0, 2], inner = 20)
     z = repeat(["A", "B"], inner = 20)
     data((; x, z)) *
-        mapping(:x, row=:z) * AlgebraOfGraphics.density() * visual(direction = :y) |>
+        mapping(:x, row = :z) * AlgebraOfGraphics.density() * visual(direction = :y) |>
         draw
 end
 
@@ -330,7 +336,7 @@ reftest("density layout datalimits extrema") do
     x = sin.(1:40) .+ repeat([0, 2], inner = 20)
     z = repeat(["A", "B"], inner = 20)
     data((; x, z)) *
-        mapping(:x, layout=:z) * AlgebraOfGraphics.density(datalimits = extrema) |>
+        mapping(:x, layout = :z) * AlgebraOfGraphics.density(datalimits = extrema) |>
         draw
 end
 
@@ -338,7 +344,7 @@ reftest("density layout datalimits manual") do
     x = sin.(1:40) .+ repeat([0, 2], inner = 20)
     z = repeat(["A", "B"], inner = 20)
     data((; x, z)) *
-        mapping(:x, layout=:z) * AlgebraOfGraphics.density(datalimits = (-3, 5)) |>
+        mapping(:x, layout = :z) * AlgebraOfGraphics.density(datalimits = (-3, 5)) |>
         draw
 end
 
@@ -346,7 +352,7 @@ reftest("density layout cat color") do
     x = sin.(1:40) .+ repeat([0, 2], inner = 20)
     z = repeat(["A", "B"], inner = 20)
     data((; x, z)) *
-        mapping(:x, layout=:z, color = :z) * AlgebraOfGraphics.density() |>
+        mapping(:x, layout = :z, color = :z) * AlgebraOfGraphics.density() |>
         draw
 end
 
@@ -354,7 +360,7 @@ reftest("density 2d layout") do
     x = sin.(1:40) .+ repeat([0, 2], inner = 20)
     z = repeat(["A", "B"], inner = 20)
     data((; x, z)) *
-        mapping(:x, :x, layout=:z) * AlgebraOfGraphics.density() |>
+        mapping(:x, :x, layout = :z) * AlgebraOfGraphics.density() |>
         draw
 end
 
@@ -417,27 +423,36 @@ end
 reftest("scales label overrides") do
     data((; x = 1:4, y = 1:4, z = 1:4)) * mapping(:x, :y, color = :z => nonnumeric) *
         visual(Scatter) |> draw(
-            scales(
-                X = (; label = "XXX"),
-                Y = (; label = rich("YYY", color = :red)),
-                Color = (; label = L"\sum{x + y}"),
-            ))
+        scales(
+            X = (; label = "XXX"),
+            Y = (; label = rich("YYY", color = :red)),
+            Color = (; label = L"\sum{x + y}"),
+        )
+    )
 end
 
 reftest("category addition middle") do
     data((; sex = repeat(["m", "f"], 10), weight = 1:20)) *
         mapping(:sex, :weight) *
-        visual(Scatter) |> draw(scales(X = (;
-            categories = ["m", "d" => rich("diverse", color = :fuchsia), "f"],
-        )))
+        visual(Scatter) |> draw(
+        scales(
+            X = (;
+                categories = ["m", "d" => rich("diverse", color = :fuchsia), "f"],
+            )
+        )
+    )
 end
 
 reftest("category addition sides") do
     data((; group = repeat(["B", "C"], 10), weight = 1:20)) *
         mapping(:group, :weight) *
-        visual(Scatter) |> draw(scales(X = (;
-            categories = ["A", "B", "C", "D"],
-        )))
+        visual(Scatter) |> draw(
+        scales(
+            X = (;
+                categories = ["A", "B", "C", "D"],
+            )
+        )
+    )
 end
 
 reftest("x palette override") do
@@ -449,7 +464,7 @@ end
 
 reftest("issue 434") do
     df = (; x = 1:5, y = [1, 4, 3, 5, 2], group = [true, true, false, false, false])
-    plt = AlgebraOfGraphics.data(df) * mapping(:x, :y; color=:group) * visual(Scatter; marker=:star5, markersize=15)
+    plt = AlgebraOfGraphics.data(df) * mapping(:x, :y; color = :group) * visual(Scatter; marker = :star5, markersize = 15)
     draw(plt)
 end
 
@@ -464,33 +479,33 @@ reftest("text cat color") do
     y = [1, 5, 2, 4, 3]
     label = ["a", "b", "a", "b", "a"]
     df = (; x, y, label)
-    plt = data(df) * mapping(:x, :y, text=:label => verbatim, color = :label) * visual(Makie.Text)
+    plt = data(df) * mapping(:x, :y, text = :label => verbatim, color = :label) * visual(Makie.Text)
     fg = draw(plt)
 end
 
 reftest("boxplot") do
-    df = (x=repeat(["a", "b", "c"], inner = 20), y=1:60)
+    df = (x = repeat(["a", "b", "c"], inner = 20), y = 1:60)
     plt = data(df) *
         mapping(:x, :y) * visual(BoxPlot)
     draw(plt)
 end
 
 reftest("boxplot horizontal") do
-    df = (x=repeat(["a", "b", "c"], inner = 20), y=1:60)
+    df = (x = repeat(["a", "b", "c"], inner = 20), y = 1:60)
     plt = data(df) *
         mapping(:x, :y) * visual(BoxPlot, orientation = :horizontal)
     draw(plt)
 end
 
 reftest("boxplot cat color") do
-    df = (x=repeat(["a", "b", "c"], inner = 20), y=1:60)
+    df = (x = repeat(["a", "b", "c"], inner = 20), y = 1:60)
     plt = data(df) *
         mapping(:x, :y, color = :x) * visual(BoxPlot)
     draw(plt)
 end
 
 reftest("boxplot dodge") do
-    df = (x=repeat(["a", "b", "c"], inner = 20), x2 = repeat(["x", "y"], 30), y=1:60)
+    df = (x = repeat(["a", "b", "c"], inner = 20), x2 = repeat(["x", "y"], 30), y = 1:60)
     plt = data(df) *
         mapping(:x, :y, color = :x2, dodge = :x2) * visual(BoxPlot)
     draw(plt)
@@ -610,7 +625,7 @@ function filled_contours_spec(; contours_kw = (;))
     y = repeat(range(52, 79, length = size(volcano, 2)), inner = size(volcano, 1))
     z = vec(volcano)
 
-    data((; x, y, z)) *
+    return data((; x, y, z)) *
         mapping(:x => "The X", :y, :z, row = :x => >(10)) *
         filled_contours(; bands = 10, contours_kw...)
 end
@@ -655,8 +670,10 @@ reftest("longpoly con color") do
     id = repeat(1:N, inner = 8)
     subid = repeat(repeat(1:2, inner = 4), N)
     color = repeat(1:N, inner = 8)
-    data((; x, y, id, subid, color)) * mapping(:x, :y, :id => verbatim, :subid => verbatim,
-        color = :color) *
+    data((; x, y, id, subid, color)) * mapping(
+        :x, :y, :id => verbatim, :subid => verbatim,
+        color = :color
+    ) *
         visual(AlgebraOfGraphics.LongPoly) |> draw
 end
 
@@ -680,18 +697,18 @@ reftest("qqplot") do
 end
 
 reftest("arrows cat color") do
-    x=repeat(1:10, inner=10)
-    y=repeat(1:10, outer=10)
-    u=cos.(x)
-    v=sin.(y)
-    c=round.(Bool, sin.(1:100) .* 0.5 .+ 0.5)
-    d=round.(Bool, cos.(1:100) .* 0.5 .+ 0.5)
+    x = repeat(1:10, inner = 10)
+    y = repeat(1:10, outer = 10)
+    u = cos.(x)
+    v = sin.(y)
+    c = round.(Bool, sin.(1:100) .* 0.5 .+ 0.5)
+    d = round.(Bool, cos.(1:100) .* 0.5 .+ 0.5)
     df = (; x, y, u, v, c, d)
     colors = [colorant"#E24A33", colorant"#348ABD"]
     plt = data(df) *
         mapping(:x, :y, :u, :v) *
         mapping(color = :d => nonnumeric) *
-        visual(Arrows2D, lengthscale=0.4)
+        visual(Arrows2D, lengthscale = 0.4)
     fg = draw(plt, scales(Color = (; palette = colors)))
 end
 
@@ -756,7 +773,7 @@ reftest("ecdfplot") do
 end
 
 reftest("hist") do
-    x = cos.(range(0, pi/2, length = 100))
+    x = cos.(range(0, pi / 2, length = 100))
     group = repeat(["A", "B"], inner = 50)
     spec1 = data((; x)) * mapping(:x) * visual(Hist)
     spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(Hist, strokecolor = :black, strokewidth = 1)
@@ -768,7 +785,7 @@ reftest("hist") do
 end
 
 reftest("hist direction x") do
-    x = cos.(range(0, pi/2, length = 100))
+    x = cos.(range(0, pi / 2, length = 100))
     group = repeat(["A", "B"], inner = 50)
     spec1 = data((; x)) * mapping(:x) * visual(Hist, direction = :x)
     spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(Hist, direction = :x, strokecolor = :black, strokewidth = 1)
@@ -843,7 +860,7 @@ function presorted_plot(; with_missing::Bool)
     m2 = mapping(:countries => presorted, :some_value, color = :group)
     m3 = mapping(:countries => presorted, :some_value, color = :group => presorted)
 
-    base = data(df) *  visual(BarPlot, direction = :x)
+    base = data(df) * visual(BarPlot, direction = :x)
 
     f = Figure()
     fg1 = draw!(f[1, 1], base * m1)
@@ -852,7 +869,7 @@ function presorted_plot(; with_missing::Bool)
     legend!(f[1, 2], fg1)
     legend!(f[2, 2], fg2)
     legend!(f[3, 2], fg3)
-    f
+    return f
 end
 
 reftest("presorted") do
@@ -900,7 +917,8 @@ reftest("title subtitle footnotes") do
         fill(1:5, 6),
         fill(11:15, 6),
         [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
-        layout = 1:6 => nonnumeric) * visual(Heatmap)
+        layout = 1:6 => nonnumeric
+    ) * visual(Heatmap)
 
     draw(
         spec;
@@ -936,7 +954,8 @@ reftest("title") do
         fill(1:5, 6),
         fill(11:15, 6),
         [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
-        layout = 1:6 => nonnumeric) * visual(Heatmap)
+        layout = 1:6 => nonnumeric
+    ) * visual(Heatmap)
 
     draw(
         spec;
@@ -952,7 +971,8 @@ reftest("title subtitle footnotes settings") do
         fill(1:5, 6),
         fill(11:15, 6),
         [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
-        layout = 1:6 => nonnumeric) * visual(Heatmap)
+        layout = 1:6 => nonnumeric
+    ) * visual(Heatmap)
 
     draw(
         spec;
@@ -985,7 +1005,8 @@ reftest("title subtitle footnotes fontsize inherit") do
         fill(1:5, 6),
         fill(11:15, 6),
         [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
-        layout = 1:6 => nonnumeric) * visual(Heatmap)
+        layout = 1:6 => nonnumeric
+    ) * visual(Heatmap)
 
     draw(
         spec;
@@ -1016,7 +1037,7 @@ reftest("dodge barplot with errorbars") do
         dodge_map = xdir ? mapping(dodge_y = :group) : mapping(dodge_x = :group)
         return data(df) * (
             mapping(:x, :y, dodge = :group, color = :group) * visual(BarPlot; kwargs...) +
-            mapping(xdir ? :y : :x, xdir ? :x : :y, :err) * dodge_map * visual(Errorbars; direction = xdir ? :x : :y)
+                mapping(xdir ? :y : :x, xdir ? :x : :y, :err) * dodge_map * visual(Errorbars; direction = xdir ? :x : :y)
         )
     end
 
@@ -1041,7 +1062,7 @@ reftest("dodge barplot with errorbars 5") do
         dodge_map = xdir ? mapping(dodge_y = :group) : mapping(dodge_x = :group)
         return data(df) * (
             mapping(:x, :y, dodge = :group, color = :group) * visual(BarPlot; kwargs...) +
-            mapping(xdir ? :y : :x, xdir ? :x : :y, :err) * dodge_map * visual(Errorbars; direction = xdir ? :x : :y)
+                mapping(xdir ? :y : :x, xdir ? :x : :y, :err) * dodge_map * visual(Errorbars; direction = xdir ? :x : :y)
         )
     end
 
@@ -1058,7 +1079,7 @@ reftest("dodge scatter with rangebars") do
         y = cos.(range(0, 2pi, length = 20)),
         ylow = cos.(range(0, 2pi, length = 20)) .- 0.2,
         yhigh = cos.(range(0, 2pi, length = 20)) .+ 0.3,
-        dodge = repeat(["A", "B"], 10)
+        dodge = repeat(["A", "B"], 10),
     )
 
     f = Figure()
@@ -1120,16 +1141,18 @@ reftest("stairs") do
 end
 
 reftest("split x scales across facet layout") do
-    dat = data((;
-        cat1 = ["Apple", "Orange", "Pear"],
-        cat2 = ["Blue", "Green", "Red"],
-        cat3 = ["Heavy", "Light", "Medium"],
-        cont = [4.5, 7.6, 9.3],
-        y1 = [3.4, 5.2, 6],
-        y2 = [0.3, 0.2, 0.3],
-        y3 = [123, 82, 71],
-        y4 = [-10, 10, 0.4],
-    ))
+    dat = data(
+        (;
+            cat1 = ["Apple", "Orange", "Pear"],
+            cat2 = ["Blue", "Green", "Red"],
+            cat3 = ["Heavy", "Light", "Medium"],
+            cont = [4.5, 7.6, 9.3],
+            y1 = [3.4, 5.2, 6],
+            y2 = [0.3, 0.2, 0.3],
+            y3 = [123, 82, 71],
+            y4 = [-10, 10, 0.4],
+        )
+    )
 
     cat_mappings = mapping(:cat1 => scale(:X1), :y1, layout = direct("A")) +
         mapping(:cat2 => "Cat 2" => scale(:X2), :y2, layout = direct("B")) +
@@ -1143,12 +1166,14 @@ reftest("split x scales across facet layout") do
 end
 
 reftest("split x and y scales row col layout") do
-    dat = data((;
-        cat1 = ["Apple", "Orange", "Pear"],
-        cont2 = [1.4, 5.1, 2.5],
-        cat3 = ["Heavy", "Light", "Medium"],
-        cont4 = [2.5, -0.2, 1.2],
-    ))
+    dat = data(
+        (;
+            cat1 = ["Apple", "Orange", "Pear"],
+            cont2 = [1.4, 5.1, 2.5],
+            cat3 = ["Heavy", "Light", "Medium"],
+            cont4 = [2.5, -0.2, 1.2],
+        )
+    )
 
     mappings = zerolayer()
     for x in [:cat1, :cont2]
@@ -1164,11 +1189,13 @@ end
 
 reftest("hide row col and layout labels") do
     f = Figure(size = (600, 600))
-    d = data((;
-        x = 1:16,
-        y = 17:32,
-        group1 = repeat(["A", "B"], inner = 8),
-        group2 = repeat(["C", "D"], 8))
+    d = data(
+        (;
+            x = 1:16,
+            y = 17:32,
+            group1 = repeat(["A", "B"], inner = 8),
+            group2 = repeat(["C", "D"], 8),
+        )
     )
     spec1 = d * mapping(:x, :y, row = :group1, col = :group2) * visual(Scatter)
     spec2 = d * mapping(:x, :y, layout = (:group1, :group2) => tuple) * visual(Scatter)
@@ -1182,11 +1209,13 @@ end
 
 reftest("hide row col and layout labels legendkw") do
     f = Figure(size = (600, 600))
-    d = data((;
-        x = 1:16,
-        y = 17:32,
-        group1 = repeat(["A", "B"], inner = 8),
-        group2 = repeat(["C", "D"], 8))
+    d = data(
+        (;
+            x = 1:16,
+            y = 17:32,
+            group1 = repeat(["A", "B"], inner = 8),
+            group2 = repeat(["C", "D"], 8),
+        )
     )
     spec1 = d * mapping(:x, :y, row = :group1, col = :group2) * visual(Scatter)
     spec2 = d * mapping(:x, :y, layout = (:group1, :group2) => tuple) * visual(Scatter)
@@ -1291,7 +1320,7 @@ let
         group = repeat(string.("Group ", 1:36), inner = 10),
         color = 1:360,
     )
-    spec = data(df) * mapping(:x, :y, color = :color, layout=:group) * visual(Lines)
+    spec = data(df) * mapping(:x, :y, color = :color, layout = :group) * visual(Lines)
     scl = scales(Color = (; colormap = :plasma, label = "The color"))
 
     reftest("pagination colorbar unpaginated") do
@@ -1318,7 +1347,7 @@ if VERSION >= v"1.9"
         weight = range(0, 70, length = 24) .* D.us"g",
     )
 
-    reftest("units basic", true) do 
+    reftest("units basic", true) do
         spec = mapping(:time, :size, color = :weight, markersize = :weight)
         f = Figure()
         fg_u = draw!(f[1, 1], spec * data(df_u))
@@ -1330,7 +1359,7 @@ if VERSION >= v"1.9"
         f
     end
 
-    reftest("units scale override", true) do 
+    reftest("units scale override", true) do
         spec = mapping(:time, :size, color = :weight, markersize = :weight)
         f = Figure()
         fg_u = draw!(
@@ -1362,13 +1391,13 @@ if VERSION >= v"1.9"
 
     reftest("units alignment errorbars") do
         f = Figure()
-        base_u = data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [10, 50, 100] .* U.u"cm")) 
+        base_u = data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [10, 50, 100] .* U.u"cm"))
         spec_u = base_u * mapping(:id, :value, :err) * visual(Errorbars)
         draw!(f[1, 1], spec_u)
         spec_u2 = base_u * mapping(:value, :id, :err) * visual(Errorbars, direction = :x)
         draw!(f[1, 2], spec_u2, scales(X = (; unit = U.u"cm")))
 
-        base_d = data((; id = 1:3, value = [1, 2, 3] .* D.us"m", err = [10, 50, 100] .* D.us"cm")) 
+        base_d = data((; id = 1:3, value = [1, 2, 3] .* D.us"m", err = [10, 50, 100] .* D.us"cm"))
         spec_d = base_d * mapping(:id, :value, :err) * visual(Errorbars)
         draw!(f[2, 1], spec_d)
         spec_d2 = base_d * mapping(:value, :id, :err) * visual(Errorbars, direction = :x)
@@ -1378,7 +1407,7 @@ if VERSION >= v"1.9"
     end
 
     reftest("units wide labels") do
-        _df = (; group = repeat(["A", "B"], inner = 50), apples = (1:100) .* U.u"s", bananas = (101:200) .* 1000 .* U.u"ms") 
+        _df = (; group = repeat(["A", "B"], inner = 50), apples = (1:100) .* U.u"s", bananas = (101:200) .* 1000 .* U.u"ms")
         spec_wide = data(_df) *
             mapping(:group, [:apples, :bananas], layout = dims(1)) *
             visual(Violin)
@@ -1433,7 +1462,7 @@ reftest("rainclouds") do
         values => "Value",
         color = groups => nonnumeric
     ) * visual(RainClouds)
-    
+
     f = Figure()
     fg1 = draw!(f[1, 1], spec)
     legend!(f[1, 2], fg1)
@@ -1447,21 +1476,21 @@ reftest("annotation", true) do
     text = string.(range('A', length = 5)) => verbatim
     spec1 = mapping(1:5, 1:5) *
         (
-            visual(Annotation) * mapping(; text) +
+        visual(Annotation) * mapping(; text) +
             visual(Scatter)
-        )
+    )
     draw!(f[1, 1], spec1)
     spec2 = mapping(1:5, 1:5, color = 1:5) *
         (
-            visual(Annotation) * mapping(; text) +
+        visual(Annotation) * mapping(; text) +
             visual(Scatter)
-        )
+    )
     draw!(f[1, 2], spec2)
     spec3 = mapping(1:5, 1:5, color = 1:5 => nonnumeric) *
         (
-            visual(Annotation) * mapping(; text) +
+        visual(Annotation) * mapping(; text) +
             visual(Scatter)
-        )
+    )
     fg = draw!(f[2, 1][1, 1], spec3)
     legend!(f[2, 1][1, 2], fg)
     spec4 = mapping(
@@ -1473,14 +1502,14 @@ reftest("annotation", true) do
     ) * visual(Annotation) +
         mapping(1:5, 1:5) * visual(Scatter) +
         mapping(50, -50, 3, 3, text = "point" => verbatim) *
-            visual(Annotation, style = Ann.Styles.LineArrow(), path = Ann.Paths.Arc(height = -0.3)) +
+        visual(Annotation, style = Ann.Styles.LineArrow(), path = Ann.Paths.Arc(height = -0.3)) +
         mapping(
-            [4, 4.5],
-            [3, 4],
-            4:5,
-            4:5;
-            text = ["D", "E"] => verbatim,
-        ) * visual(Annotation; labelspace = :data)
+        [4, 4.5],
+        [3, 4],
+        4:5,
+        4:5;
+        text = ["D", "E"] => verbatim,
+    ) * visual(Annotation; labelspace = :data)
     draw!(f[2, 2], spec4)
     f
 end

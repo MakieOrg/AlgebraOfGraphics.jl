@@ -22,7 +22,7 @@ struct AesLineStyle <: Aesthetic end
 struct AesLineWidth <: Aesthetic end
 
 # all these plot specific ones seem kind of unnecessary, but not sure what to do with them yet,
-# maybe aesthetics that completely avoid scales 
+# maybe aesthetics that completely avoid scales
 struct AesViolinSide <: Aesthetic end
 struct AesContourColor <: Aesthetic end # this is just so the third contour argument doesn't conflict with other things for now, it's complex to handle in its interplay with `color` and `levels`
 struct AesPlaceholder <: Aesthetic end # choropleth for example takes as first arg only geometries which avoid scales, but for now we still have to give an aes to 1, so this can serve for that purpose
@@ -48,7 +48,7 @@ scale(id::Symbol) = ScaleID(id)
 Base.broadcastable(s::ScaleID) = Ref(s)
 
 struct Scales
-    dict::Dictionary{Symbol,Dictionary{Symbol,Any}}
+    dict::Dictionary{Symbol, Dictionary{Symbol, Any}}
 end
 
 """
@@ -62,7 +62,7 @@ defined in a [`mapping`](@ref) using the `scale` function.
 The values attached to the keywords must be dict-like, with `Symbol`s as keys (such as `NamedTuple`s).
 """
 function scales(; kwargs...)
-    dict = Dictionary{Symbol,Dictionary{Symbol,Any}}()
+    dict = Dictionary{Symbol, Dictionary{Symbol, Any}}()
     for (kw, value) in pairs(kwargs)
         insert!(dict, kw, _kwdict(value, kw))
     end
@@ -106,7 +106,7 @@ function apply_palette(fc::FromContinuous, uv::AbstractVector{Bin})
     if fc.relative
         endpoint_values = (uv[1].range[2], uv[end].range[1])
         width = endpoint_values[2] - endpoint_values[1]
-        fractions = map(uv[2:end-1]) do bin
+        fractions = map(uv[2:(end - 1)]) do bin
             midpoint = (bin.range[1] + bin.range[2]) / 2
             fraction = (midpoint - endpoint_values[1]) / width
             return fraction
@@ -119,7 +119,7 @@ function apply_palette(fc::FromContinuous, uv::AbstractVector{Bin})
     return colors
 end
 
-struct Wrap{T<:Union{Makie.Automatic,@NamedTuple{n::Int64, cols::Bool}}}
+struct Wrap{T <: Union{Makie.Automatic, @NamedTuple{n::Int64, cols::Bool}}}
     size_restriction::T
     by_col::Bool
 end
@@ -133,11 +133,11 @@ be set to an integer at the same time. If both are `automatic`, a squareish conf
 If `by_col` is to `true`, the layout is filled top to bottom first and then column by column.
 """
 function wrapped(;
-        cols::Union{Integer,Makie.Automatic} = Makie.automatic,
-        rows::Union{Integer,Makie.Automatic} = Makie.automatic,
+        cols::Union{Integer, Makie.Automatic} = Makie.automatic,
+        rows::Union{Integer, Makie.Automatic} = Makie.automatic,
         by_col::Bool = false
     )
-    if cols !== Makie.automatic && rows !== Makie.automatic
+    return if cols !== Makie.automatic && rows !== Makie.automatic
         throw(ArgumentError("`cols` and `rows` can't both be fixed in a wrapped layout."))
     elseif cols === Makie.automatic && rows === Makie.automatic
         Wrap(Makie.automatic, by_col)
@@ -161,8 +161,8 @@ end
 
 struct Clipped{C}
     palette::C
-    high::Union{Nothing,RGBAf}
-    low::Union{Nothing,RGBAf}
+    high::Union{Nothing, RGBAf}
+    low::Union{Nothing, RGBAf}
 end
 
 function apply_palette(c::Clipped, uv::AbstractVector{Bin})
@@ -172,7 +172,7 @@ function apply_palette(c::Clipped, uv::AbstractVector{Bin})
     inner_start = lowclip ? 2 : 1
     highclip = c.high !== nothing && !isfinite(uv[end].range[2])
     inner_end = highclip ? length(uv) - 1 : length(uv)
-    
+
     colors = apply_palette(c.palette, @view uv[inner_start:inner_end])
     lowclip && pushfirst!(colors, c.low)
     highclip && push!(colors, c.high)
@@ -193,7 +193,7 @@ struct CategoricalScaleProps
     aesprops::CategoricalAesProps
     label # nothing or any type workable as a label
     legend::Bool
-    categories::Union{Nothing,Function,Vector}
+    categories::Union{Nothing, Function, Vector}
     palette # nothing or any type workable as a palette
 end
 
@@ -201,9 +201,9 @@ struct EmptyCategoricalProps <: CategoricalAesProps end
 
 categorical_aes_props_type(::Type{<:Aesthetic}) = EmptyCategoricalProps
 
-categorical_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any}) = aes_props(Val(:categorical), type, props_dict)
+categorical_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol, Any}) = aes_props(Val(:categorical), type, props_dict)
 
-function aes_props(kind::Val, type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any})
+function aes_props(kind::Val, type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol, Any})
     f_T(::Val{:categorical}) = categorical_aes_props_type
     f_T(::Val{:continuous}) = continuous_aes_props_type
     T = f_T(kind)(type)
@@ -222,7 +222,7 @@ function aes_props(kind::Val, type::Type{<:Aesthetic}, props_dict::Dictionary{Sy
             rethrow(e)
         end
     end
-    sym(::Val{<:S}) where S = S
+    sym(::Val{<:S}) where {S} = S
     throw(ArgumentError("Unknown scale$(length(invalid_keys) == 1 ? "" : "s") attribute $(join((repr(key) for key in invalid_keys), ", ", " and ")) for $(sym(kind)) scale with aesthetic $type. $(isempty(fieldnames(T)) ? "$T does not accept any attributes." : "Available attributes for $T are $(join((repr(key) for key in fieldnames(T)), ", ", " and ")).")"))
 end
 
@@ -235,7 +235,7 @@ struct CategoricalScale{S, T}
 end
 
 function _pop!(d::Dictionary, key, default)
-    if haskey(d, key)
+    return if haskey(d, key)
         val = d[key]
         delete!(d, key)
         val
@@ -245,11 +245,11 @@ function _pop!(d::Dictionary, key, default)
 end
 
 # delete! on a `copy`ed dict modifies original
-_dictcopy(dict::T) where {T<:Dictionary} = T(copy(keys(dict)), copy(values(dict)))
+_dictcopy(dict::T) where {T <: Dictionary} = T(copy(keys(dict)), copy(values(dict)))
 
 function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     props_copy = _dictcopy(props)
-    if aestype <: Union{AesRow,AesCol,AesLayout}
+    if aestype <: Union{AesRow, AesCol, AesLayout}
         if haskey(props_copy, :show_labels) && haskey(props_copy, :legend)
             error("Found `show_labels` and `legend` keyword for the $aestype scale, these are aliases and may not be set at the same time. Use of `legend` is suggested for consistency with other scales.")
         elseif haskey(props_copy, :show_labels)
@@ -265,7 +265,7 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     categories = _pop!(props_copy, :categories, nothing)
     palette = _pop!(props_copy, :palette, nothing)
     aes_props = categorical_aes_props(aestype, props_copy)
-    CategoricalScaleProps(
+    return CategoricalScaleProps(
         aes_props,
         label,
         legend,
@@ -275,13 +275,13 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
 end
 
 Base.@kwdef struct AesDodgeXCategoricalProps <: CategoricalAesProps
-    width::Union{Nothing,Float64} = nothing
+    width::Union{Nothing, Float64} = nothing
 end
 Base.@kwdef struct AesDodgeYCategoricalProps <: CategoricalAesProps
-    width::Union{Nothing,Float64} = nothing
+    width::Union{Nothing, Float64} = nothing
 end
 Base.@kwdef struct AesColorCategoricalProps <: CategoricalAesProps
-    colorbar::Union{Makie.Automatic,Bool} = Makie.automatic
+    colorbar::Union{Makie.Automatic, Bool} = Makie.automatic
 end
 
 categorical_aes_props_type(::Type{AesDodgeX}) = AesDodgeXCategoricalProps
@@ -311,7 +311,7 @@ function fitscale(c::CategoricalScale)
 end
 
 function datavalues(c::CategoricalScale)
-    if c.props.categories === nothing
+    return if c.props.categories === nothing
         c.data
     else
         if c.props.categories isa Function
@@ -339,7 +339,7 @@ to_datalabel(x) = string(x)
 to_datalabel(s::Sorted) = to_datalabel(s.value)
 
 function datalabels(c::CategoricalScale)
-    if c.props.categories === nothing
+    return if c.props.categories === nothing
         to_datalabel.(datavalues(c))
     elseif c.props.categories isa Function
         map(category_label, c.props.categories(c.data))
@@ -368,7 +368,7 @@ function ContinuousScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     unit = _pop!(props_copy, :unit, nothing)
     is_unit(unit) || error("`is_unit` returned false for unit = $unit passed to $aestype scale.")
     aes_props = continuous_aes_props(aestype, props_copy)
-    ContinuousScaleProps(
+    return ContinuousScaleProps(
         aes_props,
         label,
         legend,
@@ -388,13 +388,13 @@ end
 const _default_markersize_ticks = WilkinsonTicks(5; k_min = 4, k_max = 6)
 
 Base.@kwdef struct AesMarkerSizeContinuousProps <: ContinuousAesProps
-    sizerange::Tuple{Float64,Float64} = (5.0, 20.0)
+    sizerange::Tuple{Float64, Float64} = (5.0, 20.0)
     ticks = _default_markersize_ticks # if we construct the ticks here, we get mismatching props errors later because WilkinsonTicks(5) != WilkinsonTicks(5)
     tickformat = Makie.automatic
 end
 
 Base.@kwdef struct AesLineWidthContinuousProps <: ContinuousAesProps
-    sizerange::Tuple{Float64,Float64} = (0.5, 5.0)
+    sizerange::Tuple{Float64, Float64} = (0.5, 5.0)
     ticks = _default_markersize_ticks # if we construct the ticks here, we get mismatching props errors later because WilkinsonTicks(5) != WilkinsonTicks(5)
     tickformat = Makie.automatic
 end
@@ -404,7 +404,7 @@ continuous_aes_props_type(::Type{AesColor}) = AesColorContinuousProps
 continuous_aes_props_type(::Type{AesMarkerSize}) = AesMarkerSizeContinuousProps
 continuous_aes_props_type(::Type{AesLineWidth}) = AesLineWidthContinuousProps
 
-continuous_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol,Any}) = aes_props(Val(:continuous), type, props_dict)
+continuous_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol, Any}) = aes_props(Val(:continuous), type, props_dict)
 
 struct ContinuousScale{T}
     extrema::NTuple{2, T}
@@ -413,15 +413,15 @@ struct ContinuousScale{T}
     props::ContinuousScaleProps
 end
 
-ContinuousScale(extrema, label, props; force=false) = ContinuousScale(extrema, label, force, props)
+ContinuousScale(extrema, label, props; force = false) = ContinuousScale(extrema, label, force, props)
 
-function ContinuousScale(aestype::Type{<:Aesthetic}, extrema, label, props; force=false)
+function ContinuousScale(aestype::Type{<:Aesthetic}, extrema, label, props; force = false)
     props_typed = ContinuousScaleProps(aestype, props)
     return ContinuousScale(extrema, label, force, props_typed)
 end
 
 function append_unit_string(s::String, u::String)
-    s * " [$u]"
+    return s * " [$u]"
 end
 
 getunit(c::ContinuousScale) = nothing
@@ -431,7 +431,7 @@ function unit_string end
 dimensionally_compatible(::Nothing, ::Nothing) = true
 dimensionally_compatible(_, _) = false
 
-struct DimensionMismatch{X1,X2} <: Exception
+struct DimensionMismatch{X1, X2} <: Exception
     x1::X1
     x2::X2
 end
@@ -442,7 +442,7 @@ function align_scale_unit(lead::ContinuousScale, follow::ContinuousScale)
     if dimensionally_compatible(ulead, ufollow)
         return Accessors.@set follow.props.unit = ulead
     else
-       throw(DimensionMismatch(ulead, ufollow))
+        throw(DimensionMismatch(ulead, ufollow))
     end
 end
 
@@ -477,7 +477,7 @@ datetime2float(x::Period) = Millisecond(x) / Millisecond(1)
 Generate ticks matching `datetimes` to the corresponding `labels`.
 The result can be passed to `xticks`, `yticks`, or `zticks`.
 """
-function datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString}) 
+function datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString})
     return map(datetime2float, datetimes), labels
 end
 
@@ -488,11 +488,11 @@ Compute ticks for the given `datetimes` using a formatting function `f`.
 The result can be passed to `xticks`, `yticks`, or `zticks`.
 """
 function datetimeticks(f, datetimes::AbstractVector{<:TimeType})
-    return datetimeticks(datetimes, map(string∘f, datetimes))
+    return datetimeticks(datetimes, map(string ∘ f, datetimes))
 end
 
 # Rescaling methods that do not depend on context
-elementwise_rescale(value::Union{TimeType, Period}) = datetime2float(value) 
+elementwise_rescale(value::Union{TimeType, Period}) = datetime2float(value)
 elementwise_rescale(value::Verbatim) = value[]
 elementwise_rescale(value) = value
 
@@ -576,7 +576,7 @@ temporal_resolutions(::Type{Date}) = (Year, Month, Day)
 temporal_resolutions(::Type{Time}) = (Hour, Minute, Second, Millisecond)
 temporal_resolutions(::Type{DateTime}) = (temporal_resolutions(Date)..., temporal_resolutions(Time)...)
 
-function optimal_datetime_range((x_min, x_max)::NTuple{2, T}; k_min=2, k_max=5) where {T<:TimeType}
+function optimal_datetime_range((x_min, x_max)::NTuple{2, T}; k_min = 2, k_max = 5) where {T <: TimeType}
     local P, start, stop
     for outer P in temporal_resolutions(T)
         start, stop = trunc(x_min, P), trunc(x_max, P)
@@ -608,14 +608,14 @@ struct Geometrical <: ScientificType end
 const categorical = Categorical()
 const continuous = Continuous()
 const geometrical = Geometrical()
-const Normal = Union{Categorical,Continuous}
+const Normal = Union{Categorical, Continuous}
 
 """
     scientific_type(T::Type)
 
 Determine whether `T` represents a continuous, geometrical, or categorical variable.
 """
-function scientific_type(::Type{T}) where T
+function scientific_type(::Type{T}) where {T}
     T === Missing && return categorical
     NT = nonmissingtype(T)
     NT <: Bool && return categorical
@@ -667,7 +667,7 @@ natural_lt(::Tuple, ::Tuple{}) = false
 # """
 function natural_lt(t1::Tuple, t2::Tuple)
     a, b = t1[1], t2[1]
-    natural_lt(a, b) || (isequal(a, b) && natural_lt(tail(t1), tail(t2)))
+    return natural_lt(a, b) || (isequal(a, b) && natural_lt(tail(t1), tail(t2)))
 end
 
 function mergesorted(v1, v2)
@@ -692,7 +692,7 @@ end
 
 possibly_mergesorted(v1, v2) = mergesorted(v1, v2)
 
-function possibly_mergesorted(v1::AbstractVector{<:Presorted{T}}, v2::AbstractVector{<:Presorted}) where T
+function possibly_mergesorted(v1::AbstractVector{<:Presorted{T}}, v2::AbstractVector{<:Presorted}) where {T}
     set = Set{T}()
     for el in v1
         push!(set, el.x)

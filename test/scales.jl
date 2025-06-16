@@ -2,7 +2,7 @@
     l = data([(x = 1, subject = "c"), (x = 2, subject = "a")]) * mapping(:x, :subject)
     pl = ProcessedLayer(l)
     aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
-    scales = map(fitscale, categoricalscales(pl, Dictionary{Type{<:AlgebraOfGraphics.Aesthetic},Any}(), aesmapping))
+    scales = map(fitscale, categoricalscales(pl, Dictionary{Type{<:AlgebraOfGraphics.Aesthetic}, Any}(), aesmapping))
     @test keys(scales) == Indices([2])
     scale = scales[2]
     @test scale isa CategoricalScale
@@ -10,8 +10,8 @@
     @test scale.label == "subject"
     @test scale.plot == 1:2
 
-    l = data([(x = 1, subject = "c", grp="f"), (x = 2, subject = "a", grp="g")]) *
-        mapping(:x, :subject, color=:grp)
+    l = data([(x = 1, subject = "c", grp = "f"), (x = 2, subject = "a", grp = "g")]) *
+        mapping(:x, :subject, color = :grp)
     pl = ProcessedLayer(l)
     aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
     scaleprops = AlgebraOfGraphics.compute_scale_properties(
@@ -73,7 +73,7 @@ end
     @test apply_palette(wrapped(cols = 4, by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (1, 2), (2, 2), (3, 2), (1, 3), (2, 3), (3, 3)]
     @test apply_palette(wrapped(rows = 4), uv) == [(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3)]
     @test apply_palette(wrapped(rows = 4, by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (4, 1), (1, 2), (2, 2), (3, 2), (4, 2), (1, 3)]
-    @test_throws_message "`cols` and `rows` can't both be fixed" apply_palette(wrapped(rows = 4, cols = 5), uv) 
+    @test_throws_message "`cols` and `rows` can't both be fixed" apply_palette(wrapped(rows = 4, cols = 5), uv)
 end
 
 @testset "datetimes" begin
@@ -88,7 +88,7 @@ end
     full_labels = ["2022-01-02T02:00:00", "2022-01-02T05:00:00", "2022-01-02T08:00:00", "2022-01-02T11:00:00", "2022-01-02T14:00:00"]
     @test labels == ["02:00:00", "05:00:00", "08:00:00", "11:00:00", "14:00:00"]
     @test floats == datetime2float.(DateTime.(full_labels))
-    
+
     floats, labels = AlgebraOfGraphics.ticks((DateTime(2022, 1, 2, 1, 1, 5), DateTime(2022, 1, 2, 1, 1, 5)))
     full_labels = ["2022-01-02T01:01:05"]
     @test labels == ["01:01:05"]
@@ -103,7 +103,7 @@ end
     @test floats == datetime2float.(DateTime.(labels))
 
     floats, labels = datetimeticks(month, [Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
-    @test labels == ["1", "3",  "5"]
+    @test labels == ["1", "3", "5"]
     @test floats == datetime2float.([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
 
     floats, labels = datetimeticks([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)], ["January", "March", "May"])
@@ -149,7 +149,7 @@ end
     leg_els, el_labels, group_labels = AlgebraOfGraphics.compute_legend(axisentries, order = nothing)
     @test length(leg_els) == 1
     @test length(leg_els[]) == 4
-    
+
     ag2 = compute_axes_grid(spec1 + spec2 * mapping(color = :c => scale(:color2)))
     @test only(keys(ag2[].categoricalscales)) == AlgebraOfGraphics.AesColor
     dict = ag2[].categoricalscales[AlgebraOfGraphics.AesColor]
@@ -192,7 +192,7 @@ end
 
     pl = ProcessedLayer(l)
     aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
-    scales = map(fitscale, categoricalscales(pl, Dictionary{Type{<:AlgebraOfGraphics.Aesthetic},Any}(), aesmapping))
+    scales = map(fitscale, categoricalscales(pl, Dictionary{Type{<:AlgebraOfGraphics.Aesthetic}, Any}(), aesmapping))
     @test keys(scales) == Indices([1])
     scale = scales[1]
     @test scale isa CategoricalScale
@@ -201,8 +201,8 @@ end
     @test sort(["1", "10", "2"]) == ["1", "10", "2"]
     @test sort(["1", "10", "2"], lt = AlgebraOfGraphics.natural_lt) == ["1", "2", "10"]
 
-    @test sort([("1", 1), ("10", 2), ("2",3)]) == [("1", 1), ("10", 2), ("2", 3)]
-    @test sort([("1", 1), ("10", 2), ("2",3)], lt = AlgebraOfGraphics.natural_lt) == [("1", 1), ("2", 3), ("10", 2)]
+    @test sort([("1", 1), ("10", 2), ("2", 3)]) == [("1", 1), ("10", 2), ("2", 3)]
+    @test sort([("1", 1), ("10", 2), ("2", 3)], lt = AlgebraOfGraphics.natural_lt) == [("1", 1), ("2", 3), ("10", 2)]
 end
 
 if VERSION >= v"1.9"

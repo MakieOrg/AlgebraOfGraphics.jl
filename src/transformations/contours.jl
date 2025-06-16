@@ -1,6 +1,6 @@
 Base.@kwdef struct ContoursAnalysis
-    levels::Union{Int,Vector{Float64}}
-    kwargs::Dict{Symbol,Any}
+    levels::Union{Int, Vector{Float64}}
+    kwargs::Dict{Symbol, Any}
 end
 
 function (c::ContoursAnalysis)(input::ProcessedLayer)
@@ -31,5 +31,5 @@ so they won't be synchronized across facets and there will not be a colorbar.
 All other keyword arguments are forwarded as attributes to the underlying `Contour` plot.
 """
 function contours(; levels = 5, kwargs...)
-    transformation(ContoursAnalysis(; levels, kwargs = Dict(kwargs)))
+    return transformation(ContoursAnalysis(; levels, kwargs = Dict(kwargs)))
 end

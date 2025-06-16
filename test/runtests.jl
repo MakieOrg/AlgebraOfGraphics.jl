@@ -37,7 +37,7 @@ Random.seed!(1234)
 
 # This can be removed for `@test_throws` once CI only uses Julia 1.8 and up
 macro test_throws_message(message::String, exp)
-    quote
+    return quote
         threw_exception = false
         try
             $(esc(exp))

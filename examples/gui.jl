@@ -11,45 +11,47 @@ using AlgebraOfGraphics: linear, smooth, density, AlgebraicList, layoutplot!
 
 function clean!(g::GridLayout)
     foreach(delete!, Any, g)
-    foreach(GridLayoutBase.remove_from_gridlayout!, g.content)
+    return foreach(GridLayoutBase.remove_from_gridlayout!, g.content)
 end
 
 function gui!(scene, layout, df)
     table = data(df)
 
     plot_options = [("none", nothing), ("scatter", Scatter), ("lines", Lines), ("barplot", BarPlot)]
-    plot_menu = LMenu(scene, options = plot_options, textsize=30, width=500)
+    plot_menu = LMenu(scene, options = plot_options, textsize = 30, width = 500)
 
-    layout[1, 1] = Label(scene, "plot type", fontsize=30)
+    layout[1, 1] = Label(scene, "plot type", fontsize = 30)
     layout[1, 2] = plot_menu
 
-    analysis_options = [("none", nothing), ("linear", linear), ("smooth", smooth),
-        ("density", density)]
+    analysis_options = [
+        ("none", nothing), ("linear", linear), ("smooth", smooth),
+        ("density", density),
+    ]
 
-    analysis_menu = LMenu(scene, options = analysis_options, textsize=30, width=500)
+    analysis_menu = LMenu(scene, options = analysis_options, textsize = 30, width = 500)
 
-    layout[2, 1] = Label(scene, "analysis", fontsize=30)
+    layout[2, 1] = Label(scene, "analysis", fontsize = 30)
     layout[2, 2] = analysis_menu
 
     axis_options = vcat([("None", nothing)], [(s, Symbol(s)) for s in propertynames(table.data)])
 
     mappings = ["x", "y", "color", "marker", "markersize", "linestyle", "layout_x", "layout_y"]
-    mapping_menus = [LMenu(scene, options=axis_options, textsize=30, width=500) for mapping in mappings]
+    mapping_menus = [LMenu(scene, options = axis_options, textsize = 30, width = 500) for mapping in mappings]
     N = length(mappings)
 
     for i in 1:N
-        layout[2+i, 1] = Label(scene, mappings[i], fontsize=30)
-        layout[2+i, 2] = mapping_menus[i]
+        layout[2 + i, 1] = Label(scene, mappings[i], fontsize = 30)
+        layout[2 + i, 2] = mapping_menus[i]
     end
 
-    plot_button = Button(scene, label="Plot", textsize=30)
-    add_and_plot_button = Button(scene, label="Add and Plot", buttoncolor="powderblue", textsize=30)
+    plot_button = Button(scene, label = "Plot", textsize = 30)
+    add_and_plot_button = Button(scene, label = "Add and Plot", buttoncolor = "powderblue", textsize = 30)
 
     layout[1, 3] = plot_button
     layout[1, 4] = add_and_plot_button
 
-    axs = layout[1:2+N, 5] = GridLayout(1, 2) # for plot and legend
-    colsize!(axs, 2, Relative(1/5)) # make legend a fourth of the plot's width
+    axs = layout[1:(2 + N), 5] = GridLayout(1, 2) # for plot and legend
+    colsize!(axs, 2, Relative(1 / 5)) # make legend a fourth of the plot's width
 
     state = AlgebraicList()
 
@@ -66,7 +68,7 @@ function gui!(scene, layout, df)
         end
         clean!(axs)
         state += acc
-        layoutplot!(scene, axs, state)
+        return layoutplot!(scene, axs, state)
     end
 
     on(plot_button.clicks) do _

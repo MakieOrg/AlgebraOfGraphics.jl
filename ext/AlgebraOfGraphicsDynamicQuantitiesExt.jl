@@ -6,17 +6,17 @@ const DQ = DynamicQuantities
 
 AlgebraOfGraphics.extrema_finite(v::AbstractVector{<:DQ.Quantity}) = extrema(Iterators.filter(isfinite, skipmissing(v)))
 
-struct DimensionMismatch{X1,X2} <: Exception
+struct DimensionMismatch{X1, X2} <: Exception
     x1::X1
     x2::X2
 end
 
-dimensionless(x, u::DQ.Quantity{<:Any,<:DQ.SymbolicDimensions}) = DQ.ustrip(DQ.uconvert(u, x))
-function dimensionless(x, u::DQ.Quantity{<:Any,<:DQ.Dimensions})
+dimensionless(x, u::DQ.Quantity{<:Any, <:DQ.SymbolicDimensions}) = DQ.ustrip(DQ.uconvert(u, x))
+function dimensionless(x, u::DQ.Quantity{<:Any, <:DQ.Dimensions})
     xexp = DQ.uexpand(x)
     uexp = DQ.uexpand(u)
     DQ.dimension(xexp) == DQ.dimension(uexp) || throw(DimensionMismatch(x, u))
-    DQ.ustrip(xexp)
+    return DQ.ustrip(xexp)
 end
 
 function AlgebraOfGraphics.strip_units(scale, data::AbstractVector{<:DQ.Quantity})
@@ -29,10 +29,10 @@ end
 AlgebraOfGraphics.is_unit(::DynamicQuantities.Quantity) = true # there seems to be no FreeUnits equivalent in DQ
 
 function AlgebraOfGraphics.unit_string(u::DQ.Quantity)
-    string(DQ.dimension(u))
+    return string(DQ.dimension(u))
 end
 
-function AlgebraOfGraphics.getunit(scale::AlgebraOfGraphics.ContinuousScale{T}) where T <: DynamicQuantities.Quantity
+function AlgebraOfGraphics.getunit(scale::AlgebraOfGraphics.ContinuousScale{T}) where {T <: DynamicQuantities.Quantity}
     o1, o2 = oneunit.(scale.extrema)
     o1 == o2 || error("Different ones $o1 $o2")
     o = o1
@@ -47,7 +47,7 @@ function AlgebraOfGraphics.getunit(scale::AlgebraOfGraphics.ContinuousScale{T}) 
 end
 
 function AlgebraOfGraphics.dimensionally_compatible(q1::DynamicQuantities.Quantity, q2::DynamicQuantities.Quantity)
-    try
+    return try
         # because we can't uconvert to Dimensions its not super straightforward
         # to check if the units are compatible, so we reuse the conversion mechanism
         dimensionless(q1, q2)
