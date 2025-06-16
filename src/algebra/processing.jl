@@ -17,9 +17,9 @@ function shape(l::Layer)
     wrap(x) = fill(x)
     extract(x) = x
     extract(x::Pair) = x[1]
-    
+
     wrappedvars = (wrap(extract(v)) for vs in containers for v in vs)
-    
+
     return Broadcast.combine_axes(wrappedvars...)
 end
 
@@ -75,11 +75,11 @@ function getlabeledarray(layer::Layer, s)
         sz = ntuple(length(axs)) do n
             return n in d.dims ? length(axs[n]) : 1
         end
-        arr = map(fill∘f, CartesianIndices(sz))
+        arr = map(fill ∘ f, CartesianIndices(sz))
     elseif data === Pregrouped()
         vs, (f, (label, scaleid)) = select(data, s)
         isprim = any(iscategoricalcontainer, vs)
-        arr = isprim ? map(fill∘f, vs...) : map(x -> map(f, x...), zip(vs...)) 
+        arr = isprim ? map(fill ∘ f, vs...) : map(x -> map(f, x...), zip(vs...))
     elseif data === nothing
         vs, (f, (label, scaleid)) = select(data, axs, s)
         arr = fill(map(f, vs...))
@@ -103,7 +103,7 @@ end
 
 with_presorted_indices(arr) = arr
 function with_presorted_indices(arr::AbstractArray{<:AbstractArray{<:Presorted}})
-    s = Dict{Any,UInt16}() # TODO: how to get parametric type in Union{T,Missing} case? where T throws UndefVarError then
+    s = Dict{Any, UInt16}() # TODO: how to get parametric type in Union{T,Missing} case? where T throws UndefVarError then
     with_indices = map(arr) do subarr
         map(subarr) do el
             i = get!(s, el.x) do
@@ -127,12 +127,12 @@ function process_mappings(layer::Layer)
 
     label_scaleid_positional = map(v -> getlabeledarray(layer, v), layer.positional)
     pos_labels = map(first, label_scaleid_positional)
-    pos_scaleids = map(x -> x[2], label_scaleid_positional) 
+    pos_scaleids = map(x -> x[2], label_scaleid_positional)
     positional = map(last, label_scaleid_positional)
 
     label_scaleid_named = map(v -> getlabeledarray(layer, v), layer.named)
     nam_labels = map(first, label_scaleid_named)
-    nam_scaleids = map(x -> x[2], label_scaleid_named) 
+    nam_scaleids = map(x -> x[2], label_scaleid_named)
     named = map(last, label_scaleid_named)
 
     labels = merge(Dictionary(pos_labels), nam_labels)
@@ -163,15 +163,17 @@ function process(layer::Layer)
     grouped_entry = layer.data === Pregrouped() ? processedlayer : group(processedlayer)
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
     transformed_processlayers = ProcessedLayers(layer.transformation(ProcessedLayer(grouped_entry; primary)))
-    return ProcessedLayers(map(transformed_processlayers.layers) do transformed_processlayer
-        attributes = merge(mandatory_attributes(transformed_processlayer.plottype), transformed_processlayer.attributes)
-        possibly_without_visual = ProcessedLayer(transformed_processlayer; attributes)
-        return set_missing_visual(possibly_without_visual)
-    end)
+    return ProcessedLayers(
+        map(transformed_processlayers.layers) do transformed_processlayer
+            attributes = merge(mandatory_attributes(transformed_processlayer.plottype), transformed_processlayer.attributes)
+            possibly_without_visual = ProcessedLayer(transformed_processlayer; attributes)
+            return set_missing_visual(possibly_without_visual)
+        end
+    )
 end
 
 function set_missing_visual(p::ProcessedLayer)
-    if p.plottype !== Plot{plot}
+    return if p.plottype !== Plot{plot}
         p
     else
         plottype = Makie.plottype(p.plottype, p.positional...)

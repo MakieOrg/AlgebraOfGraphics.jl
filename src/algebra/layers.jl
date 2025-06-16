@@ -151,7 +151,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
     for multiaesscaledict in continuousscales_grid
         for (aes, scaledict) in pairs(multiaesscaledict)
             existing = if !haskey(merged_continuousscales, aes)
-                d = Dictionary{Union{Nothing,Symbol},ContinuousScale}()
+                d = Dictionary{Union{Nothing, Symbol}, ContinuousScale}()
                 insert!(merged_continuousscales, aes, d)
                 d
             else
@@ -191,7 +191,7 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
 
     # allow specifying named scales just by symbol, we can find out what aesthetic that maps
     # to by checking the processed layers
-    named_scales = Dictionary{Union{Symbol,Int},Type{<:Aesthetic}}()
+    named_scales = Dictionary{Union{Symbol, Int}, Type{<:Aesthetic}}()
     unnamed_aes = Set{Type{<:Aesthetic}}()
 
     for processedlayer in processedlayers
@@ -203,7 +203,7 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
             if value isa AbstractArray{<:AbstractArray{<:Verbatim}}
                 return
             end
-            if haskey(processedlayer.scale_mapping, key)
+            return if haskey(processedlayer.scale_mapping, key)
                 symbol = processedlayer.scale_mapping[key]
                 existing_aes = get(named_scales, symbol, nothing)
                 aes = aes_mapping[key]
@@ -225,9 +225,9 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
 
     dict = MultiAesScaleDict{Any}()
 
-    fn(value::Pair{<:Type,<:Any}) = nothing, value[1], value[2]
-    fn(value::Pair{<:Tuple{<:Type,Symbol},<:Any}) = value[1][2], value[1][1], value[2]
-    fn(value::Pair{Symbol,<:Any}) = value[1], named_scales[value[1]], value[2]
+    fn(value::Pair{<:Type, <:Any}) = nothing, value[1], value[2]
+    fn(value::Pair{<:Tuple{<:Type, Symbol}, <:Any}) = value[1][2], value[1][1], value[2]
+    fn(value::Pair{Symbol, <:Any}) = value[1], named_scales[value[1]], value[2]
 
     for (sym, value) in pairs(scales.dict)
         aes = aesthetic_for_symbol(sym)
@@ -243,9 +243,9 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
             end
             scale_id = nothing
         end
-    
+
         if !haskey(dict, aes)
-            insert!(dict, aes, Dictionary{Union{Nothing,Symbol},Any}())
+            insert!(dict, aes, Dictionary{Union{Nothing, Symbol}, Any}())
         end
         subdict = dict[aes]
         if haskey(subdict, scale_id)
@@ -262,8 +262,10 @@ function compute_scale_properties(processedlayers::Vector{ProcessedLayer}, scale
     return dict
 end
 
-function compute_axes_grid(fig, d::AbstractDrawable, scales::Scales = scales();
-                           axis=NamedTuple())
+function compute_axes_grid(
+        fig, d::AbstractDrawable, scales::Scales = scales();
+        axis = NamedTuple()
+    )
 
     axes_grid = compute_axes_grid(d, scales; axis)
     sz = size(axes_grid)
@@ -277,16 +279,16 @@ end
 
 hardcoded_mapping(_::Int) = nothing
 function hardcoded_mapping(key::Symbol)
-    key === :layout ? AesLayout :
-    key === :row ? AesRow :
-    key === :col ? AesCol :
-    key === :group ? AesGroup :
-    key === :dodge_x ? AesDodgeX :
-    key === :dodge_y ? AesDodgeY :
-    nothing
+    return key === :layout ? AesLayout :
+        key === :row ? AesRow :
+        key === :col ? AesCol :
+        key === :group ? AesGroup :
+        key === :dodge_x ? AesDodgeX :
+        key === :dodge_y ? AesDodgeY :
+        nothing
 end
 
-function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_mapping::AestheticMapping)
+function hardcoded_or_mapped_aes(processedlayer, key::Union{Int, Symbol}, aes_mapping::AestheticMapping)
     hardcoded = hardcoded_mapping(key)
     hardcoded !== nothing && return hardcoded
     if !haskey(aes_mapping, key)
@@ -295,14 +297,14 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int,Symbol}, aes_map
     return aes_mapping[key]
 end
 
-function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=NamedTuple())
+function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis = NamedTuple())
 
     processedlayers = ProcessedLayers(d).layers
 
     scale_props = compute_scale_properties(processedlayers, scales)
 
     categoricalscales = MultiAesScaleDict{CategoricalScale}()
-    
+
     for processedlayer in processedlayers
         aes_mapping = aesthetic_mapping(processedlayer)
         catscales = AlgebraOfGraphics.categoricalscales(processedlayer, scale_props, aes_mapping)
@@ -393,7 +395,7 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis=
             # Use global scales for ticks for now
             # TODO: requires a nicer mechanism that takes into account axis linking
             (scale isa ContinuousScale) && (scale = merged_continuousscales[aes][used_scale_id])
-            for (k, v) in pairs((label=label, ticks=ticks(scale)))
+            for (k, v) in pairs((label = label, ticks = ticks(scale)))
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand
                 get!(ae.axis.attributes, keyword, v)
@@ -414,11 +416,11 @@ function categorical_limits_pseudo_entry!(ae::AxisSpecEntries, aes, scale::Categ
     named = NamedArguments((; color = :transparent))
     ptype(::Type{AesX}) = VLines
     ptype(::Type{AesY}) = HLines
-    push!(ae.entries, Entry(ptype(aes), positional, named))
+    return push!(ae.entries, Entry(ptype(aes), positional, named))
 end
 
 function get_used_scale_ids(ae::AxisSpecEntries, aestype)
-    scale_ids = Set{Union{Nothing,Symbol}}()
+    scale_ids = Set{Union{Nothing, Symbol}}()
     for p in ae.processedlayers
         aes_map = aesthetic_mapping(p)
         for (key, value) in pairs(aes_map)
@@ -482,7 +484,7 @@ function to_entry(P, p::ProcessedLayer, categoricalscales::Dictionary, continuou
         end
     end
 
-    Entry(P, positional, merge(p.attributes, named, primary))
+    return Entry(P, positional, merge(p.attributes, named, primary))
 end
 
 function get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
@@ -513,7 +515,7 @@ function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, 
 end
 
 function default_colormap()
-    Makie.current_default_theme().colormap[]
+    return Makie.current_default_theme().colormap[]
 end
 
 full_rescale(data, aes, scale::CategoricalScale) = rescale(data, scale)
@@ -521,7 +523,7 @@ full_rescale(data, aes, scale::CategoricalScale) = rescale(data, scale)
 function nonsingular_colorrange(scale::ContinuousScale)
     props = scale.props.aesprops::AesColorContinuousProps
     cr = @something(props.colorrange, scale.extrema)
-    nonsingular_limits(cr)
+    return nonsingular_limits(cr)
 end
 
 # expand singular limits to (0, v) or (v, 0) if singular value v is nonzero
@@ -551,7 +553,7 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     highclip = Makie.to_color(@something(props.highclip, last(colormap)))
     nan_color = Makie.to_color(@something(props.nan_color, RGBAf(0, 0, 0, 0)))
     interpolate = true
-    Makie.numbers_to_colors(
+    return Makie.numbers_to_colors(
         Makie.convert_single_argument(collect(data)),
         colormap,
         identity,
@@ -565,12 +567,12 @@ end
 
 function full_rescale(data, ::Type{AesMarkerSize}, scale::ContinuousScale)
     props = scale.props.aesprops::AesMarkerSizeContinuousProps
-    values_to_markersizes(data, props.sizerange, nonsingular_limits(scale.extrema))
+    return values_to_markersizes(data, props.sizerange, nonsingular_limits(scale.extrema))
 end
 
 function full_rescale(data, ::Type{AesLineWidth}, scale::ContinuousScale)
     props = scale.props.aesprops::AesLineWidthContinuousProps
-    values_to_linewidth(data, props.sizerange, nonsingular_limits(scale.extrema))
+    return values_to_linewidth(data, props.sizerange, nonsingular_limits(scale.extrema))
 end
 
 function values_to_linewidth(data, sizerange, extrema)
@@ -579,14 +581,14 @@ function values_to_linewidth(data, sizerange, extrema)
     widthspan = widthmax - widthmin
     scalemin, scalemax = extrema
     scalewidth = scalemax - scalemin
-    map(data) do value
+    return map(data) do value
         fraction = ((value - scalemin) / scalewidth)
         linewidth = widthmin + fraction * widthspan
         return linewidth
     end
 end
 
-full_rescale(data, aes::Type{<:Union{AesContourColor,AesABIntercept,AesABSlope}}, scale::ContinuousScale) = data # passthrough, this aes is a mock one anyway
+full_rescale(data, aes::Type{<:Union{AesContourColor, AesABIntercept, AesABSlope}}, scale::ContinuousScale) = data # passthrough, this aes is a mock one anyway
 
 function values_to_markersizes(data, sizerange, extrema)
     # we scale the area linearly with the values
@@ -594,7 +596,7 @@ function values_to_markersizes(data, sizerange, extrema)
     areawidth = areamax - areamin
     scalemin, scalemax = extrema
     scalewidth = scalemax - scalemin
-    map(data) do value
+    return map(data) do value
         fraction = ((value - scalemin) / scalewidth)
         markerarea = areamin + fraction * areawidth
         markersize = sqrt(markerarea)
@@ -602,14 +604,14 @@ function values_to_markersizes(data, sizerange, extrema)
     end
 end
 
-function full_rescale(data, aes::Type{<:Union{AesX,AesY,AesZ,AesDeltaX,AesDeltaY,AesDeltaZ,AesAnnotationOffsetX,AesAnnotationOffsetY}}, scale::ContinuousScale)
+function full_rescale(data, aes::Type{<:Union{AesX, AesY, AesZ, AesDeltaX, AesDeltaY, AesDeltaZ, AesAnnotationOffsetX, AesAnnotationOffsetY}}, scale::ContinuousScale)
     return data
 end
 
 function numerical_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     aes = aes_mapping[key]
     scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
-    
+
     if scale isa ContinuousScale
         return values, scale
     elseif scale === nothing
@@ -627,19 +629,23 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
 
     if scale isa CategoricalScale
         colormap = plotvalues(scale)
-        color_attributes = dictionary([
-            :colormap => colormap,
-            :colorrange => (1, length(colormap)),
-            :nan_color => :transparent,
-        ])
+        color_attributes = dictionary(
+            [
+                :colormap => colormap,
+                :colorrange => (1, length(colormap)),
+                :nan_color => :transparent,
+            ]
+        )
     else
-        color_attributes = dictionary([
-            :colormap => @something(scale.props.aesprops.colormap, default_colormap()),
-            :colorrange => nonsingular_colorrange(scale),
-            :nan_color => @something(scale.props.aesprops.nan_color, :transparent),
-            :lowclip => @something(scale.props.aesprops.lowclip, Makie.automatic),
-            :highclip => @something(scale.props.aesprops.highclip, Makie.automatic),
-        ])
+        color_attributes = dictionary(
+            [
+                :colormap => @something(scale.props.aesprops.colormap, default_colormap()),
+                :colorrange => nonsingular_colorrange(scale),
+                :nan_color => @something(scale.props.aesprops.nan_color, :transparent),
+                :lowclip => @something(scale.props.aesprops.lowclip, Makie.automatic),
+                :highclip => @something(scale.props.aesprops.highclip, Makie.automatic),
+            ]
+        )
     end
 
     positional = Any[
@@ -647,17 +653,18 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
         full_rescale(p.positional[2], 2, aes_mapping, scale_mapping, categoricalscales, continuousscales),
         z_indices,
     ]
-    
-    Entry(P, positional, merge(p.named, p.primary, p.attributes, color_attributes))
+
+    return Entry(P, positional, merge(p.named, p.primary, p.attributes, color_attributes))
 end
 
 function Base.show(io::IO, layers::Layers; indent = 0)
-    ind = "  " ^ indent
+    ind = "  "^indent
     printstyled(io, ind, "Layers", bold = true)
     println(io, " with $(length(layers.layers)) elements:")
     for (i, layer) in enumerate(layers)
         show(io, layer; indent = indent + 1, index = i)
     end
+    return
 end
 
 scale_setting_name(scale_id, aes::Type{<:Aesthetic}) = scale_id !== nothing ? scale_id : string(nameof(aes))[4:end]
@@ -667,7 +674,7 @@ function compute_dodge(data, key::Symbol, dodgevalues, scale_mapping, categorica
     scale = categoricalscales[dodge_aes][scale_id]
 
     indices = rescale(dodgevalues isa AbstractArray ? dodgevalues : [dodgevalues], scale)
-    
+
     props = scale.props.aesprops
     n = length(datavalues(scale))
     n == 1 && return data
@@ -677,7 +684,7 @@ function compute_dodge(data, key::Symbol, dodgevalues, scale_mapping, categorica
         error("Tried to compute dodging offsets but the `width` attribute of the dodging scale was `nothing`. This happens if only plots participate in the dodge that do not have an inherent width. For example, a scatter plot has no width but a barplot does. You can pass a width manually like `draw(..., scales($(scale_setting_name(scale_id, dodge_aes)) = (; width = 0.6))`.")
     end
     # scale to 0-1, center around 0, shrink to width (like centers of bins that added together result in width)
-    offsets = ((indices .- 1) ./ (n - 1) .- 0.5) .* width * (n-1) / n
+    offsets = ((indices .- 1) ./ (n - 1) .- 0.5) .* width * (n - 1) / n
     return data .+ offsets
 end
 
@@ -689,7 +696,7 @@ function set_dodge_width_default!(categoricalscales, processedlayers)
             props = scale.props.aesprops
             props.width === nothing || continue
             n_dodge = length(datavalues(scale))
-            width::Union{Float64,Nothing} = nothing
+            width::Union{Float64, Nothing} = nothing
             for p in processedlayers
                 _width = determine_dodge_width(p, dodgetype, n_dodge)
                 if width === nothing
@@ -710,7 +717,7 @@ function update_width(scale::CategoricalScale, width)
     return Accessors.@set scale.props.aesprops.width = width
 end
 
-function determine_dodge_width(p::ProcessedLayer, dodgetype, n_dodge)::Union{Float64,Nothing}
+function determine_dodge_width(p::ProcessedLayer, dodgetype, n_dodge)::Union{Float64, Nothing}
     aes_mapping = aesthetic_mapping(p)
     for key in keys(p.primary)
         aes = hardcoded_or_mapped_aes(p, key, aes_mapping)
@@ -753,5 +760,5 @@ end
 function resolution(vec_of_vecs)::Float64
     iscategoricalcontainer(vec_of_vecs) && return 1.0
     s = unique(sort(reduce(vcat, vec_of_vecs)))
-    return minimum((b - a for (a, b) in @views zip((s[begin:end-1]), s[begin+1:end])))
+    return minimum((b - a for (a, b) in @views zip((s[begin:(end - 1)]), s[(begin + 1):end])))
 end

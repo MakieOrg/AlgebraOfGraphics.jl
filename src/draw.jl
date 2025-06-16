@@ -13,7 +13,7 @@ function update(f, fig)
     return output
 end
 
-function Makie.plot!(fig, d::AbstractDrawable, scales::Scales = scales(); axis=NamedTuple())
+function Makie.plot!(fig, d::AbstractDrawable, scales::Scales = scales(); axis = NamedTuple())
     if isa(fig, Union{Axis, Axis3}) && !isempty(axis)
         @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $axis.")
     end
@@ -22,17 +22,19 @@ function Makie.plot!(fig, d::AbstractDrawable, scales::Scales = scales(); axis=N
     return grid
 end
 
-function Makie.plot(d::AbstractDrawable, scales::Scales = scales();
-                    axis=NamedTuple(), figure=NamedTuple())
+function Makie.plot(
+        d::AbstractDrawable, scales::Scales = scales();
+        axis = NamedTuple(), figure = NamedTuple()
+    )
     fig = Figure(; figure...)
     grid = plot!(fig, d, scales; axis)
     return FigureGrid(fig, grid)
 end
 
-function _kwdict(prs, keyword::Symbol)::Dictionary{Symbol,Any}
+function _kwdict(prs, keyword::Symbol)::Dictionary{Symbol, Any}
     err = nothing
     dict = try
-        _dict::Dictionary{Symbol,Any} = dictionary(pairs(prs))
+        _dict::Dictionary{Symbol, Any} = dictionary(pairs(prs))
     catch _err
         err = _err
     end
@@ -84,9 +86,11 @@ The `title`, `subtitle` and `footnotes` arguments accept objects of any kind tha
 - `footnotealign`
 - `footnotelineheight`
 """
-function draw(d::AbstractDrawable, scales::Scales = scales();
-              axis=NamedTuple(), figure=NamedTuple(),
-              facet=NamedTuple(), legend=NamedTuple(), colorbar=NamedTuple(), palette=nothing)
+function draw(
+        d::AbstractDrawable, scales::Scales = scales();
+        axis = NamedTuple(), figure = NamedTuple(),
+        facet = NamedTuple(), legend = NamedTuple(), colorbar = NamedTuple(), palette = nothing
+    )
     check_palette_kw(palette)
     axis = _kwdict(axis, :axis)
     figure = _kwdict(figure, :figure)
@@ -102,17 +106,17 @@ _remove_show_kw(pairs) = filter(((key, value),) -> key !== :show, pairs)
 struct FigureSettings
     title
     subtitle
-    titlesize::Union{Nothing,Float64}
-    subtitlesize::Union{Nothing,Float64}
-    titlealign::Union{Nothing,Symbol}
+    titlesize::Union{Nothing, Float64}
+    subtitlesize::Union{Nothing, Float64}
+    titlealign::Union{Nothing, Symbol}
     titlecolor
     subtitlecolor
     titlefont
     subtitlefont
     titlelineheight
     subtitlelineheight
-    footnotes::Union{Nothing,Vector{Any}}
-    footnotesize::Union{Nothing,Float64}
+    footnotes::Union{Nothing, Vector{Any}}
+    footnotesize::Union{Nothing, Float64}
     footnotefont
     footnotecolor
     footnotealign
@@ -163,14 +167,16 @@ function figure_settings(;
     return f, kwargs
 end
 
-function _draw(d::AbstractDrawable, scales::Scales;
-              axis, figure, facet, legend, colorbar)
+function _draw(
+        d::AbstractDrawable, scales::Scales;
+        axis, figure, facet, legend, colorbar
+    )
 
     ae = compute_axes_grid(d, scales; axis)
-    _draw(ae; figure, facet, legend, colorbar)
+    return _draw(ae; figure, facet, legend, colorbar)
 end
 
-function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol,Any}(), figure = Dictionary{Symbol,Any}(), facet = Dictionary{Symbol,Any}(), legend = Dictionary{Symbol,Any}(), colorbar = Dictionary{Symbol,Any}())
+function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol, Any}(), figure = Dictionary{Symbol, Any}(), facet = Dictionary{Symbol, Any}(), legend = Dictionary{Symbol, Any}(), colorbar = Dictionary{Symbol, Any}())
 
     if !isempty(axis)
         # merge in axis attributes here because pagination runs `compute_axes_grid`
@@ -203,16 +209,16 @@ function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol,Any}(), fig
         justification = halign
 
         if fs.subtitle !== nothing
-            Label(fg.figure[begin-1, :], fs.subtitle; tellwidth = false, halign, justification, _filter_nothings(; font = fs.subtitlefont, color = fs.subtitlecolor, fontsize = fs.subtitlesize, lineheight = fs.subtitlelineheight)...)
+            Label(fg.figure[begin - 1, :], fs.subtitle; tellwidth = false, halign, justification, _filter_nothings(; font = fs.subtitlefont, color = fs.subtitlecolor, fontsize = fs.subtitlesize, lineheight = fs.subtitlelineheight)...)
         end
         if fs.title !== nothing
-            Label(fg.figure[begin-1, :], fs.title; tellwidth = false, fontsize = base_fontsize * 1.15, font = :bold, halign, justification, _filter_nothings(; font = fs.titlefont, color = fs.titlecolor, fontsize = fs.titlesize, lineheight = fs.titlelineheight)...)
+            Label(fg.figure[begin - 1, :], fs.title; tellwidth = false, fontsize = base_fontsize * 1.15, font = :bold, halign, justification, _filter_nothings(; font = fs.titlefont, color = fs.titlecolor, fontsize = fs.titlesize, lineheight = fs.titlelineheight)...)
         end
         if fs.subtitle !== nothing
             fg.figure.layout.addedrowgaps[1] = Fixed(0)
         end
         if fs.footnotes !== nothing
-            fgl = GridLayout(fg.figure[end+1, :]; halign = :left, _filter_nothings(; halign = fs.footnotealign)...)
+            fgl = GridLayout(fg.figure[end + 1, :]; halign = :left, _filter_nothings(; halign = fs.footnotealign)...)
             for (i, note) in enumerate(fs.footnotes)
                 Label(fgl[i, 1], note; tellwidth = false, halign = :left, fontsize = base_fontsize / 1.15, _filter_nothings(; halign = fs.footnotealign, font = fs.footnotefont, color = fs.footnotecolor, fontsize = fs.footnotesize, lineheight = fs.footnotelineheight)...)
             end
@@ -225,7 +231,7 @@ end
 
 # this can be used as a trailing argument to |>
 function draw(scales::Scales = scales(); kwargs...)
-    drawable -> draw(drawable, scales; kwargs...)
+    return drawable -> draw(drawable, scales; kwargs...)
 end
 
 """
@@ -237,12 +243,14 @@ In practice, `d` will often be a [`AlgebraOfGraphics.Layer`](@ref) or
 `fig` can be a figure, a position in a layout, or an axis if `d` has no facet specification.
 The output can be customized by passing named tuples or dictionaries with settings via the `axis` or `facet` keywords.
 """
-function draw!(fig, d::AbstractDrawable, scales::Scales = scales();
-               axis=NamedTuple(), facet=NamedTuple(), palette=nothing)
+function draw!(
+        fig, d::AbstractDrawable, scales::Scales = scales();
+        axis = NamedTuple(), facet = NamedTuple(), palette = nothing
+    )
     check_palette_kw(palette)
     axis = _kwdict(axis, :axis)
     facet = _kwdict(facet, :facet)
-    _draw!(fig, d, scales; axis, facet)
+    return _draw!(fig, d, scales; axis, facet)
 end
 
 function _draw!(fig, d, scales; axis, facet)
@@ -262,11 +270,11 @@ check_palette_kw(palette) = throw(PaletteError(palette))
 
 function Base.showerror(io::IO, pe::PaletteError)
     msg = """
-        The `palette` keyword for `draw` and `draw!` has been removed in AlgebraOfGraphics v0.7. Categorical palettes should now be passed as a scale setting using the `scales` function, and they don't apply per plot keyword, but per scale. Different keywords from different plot objects can share the same scale.
+    The `palette` keyword for `draw` and `draw!` has been removed in AlgebraOfGraphics v0.7. Categorical palettes should now be passed as a scale setting using the `scales` function, and they don't apply per plot keyword, but per scale. Different keywords from different plot objects can share the same scale.
 
-        For example, where before you did `draw(spec; palette = (; color = [:red, :green, :blue])` you would now do `draw(spec, scales(Color = (; palette = [:red, :green, :blue]))`. In many cases, the scale name will be a camel-case variant of the keyword, for example `color => Color` or `markersize => MarkerSize` but this depends. To check which aesthetics a plot type, for example `Scatter`, supports, call `AlgebraOfGraphics.aesthetic_mapping(Scatter)`. The key passed to `scales` is the aesthetic type without the `Aes` so `AesColor` has the key `Color`, etc.
+    For example, where before you did `draw(spec; palette = (; color = [:red, :green, :blue])` you would now do `draw(spec, scales(Color = (; palette = [:red, :green, :blue]))`. In many cases, the scale name will be a camel-case variant of the keyword, for example `color => Color` or `markersize => MarkerSize` but this depends. To check which aesthetics a plot type, for example `Scatter`, supports, call `AlgebraOfGraphics.aesthetic_mapping(Scatter)`. The key passed to `scales` is the aesthetic type without the `Aes` so `AesColor` has the key `Color`, etc.
 
-        The palette passed was `$(pe.palette)`
-        """
-    print(io, msg)
+    The palette passed was `$(pe.palette)`
+    """
+    return print(io, msg)
 end

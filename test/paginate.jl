@@ -1,12 +1,12 @@
 function _equal(l1::ProcessedLayer, l2::ProcessedLayer)
-    all(fieldnames(ProcessedLayer)) do n
+    return all(fieldnames(ProcessedLayer)) do n
         getproperty(l1, n) == getproperty(l2, n)
     end
 end
 
 function _equal(l1::ProcessedLayers, l2::ProcessedLayers)
     length(l1.layers) == length(l2.layers) || return false
-    all(zip(l1.layers, l2.layers)) do (l1l, l2l)
+    return all(zip(l1.layers, l2.layers)) do (l1l, l2l)
         _equal(l1l, l2l)
     end
 end
@@ -19,7 +19,7 @@ end
         a = 1:100,
         b = 101:200,
         c = repeat(cs, 10),
-        d = repeat(ds, inner = 10)
+        d = repeat(ds, inner = 10),
     )
 
     # test both Layer and Layers
@@ -37,7 +37,7 @@ end
         @test length(pag) == 4
         pag = paginate(spec, layout = 4)
         @test length(pag) == 3
-        
+
         fgrids = draw(pag)
         @test fgrids isa Vector{FigureGrid}
         @test length(fgrids) == length(pag)
@@ -85,7 +85,7 @@ end
     fgrid = draw(p, 1; axis = (; xlabelcolor = :tomato))
     ax = only(fgrid.grid).axis
     @test ax.xlabelcolor[] == Makie.to_color(:tomato)
-    
+
     fgrids = draw(p; axis = (; xlabelcolor = :tomato))
     ax = only(fgrids[1].grid).axis
     @test ax.xlabelcolor[] == Makie.to_color(:tomato)

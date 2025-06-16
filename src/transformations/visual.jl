@@ -2,7 +2,7 @@ struct Visual
     plottype::PlotType
     attributes::NamedArguments
 end
-Visual(plottype::PlotType=Plot{plot}; kwargs...) = Visual(plottype, NamedArguments(kwargs))
+Visual(plottype::PlotType = Plot{plot}; kwargs...) = Visual(plottype, NamedArguments(kwargs))
 
 function (v::Visual)(input::ProcessedLayer)
     plottype = Makie.plottype(v.plottype, input.plottype)
@@ -36,7 +36,7 @@ Depending on its `aesthetic_mapping`, a plot type and its attributes may change 
 For example, `visual(BarPlot)` will show mapping 1 on the x axis and 2 on the y axis, while `visual(BarPlot, direction = :x)`
 shows mapping 1 on y and 2 on x.
 """
-visual(plottype::PlotType=Plot{plot}; kwargs...) = transformation(Visual(plottype; kwargs...))
+visual(plottype::PlotType = Plot{plot}; kwargs...) = transformation(Visual(plottype; kwargs...))
 
 # For backward compatibility, still allow `visual(Any)`.
 @deprecate visual(::Type{Any}; kwargs...) visual(; kwargs...)

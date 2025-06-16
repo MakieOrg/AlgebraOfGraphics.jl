@@ -13,11 +13,11 @@ end
 # to encode all axis information without creating the axis.
 struct AxisSpec
     type::Union{Type{Axis}, Type{Axis3}}
-    position::Tuple{Int,Int}
+    position::Tuple{Int, Int}
     attributes::NamedArguments
 end
 
-extract_type(; type=Axis, options...) = type, NamedArguments(options)
+extract_type(; type = Axis, options...) = type, NamedArguments(options)
 
 function AxisSpec(position, options)
     type, attributes = extract_type(; pairs(options)...)
@@ -53,11 +53,11 @@ end
 
 function AxisEntries(ae::AxisSpecEntries, fig)
     ax = ae.axis.type(fig[ae.axis.position...]; pairs(ae.axis.attributes)...)
-    AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales, ae.processedlayers)
+    return AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales, ae.processedlayers)
 end
 
 function AxisEntries(ae::AxisSpecEntries, ax::Union{Axis, Axis3})
-    AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales, ae.processedlayers)
+    return AxisEntries(ax, ae.entries, ae.categoricalscales, ae.continuousscales, ae.processedlayers)
 end
 
 function Makie.plot!(ae::AxisEntries)

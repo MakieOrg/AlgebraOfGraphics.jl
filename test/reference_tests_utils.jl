@@ -7,7 +7,7 @@ using Statistics
 rgbaf_convert(x::AbstractMatrix{<:Makie.RGB}) = convert(Matrix{RGBAf}, x)
 rgbaf_convert(x::AbstractMatrix{<:Makie.RGBA}) = convert(Matrix{RGBAf}, x)
 
-function compare_images(a::AbstractMatrix{<:Union{Makie.RGB,Makie.RGBA}}, b::AbstractMatrix{<:Union{Makie.RGB,Makie.RGBA}})
+function compare_images(a::AbstractMatrix{<:Union{Makie.RGB, Makie.RGBA}}, b::AbstractMatrix{<:Union{Makie.RGB, Makie.RGBA}})
 
     # convert always to RGBA, as at some point CairoMakie output changed due to PNGFiles
     a = rgbaf_convert(a)
@@ -22,7 +22,7 @@ function compare_images(a::AbstractMatrix{<:Union{Makie.RGB,Makie.RGBA}}, b::Abs
     range_dim1 = round.(Int, range(0, size(a, 1), length = ceil(Int, size(a, 1) / approx_tile_size_px)))
     range_dim2 = round.(Int, range(0, size(a, 2), length = ceil(Int, size(a, 2) / approx_tile_size_px)))
 
-    boundary_iter(boundaries) = zip(boundaries[1:end-1] .+ 1, boundaries[2:end])
+    boundary_iter(boundaries) = zip(boundaries[1:(end - 1)] .+ 1, boundaries[2:end])
 
     _norm(rgb1::RGBf, rgb2::RGBf) = sqrt(sum(((rgb1.r - rgb2.r)^2, (rgb1.g - rgb2.g)^2, (rgb1.b - rgb2.b)^2)))
     _norm(rgba1::RGBAf, rgba2::RGBAf) = sqrt(sum(((rgba1.r - rgba2.r)^2, (rgba1.g - rgba2.g)^2, (rgba1.b - rgba2.b)^2, (rgba1.alpha - rgba2.alpha)^2)))
@@ -46,7 +46,7 @@ function reftest(f::Function, name::String, update::Bool = get(ENV, "UPDATE_REFI
     mkpath(path)
     refpath = joinpath(path, name * " ref.png")
     recpath = joinpath(path, name * " rec.png")
-    
+
     save(recpath, fig)
 
     @testset "$name" begin
@@ -58,8 +58,8 @@ function reftest(f::Function, name::String, update::Bool = get(ENV, "UPDATE_REFI
             rec = Makie.FileIO.load(recpath)
             maxscore, tile = compare_images(ref, rec)
             if !update
-                    @test size(ref) == size(rec)
-                    @test maxscore <= threshold
+                @test size(ref) == size(rec)
+                @test maxscore <= threshold
             end
             if maxscore > threshold && maxscore != Inf
                 @info "\"$name\" score $maxscore at $(tile)"

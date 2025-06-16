@@ -12,17 +12,19 @@ end
 
 function midpoints(edges::AbstractVector)
     i0, i1 = firstindex(edges), lastindex(edges)
-    front, tail = view(edges, i0:i1-1), view(edges, i0+1:i1)
+    front, tail = view(edges, i0:(i1 - 1)), view(edges, (i0 + 1):i1)
     return (front .+ tail) ./ 2
 end
 
 function midpoints(edges::AbstractRange)
     min, s, l = minimum(edges), step(edges), length(edges)
-    return range(min + s / 2, step=s, length=l - 1)
+    return range(min + s / 2, step = s, length = l - 1)
 end
 
-function _histogram(vs::Tuple; bins=sturges(length(vs[1])), weights=automatic,
-    normalization::Symbol, datalimits, closed::Symbol)
+function _histogram(
+        vs::Tuple; bins = sturges(length(vs[1])), weights = automatic,
+        normalization::Symbol, datalimits, closed::Symbol
+    )
 
     intervals = applydatalimits(datalimits, vs)
     edges = compute_edges(intervals, bins, closed)
@@ -31,7 +33,7 @@ function _histogram(vs::Tuple; bins=sturges(length(vs[1])), weights=automatic,
     else
         fit(Histogram, vs, StatsBase.weights(weights), edges)
     end
-    return normalize(h, mode=normalization)
+    return normalize(h, mode = normalization)
 end
 
 struct HistogramAnalysis{plottype <: Plot, D, B}
@@ -42,17 +44,17 @@ struct HistogramAnalysis{plottype <: Plot, D, B}
 end
 
 function HistogramAnalysis{plottype}(;
-        datalimits::D=automatic,
-        bins::B=automatic,
-        closed::Symbol=:left,
-        normalization::Symbol=:none,
+        datalimits::D = automatic,
+        bins::B = automatic,
+        closed::Symbol = :left,
+        normalization::Symbol = :none,
     ) where {plottype <: Plot, D, B}
     return HistogramAnalysis{plottype, D, B}(datalimits, bins, closed, normalization)
 end
 HistogramAnalysis(; options...) = HistogramAnalysis{Plot{plot}}(; options...)
 
 histogram_preprocess_named(::Type{<:Plot}, edges, weights) = (;)
-histogram_preprocess_named(::Type{BarPlot}, edges, weights) = (; width=diff(first(edges)))
+histogram_preprocess_named(::Type{BarPlot}, edges, weights) = (; width = diff(first(edges)))
 histogram_preprocess_positional(::Type{<:Plot}, edges, weights) = (map(midpoints, edges)..., weights)
 function histogram_preprocess_positional(::Type{Stairs}, edges, weights)
     edges = only(edges)
@@ -82,7 +84,7 @@ function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plotty
     end
 
     label = h.normalization == :none ? "count" : string(h.normalization)
-    labels = set(output.labels, N+1 => label)
+    labels = set(output.labels, N + 1 => label)
     attributes = merge(output.attributes, histogram_default_attributes(plottype))
     return ProcessedLayer(output; plottype, labels, attributes)
 end

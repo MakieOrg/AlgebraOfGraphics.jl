@@ -1,5 +1,7 @@
-function colorbar!(fg::FigureGrid; position=:right,
-                   vertical=default_isvertical(position), kwargs...)
+function colorbar!(
+        fg::FigureGrid; position = :right,
+        vertical = default_isvertical(position), kwargs...
+    )
 
     guide_pos = guides_position(fg.figure, position)
     return colorbar!(guide_pos, fg; vertical, kwargs...)
@@ -39,10 +41,10 @@ function compute_colorbars(grid::Matrix{AxisEntries})
             end
         end
     end
-    
+
     colorscales = filter(!isnothing, [get(ae.continuousscales, AesColor, nothing) for ae in grid])
 
-    colorscale_dict = reduce(colorscales, init=Dictionary{Union{Nothing,Symbol},ContinuousScale}()) do c1, c2
+    colorscale_dict = reduce(colorscales, init = Dictionary{Union{Nothing, Symbol}, ContinuousScale}()) do c1, c2
         mergewith!(mergescales, c1, c2)
     end
 
@@ -77,7 +79,7 @@ function continuous_colorbar(colorscale::ContinuousScale)
 end
 
 function is_binned(scale::CategoricalScale)
-    all(x -> x isa Bin, datavalues(scale))
+    return all(x -> x isa Bin, datavalues(scale))
 end
 
 function categorical_colorbar(scale::CategoricalScale)
@@ -95,7 +97,7 @@ function categorical_colorbar(scale::CategoricalScale)
                 push!(values, bin.range...)
                 push!(colors, pv[i])
             else
-                prev_bin = bins[i-1]
+                prev_bin = bins[i - 1]
                 # if bins don't touch, we have to insert transparent gaps in between
                 if prev_bin.range[2] > bin.range[1]
                     error("Overlapping bins in categorical colorscale: $(prev_bin.range) and $(bin.range).")
@@ -144,5 +146,5 @@ function categorical_colorbar(scale::CategoricalScale)
             label,
         )
     end
-    
+
 end

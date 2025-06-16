@@ -1,7 +1,7 @@
 Base.@kwdef struct FilledContoursAnalysis
-    bands::Union{Nothing,Int}
-    levels::Union{Nothing,Vector{Float64}}
-    kwargs::Dict{Symbol,Any}
+    bands::Union{Nothing, Int}
+    levels::Union{Nothing, Vector{Float64}}
+    kwargs::Dict{Symbol, Any}
 end
 
 function (c::FilledContoursAnalysis)(input::ProcessedLayer)
@@ -28,7 +28,7 @@ function (c::FilledContoursAnalysis)(input::ProcessedLayer)
 
         (x, y, z) = Makie.convert_arguments(Contourf, _x, _y, _z)
         _xs, _ys, _ids, _subids, _bins = calculate_pregrouped_poly_columns(x, y, z, lvls)
-        
+
         for (_x, _y, _id, _subid, bin) in zip(_xs, _ys, _ids, _subids, _bins)
             push!(xs, _x)
             push!(ys, _y)
@@ -51,7 +51,7 @@ function (c::FilledContoursAnalysis)(input::ProcessedLayer)
         positional = Any[xs, ys, ids, subids],
         primary,
     )
-    
+
 end
 
 """
@@ -75,7 +75,7 @@ function filled_contours(; bands = automatic, levels = automatic, kwargs...)
     end
     bands = bands === automatic ? nothing : bands
     levels = levels === automatic ? nothing : levels
-    transformation(FilledContoursAnalysis(; bands, levels, kwargs = Dict(kwargs)))
+    return transformation(FilledContoursAnalysis(; bands, levels, kwargs = Dict(kwargs)))
 end
 
 # copied and adjusted from Makie
@@ -83,7 +83,7 @@ end
 function calculate_pregrouped_poly_columns(xs, ys, zs, levels)
     @assert issorted(levels)
 
-    lows = levels[1:end-1]
+    lows = levels[1:(end - 1)]
     highs = levels[2:end]
 
     # zs needs to be transposed to match rest of makie
@@ -118,7 +118,7 @@ function calculate_pregrouped_poly_columns(xs, ys, zs, levels)
         push!(ys_out, _ys)
         push!(poly_ids, _poly_ids)
         push!(poly_subids, _poly_subids)
-        bin = Bin((levels[level_index], levels[level_index+1]), (level_index == 1, true))
+        bin = Bin((levels[level_index], levels[level_index + 1]), (level_index == 1, true))
         push!(bins, bin)
     end
     return xs_out, ys_out, poly_ids, poly_subids, bins
@@ -138,8 +138,9 @@ function _group_polys(points, ids)
     # check if a single point is contained, saving some computation time
     containment_matrix = [
         p1 != p2 &&
-        PolygonOps.inpolygon(first(p1), p2) == 1
-        for p1 in polys_lastdouble, p2 in polys_lastdouble]
+            PolygonOps.inpolygon(first(p1), p2) == 1
+            for p1 in polys_lastdouble, p2 in polys_lastdouble
+    ]
 
     unclassified_polyindices = collect(1:size(containment_matrix, 1))
 
@@ -187,5 +188,5 @@ function _group_polys(points, ids)
         unclassified_polyindices = unclassified_polyindices[to_keep]
         containment_matrix = containment_matrix[to_keep, to_keep]
     end
-    groups
+    return groups
 end

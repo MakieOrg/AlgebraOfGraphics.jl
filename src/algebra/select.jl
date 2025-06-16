@@ -38,7 +38,7 @@ in such scenarios could be `row = dims(1), col = dims(2)`, for example.
 """
 dims(args...) = DimsSelector(args)
 
-function (d::DimsSelector)(c::CartesianIndex{N}) where N
+function (d::DimsSelector)(c::CartesianIndex{N}) where {N}
     t = ntuple(N) do n
         return n in d.dims ? c[n] : 1
     end
@@ -103,8 +103,8 @@ function select(data, x::Pair{<:Any, <:Union{Symbol, AbstractString}})
     return vs => identity => to_string(label) => nothing
 end
 
-function select(data::Columns, direct::DirectData{T}) where T
-    arr = if T <: AbstractArray{X, 1} where X
+function select(data::Columns, direct::DirectData{T}) where {T}
+    arr = if T <: AbstractArray{X, 1} where {X}
         direct.data
     elseif T <: AbstractArray
         throw(ArgumentError("It's currently not allowed to use arrays that are not one-dimensional (column vectors) as direct data."))
@@ -112,7 +112,7 @@ function select(data::Columns, direct::DirectData{T}) where T
         nrows = length(rows(data.columns))
         fill(direct.data, nrows)
     end
-    (arr,) => identity => "" => nothing
+    return (arr,) => identity => "" => nothing
 end
 
 function select(data, x::Pair{<:Any, <:Any})
