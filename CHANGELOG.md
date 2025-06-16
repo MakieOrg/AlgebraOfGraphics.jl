@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.11.0 - 2025-06-16
+
+- **Breaking** Added Makie 0.23 compat. As Makie 0.23 split up `Arrows` in `Arrows2D` and `Arrows3D`, `visual(Arrows2D)` needs to be specified explicitly now in AlgebraOfGraphics. As `Arrows2D` plots polygon shapes now and not a mixture of scatters and lines, the categorical `arrowhead` marker aesthetic had to be removed [#666](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/666).
+
 ## v0.10.8 - 2025-06-06
 
 - Added support for the Makie's new `Annotation` recipe [#663](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/663).

@@ -361,14 +361,13 @@ function aesthetic_mapping(::Type{QQPlot}, ::Normal, ::Normal)
     ])
 end
 
-function aesthetic_mapping(::Type{Arrows}, ::Normal, ::Normal, ::Normal, ::Normal)
+function aesthetic_mapping(::Type{Arrows2D}, ::Normal, ::Normal, ::Normal, ::Normal)
     dictionary([
         1 => AesX,
         2 => AesY,
         3 => AesDeltaX,
         4 => AesDeltaY,
         :color => AesColor,
-        :arrowhead => AesMarker,
     ])
 end
 
