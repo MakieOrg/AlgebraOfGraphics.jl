@@ -461,18 +461,14 @@ function legend_elements(T::Type{<:Union{Band,VSpan,HSpan}}, attributes, scale_a
     )]
 end
 
-function legend_elements(T::Type{Arrows}, attributes, scale_args::MixedArguments)
-    marker = _get(T, scale_args, attributes, :arrowhead)
-    marker = marker === Makie.automatic ? :utriangle : marker # Makie handles this internally due to the 2d/3d combination. This should probably be fixed in Makie
+function legend_elements(T::Type{Arrows2D}, attributes, scale_args::MixedArguments)
     [
         LineElement(
             color = _get(T, scale_args, attributes, :color),
-            linewidth = _get(T, scale_args, attributes, :linewidth),
-            linestyle = _get(T, scale_args, attributes, :linestyle),
             linepoints = [Point2(0.5, 0), Point2(0.5, 0.75)]
         ),
         MarkerElement(;
-            marker,
+            marker = :utriangle, # Makie handles this internally due to the 2d/3d combination. This should probably be fixed in Makie,
             color = _get(T, scale_args, attributes, :color),
             markerpoints = [Point2(0.5, 0.75)],
         ),

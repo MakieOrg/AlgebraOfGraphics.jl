@@ -17,13 +17,11 @@ c=rand(Bool, length(x))
 d=rand(Bool, length(x))
 df = (; x, y, u, v, c, d)
 colors = [colorant"#E24A33", colorant"#348ABD"]
-heads = ['◮', '◭']
 plt = data(df) *
     mapping(:x, :y, :u, :v) *
-    mapping(arrowhead = :c => nonnumeric) *
     mapping(color = :d => nonnumeric) *
-    visual(Arrows, arrowsize=10, lengthscale=0.4, linewidth = 1)
-fg = draw(plt, scales(Marker = (; palette = heads), Color = (; palette = colors)))
+    visual(Arrows2D, lengthscale=0.4)
+fg = draw(plt, scales(Color = (; palette = colors)))
 ````
 
 To associate specific attribute values to specific data values, use pairs.
