@@ -1471,7 +1471,7 @@ reftest("rainclouds") do
     f
 end
 
-reftest("annotation", true) do
+reftest("annotation") do
     f = Figure(size = (600, 450))
     text = string.(range('A', length = 5)) => verbatim
     spec1 = mapping(1:5, 1:5) *
@@ -1511,5 +1511,18 @@ reftest("annotation", true) do
         text = ["D", "E"] => verbatim,
     ) * visual(Annotation; labelspace = :data)
     draw!(f[2, 2], spec4)
+    f
+end
+
+reftest("textlabel") do
+    f = Figure()
+    s1 = mapping(1:5, fill(0, 5), text = string.(range('A', length = 5)) => verbatim, background_color = ["X", "X", "X", "Y", "Y"]) *
+        visual(TextLabel)
+    fg1 = draw!(f[1, 1], s1)
+    legend!(f[1, 2], fg1)
+    s2 = mapping(1:5, fill(0, 5), text = string.(range('A', length = 5)) => verbatim, text_color = ["X", "X", "X", "Y", "Y"]) *
+        visual(TextLabel)
+    fg2 = draw!(f[2, 1], s2)
+    legend!(f[2, 2], fg2)
     f
 end

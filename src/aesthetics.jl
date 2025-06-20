@@ -365,6 +365,17 @@ function aesthetic_mapping(::Type{Makie.Text}, ::Normal, ::Normal)
     )
 end
 
+function aesthetic_mapping(::Type{Makie.TextLabel}, ::Normal, ::Normal)
+    return dictionary(
+        [
+            1 => AesX,
+            2 => AesY,
+            :background_color => AesColor,
+            :text_color => AesColor,
+        ]
+    )
+end
+
 function aesthetic_mapping(::Type{BoxPlot}, ::Normal, ::Normal)
     return dictionary(
         [
