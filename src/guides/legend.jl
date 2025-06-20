@@ -464,6 +464,15 @@ function legend_elements(T::Type{<:Union{Makie.Text, Annotation}}, attributes, s
     ]
 end
 
+function legend_elements(T::Type{<:Makie.TextLabel}, attributes, scale_args::MixedArguments)
+    colorkey = haskey(scale_args, :text_color) && !haskey(scale_args, :background_color) ? :text_color : :background_color
+    return [
+        PolyElement(
+            color = _get(T, scale_args, attributes, colorkey),
+        ),
+    ]
+end
+
 function legend_elements(T::Type{Contour}, attributes, scale_args::MixedArguments)
     return [
         LineElement(

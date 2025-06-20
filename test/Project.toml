@@ -1,0 +1,24 @@
+[deps]
+AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+Dictionaries = "85a47980-9c8c-11e8-2b9f-f7ca1fa99fb4"
+DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
+GLM = "38e38edf-8417-5370-95a0-9cbb8c7f171a"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+GridLayoutBase = "3955a311-db13-416c-9275-1d80ed98e5e9"
+ImageInTerminal = "d8c32880-2388-543b-8c61-d9f865259254"
+KernelDensity = "5ab0869b-81aa-558d-bb23-cbf5423bbe9b"
+Loess = "4345ca2d-374a-55d4-8d30-97f9976e7612"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Shapefile = "8e980c4a-a4fe-5da2-b3a7-4b4b0353a2f4"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
+
+[sources]
+AlgebraOfGraphics = {path = ".."}
