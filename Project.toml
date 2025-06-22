@@ -36,10 +36,6 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 AlgebraOfGraphicsDynamicQuantitiesExt = "DynamicQuantities"
 AlgebraOfGraphicsUnitfulExt = "Unitful"
 
-[extras]
-DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
-Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
-
 [compat]
 Accessors = "0.1"
 Colors = "0.12, 0.13"
@@ -54,7 +50,7 @@ GridLayoutBase = "0.6, 0.7, 0.8, 0.9, 0.10, 0.11"
 Isoband = "0.1"
 KernelDensity = "0.6"
 Loess = "0.5.1, 0.6.1"
-Makie = "0.23"
+Makie = "0.23, 0.24"
 NaturalSort = "1"
 PlotUtils = "1"
 PolygonOps = "0.1.1"
@@ -66,3 +62,7 @@ StructArrays = "0.5, 0.6, 0.7"
 Tables = "1.4"
 Unitful = "1"
 julia = "1.6"
+
+[extras]
+DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
+Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
