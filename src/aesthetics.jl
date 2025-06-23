@@ -48,7 +48,7 @@ function aesthetic_mapping(plottype, attributes, scitypes::Vector{ScientificType
 end
 
 function aesthetic_mapping(T::Type{<:Plot}, scitypes::ScientificType...)
-    error("No aesthetic mapping defined yet for plot type $T with scientific eltypes $scitypes. AlgebraOfGraphics can only use plot types if it is told which attributes and input arguments map to which aesthetics like color, markersize or linewidth for example.")
+    error("No aesthetic mapping defined yet for plot type $T with $(length(scitypes)) positional argument$(length(scitypes) == 1 ? "" : "s") of kind$(length(scitypes) == 1 ? "" : "s") $scitypes. Run `show_aesthetics($T)` to check which aesthetic mappings it supports.")
 end
 
 aesthetic_mapping(::Type{Lines}, ::Normal) = aesthetic_mapping(Lines, 1)

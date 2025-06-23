@@ -292,7 +292,7 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int, Symbol}, aes_ma
     hardcoded = hardcoded_mapping(key)
     hardcoded !== nothing && return hardcoded
     if !haskey(aes_mapping, key)
-        throw(ArgumentError("ProcessedLayer with plot type $(processedlayer.plottype) did not have $(repr(key)) in its AestheticMapping. That means AlgebraOfGraphics does not know how to handle this attribute in its scale system. Note that you can use any array-valued attribute in a `mapping` if you bypass the scale system using the `=> verbatim` helper. The available mapping dictionary was:\n $(sprint(print, aes_mapping))"))
+        throw(ArgumentError("ProcessedLayer with plot type `$(processedlayer.plottype)` contains mapped attribute `$key` which is not part of the aesthetic mapping for `$(processedlayer.plottype)`. Run `show_aesthetics($(processedlayer.plottype))` to check which aesthetic mappings it supports.\n\nNote: If a plot attribute is not part of the aesthetic mapping for a given plot type, AlgebraOfGraphics does not know how to handle this attribute in its scale system, therefore that attribute cannot be used in `mapping`. The exception is if you bypass the scale system using the `=> verbatim` helper which allows you to use any array-valued attribute in `mapping`."))
     end
     return aes_mapping[key]
 end
