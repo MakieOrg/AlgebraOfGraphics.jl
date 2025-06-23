@@ -250,7 +250,9 @@ if VERSION >= v"1.9"
     end
 end
 
-@testset "Aesthetics errors" begin
-    @test_throws "No aesthetic mapping defined yet for plot type `Errorbars` with 1 positional argument" mapping(1:10) * visual(Errorbars) |> draw
-    @test_throws "contains mapped attribute `alpha` which is not part of the aesthetic mapping for `Scatter`" mapping(1:10, alpha = 1:10) * visual(Scatter) |> draw
+if VERSION > v"1.6"
+    @testset "Aesthetics errors" begin
+        @test_throws "No aesthetic mapping defined yet for plot type `Errorbars` with 1 positional argument" mapping(1:10) * visual(Errorbars) |> draw
+        @test_throws "contains mapped attribute `alpha` which is not part of the aesthetic mapping for `Scatter`" mapping(1:10, alpha = 1:10) * visual(Scatter) |> draw
+    end
 end
