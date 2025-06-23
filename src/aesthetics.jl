@@ -48,7 +48,7 @@ function aesthetic_mapping(plottype, attributes, scitypes::Vector{ScientificType
 end
 
 function aesthetic_mapping(T::Type{<:Plot}, scitypes::ScientificType...)
-    error("No aesthetic mapping defined yet for plot type $T with scientific eltypes $scitypes. AlgebraOfGraphics can only use plot types if it is told which attributes and input arguments map to which aesthetics like color, markersize or linewidth for example.")
+    error("No aesthetic mapping defined yet for plot type `$(Makie.plotsym(T))` with $(length(scitypes)) positional argument$(length(scitypes) == 1 ? "" : "s") of kind$(length(scitypes) == 1 ? "" : "s") $scitypes. Run `show_aesthetics($(Makie.plotsym(T)))` to check which aesthetic mappings it supports.")
 end
 
 aesthetic_mapping(::Type{Lines}, ::Normal) = aesthetic_mapping(Lines, 1)
@@ -658,3 +658,81 @@ function aesthetic_mapping(::Type{Annotation}, N::Int)
 end
 
 mandatory_attributes(::Type{Annotation}) = dictionary([:labelspace => :relative_pixel])
+
+aesname(T::Type{<:Aesthetic}) = replace(string(nameof(T)), r"^Aes" => "")
+
+"""
+    show_aesthetics(T::Type{<:Makie.Plot})
+
+Show the aesthetic mappings defined for Makie plot type `T`.
+The aesthetic mappings show which named attributes can be used in `mapping`
+with a given set of positional arguments and which aesthetic types the arguments
+are mapped to.
+
+!!! note
+    This function uses reflection on the method table to determine the
+    applicable methods and it might not catch all applicable methods in all circumstances.
+
+## Example
+
+```julia
+show_aesthetics(Lines)
+show_aesthetics(Errorbars)
+```
+"""
+show_aesthetics(T::Type{<:Makie.Plot}) = show_aesthetics(stdout, T)
+
+function show_aesthetics(io, T::Type{<:Makie.Plot})
+    meths = filter(
+        m -> m.sig isa Type{<:Tuple} && length(m.sig.types) >= 3 && Type{T} <: m.sig.types[2],
+        methods(aesthetic_mapping)
+    )
+    meths = filter(meths) do m
+        all(m.sig.types[3:end]) do t
+            t isa Type && t <: Union{Normal, Geometrical}
+        end
+    end
+    meths = sort(meths, by = m -> length(m.sig.types))
+    n = length(meths)
+    println(io, "Found $n aesthetic mapping$(n == 1 ? "" : "s") for `$(Makie.plotsym(T))`:")
+    for meth in meths
+        println(io)
+        applicable_type(typ) = Continuous <: typ ? Continuous() : Categorical <: typ ? Categorical() : Geometrical()
+        scitypes = meth.sig.types[3:end]
+        dict = aesthetic_mapping(T, map(applicable_type, scitypes)...)
+        nargs = length(meth.sig.types) - 2
+        printstyled(io, "With $nargs positional argument$(nargs == 1 ? "" : "s"): ", bold = true)
+
+        function scitypelabel(key)
+            return if key isa Integer
+                t = scitypes[key]
+                label = t === Categorical ? "categorical" : t === Continuous ? "continuous" : t === Union{Categorical, Continuous} ? "categorical/continuous" : "geometrical"
+                " ($label)"
+            else
+                ""
+            end
+        end
+        println(io)
+        for (key, value) in pairs(dict)
+            if value isa Pair
+                print(io, " - ")
+                printstyled(io, key, bold = true)
+                print(io, scitypelabel(key))
+                print(io, " depends on ")
+                printstyled(io, value[1], color = :blue)
+                println(io, ":")
+                for (kkey, vvalue) in pairs(value[2])
+                    print(io, "    ")
+                    printstyled(io, repr(kkey), color = :blue)
+                    println(io, " → ", aesname(vvalue))
+                end
+            else
+                print(io, " - ")
+                printstyled(io, key, bold = true)
+                print(io, scitypelabel(key))
+                println(io, " → ", aesname(value))
+            end
+        end
+    end
+    return
+end

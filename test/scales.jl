@@ -249,3 +249,10 @@ if VERSION >= v"1.9"
         @test_throws_message "incompatible dimensions for AesY and AesDeltaY scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:id, :value, :err) * visual(Errorbars))
     end
 end
+
+if VERSION >= v"1.7"
+    @testset "Aesthetics errors" begin
+        @test_throws "No aesthetic mapping defined yet for plot type `Errorbars` with 1 positional argument" mapping(1:10) * visual(Errorbars) |> draw
+        @test_throws "contains mapped attribute `alpha` which is not part of the aesthetic mapping for `Scatter`" mapping(1:10, alpha = 1:10) * visual(Scatter) |> draw
+    end
+end

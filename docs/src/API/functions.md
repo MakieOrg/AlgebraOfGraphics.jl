@@ -48,6 +48,12 @@ datetimeticks
 AlgebraOfGraphics.mergeable
 ```
 
+## Utilities
+
+```@docs
+show_aesthetics
+```
+
 ## Internal functions
 
 ```@docs

@@ -19,7 +19,7 @@ draw(spec)
 We also saw that each Makie plotting function which AoG supports has a number of possible attributes that can be used in `mapping`, for example:
 
 ```@example tut
-AlgebraOfGraphics.aesthetic_mapping(Scatter, AlgebraOfGraphics.Continuous(), AlgebraOfGraphics.Continuous())
+show_aesthetics(Scatter)
 ```
 
 There are, however, a few mappings that are not specific to each plotting function, but rather hardcoded into AlgebraOfGraphics and available for use with any plotting function.

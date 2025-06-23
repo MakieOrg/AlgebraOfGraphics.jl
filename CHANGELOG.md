@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added the `show_aesthetics` function which can be used to print information about the aesthetic mappings supported for a given Makie plot type [#673](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/673).
+
+
 ## v0.11.1 - 2025-06-20
 
 - Added support for Makie's new `TextLabel` recipe [#671](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/671).
