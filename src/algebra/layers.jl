@@ -292,7 +292,8 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int, Symbol}, aes_ma
     hardcoded = hardcoded_mapping(key)
     hardcoded !== nothing && return hardcoded
     if !haskey(aes_mapping, key)
-        throw(ArgumentError("ProcessedLayer with plot type `$(processedlayer.plottype)` contains mapped attribute `$key` which is not part of the aesthetic mapping for `$(processedlayer.plottype)`. Run `show_aesthetics($(processedlayer.plottype))` to check which aesthetic mappings it supports.\n\nNote: If a plot attribute is not part of the aesthetic mapping for a given plot type, AlgebraOfGraphics does not know how to handle this attribute in its scale system, therefore that attribute cannot be used in `mapping`. The exception is if you bypass the scale system using the `=> verbatim` helper which allows you to use any array-valued attribute in `mapping`."))
+        sym = Makie.plotsym(processedlayer.plottype)
+        throw(ArgumentError("ProcessedLayer with plot type `$sym` contains mapped attribute `$key` which is not part of the aesthetic mapping for `$sym`. Run `show_aesthetics($sym)` to check which aesthetic mappings it supports.\n\nNote: If a plot attribute is not part of the aesthetic mapping for a given plot type, AlgebraOfGraphics does not know how to handle this attribute in its scale system, therefore that attribute cannot be used in `mapping`, only in `visual`. The exception is if you bypass the scale system using the `=> verbatim` helper. `verbatim` allows you to use array-valued attributes in `mapping` which are also sliced according to each layer's grouping structure (unlike `visual` which passes attributes to each group unmodified)."))
     end
     return aes_mapping[key]
 end
