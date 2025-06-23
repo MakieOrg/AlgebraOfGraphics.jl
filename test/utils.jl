@@ -71,3 +71,54 @@ end
     @test AlgebraOfGraphics.shiftdims("a") == "a"
     @test AlgebraOfGraphics.shiftdims([1, 2]) == [1 2]
 end
+
+@testset "show aesthetics" begin
+    _text(type) = sprint(AlgebraOfGraphics.show_aesthetics, type; context = :color => false)
+    @test _text(Lines) == """
+        Found 3 aesthetic mappings for Lines:
+
+        With 1 positional argument: 
+         - 1 (categorical/continuous) → Y
+         - color → Color
+         - linestyle → LineStyle
+         - linewidth → LineWidth
+
+        With 2 positional arguments: 
+         - 1 (categorical/continuous) → X
+         - 2 (categorical/continuous) → Y
+         - color → Color
+         - linestyle → LineStyle
+         - linewidth → LineWidth
+
+        With 3 positional arguments: 
+         - 1 (categorical/continuous) → X
+         - 2 (categorical/continuous) → Y
+         - 3 (categorical/continuous) → Z
+         - color → Color
+         - linestyle → LineStyle
+         - linewidth → LineWidth
+        """
+
+    @test _text(Errorbars) == """
+        Found 2 aesthetic mappings for Plot{Makie.errorbars}:
+
+        With 3 positional arguments: 
+         - 1 (categorical/continuous) → X
+         - 2 (categorical/continuous) → Y
+         - 3 (categorical/continuous) depends on direction:
+            :x → DeltaX
+            :y → DeltaY
+         - color → Color
+
+        With 4 positional arguments: 
+         - 1 (categorical/continuous) → X
+         - 2 (categorical/continuous) → Y
+         - 3 (categorical/continuous) depends on direction:
+            :x → DeltaX
+            :y → DeltaY
+         - 4 (categorical/continuous) depends on direction:
+            :x → DeltaX
+            :y → DeltaY
+         - color → Color
+        """
+end
