@@ -72,7 +72,7 @@ end
     @test AlgebraOfGraphics.shiftdims([1, 2]) == [1 2]
 end
 
-if VERSION > v"1.6"
+if VERSION >= v"1.7"
     @testset "show aesthetics" begin
         _text(type) = sprint(AlgebraOfGraphics.show_aesthetics, type; context = :color => false)
         @test _text(Lines) == """
