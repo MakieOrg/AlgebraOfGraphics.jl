@@ -672,6 +672,13 @@ are mapped to.
 !!! note
     This function uses reflection on the method table to determine the
     applicable methods and it might not catch all applicable methods in all circumstances.
+
+## Example
+
+```julia
+show_aesthetics(Lines)
+show_aesthetics(Errorbars)
+```
 """
 show_aesthetics(T::Type{<:Makie.Plot}) = show_aesthetics(stdout, T)
 
