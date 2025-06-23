@@ -221,10 +221,10 @@ Not every attribute that a Makie plotting function supports can be used inside `
 In order to use a Makie plotting function with AlgebraOfGraphics, AoG has to be told which positional arguments and which keyword arguments correspond to which "aesthetics".
 Aesthetics in AlgebraOfGraphics are pretty similar to `aes` in ggplot2, they are abstractions of visual properties, like `X`, `Y`, `Color` or `Marker`, which tell AlgebraOfGraphics what labels and legends are appropriate when those aesthetics are used.
 
-For example, here are the aesthetics AoG supports for the `Scatter` visual when two continuous positional arguments are used:
+For example, here are the aesthetics AoG supports for the `Scatter` visual (the `show_aesthetics` function was added in version 0.11.2):
 
 ```@example tut
-AlgebraOfGraphics.aesthetic_mapping(Scatter, AlgebraOfGraphics.Continuous(), AlgebraOfGraphics.Continuous())
+show_aesthetics(Scatter)
 ```
 
 You can see that the first two positional arguments correspond to `X` and `Y`, and we could also use `strokecolor`, `marker` and `markersize` in a `mapping`. You can also see that `color` and `strokecolor` both correspond to the `Color` aesthetic because on some level they both influence the color of the plot, even though they do it in slightly different ways.
@@ -232,7 +232,7 @@ You can see that the first two positional arguments correspond to `X` and `Y`, a
 The first two arguments of a plotting function are not always `X` and `Y`, that depends on the implementation. A simple counterexample in Makie is `Violin` which can be vertical or horizontal, and which of the positional arguments is `X` and which is `Y` depends on the `orientation`. We can see that reflected in the aesthetic mapping of `Violin`:
 
 ```@example tut
-AlgebraOfGraphics.aesthetic_mapping(Violin, AlgebraOfGraphics.Continuous(), AlgebraOfGraphics.Continuous())
+show_aesthetics(Violin)
 ```
 
 You can see that arguments `1`, `2` as well as the keyword argument `dodge` change their aesthetics depending on the value of the `orientation` attribute.
