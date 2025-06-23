@@ -694,7 +694,7 @@ function show_aesthetics(io, T::Type{<:Makie.Plot})
     end
     meths = sort(meths, by = m -> length(m.sig.types))
     n = length(meths)
-    println(io, "Found $n aesthetic mapping$(n == 1 ? "" : "s") for $T:")
+    println(io, "Found $n aesthetic mapping$(n == 1 ? "" : "s") for `$(Makie.plotsym(T))`:")
     for meth in meths
         println(io)
         applicable_type(typ) = Continuous <: typ ? Continuous() : Categorical <: typ ? Categorical() : Geometrical()

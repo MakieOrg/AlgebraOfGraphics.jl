@@ -75,7 +75,7 @@ end
 @testset "show aesthetics" begin
     _text(type) = sprint(AlgebraOfGraphics.show_aesthetics, type; context = :color => false)
     @test _text(Lines) == """
-        Found 3 aesthetic mappings for Lines:
+        Found 3 aesthetic mappings for `Lines`:
 
         With 1 positional argument: 
          - 1 (categorical/continuous) → Y
@@ -100,7 +100,7 @@ end
         """
 
     @test _text(Errorbars) == """
-        Found 2 aesthetic mappings for Plot{Makie.errorbars}:
+        Found 2 aesthetic mappings for `Errorbars`:
 
         With 3 positional arguments: 
          - 1 (categorical/continuous) → X
