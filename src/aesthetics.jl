@@ -685,7 +685,7 @@ show_aesthetics(T::Type{<:Makie.Plot}) = show_aesthetics(stdout, T)
 function show_aesthetics(io, T::Type{<:Makie.Plot})
     meths = filter(
         m -> m.sig isa Type{<:Tuple} && length(m.sig.types) >= 3 && Type{T} <: m.sig.types[2],
-        collect(methods(aesthetic_mapping))
+        methods(aesthetic_mapping)
     )
     meths = filter(meths) do m
         all(m.sig.types[3:end]) do t
