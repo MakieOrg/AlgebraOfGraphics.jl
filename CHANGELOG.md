@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added compatibility for Makie 0.24 [#674](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/674).
 - Added the `show_aesthetics` function which can be used to print information about the aesthetic mappings supported for a given Makie plot type [#673](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/673).
 
 
