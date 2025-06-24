@@ -506,6 +506,9 @@ You can set the axis properties `ticks`, `tickformat` and `scale`. While these c
 setting them via scale options is more explicit and allows to use them in scenarios with multiple scales in facet layouts.
 
 ```@example
+using AlgebraOfGraphics
+using CairoMakie
+
 x = 1:5
 y1 = range(5, 10; length = 5)
 y2 = logrange(10, 100_000; length = 5)
