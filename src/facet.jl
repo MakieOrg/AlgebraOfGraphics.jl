@@ -72,11 +72,13 @@ function consistent_attribute(aes, attr)
     return all(axis -> getproperty(axis, attr)[] == getproperty(ax, attr)[], axes)
 end
 
-consistent_xaxis(aes) = consistent_xlabels(aes) && consistent_attribute(aes, :xscale)
-consistent_yaxis(aes) = consistent_ylabels(aes) && consistent_attribute(aes, :yscale)
 consistent_xlabels(aes) = consistent_attribute(aes, :xlabel)
 consistent_ylabels(aes) = consistent_attribute(aes, :ylabel)
+consistent_xaxis(aes) = consistent_xlabels(aes) && consistent_attribute(aes, :xscale)
+consistent_yaxis(aes) = consistent_ylabels(aes) && consistent_attribute(aes, :yscale)
 
+colwise_consistent_xlabels(aes) = all(consistent_xlabels, eachcol(aes))
+rowwise_consistent_ylabels(aes) = all(consistent_ylabels, eachrow(aes))
 colwise_consistent_xaxis(aes) = all(consistent_xaxis, eachcol(aes))
 rowwise_consistent_yaxis(aes) = all(consistent_yaxis, eachrow(aes))
 
