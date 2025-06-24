@@ -29,8 +29,8 @@ function clean_facet_attributes(
         linkxaxes = automatic, linkyaxes = automatic,
         hidexdecorations = automatic, hideydecorations = automatic
     )
-    linkxaxes = normalize_link(linkxaxes, :x, consistent_xlabels(aes), colwise_consistent_xlabels(aes))
-    linkyaxes = normalize_link(linkyaxes, :y, consistent_ylabels(aes), rowwise_consistent_ylabels(aes))
+    linkxaxes = normalize_link(linkxaxes, :x, consistent_xaxis(aes), colwise_consistent_xaxis(aes))
+    linkyaxes = normalize_link(linkyaxes, :y, consistent_yaxis(aes), rowwise_consistent_yaxis(aes))
     hidexdecorations = normalize_hide(hidexdecorations, linkxaxes, :x)
     hideydecorations = normalize_hide(hideydecorations, linkyaxes, :y)
     return (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
@@ -74,9 +74,13 @@ end
 
 consistent_xlabels(aes) = consistent_attribute(aes, :xlabel)
 consistent_ylabels(aes) = consistent_attribute(aes, :ylabel)
+consistent_xaxis(aes) = consistent_xlabels(aes) && (any(!isaxis2d, nonemptyaxes(aes)) || consistent_attribute(aes, :xscale)) # TODO: remove special case once Axis3 supports scales
+consistent_yaxis(aes) = consistent_ylabels(aes) && (any(!isaxis2d, nonemptyaxes(aes)) || consistent_attribute(aes, :yscale)) # TODO: remove special case once Axis3 supports scales
 
 colwise_consistent_xlabels(aes) = all(consistent_xlabels, eachcol(aes))
 rowwise_consistent_ylabels(aes) = all(consistent_ylabels, eachrow(aes))
+colwise_consistent_xaxis(aes) = all(consistent_xaxis, eachcol(aes))
+rowwise_consistent_yaxis(aes) = all(consistent_yaxis, eachrow(aes))
 
 # spanned axis labels
 function span_label!(fig, aes, var)

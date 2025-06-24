@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added the ability to set `scale`, `ticks` and `tickformat` for continuous X, Y and Z scales via the `scales` options which allows to set these in multi-scale facet scenarios [#675](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/675).
+
 ## v0.11.2 - 2025-06-23
 
 - Added compatibility for Makie 0.24 [#674](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/674).

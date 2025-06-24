@@ -1526,3 +1526,33 @@ reftest("textlabel") do
     legend!(f[2, 2], fg2)
     f
 end
+
+reftest("scales ticks tickformats") do
+    specs = data(
+        (;
+            x = 1:10,
+            ylin = range(-50, 50, length = 10),
+            yexp = exp.(-(1:10)),
+        )
+    ) *
+        (
+        mapping(
+            :x,
+            :ylin => "y" => scale(:a),
+            layout = direct("a")
+        ) + mapping(
+            :x => x -> x + 3,
+            :yexp => "y" => scale(:b),
+            layout = direct("b")
+        )
+    ) * visual(Scatter)
+
+    draw(
+        specs,
+        scales(
+            a = (; scale = Makie.pseudolog10, ticks = [-50, -30, -20, -10, 0, 10, 20, 30, 50]),
+            b = (; scale = log10, tickformat = "{:.4f}mg"),
+            X = (; scale = log2),
+        )
+    )
+end
