@@ -500,7 +500,7 @@ spec = data((; x, y, z)) *
 draw(spec, scales(LineWidth = (; tickformat = "{:.1f} mg")))
 ```
 
-### X, Y & Z
+#### X, Y & Z
 
 You can set the axis properties `ticks`, `tickformat` and `scale`. While these can also be set globally via the `axis` options,
 setting them via scale options is more explicit and allows to use them in scenarios with multiple scales in facet layouts.
