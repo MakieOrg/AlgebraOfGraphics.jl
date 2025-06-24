@@ -398,7 +398,7 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
             (scale isa ContinuousScale) && (scale = merged_continuousscales[aes][used_scale_id])
             if scale isa ContinuousScale
                 # Only set attribute if it was not present beforehand
-                get!(ae.axis.attributes, Symbol(var, "scale"), scale.props.aesprops.scale)
+                ndims == 2 && get!(ae.axis.attributes, Symbol(var, "scale"), scale.props.aesprops.scale) # TODO: remove ndims == 2 when Axis3 supports scales
                 get!(ae.axis.attributes, Symbol(var, "tickformat"), scale.props.aesprops.tickformat)
             end
             for (k, v) in pairs((label = label, ticks = ticks(scale)))

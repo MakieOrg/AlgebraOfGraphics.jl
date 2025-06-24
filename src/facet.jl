@@ -74,8 +74,8 @@ end
 
 consistent_xlabels(aes) = consistent_attribute(aes, :xlabel)
 consistent_ylabels(aes) = consistent_attribute(aes, :ylabel)
-consistent_xaxis(aes) = consistent_xlabels(aes) && consistent_attribute(aes, :xscale)
-consistent_yaxis(aes) = consistent_ylabels(aes) && consistent_attribute(aes, :yscale)
+consistent_xaxis(aes) = consistent_xlabels(aes) && (any(!isaxis2d, nonemptyaxes(aes)) || consistent_attribute(aes, :xscale)) # TODO: remove special case once Axis3 supports scales
+consistent_yaxis(aes) = consistent_ylabels(aes) && (any(!isaxis2d, nonemptyaxes(aes)) || consistent_attribute(aes, :yscale)) # TODO: remove special case once Axis3 supports scales
 
 colwise_consistent_xlabels(aes) = all(consistent_xlabels, eachcol(aes))
 rowwise_consistent_ylabels(aes) = all(consistent_ylabels, eachrow(aes))
