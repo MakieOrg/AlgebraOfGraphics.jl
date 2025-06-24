@@ -409,7 +409,7 @@ continuous_aes_props_type(::Type{<:Aesthetic}) = EmptyContinuousProps
 continuous_aes_props_type(::Type{AesColor}) = AesColorContinuousProps
 continuous_aes_props_type(::Type{AesMarkerSize}) = AesMarkerSizeContinuousProps
 continuous_aes_props_type(::Type{AesLineWidth}) = AesLineWidthContinuousProps
-continuous_aes_props_type(::Type{<:Union{AesX,AesY,AesZ}}) = AesXYZContinuousProps
+continuous_aes_props_type(::Type{<:Union{AesX, AesY, AesZ}}) = AesXYZContinuousProps
 
 continuous_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol, Any}) = aes_props(Val(:continuous), type, props_dict)
 
@@ -577,7 +577,7 @@ end
 
 function ticks(scale::ContinuousScale)
     _ticks = scale.props.aesprops.ticks
-    if _ticks === nothing
+    return if _ticks === nothing
         ticks(scale.extrema)
     else
         _ticks
