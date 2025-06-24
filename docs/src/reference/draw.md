@@ -500,6 +500,30 @@ spec = data((; x, y, z)) *
 draw(spec, scales(LineWidth = (; tickformat = "{:.1f} mg")))
 ```
 
+### X, Y & Z
+
+You can set the axis properties `ticks`, `tickformat` and `scale`. While these can also be set globally via the `axis` options,
+setting them via scale options is more explicit and allows to use them in scenarios with multiple scales in facet layouts.
+
+```@example
+x = 1:5
+y1 = range(5, 10; length = 5)
+y2 = logrange(10, 100_000; length = 5)
+
+spec = (
+    mapping(x => "Time [months]", y1 => "Weight"; layout = "Baby") +
+    mapping(x => "Time [months]", y2 => "N" => scale(:Y2); layout = "Bacteria")
+) * visual(ScatterLines)
+
+draw(
+    spec,
+    scales(
+        Y = (; tickformat = "{:.1f} kg", ticks = 5:0.5:10),
+        Y2 = (; scale = log10)
+    ),
+)
+```
+
 
 ## Legend options
 
