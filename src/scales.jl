@@ -399,10 +399,17 @@ Base.@kwdef struct AesLineWidthContinuousProps <: ContinuousAesProps
     tickformat = Makie.automatic
 end
 
+Base.@kwdef struct AesXYZContinuousProps <: ContinuousAesProps
+    scale = identity
+    ticks = nothing
+    tickformat = Makie.automatic
+end
+
 continuous_aes_props_type(::Type{<:Aesthetic}) = EmptyContinuousProps
 continuous_aes_props_type(::Type{AesColor}) = AesColorContinuousProps
 continuous_aes_props_type(::Type{AesMarkerSize}) = AesMarkerSizeContinuousProps
 continuous_aes_props_type(::Type{AesLineWidth}) = AesLineWidthContinuousProps
+continuous_aes_props_type(::Type{<:Union{AesX,AesY,AesZ}}) = AesXYZContinuousProps
 
 continuous_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol, Any}) = aes_props(Val(:continuous), type, props_dict)
 
@@ -568,7 +575,14 @@ function ticks(scale::CategoricalScale)
     return (positions, labels)
 end
 
-ticks(scale::ContinuousScale) = ticks(scale.extrema)
+function ticks(scale::ContinuousScale)
+    _ticks = scale.props.aesprops.ticks
+    if _ticks === nothing
+        ticks(scale.extrema)
+    else
+        _ticks
+    end
+end
 
 ticks((min, max)::NTuple{2, Any}) = automatic
 

@@ -396,6 +396,11 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
             # Use global scales for ticks for now
             # TODO: requires a nicer mechanism that takes into account axis linking
             (scale isa ContinuousScale) && (scale = merged_continuousscales[aes][used_scale_id])
+            if scale isa ContinuousScale
+                # Only set attribute if it was not present beforehand
+                get!(ae.axis.attributes, Symbol(var, "scale"), scale.props.aesprops.scale)
+                get!(ae.axis.attributes, Symbol(var, "tickformat"), scale.props.aesprops.tickformat)
+            end
             for (k, v) in pairs((label = label, ticks = ticks(scale)))
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand
