@@ -358,6 +358,29 @@ draw(multidim_pregrouped)
 
 Isn't that impressively little code to get a quick visualization out of multidimensional non-tabular data?
 
+### Experimental: Passing matrices directly
+
+Tables as 1D data structures are somewhat impractical when it comes to 2D data. With `pregrouped`, you can take advantage of the fact that AlgebraOfGraphics allows you to pass multidimensional numeric arrays to Makie as well.
+
+!!! note
+    This feature is considered experimental as it is a side effect from implementation details and the rules are not really fleshed out, yet.
+
+```@example tut
+ns = 3:8
+xs = [range(0, 3, n+1) for n in ns]
+ys = [range(2, 5, n+1) for n in ns]
+matrices = [randn(n, n) for n in ns]
+
+spec = pregrouped(
+    xs,
+    ys,
+    matrices,
+    layout = dims(1) => renamer(string.(ns))
+) * visual(Heatmap)
+
+draw(spec)
+```
+
 ## Summary
 
 In this chapter you have seen alternative ways of passing input data to AoG, circumventing `data` by passing columns to `mapping` directly, supplying additional columns using `direct`, as well as using multidimensional wide and pregrouped data.
