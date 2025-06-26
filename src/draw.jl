@@ -299,17 +299,25 @@ function draw_to_spec(spec, scales = scales())
 
     axisspecs_vec = [x for x in axisspecs if x !== nothing]
 
+    specs = Pair[]
+
+    append!(specs, axisspecs_vec)
+
+    # TODO: Makie can currently not handle multiple linked subsets here
+    xaxislinks = last.(axisspecs_vec)
+    yaxislinks = last.(axisspecs_vec)
+
     legend = compute_legend(agrid; order = nothing)
     if legend !== nothing
         gridsize = size(agrid)
         legendpos = (:, gridsize[2] + 1)
         legendspec = S.Legend(legend...)
-        axisspecs = [axisspecs; legendpos => legendspec]
+        push!(specs, legendpos => legendspec)
     end
 
     return S.GridLayout(
-        axisspecs_vec,
-        xaxislinks = last.(axisspecs_vec),
-        yaxislinks = last.(axisspecs_vec),
+        specs;
+        xaxislinks,
+        yaxislinks,
     )
 end
