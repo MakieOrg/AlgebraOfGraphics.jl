@@ -279,12 +279,12 @@ function Base.showerror(io::IO, pe::PaletteError)
     return print(io, msg)
 end
 
-function draw_to_spec(spec, scales = scales())
+function draw_to_spec(spec, scales = scales(); facet = (;))
     agrid = compute_axes_grid(spec, scales)
 
     S = Makie.SpecApi
 
-    axisspecs = map(vec(agrid)) do ase
+    axisspecs = map(agrid) do ase
         ax = ase.axis
         axtype = ax.type === Axis ? S.Axis : ax.type === Axis3 ? S.Axis3 : error()
 
@@ -297,11 +297,14 @@ function draw_to_spec(spec, scales = scales())
         ax.position => axtype(; plots, pairs(ax.attributes)...)
     end
 
-    axisspecs_vec = [x for x in axisspecs if x !== nothing]
+    axisspecs_vec = [x for x in vec(axisspecs) if x !== nothing]
 
     specs = Pair[]
 
     append!(specs, axisspecs_vec)
+
+    facet_grid!(specs, axisspecs, first(agrid).categoricalscales; facet)
+    facet_wrap!(specs, axisspecs, first(agrid).categoricalscales; facet)
 
     # TODO: Makie can currently not handle multiple linked subsets here
     xaxislinks = last.(axisspecs_vec)
@@ -328,4 +331,84 @@ function draw_to_spec(spec, scales = scales())
         xaxislinks,
         yaxislinks,
     )
+end
+
+function facet_wrap!(specs::Vector{<:Pair}, aes::AbstractMatrix, categoricalscales; facet)
+
+    scale = extract_single(AesLayout, categoricalscales)
+    isnothing(scale) && return
+
+    # # Link axes and hide decorations if appropriate
+    # attrs = clean_facet_attributes(aes; pairs(facet)...)
+    # link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
+    # hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap = true)
+
+    # # delete empty axes
+    # deleteemptyaxes!(aes)
+
+    # add facet labels
+    scale.props.legend && panel_labels!(specs, aes, scale)
+
+    # # span axis labels if appropriate
+    # is2d = all(isaxis2d, nonemptyaxes(aes))
+
+    # if is2d && consistent_ylabels(aes)
+    #     span_ylabel!(fig, aes)
+    # end
+    # if is2d && consistent_xlabels(aes)
+    #     span_xlabel!(fig, aes)
+    # end
+
+    return
+end
+
+function facet_grid!(specs::Vector{<:Pair}, aes::AbstractMatrix, categoricalscales; facet)
+    row_scale = extract_single(AesRow, categoricalscales)
+    col_scale = extract_single(AesCol, categoricalscales)
+    all(isnothing, (row_scale, col_scale)) && return
+
+    # # link axes and hide decorations if appropriate
+    # attrs = clean_facet_attributes(aes; pairs(facet)...)
+    # link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
+    # hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap = false)
+
+    # # span axis labels if appropriate
+    # is2d = all(isaxis2d, nonemptyaxes(aes))
+
+    # is2d && consistent_ylabels(aes) && span_ylabel!(fig, aes)
+    # is2d && consistent_xlabels(aes) && span_xlabel!(fig, aes)
+
+    if !isnothing(row_scale)
+        row_scale.props.legend && row_labels!(specs, aes, row_scale)
+    end
+    if !isnothing(col_scale)
+        col_scale.props.legend && col_labels!(specs, aes, col_scale)
+    end
+    return
+end
+
+function facet_labels!(specs::Vector{<:Pair}, aes, scale, dir)
+    # reference axis to extract attributes
+    # ax = first(nonemptyaxes(aes))
+    # color = ax.titlecolor
+    # font = ax.titlefont
+    # fontsize = ax.titlesize
+    # visible = ax.titlevisible
+
+    padding_index = dir == :row ? 1 : 3
+    # padding = lift(ax.titlegap) do gap
+    #     return ntuple(i -> i == padding_index ? gap : 0.0f0, 4)
+    # end
+    color = :black
+    font = :bold
+    fontsize = 16
+    visible = true
+    padding = (0, 0, 0, 0)
+
+    append!(specs, map(plotvalues(scale), datalabels(scale)) do index, label
+        rotation = dir == :row ? -π / 2 : 0.0
+        figpos = dir == :col ? (1, index, Top()) :
+            dir == :row ? (index, size(aes, 2), Right()) : (index..., Top())
+        return figpos => Makie.SpecApi.Label(; text = label, rotation, padding, color, font, fontsize, visible)
+    end)
 end
