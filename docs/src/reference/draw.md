@@ -620,9 +620,9 @@ using AlgebraOfGraphics
 using CairoMakie
 
 spec = pregrouped(
-    fill(1:5, 6),
-    fill(11:15, 6),
-    [reshape(sin.(1:25), 5, 5) .+ i for i in 1:6],
+    fill(repeat(1:5, 5), 6),
+    fill(repeat(11:15, inner = 5), 6),
+    [sin.(1:25) .+ i for i in 1:6],
     layout = 1:6 => nonnumeric) * visual(Heatmap)
 
 draw(
