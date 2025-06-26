@@ -307,12 +307,20 @@ function draw_to_spec(spec, scales = scales())
     xaxislinks = last.(axisspecs_vec)
     yaxislinks = last.(axisspecs_vec)
 
+    gridsize = size(agrid)
+
     legend = compute_legend(agrid; order = nothing)
     if legend !== nothing
-        gridsize = size(agrid)
         legendpos = (:, gridsize[2] + 1)
-        legendspec = S.Legend(legend...)
+        legendspec = S.Legend(; legend...)
         push!(specs, legendpos => legendspec)
+    end
+
+    colorbars = compute_colorbars(agrid)
+    if !isempty(colorbars)
+        push!(specs, (:, gridsize[2] + 1 + (legend !== nothing)) => S.GridLayout([
+            S.Colorbar(; colorbar...) for colorbar in colorbars
+        ]))
     end
 
     return S.GridLayout(
