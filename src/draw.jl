@@ -339,9 +339,9 @@ function facet_wrap!(specs::Vector{<:Pair}, aes::AbstractMatrix, categoricalscal
     isnothing(scale) && return
 
     # # Link axes and hide decorations if appropriate
-    # attrs = clean_facet_attributes(aes; pairs(facet)...)
+    attrs = clean_facet_attributes(aes; pairs(facet)...)
     # link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
-    # hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap = true)
+    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap = true)
 
     # # delete empty axes
     # deleteemptyaxes!(aes)
@@ -368,9 +368,9 @@ function facet_grid!(specs::Vector{<:Pair}, aes::AbstractMatrix, categoricalscal
     all(isnothing, (row_scale, col_scale)) && return
 
     # # link axes and hide decorations if appropriate
-    # attrs = clean_facet_attributes(aes; pairs(facet)...)
+    attrs = clean_facet_attributes(aes; pairs(facet)...)
     # link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
-    # hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap = false)
+    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap = false)
 
     # # span axis labels if appropriate
     # is2d = all(isaxis2d, nonemptyaxes(aes))
@@ -411,4 +411,42 @@ function facet_labels!(specs::Vector{<:Pair}, aes, scale, dir)
             dir == :row ? (index, size(aes, 2), Right()) : (index..., Top())
         return figpos => Makie.SpecApi.Label(; text = label, rotation, padding, color, font, fontsize, visible)
     end)
+end
+
+function hideinnerdecorations!(
+        aes::AbstractMatrix{<:Union{Nothing,<:Pair}};
+        hidexdecorations, hideydecorations, wrap
+    )
+    I, J = size(aes)
+
+    if hideydecorations
+        for i in 1:I, j in 2:J
+            aes[i, j] !== nothing && hide_ydecorations!(aes[i, j][2])
+        end
+    end
+
+    return if hidexdecorations
+        for i in 1:(I - 1), j in 1:J
+            if wrap && aes[i + 1, j] === nothing
+                # In facet_wrap, don't hide x decorations if axis below is empty,
+                # but instead improve alignment.
+                if aes[i, j] !== nothing
+                    aes[i, j][2].alignmode = Mixed(bottom = Protrusion(0))
+                end
+            else
+                aes[i, j] !== nothing && hide_xdecorations!(aes[i, j][2])
+            end
+        end
+    end
+end
+
+function hide_xdecorations!(ax::Makie.BlockSpec)
+    ax.xlabelvisible = false
+    ax.xticklabelsvisible = false
+    ax.xticksvisible = false
+end
+function hide_ydecorations!(ax::Makie.BlockSpec)
+    ax.ylabelvisible = false
+    ax.yticklabelsvisible = false
+    ax.yticksvisible = false
 end
