@@ -279,8 +279,8 @@ function Base.showerror(io::IO, pe::PaletteError)
     return print(io, msg)
 end
 
-function draw_to_spec(spec, scales = scales(); facet = (;))
-    agrid = compute_axes_grid(spec, scales)
+function draw_to_spec(spec, scales = scales(); facet = (;), axis = (;))
+    agrid = compute_axes_grid(spec, scales; axis)
 
     S = Makie.SpecApi
 
@@ -407,13 +407,14 @@ end
 
 function facet_labels!(specs::Vector{<:Pair}, aes, scale, dir)
     # reference axis to extract attributes
-    # ax = first(nonemptyaxes(aes))
+    ax = first(nonemptyaxes(aes))
+
     axdefaults = Makie.block_defaults(Axis, Dict(), nothing)
 
-    color = axdefaults[:titlecolor]
-    font = axdefaults[:titlefont]
-    fontsize = axdefaults[:titlesize]
-    visible = axdefaults[:titlevisible]
+    color = get(() -> axdefaults[:titlecolor], ax.kwargs, :titlecolor)
+    font = get(() -> axdefaults[:titlefont], ax.kwargs, :titlefont)
+    fontsize = get(() -> axdefaults[:titlesize], ax.kwargs, :titlesize)
+    visible = get(() -> axdefaults[:titlevisible], ax.kwargs, :titlevisible)
 
     padding_index = dir == :row ? 1 : 3
     padding = ntuple(i -> i == padding_index ? axdefaults[:titlegap] : 0.0f0, 4)
