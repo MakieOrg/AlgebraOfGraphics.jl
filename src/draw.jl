@@ -303,8 +303,8 @@ function draw_to_spec(spec, scales = scales(); facet = (;))
 
     append!(specs, axisspecs_vec)
 
-    facet_grid!(specs, axisspecs, first(agrid).categoricalscales; facet)
-    facet_wrap!(specs, axisspecs, first(agrid).categoricalscales; facet)
+    gridattrs = facet_grid!(specs, axisspecs, first(agrid).categoricalscales; facet)
+    wrapattrs = facet_wrap!(specs, axisspecs, first(agrid).categoricalscales; facet)
 
     # TODO: Makie can currently not handle multiple linked subsets here
     xaxislinks = last.(axisspecs_vec)
@@ -326,11 +326,29 @@ function draw_to_spec(spec, scales = scales(); facet = (;))
         ]))
     end
 
+    xaxislinks = Vector{Makie.BlockSpec}[]
+    yaxislinks = Vector{Makie.BlockSpec}[]
+
+    gridattrs !== nothing && link_axes!(xaxislinks, yaxislinks, axisspecs; gridattrs.linkxaxes, gridattrs.linkyaxes)
+    wrapattrs !== nothing && link_axes!(xaxislinks, yaxislinks, axisspecs; wrapattrs.linkxaxes, wrapattrs.linkyaxes)
+
     return S.GridLayout(
         specs;
         xaxislinks,
         yaxislinks,
     )
+end
+
+function link_axes!(xaxislinks::Vector{Vector{Makie.BlockSpec}}, yaxislinks::Vector{Vector{Makie.BlockSpec}}, axisspecs::Matrix; linkxaxes, linkyaxes)
+    _link!(v, axes) = push!(v, [a[2] for a in axes if a !== nothing])
+
+    linkxaxes == :all && _link!(xaxislinks, axisspecs)
+    linkxaxes == :colwise && foreach(col -> _link!(xaxislinks, col), eachcol(axisspecs))
+
+    linkyaxes == :all && _link!(yaxislinks, axisspecs)
+    linkyaxes == :rowwise && foreach(row -> _link!(yaxislinks, row), eachrow(axisspecs))
+
+    return
 end
 
 function facet_wrap!(specs::Vector{<:Pair}, aes::AbstractMatrix, categoricalscales; facet)
@@ -359,7 +377,7 @@ function facet_wrap!(specs::Vector{<:Pair}, aes::AbstractMatrix, categoricalscal
     #     span_xlabel!(fig, aes)
     # end
 
-    return
+    return attrs
 end
 
 function facet_grid!(specs::Vector{<:Pair}, aes::AbstractMatrix, categoricalscales; facet)
@@ -384,7 +402,7 @@ function facet_grid!(specs::Vector{<:Pair}, aes::AbstractMatrix, categoricalscal
     if !isnothing(col_scale)
         col_scale.props.legend && col_labels!(specs, aes, col_scale)
     end
-    return
+    return attrs
 end
 
 function facet_labels!(specs::Vector{<:Pair}, aes, scale, dir)
