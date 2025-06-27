@@ -408,20 +408,15 @@ end
 function facet_labels!(specs::Vector{<:Pair}, aes, scale, dir)
     # reference axis to extract attributes
     # ax = first(nonemptyaxes(aes))
-    # color = ax.titlecolor
-    # font = ax.titlefont
-    # fontsize = ax.titlesize
-    # visible = ax.titlevisible
+    axdefaults = Makie.block_defaults(Axis, Dict(), nothing)
+
+    color = axdefaults[:titlecolor]
+    font = axdefaults[:titlefont]
+    fontsize = axdefaults[:titlesize]
+    visible = axdefaults[:titlevisible]
 
     padding_index = dir == :row ? 1 : 3
-    # padding = lift(ax.titlegap) do gap
-    #     return ntuple(i -> i == padding_index ? gap : 0.0f0, 4)
-    # end
-    color = :black
-    font = :bold
-    fontsize = 16
-    visible = true
-    padding = (0, 0, 0, 0)
+    padding = ntuple(i -> i == padding_index ? axdefaults[:titlegap] : 0.0f0, 4)
 
     append!(specs, map(plotvalues(scale), datalabels(scale)) do index, label
         rotation = dir == :row ? -π / 2 : 0.0
