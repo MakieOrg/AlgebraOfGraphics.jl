@@ -315,7 +315,7 @@ function draw_to_spec(spec, scales = scales(); facet = (;), axis = (;))
     legend = compute_legend(agrid; order = nothing)
     if legend !== nothing
         legendpos = (:, gridsize[2] + 1)
-        legendspec = S.Legend(; legend...)
+        legendspec = S.Legend(legend...)
         push!(specs, legendpos => legendspec)
     end
 
