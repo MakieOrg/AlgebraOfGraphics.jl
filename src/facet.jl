@@ -69,7 +69,7 @@ panel_labels!(fig, aes, scale) = facet_labels!(fig, aes, scale, :layout)
 function consistent_attribute(aes, attr)
     axes = nonemptyaxes(aes)
     ax = first(axes)
-    return all(axis -> getproperty(axis, attr)[] == getproperty(ax, attr)[], axes)
+    return all(axis -> Makie.to_value(getproperty(axis, attr)) == Makie.to_value(getproperty(ax, attr)), axes)
 end
 
 consistent_xlabels(aes) = consistent_attribute(aes, :xlabel)
@@ -185,6 +185,7 @@ end
 ## Layout helpers
 
 isaxis2d(::Axis) = true
+isaxis2d(b::Makie.BlockSpec) = b.type === :Axis
 isaxis2d(::Axis3) = false
 isaxis2d(ax::AxisSpec) = ax.type <: Axis
 isaxis2d(ae::AxisEntries) = isaxis2d(ae.axis)
@@ -258,6 +259,7 @@ end
 (g::GetAttr)(collection, args...) = getproperty(collection, Symbol(g.var, args...))
 
 nonemptyaxes(aes) = (ae.axis for ae in aes if !isempty(ae.entries))
+nonemptyaxes(aes::AbstractArray{<:Union{Nothing, Pair{Tuple{Int64, Int64}, Makie.BlockSpec}}}) = (a[2] for a in aes if a !== nothing)
 
 function deleteemptyaxes!(aes::AbstractArray{AxisEntries})
     for ae in aes

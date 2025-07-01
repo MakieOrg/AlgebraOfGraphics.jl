@@ -31,7 +31,7 @@ function should_use_colorbar(colorscale::CategoricalScale)::Bool
     return aesprops.colorbar === Makie.automatic ? is_binned(colorscale) : aesprops.colorbar
 end
 
-function compute_colorbars(grid::Matrix{AxisEntries})
+function compute_colorbars(grid::Matrix{<:Union{AxisEntries,AxisSpecEntries}})
     colorbars = []
     catscales = get(first(grid).categoricalscales, AesColor, nothing)
     if catscales !== nothing
