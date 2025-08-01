@@ -38,9 +38,11 @@ target_matches(t::Target{<:Type}, input) = input.plottype <: t.target
 target_matches(t::Target{<:Function}, input) = t.target(input)::Bool
 
 function (v::Visual)(inputs::ProcessedLayers)
-    ProcessedLayers(map(inputs.layers) do pl
-        v(pl)
-    end)
+    return ProcessedLayers(
+        map(inputs.layers) do pl
+            v(pl)
+        end
+    )
 end
 
 # In the future, consider switching from `visual(Plot{T})` to `visual(T)`.
@@ -90,4 +92,3 @@ visual(target::Target, plot = Plot{plot}; kwargs...) = transformation(Visual(plo
 
 # For backward compatibility, still allow `visual(Any)`.
 @deprecate visual(::Type{Any}; kwargs...) visual(; kwargs...)
-

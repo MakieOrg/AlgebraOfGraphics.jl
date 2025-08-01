@@ -247,7 +247,6 @@ end
 end
 
 
-
 @testset "verbatim works without scales" begin
     colors = RGBf.(range(0, 1, length = 10), 0.5, 0.5)
     fontsizes = range(20, 40, length = 10)
