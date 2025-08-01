@@ -1,13 +1,33 @@
+struct Target{T}
+    target::T
+end
+
+target(target) = Target(target)
 struct Visual
     plottype::PlotType
     attributes::NamedArguments
+    target::Target
 end
-Visual(plottype::PlotType = Plot{plot}; kwargs...) = Visual(plottype, NamedArguments(kwargs))
+
+Visual(plottype::PlotType = Plot{plot}; kwargs...) = Visual(plottype, NamedArguments(kwargs), Target(nothing))
 
 function (v::Visual)(input::ProcessedLayer)
-    plottype = Makie.plottype(v.plottype, input.plottype)
-    attributes = merge(input.attributes, v.attributes)
-    return ProcessedLayer(input; plottype, attributes)
+    if target_matches(v.target, input)::Bool
+        plottype = Makie.plottype(v.plottype, input.plottype)
+        attributes = merge(input.attributes, v.attributes)
+        return ProcessedLayer(input; plottype, attributes)
+    else
+        return input
+    end
+end
+
+target_matches(::Target{Nothing}, input) = true
+target_matches(t::Target{<:Type}, input) = input.plottype <: t.target
+
+function (v::Visual)(inputs::ProcessedLayers)
+    ProcessedLayers(map(inputs.layers) do pl
+        v(pl)
+    end)
 end
 
 # In the future, consider switching from `visual(Plot{T})` to `visual(T)`.
@@ -38,5 +58,9 @@ shows mapping 1 on y and 2 on x.
 """
 visual(plottype::PlotType = Plot{plot}; kwargs...) = transformation(Visual(plottype; kwargs...))
 
+visual(target::Target, plot = Plot{plot}; kwargs...) = transformation(Visual(plot, NamedArguments(kwargs), target))
+
+
 # For backward compatibility, still allow `visual(Any)`.
 @deprecate visual(::Type{Any}; kwargs...) visual(; kwargs...)
+
