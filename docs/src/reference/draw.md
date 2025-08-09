@@ -47,7 +47,56 @@ f
 
 #### `palette`
 
-The palette decides which attribute values are passed to Makie's plotting functions for each categorical value in the scale.
+Each categorical scale has a palette which assigns an attribute value to each data value in the scale.
+For example, a categorical color scale might assign the color `:red` to the value `"A"`, `:blue` to `"B"` and so on.
+
+The most basic kind of palette is simply a vector of values.
+Each scale value is assigned one palette entry in order, if there are fewer palette entries than scale values the palette is cycled.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+f = Figure()
+spec = mapping(1:5, 1:5, color = ["E", "D", "C", "B", "A"])
+fg1 = draw!(
+    f[1, 1], spec, scales(Color = (; palette = [:red, :blue, :green, :orange, :pink])),
+    axis = (; title = "palette = [:red, :blue, :green, :orange, :pink]")
+)
+legend!(f[1, 2], fg1)
+fg2 = draw!(
+    f[2, 1], spec, scales(Color = (; palette = [:red, :blue])),
+    axis = (; title = "palette = [:red, :blue]")
+)
+legend!(f[2, 2], fg2)
+f
+```
+
+If you want to make sure that some categorical values receive specific palette values, no matter where in the categorical scale they are ordered, you can add these as paired elements to the palette vector.
+The unpaired palette values are then distributed between the remaining categorical values.
+This feature is primarily useful when creating multiple figures with different datasets that share some categories which should be colored consistently.
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+f = Figure()
+spec = mapping(1:5, 1:5, color = ["E", "D", "C", "B", "A"])
+fg1 = draw!(
+    f[1, 1], spec, scales(Color = (; palette = [:red, :blue, :green, :orange, "A" => :cyan])),
+    axis = (; title = "palette = [:red, :blue, :green, :orange, \"A\" => :cyan]")
+)
+legend!(f[1, 2], fg1)
+fg2 = draw!(
+    f[2, 1], spec, scales(Color = (; palette = [:red, :blue, "A" => :cyan])),
+    axis = (; title = "palette = [:red, :blue, \"A\" => :cyan]")
+)
+legend!(f[2, 2], fg2)
+f
+```
+
+Some categorical scale types support palette types other than vectors.
+A few examples are shown in the following subsections.
 
 ##### Color
 
