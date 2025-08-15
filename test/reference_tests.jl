@@ -1556,3 +1556,35 @@ reftest("scales ticks tickformats") do
         )
     )
 end
+
+function specfigure()
+    df = Observable{Any}(
+        (;
+            x = 1:100, y = 101:200, color = 1:100, marker = repeat('A':'B', 50), layout = repeat('A':'E', 20),
+        )
+    )
+    colormap = Observable(:viridis)
+
+    specobs = lift(df, colormap) do df, colormap
+        layer = data(df) * mapping(:x, :y, color = :color, marker = :marker, layout = :layout) *
+            visual(Scatter)
+        AlgebraOfGraphics.draw_to_spec(layer, scales(Color = (; colormap)))
+    end
+
+    f = Figure()
+    plot(f[1, 1], specobs)
+
+    return f, df, colormap
+end
+
+reftest("draw_to_spec") do
+    f, df, colormap = specfigure()
+    f
+end
+
+reftest("draw_to_spec update") do
+    f, df, colormap = specfigure()
+    df[] = (; x = 5:104, y = 111:210, color = 11:110, marker = repeat('C':'D', 50), layout = repeat('F':'I', 25))
+    colormap[] = :plasma
+    f
+end

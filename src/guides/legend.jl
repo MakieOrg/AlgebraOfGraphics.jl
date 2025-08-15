@@ -96,7 +96,7 @@ end
 
 categorical_scales_mergeable(c1, c2) = false # there can be continuous scales in the mix, like markersize
 
-function compute_legend(grid::Matrix{<:Union{AxisEntries,AxisSpecEntries}}; order::Union{Nothing,AbstractVector})
+function compute_legend(grid::Matrix{<:Union{AxisEntries, AxisSpecEntries}}; order::Union{Nothing, AbstractVector})
     # gather valid named scales
     scales_categorical = legendable_scales(Val(:categorical), first(grid).categoricalscales)
     scales_continuous = legendable_scales(Val(:continuous), first(grid).continuousscales)

@@ -369,9 +369,13 @@ function draw_to_spec(spec, scales = scales(); facet = (;), axis = (;))
 
     colorbars = compute_colorbars(agrid)
     if !isempty(colorbars)
-        push!(specs, (:, gridsize[2] + 1 + (legend !== nothing)) => S.GridLayout([
-            S.Colorbar(; colorbar...) for colorbar in colorbars
-        ]))
+        push!(
+            specs, (:, gridsize[2] + 1 + (legend !== nothing)) => S.GridLayout(
+                [
+                    S.Colorbar(; colorbar...) for colorbar in colorbars
+                ]
+            )
+        )
     end
 
     xaxislinks = Vector{Makie.BlockSpec}[]
@@ -467,16 +471,18 @@ function facet_labels!(specs::Vector{<:Pair}, aes, scale, dir)
     padding_index = dir == :row ? 1 : 3
     padding = ntuple(i -> i == padding_index ? axdefaults[:titlegap] : 0.0f0, 4)
 
-    append!(specs, map(plotvalues(scale), datalabels(scale)) do index, label
-        rotation = dir == :row ? -π / 2 : 0.0
-        figpos = dir == :col ? (1, index, Top()) :
-            dir == :row ? (index, size(aes, 2), Right()) : (index..., Top())
-        return figpos => Makie.SpecApi.Label(; text = label, rotation, padding, color, font, fontsize, visible)
-    end)
+    return append!(
+        specs, map(plotvalues(scale), datalabels(scale)) do index, label
+            rotation = dir == :row ? -π / 2 : 0.0
+            figpos = dir == :col ? (1, index, Top()) :
+                dir == :row ? (index, size(aes, 2), Right()) : (index..., Top())
+            return figpos => Makie.SpecApi.Label(; text = label, rotation, padding, color, font, fontsize, visible)
+        end
+    )
 end
 
 function hideinnerdecorations!(
-        aes::AbstractMatrix{<:Union{Nothing,<:Pair}};
+        aes::AbstractMatrix{<:Union{Nothing, <:Pair}};
         hidexdecorations, hideydecorations, wrap
     )
     I, J = size(aes)
@@ -505,10 +511,10 @@ end
 function hide_xdecorations!(ax::Makie.BlockSpec)
     ax.xlabelvisible = false
     ax.xticklabelsvisible = false
-    ax.xticksvisible = false
+    return ax.xticksvisible = false
 end
 function hide_ydecorations!(ax::Makie.BlockSpec)
     ax.ylabelvisible = false
     ax.yticklabelsvisible = false
-    ax.yticksvisible = false
+    return ax.yticksvisible = false
 end
