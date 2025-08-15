@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.11.4 - 2025-08-15
+
 - Bumped julia compat to `1.10` to match Makie going forward.
 - Added the experimental `draw_to_spec` function. This can be used as an alternative to `draw` to create a Makie.SpecApi spec that can be updated interactively using observables [#609](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/609).
 
