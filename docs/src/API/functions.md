@@ -62,3 +62,9 @@ AlgebraOfGraphics.scientific_type
 AlgebraOfGraphics.plottypes_attributes
 AlgebraOfGraphics.compute_attributes
 ```
+
+## Experimental functions
+
+```@docs
+AlgebraOfGraphics.draw_to_spec
+```
