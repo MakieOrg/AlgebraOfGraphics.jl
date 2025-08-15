@@ -279,6 +279,58 @@ function Base.showerror(io::IO, pe::PaletteError)
     return print(io, msg)
 end
 
+"""
+    draw_to_spec(d, scales = scales(); [axis, facet])
+
+!!! warning
+    This function is considered experimental.
+    It can have breaking changes or be removed at any time.
+
+Create a Makie SpecApi specification from a [`AlgebraOfGraphics.AbstractDrawable`](@ref) object `d`.
+Scale options can be passed as an optional second argument.
+The output can be customized by passing named tuples or dictionaries with settings via the `axis` or `facet` keywords.
+
+Unlike [`draw`](@ref), this function does not create or mutate a figure. Instead, it returns a
+`Makie.SpecApi.GridLayout` specification that can be used for reactive
+plotting with observables. This allows for creating plots that can be efficiently updated
+when the underlying data changes.
+
+The returned specification includes axis configurations, plot specifications, facet layouts,
+legends, and colorbars as appropriate. It can be plotted using `Makie.plot(spec)` or used
+in more complex reactive plotting scenarios.
+
+## Example
+
+```julia
+using AlgebraOfGraphics, GLMakie
+
+function random_frame()
+    (
+        x = randn(100),
+        y = randn(100),
+        color = randn(100),
+        marker = rand(rand('A':'Z', 3), 100),
+        layout = rand(rand(names(Base), 9), 100),
+    )
+end
+
+df = Observable(random_frame())
+specobs = lift(df) do df
+    layer = data(df) * mapping(:x, :y, color = :color, marker = :marker, layout = :layout) *
+        visual(Scatter)
+    AlgebraOfGraphics.draw_to_spec(layer, scales(Color = (; colormap = rand(RGBf, 3))))
+end
+f = Figure()
+plot(f[1, 1], specobs)
+f
+
+# later, the data observable can be updated
+
+df[] = random_frame()
+```
+
+See also [`draw`](@ref), [`draw!`](@ref).
+"""
 function draw_to_spec(spec, scales = scales(); facet = (;), axis = (;))
     agrid = compute_axes_grid(spec, scales; axis)
 
@@ -305,10 +357,6 @@ function draw_to_spec(spec, scales = scales(); facet = (;), axis = (;))
 
     gridattrs = facet_grid!(specs, axisspecs, first(agrid).categoricalscales; facet)
     wrapattrs = facet_wrap!(specs, axisspecs, first(agrid).categoricalscales; facet)
-
-    # TODO: Makie can currently not handle multiple linked subsets here
-    xaxislinks = last.(axisspecs_vec)
-    yaxislinks = last.(axisspecs_vec)
 
     gridsize = size(agrid)
 
