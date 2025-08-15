@@ -52,6 +52,7 @@ AlgebraOfGraphics.mergeable
 
 ```@docs
 show_aesthetics
+target
 ```
 
 ## Internal functions
