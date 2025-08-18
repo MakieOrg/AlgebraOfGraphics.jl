@@ -278,3 +278,243 @@ function Base.showerror(io::IO, pe::PaletteError)
     """
     return print(io, msg)
 end
+
+"""
+    draw_to_spec(d, scales = scales(); [axis, facet])
+
+!!! warning
+    This function is considered experimental.
+    It can have breaking changes or be removed at any time.
+
+Create a Makie SpecApi specification from a [`AlgebraOfGraphics.AbstractDrawable`](@ref) object `d`.
+Scale options can be passed as an optional second argument.
+The output can be customized by passing named tuples or dictionaries with settings via the `axis` or `facet` keywords.
+
+Unlike [`draw`](@ref), this function does not create or mutate a figure. Instead, it returns a
+`Makie.SpecApi.GridLayout` specification that can be used for reactive
+plotting with observables. This allows for creating plots that can be efficiently updated
+when the underlying data changes.
+
+The returned specification includes axis configurations, plot specifications, facet layouts,
+legends, and colorbars as appropriate. It can be plotted using `Makie.plot(spec)` or used
+in more complex reactive plotting scenarios.
+
+## Example
+
+```julia
+using AlgebraOfGraphics, GLMakie
+
+function random_frame()
+    (
+        x = randn(100),
+        y = randn(100),
+        color = randn(100),
+        marker = rand(rand('A':'Z', 3), 100),
+        layout = rand(rand(names(Base), 9), 100),
+    )
+end
+
+df = Observable(random_frame())
+specobs = lift(df) do df
+    layer = data(df) * mapping(:x, :y, color = :color, marker = :marker, layout = :layout) *
+        visual(Scatter)
+    AlgebraOfGraphics.draw_to_spec(layer, scales(Color = (; colormap = rand(RGBf, 3))))
+end
+f = Figure()
+plot(f[1, 1], specobs)
+f
+
+# later, the data observable can be updated
+
+df[] = random_frame()
+```
+
+See also [`draw`](@ref), [`draw!`](@ref).
+"""
+function draw_to_spec(spec, scales = scales(); facet = (;), axis = (;))
+    agrid = compute_axes_grid(spec, scales; axis)
+
+    S = Makie.SpecApi
+
+    axisspecs = map(agrid) do ase
+        ax = ase.axis
+        axtype = ax.type === Axis ? S.Axis : ax.type === Axis3 ? S.Axis3 : error()
+
+        isempty(ase.entries) && return nothing
+
+        plots::Vector{Makie.PlotSpec} = map(ase.entries) do entry
+            Makie.PlotSpec(entry.plottype, entry.positional...; pairs(entry.named)...)
+        end
+
+        ax.position => axtype(; plots, pairs(ax.attributes)...)
+    end
+
+    axisspecs_vec = [x for x in vec(axisspecs) if x !== nothing]
+
+    specs = Pair[]
+
+    append!(specs, axisspecs_vec)
+
+    gridattrs = facet_grid!(specs, axisspecs, first(agrid).categoricalscales; facet)
+    wrapattrs = facet_wrap!(specs, axisspecs, first(agrid).categoricalscales; facet)
+
+    gridsize = size(agrid)
+
+    legend = compute_legend(agrid; order = nothing)
+    if legend !== nothing
+        legendpos = (:, gridsize[2] + 1)
+        legendspec = S.Legend(legend...)
+        push!(specs, legendpos => legendspec)
+    end
+
+    colorbars = compute_colorbars(agrid)
+    if !isempty(colorbars)
+        push!(
+            specs, (:, gridsize[2] + 1 + (legend !== nothing)) => S.GridLayout(
+                [
+                    S.Colorbar(; colorbar...) for colorbar in colorbars
+                ]
+            )
+        )
+    end
+
+    xaxislinks = Vector{Makie.BlockSpec}[]
+    yaxislinks = Vector{Makie.BlockSpec}[]
+
+    gridattrs !== nothing && link_axes!(xaxislinks, yaxislinks, axisspecs; gridattrs.linkxaxes, gridattrs.linkyaxes)
+    wrapattrs !== nothing && link_axes!(xaxislinks, yaxislinks, axisspecs; wrapattrs.linkxaxes, wrapattrs.linkyaxes)
+
+    return S.GridLayout(
+        specs;
+        xaxislinks,
+        yaxislinks,
+    )
+end
+
+function link_axes!(xaxislinks::Vector{Vector{Makie.BlockSpec}}, yaxislinks::Vector{Vector{Makie.BlockSpec}}, axisspecs::Matrix; linkxaxes, linkyaxes)
+    _link!(v, axes) = push!(v, [a[2] for a in axes if a !== nothing])
+
+    linkxaxes == :all && _link!(xaxislinks, axisspecs)
+    linkxaxes == :colwise && foreach(col -> _link!(xaxislinks, col), eachcol(axisspecs))
+
+    linkyaxes == :all && _link!(yaxislinks, axisspecs)
+    linkyaxes == :rowwise && foreach(row -> _link!(yaxislinks, row), eachrow(axisspecs))
+
+    return
+end
+
+function facet_wrap!(specs::Vector{<:Pair}, aes::AbstractMatrix, categoricalscales; facet)
+
+    scale = extract_single(AesLayout, categoricalscales)
+    isnothing(scale) && return
+
+    # # Link axes and hide decorations if appropriate
+    attrs = clean_facet_attributes(aes; pairs(facet)...)
+    # link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
+    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap = true)
+
+    # # delete empty axes
+    # deleteemptyaxes!(aes)
+
+    # add facet labels
+    scale.props.legend && panel_labels!(specs, aes, scale)
+
+    # # span axis labels if appropriate
+    # is2d = all(isaxis2d, nonemptyaxes(aes))
+
+    # if is2d && consistent_ylabels(aes)
+    #     span_ylabel!(fig, aes)
+    # end
+    # if is2d && consistent_xlabels(aes)
+    #     span_xlabel!(fig, aes)
+    # end
+
+    return attrs
+end
+
+function facet_grid!(specs::Vector{<:Pair}, aes::AbstractMatrix, categoricalscales; facet)
+    row_scale = extract_single(AesRow, categoricalscales)
+    col_scale = extract_single(AesCol, categoricalscales)
+    all(isnothing, (row_scale, col_scale)) && return
+
+    # # link axes and hide decorations if appropriate
+    attrs = clean_facet_attributes(aes; pairs(facet)...)
+    # link_axes!(aes; attrs.linkxaxes, attrs.linkyaxes)
+    hideinnerdecorations!(aes; attrs.hidexdecorations, attrs.hideydecorations, wrap = false)
+
+    # # span axis labels if appropriate
+    # is2d = all(isaxis2d, nonemptyaxes(aes))
+
+    # is2d && consistent_ylabels(aes) && span_ylabel!(fig, aes)
+    # is2d && consistent_xlabels(aes) && span_xlabel!(fig, aes)
+
+    if !isnothing(row_scale)
+        row_scale.props.legend && row_labels!(specs, aes, row_scale)
+    end
+    if !isnothing(col_scale)
+        col_scale.props.legend && col_labels!(specs, aes, col_scale)
+    end
+    return attrs
+end
+
+function facet_labels!(specs::Vector{<:Pair}, aes, scale, dir)
+    # reference axis to extract attributes
+    ax = first(nonemptyaxes(aes))
+
+    axdefaults = Makie.block_defaults(Axis, Dict(), nothing)
+
+    color = get(() -> axdefaults[:titlecolor], ax.kwargs, :titlecolor)
+    font = get(() -> axdefaults[:titlefont], ax.kwargs, :titlefont)
+    fontsize = get(() -> axdefaults[:titlesize], ax.kwargs, :titlesize)
+    visible = get(() -> axdefaults[:titlevisible], ax.kwargs, :titlevisible)
+
+    padding_index = dir == :row ? 1 : 3
+    padding = ntuple(i -> i == padding_index ? axdefaults[:titlegap] : 0.0f0, 4)
+
+    return append!(
+        specs, map(plotvalues(scale), datalabels(scale)) do index, label
+            rotation = dir == :row ? -π / 2 : 0.0
+            figpos = dir == :col ? (1, index, Top()) :
+                dir == :row ? (index, size(aes, 2), Right()) : (index..., Top())
+            return figpos => Makie.SpecApi.Label(; text = label, rotation, padding, color, font, fontsize, visible)
+        end
+    )
+end
+
+function hideinnerdecorations!(
+        aes::AbstractMatrix{<:Union{Nothing, <:Pair}};
+        hidexdecorations, hideydecorations, wrap
+    )
+    I, J = size(aes)
+
+    if hideydecorations
+        for i in 1:I, j in 2:J
+            aes[i, j] !== nothing && hide_ydecorations!(aes[i, j][2])
+        end
+    end
+
+    return if hidexdecorations
+        for i in 1:(I - 1), j in 1:J
+            if wrap && aes[i + 1, j] === nothing
+                # In facet_wrap, don't hide x decorations if axis below is empty,
+                # but instead improve alignment.
+                if aes[i, j] !== nothing
+                    aes[i, j][2].alignmode = Mixed(bottom = Protrusion(0))
+                end
+            else
+                aes[i, j] !== nothing && hide_xdecorations!(aes[i, j][2])
+            end
+        end
+    end
+end
+
+function hide_xdecorations!(ax::Makie.BlockSpec)
+    ax.xlabelvisible = false
+    ax.xticklabelsvisible = false
+    return ax.xticksvisible = false
+end
+function hide_ydecorations!(ax::Makie.BlockSpec)
+    ax.ylabelvisible = false
+    ax.yticklabelsvisible = false
+    return ax.yticksvisible = false
+end

@@ -4,6 +4,11 @@
 
 - Added `target` function which, as a first argument to `visual`, restricts the effect of `visual` to only those layers specified by the argument of `target`. Intended for the styling of transformations creating multiple plot layers [#678](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/678).
 
+## v0.11.4 - 2025-08-15
+
+- Bumped julia compat to `1.10` to match Makie going forward.
+- Added the experimental `draw_to_spec` function. This can be used as an alternative to `draw` to create a Makie.SpecApi spec that can be updated interactively using observables [#609](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/609).
+
 ## v0.11.3 - 2025-06-24
 
 - Added the ability to set `scale`, `ticks` and `tickformat` for continuous X, Y and Z scales via the `scales` options which allows to set these in multi-scale facet scenarios [#675](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/675).
