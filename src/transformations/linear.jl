@@ -25,15 +25,24 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         pred = GLM.predict(lin_model, add_intercept_column(x̂); interval, l.level)
         return if !isnothing(interval)
             ŷ, lower, upper = pred
-            (x̂, ŷ), (; lower, upper)
+            (x̂, ŷ, x̂, lower, upper), (;)
         else
             ŷ = pred
-            (x̂, ŷ), (;)
+            (x̂, ŷ, empty(x̂), empty(ŷ), empty(ŷ)), (;)
         end
     end
-    default_plottype = isempty(output.named) ? Lines : LinesFill
-    plottype = Makie.plottype(output.plottype, default_plottype)
-    return ProcessedLayer(output; plottype)
+
+    lineslayer = ProcessedLayer(map(output) do p, n
+        x̂, ŷ, x, lower, upper = p
+        (x̂, ŷ), (;)
+    end, plottype = Lines, label = :prediction)
+
+    bandlayer = ProcessedLayer(map(output) do p, n
+        x̂, ŷ, x, lower, upper = p
+        (x, lower, upper), (;)
+    end, plottype = Band, label = :ci, attributes = dictionary([:alpha => 0.15]))
+
+    return ProcessedLayers([bandlayer, lineslayer])
 end
 
 """
@@ -50,5 +59,7 @@ it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.
 
 Weighted data is supported via the keyword `weights` (passed to `mapping`).
+
+This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """
 linear(; options...) = transformation(LinearAnalysis(; options...))

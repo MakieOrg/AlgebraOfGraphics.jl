@@ -124,7 +124,7 @@ These are the attributes you can override (note that some of them have convenien
 subvisual
 ```
 
-In this example, we first create a `linear` transformation which makes two sublayers, labelled `:prediction` and `:ci`, respectively.
+In this example, we first create a `linear` transformation which makes two sublayers, labelled `:prediction` and `:ci`, respectively. With `visual`, we can only set attributes for both sublayers at once:
 
 ```@example subvisual
 using AlgebraOfGraphics
@@ -132,10 +132,10 @@ using CairoMakie
 
 base = mapping(1:20, 2 .* randn(20) .+ (1:20)) * linear()
 
-draw(base)
+draw(base * visual(color = :tomato, label = "Prediction + CI"))
 ```
 
-We can then separately style these layers using `subvisual`, we can even set separate labels to split them apart in the legend:
+We can separately style these layers using `subvisual`. We can even set separate labels to split them apart in the legend:
 
 ```@example subvisual
 modified = base *
