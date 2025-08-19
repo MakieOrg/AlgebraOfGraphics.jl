@@ -100,12 +100,6 @@ end
     @test processedlayer.named[:text] == fill(verbatim.(fill("hello", 3)))
 end
 
-@testset "Invalid use of continuous for categorical hardcoded mapping" begin
-    df = (x = 1:4, y = 1:4, page = [1, 1, 2, 2], color = ["A", "B", "C", "D"])
-    spec = data(df) * mapping(:x, :y, color = :color, layout = :page) * visual(Scatter)
-    @test_throws_message "The `layout` mapping was used with continuous data" draw(spec)
-end
-
 @testset "shape" begin
     df = (x = rand(1000), y = rand(1000), z = rand(1000), c = rand(["a", "b", "c"], 1000))
     d = mapping(:x => exp, [:y, :z], color = :c, marker = dims(1) => renamer(["a", "b"]))
@@ -265,4 +259,27 @@ end
     @test e2.named[:fontsize] == fontsizes[6:10]
     @test e2.named[:align] == aligns[6:10]
     @test e2.named[:color] == colors[6:10]
+end
+
+@testset "hardcoded categoricals work with continuous data" begin
+
+    hardcodeds = [:layout, :col, :row, :group]
+
+    for hardcoded in hardcodeds
+        aes = AlgebraOfGraphics.hardcoded_mapping(hardcoded)
+        @test aes !== nothing
+        fg = draw(mapping(1:3, 1:3; (; hardcoded => [3, 1, 2])...))
+        sc = fg.grid[1].categoricalscales[aes][nothing]
+        @test AlgebraOfGraphics.datavalues(sc) == [1, 2, 3]
+        expected_palette = hardcoded === :layout ? [(1, 1), (1, 2), (2, 1)] : 1:3
+        @test AlgebraOfGraphics.plotvalues(sc) == expected_palette
+    end
+end
+@testset "tuples of columns can be passed without transform func" begin
+    spec = data((; x = 1:4, y = 1:4, a = [2, 1, 1, 2], b = [4, 4, 3, 3])) *
+        mapping(:x, :y, row = (:a, :b))
+    fg = draw(spec)
+    sc = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesRow][nothing]
+    @test AlgebraOfGraphics.datavalues(sc) == [(1, 3), (1, 4), (2, 3), (2, 4)]
+    @test AlgebraOfGraphics.plotvalues(sc) == 1:4
 end

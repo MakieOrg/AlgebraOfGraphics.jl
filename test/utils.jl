@@ -36,9 +36,14 @@ end
     )
 
     s = NamedArguments([:a, :b, :c], [1, 2, 3])
-    odd, even = separate(isodd, s)
+    odd, even = separate_by_key_value((k, v) -> isodd(v), s)
     @test odd == NamedArguments((a = 1, c = 3))
     @test even == NamedArguments((b = 2,))
+
+    s = NamedArguments([:a, :b, :c], [1, 2, 3])
+    is_a, is_not_a = separate_by_key_value((k, v) -> k == :a, s)
+    @test is_a == NamedArguments((a = 1,))
+    @test is_not_a == NamedArguments((b = 2, c = 3))
 
     t = AlgebraOfGraphics.set(s, :d => 5, :a => 3)
     @test t == NamedArguments([:a, :b, :c, :d], [3, 2, 3, 5])

@@ -12,10 +12,10 @@ function filterkeys(f, d::AbstractDictionary)
     return getindices(d, idxs)
 end
 
-function separate(f, d::AbstractDictionary)
+function separate_by_key_value(f, d::AbstractDictionary)
     d1, d2 = empty(d), empty(d)
     for (k, v) in pairs(d)
-        target = ifelse(f(v), d1, d2)
+        target = ifelse(f(k, v), d1, d2)
         insert!(target, k, v)
     end
     return d1, d2
