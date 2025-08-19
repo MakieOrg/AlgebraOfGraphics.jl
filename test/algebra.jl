@@ -218,15 +218,15 @@ end
     @test pls[1].positional == [[1, 2, 3], [4, 5, 6]]
     @test pls[2].positional == [[11, 12, 13], [14, 15, 16]]
 
-    @testset "visual target with processedlayers" begin
+    @testset "subvisual with processedlayers" begin
         fg = data((; x = 1:3, y = 4:6)) *
             mapping(:x, :y) *
             visual(Scatter) *
             duplicate_shifted() *
             visual(color = :red) *
-            visual(target(Scatter), markersize = 30) *
-            visual(target(BarPlot), Lines, linewidth = 20) *
-            visual(target(p -> p.plottype == Lines), linestyle = :dash) |> draw
+            subvisual(Scatter, markersize = 30) *
+            subvisual(BarPlot, Lines, linewidth = 20) *
+            subvisual(p -> p.plottype == Lines, linestyle = :dash) |> draw
 
         pls = fg.grid[].processedlayers
         @test length(pls) == 2
