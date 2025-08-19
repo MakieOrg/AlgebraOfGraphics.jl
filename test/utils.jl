@@ -36,7 +36,7 @@ end
     )
 
     s = NamedArguments([:a, :b, :c], [1, 2, 3])
-    odd, even = separate(isodd, s)
+    odd, even = separate_by_key_value((k, v) -> isodd(v), s)
     @test odd == NamedArguments((a = 1, c = 3))
     @test even == NamedArguments((b = 2,))
 
