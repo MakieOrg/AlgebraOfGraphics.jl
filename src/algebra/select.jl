@@ -116,7 +116,7 @@ function select(data::Columns, direct::DirectData{T}) where {T}
 end
 
 # treat a tuple of columns as a column of tuples by default
-select(data, x::Tuple{Vararg{Union{Symbol,String}}}) = select(data, x => tuple)
+select(data, x::Tuple{Vararg{Union{Symbol, String}}}) = select(data, x => tuple)
 
 function select(data, x::Pair{<:Any, <:Any})
     name, transformation = x
