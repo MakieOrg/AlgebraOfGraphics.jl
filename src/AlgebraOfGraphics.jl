@@ -36,8 +36,7 @@ export Layer, Layers, ProcessedLayer, ProcessedLayers, zerolayer
 export Entry, AxisEntries
 export renamer, sorter, nonnumeric, verbatim, presorted
 export density, histogram, linear, smooth, expectation, frequency, contours, filled_contours
-export visual, data, geodata, dims, mapping
-export target
+export visual, subvisual, data, geodata, dims, mapping
 export datetimeticks
 export draw, draw!
 export facet!, colorbar!, legend!
