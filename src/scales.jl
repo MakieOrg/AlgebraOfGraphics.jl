@@ -505,11 +505,14 @@ elementwise_rescale(value) = value
 
 contextfree_rescale(values) = map(elementwise_rescale, values)
 
-rescale(values, ::Nothing) = values
+rescale(values, ::Nothing; allow_continuous = true) = values
 
-function rescale(values, c::CategoricalScale)
+function rescale(values, c::CategoricalScale; allow_continuous = true)
     # Do not rescale continuous data with categorical scale
-    scientific_eltype(values) === categorical || return values
+    if allow_continuous && scientific_eltype(values) !== categorical
+        # this can be useful to allow plotting values in between categories, but should be used carefully, more like an escape hatch really
+        return values
+    end
     idxs = indexin(values, datavalues(c))
     for (i, idx) in zip(eachindex(values), idxs)
         if idx === nothing

@@ -153,7 +153,9 @@ function process_mappings(layer::Layer)
     unique_scales_without_nothings = filter(x -> x isa ScaleID, unique_scales)
     scale_mapping = map(scaleid -> scaleid.id, unique_scales_without_nothings)
 
-    primary, named = separate(iscategoricalcontainer, named)
+    # we know that the hardcoded mappings are categorical, so we can just always sort
+    # those into primary even if users pass something like integers, which is very common
+    primary, named = separate_by_key_value((k, v) -> hardcoded_mapping(k) !== nothing || iscategoricalcontainer(v), named)
 
     return ProcessedLayer(; primary, positional, named, labels, scale_mapping)
 end

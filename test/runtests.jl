@@ -1,7 +1,7 @@
 using AlgebraOfGraphics, Makie, Random, Statistics, Test, Dates
 
 using AlgebraOfGraphics: Sorted, Presorted
-using AlgebraOfGraphics: separate
+using AlgebraOfGraphics: separate_by_key_value
 using AlgebraOfGraphics: midpoints
 using AlgebraOfGraphics: apply_palette
 using AlgebraOfGraphics: datavalues

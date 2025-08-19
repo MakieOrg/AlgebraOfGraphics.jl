@@ -412,7 +412,7 @@ function rescale(p::ProcessedLayer, categoricalscales::MultiAesScaleDict{Categor
             scale_id = get(p.scale_mapping, key, nothing)
             scale_dict = get(categoricalscales, aes, nothing)
             scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)
-            return rescale(values, scale)
+            return rescale(values, scale; allow_continuous = false) # we know these aesthetics are always categorical so we don't the option to mix continuous into it here (like drawing a scatter dot at 1.5 between A and B)
         else
             return values
         end
@@ -468,7 +468,9 @@ function concatenate(pls::AbstractVector{ProcessedLayer})
 end
 
 function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::MultiAesScaleDict{CategoricalScale})
+    @show processedlayer.primary
     processedlayer = rescale(processedlayer, categoricalscales)
+    @show processedlayer.primary
     tmp_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
     for c in CartesianIndices(shape(processedlayer))
         pl = slice(processedlayer, c)

@@ -4,6 +4,11 @@
 
 - Added `target` function which, as a first argument to `visual`, restricts the effect of `visual` to only those layers specified by the argument of `target`. Intended for the styling of transformations creating multiple plot layers [#678](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/678).
 
+## v0.11.5 - 2025-08-19
+
+- Always treat `layout`, `row`, `col` and `group` mappings as categorical to simplify common scenarios where grouping information is stored as integers [#681](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/681).
+- Make `mapping(key = (:col1, :col2))` work automatically, equivalent to `(:col1, :col2) => tuple` [#681](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/681).
+
 ## v0.11.4 - 2025-08-15
 
 - Bumped julia compat to `1.10` to match Makie going forward.
