@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Added `target` function which, as a first argument to `visual`, restricts the effect of `visual` to only those layers specified by the argument of `target`. Intended for the styling of transformations creating multiple plot layers [#678](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/678).
+- Added `subvisual` which is a version of `visual` that restricts its effect to only those layers specified by a `target` argument. Intended for the styling of transformations creating multiple plot layers [#678](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/678).
 
 ## v0.11.5 - 2025-08-19
 
