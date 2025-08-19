@@ -60,7 +60,7 @@ visual(plottype::PlotType = Plot{plot}; kwargs...) = transformation(Visual(plott
 """
     subvisual(target, args...; kwargs...)
 
-Create a layer that works like `visual(args...; kwargs...)` but only applies to ProcessedLayers that
+Create a layer that works like `visual(args...; kwargs...)` but only applies to `ProcessedLayer`s that
 match the `target` argument. This is mainly intended for usage with transformation layers
 which create multiple layers, but can be used with normal layers as well.
 
