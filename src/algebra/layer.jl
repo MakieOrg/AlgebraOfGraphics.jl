@@ -466,9 +466,7 @@ function concatenate(pls::AbstractVector{ProcessedLayer})
 end
 
 function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categoricalscales::MultiAesScaleDict{CategoricalScale})
-    @show processedlayer.primary
     processedlayer = rescale(processedlayer, categoricalscales)
-    @show processedlayer.primary
     tmp_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
     for c in CartesianIndices(shape(processedlayer))
         pl = slice(processedlayer, c)
