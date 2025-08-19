@@ -32,15 +32,19 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         end
     end
 
-    lineslayer = ProcessedLayer(map(output) do p, n
-        x̂, ŷ, x, lower, upper = p
-        (x̂, ŷ), (;)
-    end, plottype = Lines, label = :prediction)
+    lineslayer = ProcessedLayer(
+        map(output) do p, n
+            x̂, ŷ, x, lower, upper = p
+            (x̂, ŷ), (;)
+        end, plottype = Lines, label = :prediction
+    )
 
-    bandlayer = ProcessedLayer(map(output) do p, n
-        x̂, ŷ, x, lower, upper = p
-        (x, lower, upper), (;)
-    end, plottype = Band, label = :ci, attributes = dictionary([:alpha => 0.15]))
+    bandlayer = ProcessedLayer(
+        map(output) do p, n
+            x̂, ŷ, x, lower, upper = p
+            (x, lower, upper), (;)
+        end, plottype = Band, label = :ci, attributes = dictionary([:alpha => 0.15])
+    )
 
     return ProcessedLayers([bandlayer, lineslayer])
 end
