@@ -4,6 +4,10 @@
 
 - Added `subvisual` which is a version of `visual` that restricts its effect to only those layers specified by a `target` argument. Intended for the styling of transformations creating multiple plot layers [#678](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/678).
 
+## v0.11.6 - 2025-08-19
+
+- Remove accidentally left in `@show` macro [#682](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/682).
+
 ## v0.11.5 - 2025-08-19
 
 - Always treat `layout`, `row`, `col` and `group` mappings as categorical to simplify common scenarios where grouping information is stored as integers [#681](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/681).
