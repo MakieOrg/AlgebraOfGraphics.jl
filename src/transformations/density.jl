@@ -32,11 +32,18 @@ function (d::DensityAnalysis)(input::ProcessedLayer)
         return _density(Tuple(p); pairs(n)..., pairs(options)...), (;)
     end
     N = length(input.positional)
-    labels = set(input.labels, N + 1 => "pdf")
-    plottypes = [LinesFill, Heatmap, Volume]
-    default_plottype = plottypes[N]
-    plottype = Makie.plottype(input.plottype, default_plottype)
-    return ProcessedLayer(output; plottype, labels)
+    if N == 1
+        linelayer = ProcessedLayer(output; plottype = Lines, label = :line)
+        bandlayer = ProcessedLayer(map(output) do p, n
+            (p[1], zero(p[2]), p[2]), n
+        end; plottype = Band, label = :area, attributes = dictionary([:alpha => 0.15]))
+        return ProcessedLayers([bandlayer, linelayer])
+    else
+        labels = set(input.labels, N + 1 => "pdf")
+        default_plottype = [Heatmap, Volume][N-1]
+        plottype = Makie.plottype(input.plottype, default_plottype)
+        return ProcessedLayer(output; plottype, labels)
+    end
 end
 
 """
@@ -52,5 +59,10 @@ The keyword arguments `kernel` and `bandwidth` are forwarded to `KernelDensity.k
 `npoints` is the number of points used by Makie to draw the line
 
 Weighted data is supported via the keyword `weights` (passed to `mapping`).
+
+For 1D, returns two layers, a `Band` with label `:area` and a `Lines` with label `:line`
+which you can separately style using [`subvisual`](@ref).
+
+For 2D, returns a `Heatmap` and for 3D a `Volume` layer.
 """
 density(; options...) = transformation(DensityAnalysis(; options...))
