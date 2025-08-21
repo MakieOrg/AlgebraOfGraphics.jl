@@ -3,6 +3,7 @@ Base.@kwdef struct DensityAnalysis{D, K, B}
     npoints::Int = 200
     kernel::K = automatic
     bandwidth::B = automatic
+    direction::Union{Makie.Automatic,Symbol} = automatic
 end
 
 # Work around lack of length 1 tuple method
@@ -33,12 +34,17 @@ function (d::DensityAnalysis)(input::ProcessedLayer)
     end
     N = length(input.positional)
     if N == 1
-        linelayer = ProcessedLayer(output; plottype = Lines, label = :line)
+        direction = d.direction === automatic ? :x : d.direction
+        linelayer = ProcessedLayer(map(output) do p, n
+            _p = direction === :x ? p : direction === :y ? reverse(p) : error("Invalid density direction $(repr(direction)), options are :x or :y")
+            _p, n
+        end, plottype = Lines, label = :line)
         bandlayer = ProcessedLayer(map(output) do p, n
             (p[1], zero(p[2]), p[2]), n
-        end; plottype = Band, label = :area, attributes = dictionary([:alpha => 0.15]))
+        end; plottype = Band, label = :area, attributes = dictionary([:alpha => 0.15, :direction => direction]))
         return ProcessedLayers([bandlayer, linelayer])
     else
+        d.direction === automatic || error("The direction = $(repr(d.direction)) keyword in a density analysis may only be set for the 1-dimensional case")
         labels = set(input.labels, N + 1 => "pdf")
         default_plottype = [Heatmap, Volume][N-1]
         plottype = Makie.plottype(input.plottype, default_plottype)
@@ -47,7 +53,7 @@ function (d::DensityAnalysis)(input::ProcessedLayer)
 end
 
 """
-    density(; datalimits=automatic, kernel=automatic, bandwidth=automatic, npoints=200)
+    density(; datalimits=automatic, kernel=automatic, bandwidth=automatic, npoints=200, direction=automatic)
 
 Fit a kernel density estimation of `data`.
 
@@ -61,7 +67,8 @@ The keyword arguments `kernel` and `bandwidth` are forwarded to `KernelDensity.k
 Weighted data is supported via the keyword `weights` (passed to `mapping`).
 
 For 1D, returns two layers, a `Band` with label `:area` and a `Lines` with label `:line`
-which you can separately style using [`subvisual`](@ref).
+which you can separately style using [`subvisual`](@ref). The direction may be changed to
+vertical via `direction = :y`.
 
 For 2D, returns a `Heatmap` and for 3D a `Volume` layer.
 """
