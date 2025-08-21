@@ -3,7 +3,7 @@ Base.@kwdef struct DensityAnalysis{D, K, B}
     npoints::Int = 200
     kernel::K = automatic
     bandwidth::B = automatic
-    direction::Union{Makie.Automatic,Symbol} = automatic
+    direction::Union{Makie.Automatic, Symbol} = automatic
 end
 
 # Work around lack of length 1 tuple method
@@ -35,18 +35,22 @@ function (d::DensityAnalysis)(input::ProcessedLayer)
     N = length(input.positional)
     if N == 1
         direction = d.direction === automatic ? :x : d.direction
-        linelayer = ProcessedLayer(map(output) do p, n
-            _p = direction === :x ? p : direction === :y ? reverse(p) : error("Invalid density direction $(repr(direction)), options are :x or :y")
-            _p, n
-        end, plottype = Lines, label = :line)
-        bandlayer = ProcessedLayer(map(output) do p, n
-            (p[1], zero(p[2]), p[2]), n
-        end; plottype = Band, label = :area, attributes = dictionary([:alpha => 0.15, :direction => direction]))
+        linelayer = ProcessedLayer(
+            map(output) do p, n
+                _p = direction === :x ? p : direction === :y ? reverse(p) : error("Invalid density direction $(repr(direction)), options are :x or :y")
+                _p, n
+            end, plottype = Lines, label = :line
+        )
+        bandlayer = ProcessedLayer(
+            map(output) do p, n
+                (p[1], zero(p[2]), p[2]), n
+            end; plottype = Band, label = :area, attributes = dictionary([:alpha => 0.15, :direction => direction])
+        )
         return ProcessedLayers([bandlayer, linelayer])
     else
         d.direction === automatic || error("The direction = $(repr(d.direction)) keyword in a density analysis may only be set for the 1-dimensional case")
         labels = set(input.labels, N + 1 => "pdf")
-        default_plottype = [Heatmap, Volume][N-1]
+        default_plottype = [Heatmap, Volume][N - 1]
         plottype = Makie.plottype(input.plottype, default_plottype)
         return ProcessedLayer(output; plottype, labels)
     end
