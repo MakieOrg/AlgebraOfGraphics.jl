@@ -440,22 +440,6 @@ function legend_elements(T::Type{<:Union{HLines, VLines, Lines, LineSegments, Er
     ]
 end
 
-function legend_elements(T::Type{LinesFill}, attributes, scale_args::MixedArguments)
-    fillalpha = _get(T, scale_args, attributes, :fillalpha)
-    base_color = _get(T, scale_args, attributes, :color)
-
-    return [
-        PolyElement(
-            color = (base_color, fillalpha),
-        ),
-        LineElement(
-            color = base_color,
-            linewidth = _get(T, scale_args, attributes, :linewidth),
-            linestyle = _get(T, scale_args, attributes, :linestyle),
-        ),
-    ]
-end
-
 function legend_elements(T::Type{<:Union{Makie.Text, Annotation}}, attributes, scale_args::MixedArguments)
     return [
         PolyElement(

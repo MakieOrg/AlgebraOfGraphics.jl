@@ -328,7 +328,7 @@ reftest("density layout visual direction y") do
     x = sin.(1:40) .+ repeat([0, 2], inner = 20)
     z = repeat(["A", "B"], inner = 20)
     data((; x, z)) *
-        mapping(:x, row = :z) * AlgebraOfGraphics.density() * visual(direction = :y) |>
+        mapping(:x, row = :z) * AlgebraOfGraphics.density(direction = :y) |>
         draw
 end
 

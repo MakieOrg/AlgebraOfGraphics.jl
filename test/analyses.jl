@@ -483,7 +483,7 @@ end
     df = (x = rand(1000), y = rand(1000), c = rand(["a", "b"], 1000))
     npoints, dropcollinear = 150, false
     layer = data(df) * mapping(:x, :y, color = :c) * linear(; npoints, dropcollinear)
-    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+    processedlayers = AlgebraOfGraphics.ProcessedLayers(layer)
 
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
@@ -497,8 +497,10 @@ end
     x̂2 = range(extrema(x2)...; length = npoints)
     ŷ2, lower2, upper2 = map(vec, GLM.predict(lm2, [ones(length(x̂2)) x̂2]; interval = :confidence))
 
-    x̂, ŷ = processedlayer.positional
-    lower, upper = processedlayer.named[:lower], processedlayer.named[:upper]
+    pl_line = processedlayers.layers[2]
+    x̂, ŷ = pl_line.positional
+    pl_band = processedlayers.layers[1]
+    lower, upper = pl_band.positional[2], pl_band.positional[3]
 
     @test x̂[1] ≈ x̂1
     @test ŷ[1] ≈ ŷ1
@@ -510,23 +512,23 @@ end
     @test lower[2] ≈ lower2
     @test upper[2] ≈ upper2
 
-    @test processedlayer.primary == NamedArguments((color = ["a", "b"],))
-    @test processedlayer.attributes == NamedArguments((; direction = :x))
+    @test pl_line.primary == NamedArguments((color = ["a", "b"],))
 
-    @test processedlayer.plottype == LinesFill
+    @test pl_line.plottype == Lines
+    @test pl_band.plottype == Band
 
     labels = MixedArguments()
     insert!(labels, 1, "x")
     insert!(labels, 2, "y")
     insert!(labels, :color, "c")
-    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
+    @test labels == map(AlgebraOfGraphics.to_label, pl_line.labels)
 
     # Test `interval` and `level` custom values
     df = (x = rand(1000), y = rand(1000), c = rand(["a", "b"], 1000))
     npoints, dropcollinear = 150, false
     interval, level = :prediction, 0.9
     layer = data(df) * mapping(:x, :y, color = :c) * linear(; npoints, dropcollinear, interval, level)
-    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+    processedlayers = AlgebraOfGraphics.ProcessedLayers(layer)
 
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
@@ -540,8 +542,10 @@ end
     x̂2 = range(extrema(x2)...; length = npoints)
     ŷ2, lower2, upper2 = map(vec, GLM.predict(lm2, [ones(length(x̂2)) x̂2]; interval, level))
 
-    x̂, ŷ = processedlayer.positional
-    lower, upper = processedlayer.named[:lower], processedlayer.named[:upper]
+    pl_band = processedlayers.layers[1]
+    pl_line = processedlayers.layers[2]
+    x̂, ŷ = pl_line.positional
+    lower, upper = pl_band.positional[2], pl_band.positional[3]
 
     @test x̂[1] ≈ x̂1
     @test ŷ[1] ≈ ŷ1
@@ -558,7 +562,7 @@ end
     df = (x = rand(1000), y = rand(1000), z = rand(1000), c = rand(["a", "b"], 1000))
     npoints, dropcollinear = 150, false
     layer = data(df) * mapping(:x, :y, color = :c, weights = :z) * linear(; npoints, dropcollinear)
-    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+    processedlayers = AlgebraOfGraphics.ProcessedLayers(layer)
 
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
@@ -574,7 +578,9 @@ end
     x̂2 = range(extrema(x2)...; length = npoints)
     ŷ2 = vec(GLM.predict(lm2, [ones(length(x̂2)) x̂2]; interval = nothing))
 
-    x̂, ŷ = processedlayer.positional
+    pl_band = processedlayers.layers[1]
+    pl_line = processedlayers.layers[2]
+    x̂, ŷ = pl_line.positional
 
     @test x̂[1] ≈ x̂1
     @test ŷ[1] ≈ ŷ1
@@ -582,18 +588,18 @@ end
     @test x̂[2] ≈ x̂2
     @test ŷ[2] ≈ ŷ2
 
-    @test processedlayer.primary == NamedArguments((color = ["a", "b"],))
-    @test isempty(processedlayer.named)
-    @test isempty(processedlayer.attributes)
+    @test pl_line.primary == NamedArguments((color = ["a", "b"],))
+    @test isempty(pl_line.named)
+    @test isempty(pl_line.attributes)
 
-    @test processedlayer.plottype == Lines
+    @test pl_line.plottype == Lines
 
     labels = MixedArguments()
     insert!(labels, 1, "x")
     insert!(labels, 2, "y")
     insert!(labels, :color, "c")
     insert!(labels, :weights, "z")
-    @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
+    @test labels == map(AlgebraOfGraphics.to_label, pl_line.labels)
 end
 
 @testset "smooth" begin
