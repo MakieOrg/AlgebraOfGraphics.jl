@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.11.7 - 2025-08-26
+
+- Fixed a bug where adding a layer without `layout` mapping could result in `layout` facets that should not have been visible at all [#683](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/683).
+
 ## v0.11.6 - 2025-08-19
 
 - Remove accidentally left in `@show` macro [#682](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/682).
