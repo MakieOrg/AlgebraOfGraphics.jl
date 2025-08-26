@@ -347,7 +347,7 @@ end
 
 ## Machinery to convert a `ProcessedLayer` to a grid of slices of `ProcessedLayer`s
 
-function compute_grid_positions(categoricalscales, primary = NamedArguments())::Vector{Tuple{Int,Int}}
+function compute_grid_positions(categoricalscales, primary = NamedArguments())::Vector{Tuple{Int, Int}}
 
     aes_keyword(::Type{AesRow}) = :row
     aes_keyword(::Type{AesCol}) = :col
@@ -357,7 +357,7 @@ function compute_grid_positions(categoricalscales, primary = NamedArguments())::
     colscale = extract_single(AesCol, categoricalscales)
     layoutscale = extract_single(AesLayout, categoricalscales)
 
-    if !isnothing(layoutscale)
+    return if !isnothing(layoutscale)
         if haskey(primary, :layout)
             [primary[:layout]]
         else
