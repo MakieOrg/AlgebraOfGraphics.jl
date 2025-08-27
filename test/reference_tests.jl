@@ -1486,3 +1486,14 @@ reftest("annotation", true) do
     draw!(f[2, 2], spec4)
     f
 end
+
+reftest("empty facets with non-layout layer") do
+    f = Figure()
+    layer1 = mapping(1:3, 1:3, layout = 1:3) * visual(Scatter, markersize = 20) +
+        mapping(1.5) * visual(HLines, linewidth = 4)
+    layer2 = mapping(1:2, 1:2, row = 1:2, col = 1:2) * visual(Scatter, markersize = 20) +
+        mapping(1.5) * visual(HLines, linewidth = 4)
+    draw!(f[1, 1], layer1)
+    draw!(f[1, 2], layer2)
+    f
+end
