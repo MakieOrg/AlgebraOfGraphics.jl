@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.10.9 - 2025-08-27
+
+- **Backport** [#683](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/683): Fixed a bug where adding a layer without layout mapping could result in layout facets that should not have been visible at all [#684](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/684).
+
 ## v0.10.8 - 2025-06-06
 
 - Added support for the Makie's new `Annotation` recipe [#663](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/663).

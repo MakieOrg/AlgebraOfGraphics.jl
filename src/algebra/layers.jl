@@ -71,7 +71,8 @@ ProcessedLayers(p::ProcessedLayer) = ProcessedLayers([p])
 ProcessedLayers(p::ProcessedLayers) = p
 
 function compute_processedlayers_grid(processedlayers, categoricalscales)
-    indices = CartesianIndices(compute_grid_positions(categoricalscales))
+    gridpositions = compute_grid_positions(categoricalscales)
+    indices = CartesianIndices((maximum(first, gridpositions), maximum(last, gridpositions)))
     pls_grid = map(_ -> ProcessedLayer[], indices)
     for processedlayer in processedlayers
         append_processedlayers!(pls_grid, processedlayer, categoricalscales)

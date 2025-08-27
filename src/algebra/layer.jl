@@ -348,24 +348,40 @@ end
 
 ## Machinery to convert a `ProcessedLayer` to a grid of slices of `ProcessedLayer`s
 
-function compute_grid_positions(categoricalscales, primary=NamedArguments())
+function compute_grid_positions(categoricalscales, primary = NamedArguments())::Vector{Tuple{Int, Int}}
 
     aes_keyword(::Type{AesRow}) = :row
     aes_keyword(::Type{AesCol}) = :col
 
-    return map((AesRow, AesCol), (first, last)) do aes, f
-        scale = extract_single(aes, categoricalscales)
-        lscale = extract_single(AesLayout, categoricalscales)
-        return if !isnothing(scale)
-            rg = Base.OneTo(maximum(plotvalues(scale)))
-            aeskw = aes_keyword(aes)
-            haskey(primary, aeskw) ? fill(primary[aeskw]) : rg
-        elseif !isnothing(lscale)
-            rg = Base.OneTo(maximum(f, plotvalues(lscale)))
-            haskey(primary, :layout) ? fill(f(primary[:layout])) : rg
+
+    rowscale = extract_single(AesRow, categoricalscales)
+    colscale = extract_single(AesCol, categoricalscales)
+    layoutscale = extract_single(AesLayout, categoricalscales)
+
+    return if !isnothing(layoutscale)
+        if haskey(primary, :layout)
+            [primary[:layout]]
         else
-            Base.OneTo(1)
+            plotvalues(layoutscale)
         end
+    elseif !isnothing(rowscale) || !isnothing(colscale)
+        rowrange = if isnothing(rowscale)
+            [1]
+        elseif haskey(primary, :row)
+            [primary[:row]]
+        else
+            plotvalues(rowscale)
+        end
+        colrange = if isnothing(colscale)
+            [1]
+        elseif haskey(primary, :col)
+            [primary[:col]]
+        else
+            plotvalues(colscale)
+        end
+        [(i, j) for i in rowrange for j in colrange]
+    else
+        [(1, 1)]
     end
 end
 
@@ -471,8 +487,8 @@ function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categ
     tmp_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
     for c in CartesianIndices(shape(processedlayer))
         pl = slice(processedlayer, c)
-        rows, cols = compute_grid_positions(categoricalscales, pl.primary)
-        for i in rows, j in cols
+        gridpositions = compute_grid_positions(categoricalscales, pl.primary)
+        for (i, j) in gridpositions
             push!(tmp_pls_grid[i, j], pl)
         end
     end
