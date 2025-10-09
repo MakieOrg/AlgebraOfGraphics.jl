@@ -1599,3 +1599,24 @@ reftest("empty facets with non-layout layer") do
     draw!(f[1, 2], layer2)
     f
 end
+
+reftest("all-missing groups") do
+    df1 = (;
+        a = [1, 2, 3],
+        b = Union{Float64, Missing}[missing, missing, missing],
+    )
+    df2 = (;
+        a = [1, 2, 3, 4],
+        b = [missing, missing, 3, 4],
+        c = ["A", "A", "B", "B"],
+    )
+    # this one will fall back to categorical
+    spec1 = data(df1) * mapping(:a, :b) * visual(Scatter)
+    # but this one used to error and now doesn't
+    spec2 = data(df2) * mapping(:a, :b, layout = :c) * visual(Scatter)
+
+    f = Figure()
+    draw!(f[1, 1], spec1)
+    draw!(f[1, 2], spec2)
+    f
+end

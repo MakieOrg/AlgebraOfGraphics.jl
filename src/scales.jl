@@ -501,9 +501,14 @@ end
 # Rescaling methods that do not depend on context
 elementwise_rescale(value::Union{TimeType, Period}) = datetime2float(value)
 elementwise_rescale(value::Verbatim) = value[]
-elementwise_rescale(value) = value
+elementwise_rescale(::Missing) = missing
 
-contextfree_rescale(values) = map(elementwise_rescale, values)
+# TODO: these maps could, like the one in early processing, also turn subgroup vectors into Vector{Missing}
+# if there were only missings, breaking some plotting scenarios due to downstream Makie failures to convert,
+# this way we at least pass through data that doesn't look like it should be rescaled, also saving some memory,
+# which keeps the annoying behavior for those types but can't really be avoided easily
+contextfree_rescale(values::AbstractArray{<:Union{TimeType, Period, Verbatim, Missing}}) = map(elementwise_rescale, values)
+contextfree_rescale(values::AbstractArray) = values
 
 rescale(values, ::Nothing; allow_continuous = true) = values
 
