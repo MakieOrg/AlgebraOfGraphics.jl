@@ -17,13 +17,13 @@ function reftest(f::Function, name::String, update::Bool = get(ENV, "UPDATE_REFI
 
     save(rec_path, fig; px_per_unit = 1, backend = CairoMakie)
 
-    @testset "$name" begin        
+    @testset "$name" begin
         reference_exists = isfile(ref_path)
 
         if !reference_exists
             if isinteractive()
                 @info "Creating missing reference image: $ref_path"
-                cp(rec_path, ref_path; force=true)
+                cp(rec_path, ref_path; force = true)
             else
                 @test reference_exists
             end
@@ -31,26 +31,26 @@ function reftest(f::Function, name::String, update::Bool = get(ENV, "UPDATE_REFI
             # Load both images
             img_ref = PNGFiles.load(ref_path)
             img_rec = PNGFiles.load(rec_path)
-            
+
             # Compare images using PixelMatch
             num_pixels_diff, diff_image = PixelMatch.pixelmatch(img_ref, img_rec)
-            
+
             if num_pixels_diff > 0
                 # Save diff image
                 PNGFiles.save(diff_path, diff_image)
-                
+
                 # Print paths for inspection
                 println("Reference test failed for: $name")
                 println("  Reference: $ref_path")
                 println("  Recorded:  $rec_path")
                 println("  Diff:      $diff_path")
                 println("  Pixels different: $num_pixels_diff")
-                
+
                 # In interactive mode, offer to replace reference
                 if isinteractive()
                     if update
                         println("update = true, updating reference image")
-                        cp(rec_path, ref_path; force=true)
+                        cp(rec_path, ref_path; force = true)
                     else
                         # Display images in VS Code if available
                         if Base.displayable(MIME("juliavscode/html"))
@@ -59,7 +59,7 @@ function reftest(f::Function, name::String, update::Bool = get(ENV, "UPDATE_REFI
                         print("Replace reference with recorded image? (y/n): ")
                         response = readline()
                         if lowercase(strip(response)) == "y"
-                            cp(rec_path, ref_path; force=true)
+                            cp(rec_path, ref_path; force = true)
                             println("Reference image updated.")
                         else
                             @test false
@@ -82,7 +82,7 @@ function show_html_differ(; name, num_pixels_diff, ref_path, rec_path, diff_path
     ref_b64 = Base64.base64encode(read(ref_path))
     rec_b64 = Base64.base64encode(read(rec_path))
     diff_b64 = Base64.base64encode(read(diff_path))
-    
+
     html_content = """
     <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h3>Image Comparison Failed: $(name)</h3>
@@ -162,6 +162,6 @@ function show_html_differ(; name, num_pixels_diff, ref_path, rec_path, diff_path
         </script>
     </div>
     """
-    
-    display(MIME("juliavscode/html"), html_content)
+
+    return display(MIME("juliavscode/html"), html_content)
 end
