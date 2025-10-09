@@ -89,6 +89,11 @@ function getlabeledarray(layer::Layer, s)
         selector = s isa AbstractArray ? s : fill(s)
         labeled_arr = map(selector) do s
             local vs, (f, (label, scaleid)) = select(data, s)
+            # TODO: the map(f, ...) thing here can turn a vector of all missings
+            # but with a Float64 Union type into just Missing, which makes it
+            # categorical, but this cannot really be avoided in Julia without
+            # return_type or promote_op shenanigans. It should at least be a relatively
+            # rare edge case
             return label, scaleid, map(f, vs...)
         end
         label = map(first, labeled_arr)
