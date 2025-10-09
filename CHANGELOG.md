@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.11.8 - 2025-10-09
+
+- Improved handling of all-missing subgroups in some cases [#689](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/689).
+
 ## v0.11.7 - 2025-08-26
 
 - Fixed a bug where adding a layer without `layout` mapping could result in `layout` facets that should not have been visible at all [#683](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/683).
