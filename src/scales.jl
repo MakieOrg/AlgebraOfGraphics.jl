@@ -558,6 +558,12 @@ function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     return CategoricalScale(data, plot, label, c1.props, c1.aes)
 end
 
+struct ExtendExtremaError <: Exception
+    e1
+    e2
+    msg::String
+end
+
 function mergescales(c1::ContinuousScale, c2::ContinuousScale)
     c1.force && c2.force && assert_equal(c1.extrema, c2.extrema)
     i = findfirst((c1.force, c2.force))
@@ -568,10 +574,7 @@ function mergescales(c1::ContinuousScale, c2::ContinuousScale)
         result = try
             extend_extrema(c1.extrema, c2.extrema)
         catch err
-            sprint(Base.showerror, err)
-        end
-        if result isa String
-            error("Merging the extrema of two continuous scales failed. This happens if two layers are combined which use data of different types for the same scale.\nThe incompatible extrema of the two scales were $(c1.extrema) and $(c2.extrema).\nThe error was: $result")
+            throw(ExtendExtremaError(c1.extrema, c2.extrema, sprint(Base.showerror, err)))
         end
         result
     end
