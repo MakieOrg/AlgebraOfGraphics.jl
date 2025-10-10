@@ -248,6 +248,10 @@ if VERSION >= v"1.9"
         @test_throws_message "incompatible dimensions for AesX and AesDeltaX scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:value, :id, :err) * visual(Errorbars, direction = :x))
         @test_throws_message "incompatible dimensions for AesY and AesDeltaY scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:id, :value, :err) * visual(Errorbars))
     end
+
+    @testset "Incompatible extrema in continuous scales" begin
+        @test_throws_message "Merging the extrema of two continuous scales failed" (mapping([1]) + mapping([1u"kg"])) * visual(Scatter) |> draw
+    end
 end
 
 if VERSION >= v"1.7"

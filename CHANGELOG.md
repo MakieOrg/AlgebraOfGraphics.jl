@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Improved error message when two layers with incompatible continuous data are combined [#692](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/692).
+
 ## v0.11.8 - 2025-10-09
 
 - Improved handling of all-missing subgroups in some cases [#689](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/689).
