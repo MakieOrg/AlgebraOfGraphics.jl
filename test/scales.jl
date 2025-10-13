@@ -250,7 +250,7 @@ if VERSION >= v"1.9"
     end
 
     @testset "Incompatible extrema in continuous scales" begin
-        @test_throws_message "Merging the extrema of two subscales of the continuous scale Y failed" (mapping([1]) + mapping([1u"kg"])) * visual(Scatter) |> draw
+        @test_throws_message "Merging the extrema of two subscales of the continuous scale Y failed" (mapping([1]) + mapping([1 * U.u"kg"])) * visual(Scatter) |> draw
     end
 end
 
