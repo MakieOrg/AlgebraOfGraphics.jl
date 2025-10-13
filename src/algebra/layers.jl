@@ -107,7 +107,19 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
             if !haskey(dict, scale_id)
                 insert!(dict, scale_id, scale)
             else
-                dict[scale_id] = mergescales(dict[scale_id], scale)
+                err = try
+                    dict[scale_id] = mergescales(dict[scale_id], scale)
+                    nothing
+                catch err
+                    if err isa ExtendExtremaError
+                        err
+                    else
+                        rethrow(err)
+                    end
+                end
+                if err !== nothing
+                    error("Merging the extrema of two subscales of the continuous scale $(scale_setting_name(scale_id, aes)) failed. This usually happens if two layers are combined which use data of different types for the same scale.\nThe incompatible extrema of the two scales were $(err.e1) and $(err.e2).\nThe error was: $(err.msg)")
+                end
             end
         end
 

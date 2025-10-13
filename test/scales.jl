@@ -208,9 +208,9 @@ end
 if VERSION >= v"1.9"
     @testset "Units" begin
         spec = data((; x1 = (1:10) .* D.us"m", x2 = (1:10) .* D.us"kg", y = 1:10)) * (mapping(:x1, :y) + mapping(:x2, :y)) * visual(Scatter)
-        @test_throws D.DimensionError draw(spec)
+        @test_throws_message "Merging the extrema of two subscales of the continuous scale X failed" draw(spec)
         spec = data((; x1 = (1:10) .* U.u"m", x2 = (1:10) .* U.u"kg", y = 1:10)) * (mapping(:x1, :y) + mapping(:x2, :y)) * visual(Scatter)
-        @test_throws U.DimensionError draw(spec)
+        @test_throws_message "Merging the extrema of two subscales of the continuous scale X failed"  draw(spec)
 
         for (xunit, yunit, xoverride, yoverride) in [(D.us"m", D.us"kg", D.us"cm", D.us"g"), (U.u"m", U.u"kg", U.u"cm", U.u"g")]
             spec = data((; x = (1:10) .* xunit, y = (11:20) .* yunit)) * mapping(:x, :y) * visual(Scatter)
@@ -247,6 +247,10 @@ if VERSION >= v"1.9"
 
         @test_throws_message "incompatible dimensions for AesX and AesDeltaX scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:value, :id, :err) * visual(Errorbars, direction = :x))
         @test_throws_message "incompatible dimensions for AesY and AesDeltaY scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:id, :value, :err) * visual(Errorbars))
+    end
+
+    @testset "Incompatible extrema in continuous scales" begin
+        @test_throws_message "Merging the extrema of two subscales of the continuous scale Y failed" (mapping([1]) + mapping([1 * U.u"kg"])) * visual(Scatter) |> draw
     end
 end
 
