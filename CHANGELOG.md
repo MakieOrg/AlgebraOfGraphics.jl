@@ -5,6 +5,18 @@
 - Added `subvisual` which is a version of `visual` that restricts its effect to only those layers specified by a `target` argument. Intended for the styling of transformations creating multiple plot layers [#678](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/678).
 - **Breaking**: Removed the internal `LinesFill` recipe which had been used for `linear` and `density` transformations. Instead, both transformations now create `ProcessedLayers` with `Band`s and `Lines` layers. This means that certain `visual`s multiplied with those transformations may lead to incompatible attribute errors now when calling `draw` if they use attributes that `Band` and `Lines` do not share. On the other hand, you can style layers completely independently with `subvisual` now. To replace `density() * visual(direction = :y)` you can now do `density(direction = :y)` directly.
 
+## v0.11.9 - 2025-10-10
+
+- Improved error message when two layers with incompatible continuous data are combined [#692](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/692).
+
+## v0.11.8 - 2025-10-09
+
+- Improved handling of all-missing subgroups in some cases [#689](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/689).
+
+## v0.11.7 - 2025-08-26
+
+- Fixed a bug where adding a layer without `layout` mapping could result in `layout` facets that should not have been visible at all [#683](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/683).
+
 ## v0.11.6 - 2025-08-19
 
 - Remove accidentally left in `@show` macro [#682](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/682).
@@ -36,6 +48,10 @@
 ## v0.11.0 - 2025-06-16
 
 - **Breaking** Added Makie 0.23 compat. As Makie 0.23 split up `Arrows` in `Arrows2D` and `Arrows3D`, `visual(Arrows2D)` needs to be specified explicitly now in AlgebraOfGraphics. As `Arrows2D` plots polygon shapes now and not a mixture of scatters and lines, the categorical `arrowhead` marker aesthetic had to be removed [#666](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/666).
+
+## v0.10.9 - 2025-08-27
+
+- **[Backport #683](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/683)**: Fixed a bug where adding a layer without layout mapping could result in layout facets that should not have been visible at all [#684](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/684).
 
 ## v0.10.8 - 2025-06-06
 

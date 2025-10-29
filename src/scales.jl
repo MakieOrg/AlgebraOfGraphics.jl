@@ -501,9 +501,14 @@ end
 # Rescaling methods that do not depend on context
 elementwise_rescale(value::Union{TimeType, Period}) = datetime2float(value)
 elementwise_rescale(value::Verbatim) = value[]
-elementwise_rescale(value) = value
+elementwise_rescale(::Missing) = missing
 
-contextfree_rescale(values) = map(elementwise_rescale, values)
+# TODO: these maps could, like the one in early processing, also turn subgroup vectors into Vector{Missing}
+# if there were only missings, breaking some plotting scenarios due to downstream Makie failures to convert,
+# this way we at least pass through data that doesn't look like it should be rescaled, also saving some memory,
+# which keeps the annoying behavior for those types but can't really be avoided easily
+contextfree_rescale(values::AbstractArray{<:Union{TimeType, Period, Verbatim, Missing}}) = map(elementwise_rescale, values)
+contextfree_rescale(values::AbstractArray) = values
 
 rescale(values, ::Nothing; allow_continuous = true) = values
 
@@ -553,11 +558,26 @@ function mergescales(c1::CategoricalScale, c2::CategoricalScale)
     return CategoricalScale(data, plot, label, c1.props, c1.aes)
 end
 
+struct ExtendExtremaError <: Exception
+    e1
+    e2
+    msg::String
+end
+
 function mergescales(c1::ContinuousScale, c2::ContinuousScale)
     c1.force && c2.force && assert_equal(c1.extrema, c2.extrema)
     i = findfirst((c1.force, c2.force))
     force = !isnothing(i)
-    extrema = force ? (c1.extrema, c2.extrema)[i] : extend_extrema(c1.extrema, c2.extrema)
+    extrema = if force
+        (c1.extrema, c2.extrema)[i]
+    else
+        result = try
+            extend_extrema(c1.extrema, c2.extrema)
+        catch err
+            throw(ExtendExtremaError(c1.extrema, c2.extrema, sprint(Base.showerror, err)))
+        end
+        result
+    end
     label = mergelabels(c1.label, c2.label)
     if c1.props != c2.props
         error("Expected props of merging continuous scales to match, got $(c1.props) and $(c2.props)")
