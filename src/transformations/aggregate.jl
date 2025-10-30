@@ -1,4 +1,10 @@
-# Generic aggregation transformation for flexible data aggregation
+struct ParsedAggregation
+    target::Union{Int, Symbol}
+    aggfunc::Base.Callable
+    splits::Any
+    label::Any
+    scaleid::Union{Nothing, ScaleID}
+end
 
 """
     AggregateAnalysis
@@ -53,17 +59,27 @@ data(...) * mapping(:x, :y) *
 ```
 """
 # Helper to parse aggregation spec: just a function
-_parse_agg_spec(f) = (aggfunc=f, splits=nothing, label=nothing)
+_parse_agg_spec(target, f) = ParsedAggregation(target, f, nothing, nothing, nothing)
 
 # Helper to parse aggregation spec: function => splits (for result splitting)
-_parse_agg_spec(p::Pair{<:Function, <:AbstractVector}) = (aggfunc=first(p), splits=last(p), label=nothing)
+_parse_agg_spec(target, p::Pair{<:Function, <:AbstractVector}) = 
+    ParsedAggregation(target, first(p), last(p), nothing, nothing)
 
 # Helper to parse aggregation spec: function => label (accepts any label type like String, RichText, etc.)
-_parse_agg_spec(p::Pair{<:Function}) = (aggfunc=first(p), splits=nothing, label=last(p))
+_parse_agg_spec(target, p::Pair{<:Function}) = 
+    ParsedAggregation(target, first(p), nothing, last(p), nothing)
 
 # Helper to parse aggregation spec: (function => splits) => label
-_parse_agg_spec(p::Pair{<:Pair{<:Function, <:AbstractVector}}) = 
-    (aggfunc=first(first(p)), splits=last(first(p)), label=last(p))
+_parse_agg_spec(target, p::Pair{<:Pair{<:Function, <:AbstractVector}}) = 
+    ParsedAggregation(target, first(first(p)), last(first(p)), last(p), nothing)
+
+# Helper to parse aggregation spec: function => (label => scale_id)
+_parse_agg_spec(target, p::Pair{<:Function, <:Pair{<:Any, ScaleID}}) = 
+    ParsedAggregation(target, first(p), nothing, first(last(p)), last(last(p)))
+
+# Helper to parse aggregation spec: (function => splits) => (label => scale_id)
+_parse_agg_spec(target, p::Pair{<:Pair{<:Function, <:AbstractVector}, <:Pair{<:Any, ScaleID}}) = 
+    ParsedAggregation(target, first(first(p)), last(first(p)), first(last(p)), last(last(p)))
 
 function aggregate(args...; named_aggs...)
     # Parse positional arguments to separate groupby indices from aggregations
@@ -118,7 +134,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
     
     # Parse all aggregation specs once and compute labels
     parsed_aggregations = map(a.aggregations) do (target, agg_spec)
-        parsed = _parse_agg_spec(agg_spec)
+        parsed = _parse_agg_spec(target, agg_spec)
         
         # Get original label for this target
         original_label = get(input.labels, target, "")
@@ -131,20 +147,29 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             generated_label = isempty(original_label) ? func_name : "$(func_name)($(original_label))"
         end
         
-        return (target=target, aggfunc=parsed.aggfunc, splits=parsed.splits, label=generated_label)
+        return ParsedAggregation(target, parsed.aggfunc, parsed.splits, generated_label, parsed.scaleid)
     end
     
     # Build output labels dictionary (Any to support RichText, String, etc.)
     # Wrap labels in fill() to make them broadcastable
     output_labels = Dict{Union{Int, Symbol}, Any}()
+    # Build scale_mapping dictionary to map positions/names to custom scale ids
+    scale_mapping = Dictionary{KeyType, Symbol}()
+    
     for parsed in parsed_aggregations
         if parsed.splits === nothing
             output_labels[parsed.target] = fill(parsed.label)
+            if parsed.scaleid !== nothing
+                insert!(scale_mapping, parsed.target, parsed.scaleid.id)
+            end
         else
             for split_pair in parsed.splits
                 accessor, destination = split_pair
                 accessor_name = string(nameof(accessor))
                 output_labels[destination] = fill("$(accessor_name)($(parsed.label))")
+                if parsed.scaleid !== nothing
+                    insert!(scale_mapping, destination, parsed.scaleid.id)
+                end
             end
         end
     end
@@ -262,5 +287,8 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
     # Apply labels to the output
     labels = set(output.labels, (k => v for (k, v) in output_labels)...)
     
-    return ProcessedLayer(output; plottype, labels)
+    # Merge scale_mapping with existing scale_mapping from output
+    merged_scale_mapping = merge(output.scale_mapping, scale_mapping)
+    
+    return ProcessedLayer(output; plottype, labels, scale_mapping=merged_scale_mapping)
 end
