@@ -1726,3 +1726,32 @@ reftest("aggregate mean with missing values") do
     layer_mean = data(df) * mapping(:x, :y) * aggregate(:, mean) * visual(Scatter, color = :blue, markersize = 20)
     draw(layer_raw + layer_mean)
 end
+
+reftest("aggregate sum heatmap 2d") do
+    # 2x3 heatmap with one combination missing (x=2, y=2) to show gap
+    df = (;
+        x = [
+            1, 1, 1,  # (1,1): sum = 6.0
+            1, 1,  # (1,2): sum = 5.0
+            1, 1, 1,  # (1,3): sum = 9.0
+            2, 2,  # (2,1): sum = 7.0
+            # (2,2): missing - no data points
+            2, 2, 2, 2  # (2,3): sum = 12.0
+        ],
+        y = [
+            1, 1, 1,
+            2, 2,
+            3, 3, 3,
+            1, 1,
+            3, 3, 3, 3
+        ],
+        z = [
+            2.0, 2.0, 2.0,  # sum = 6.0
+            2.5, 2.5,  # sum = 5.0
+            3.0, 3.0, 3.0,  # sum = 9.0
+            3.0, 4.0,  # sum = 7.0
+            3.0, 3.0, 3.0, 3.0  # sum = 12.0
+        ]
+    )
+    data(df) * mapping(:x, :y, :z) * aggregate(:, :, sum) * visual(Heatmap) |> draw
+end

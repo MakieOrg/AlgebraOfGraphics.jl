@@ -1,29 +1,6 @@
 using AlgebraOfGraphics, CairoMakie
-using Statistics: mean, median, sum
+using Statistics: mean, median, sum, extrema
 
-
-
-
-
-## Heatmap by grouping over x and y, aggregating z with sum
-
-using Statistics: sum
-
-# Create test data with multiple z values for each x,y combination
-# Random points scattered in a 5x5 grid
-n_points = 50
-x_vals = rand(1:5, n_points)
-y_vals = rand(1:5, n_points)
-z_vals = randn(n_points) .+ 10  # Random values around 10
-
-data_df = (; x=x_vals, y=y_vals, z=z_vals)
-
-# Create heatmap using aggregate with two grouping dimensions
-layer_heatmap = data(data_df) * mapping(:x, :y, :z) * 
-    aggregate(:, :, sum) * 
-    visual(Heatmap)
-
-fig = draw(layer_heatmap)
 
 
 
