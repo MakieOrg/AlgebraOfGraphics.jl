@@ -19,7 +19,7 @@ end
 
 # Create layers: raw data + aggregated mean
 layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, color=(:gray, 0.3))
-layer_mean = data(data_df) * mapping(:x, :y) * aggregate(2 => mean, groupby=1) * visual(Lines, color=:red, linewidth=3)
+layer_mean = data(data_df) * mapping(:x, :y) * aggregate(:, mean) * visual(Lines, color=:red, linewidth=3)
 
 plt = layer_raw + layer_mean
 fig = draw(plt)
@@ -41,7 +41,7 @@ end
 
 # Create layers: raw data + aggregated mean
 layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, color=(:gray, 0.3))
-layer_mean = data(data_df) * mapping(:x, :y) * aggregate(1 => mean, groupby=2) * visual(Lines, color=:red, linewidth=3)
+layer_mean = data(data_df) * mapping(:x, :y) * aggregate(mean, :) * visual(Lines, color=:red, linewidth=3)
 
 plt = layer_raw + layer_mean
 fig = draw(plt)
@@ -75,7 +75,7 @@ data_df = (; x=x_vals, y=y_vals, color=color_vals)
 # Create layers: raw data (gray) + aggregated mean with group size color
 layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, alpha=0.3, color=:gray)
 layer_agg = data(data_df) * mapping(:x, :y, color=:color) * 
-    aggregate(2 => mean, :color => length, groupby=1) * 
+    aggregate(:, mean, color = length) * 
     visual(Scatter, markersize=20, marker=:diamond, colormap=:viridis)
 
 plt = layer_raw + layer_agg
@@ -102,8 +102,9 @@ end
 
 # Create layers: raw data + aggregated mean
 layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, color=(:gray, 0.3))
-layer_mean = data(data_df) * mapping(:x, :y) * aggregate(2 => mean, groupby=1) * visual(Scatter, color=:blue, markersize=20)
+layer_mean = data(data_df) * mapping(:x, :y) * aggregate(:, mean) * visual(Scatter, color=:blue, markersize=20)
 
 plt = layer_raw + layer_mean
 fig = draw(plt)
 
+##

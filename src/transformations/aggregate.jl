@@ -3,79 +3,72 @@
 """
     AggregateAnalysis
 
-Analysis that performs flexible aggregation of data with optional output remapping.
+Analysis that performs flexible aggregation of data.
 
 Fields:
 - `aggregations`: Pairs of target => aggregation function
-- `groupby`: Tuple of integers and/or symbols specifying grouping dimensions
-- `remap`: Vector of remapping specifications for output reorganization
+- `groupby`: Tuple of integers specifying grouping dimensions
 """
-struct AggregateAnalysis{A, G, R}
+struct AggregateAnalysis{A, G}
     aggregations::A
     groupby::G
-    remap::R
 end
 
 """
-    aggregate(target => aggfunc, ...; groupby, remap=nothing)
+    aggregate(args...; named_args...)
 
-Perform flexible aggregation of data.
+Perform flexible aggregation of data. Use `:` to mark grouping dimensions and 
+aggregation functions for dimensions to aggregate.
 
 # Arguments
-- Positional pairs of `target => aggfunc` where:
-  - `target`: Integer (positional arg) or Symbol (named arg) to aggregate
-  - `aggfunc`: Function to aggregate values (e.g., `mean`, `median`, `std`, `extrema`)
-- `groupby`: Integer, Symbol, or Tuple specifying grouping dimensions
-  - Integers refer to positional arguments (1 = first, 2 = second, etc.)
-  - Symbols refer to named mappings (e.g., `:color`, `:group`)
-  - Tuples combine multiple: `(1, :color)` groups by first position and color
-- `remap`: Optional vector of remapping rules to reorganize outputs
-  - Format: `source => destination` or `source => accessor => destination`
-  - `source`: Integer or Symbol of aggregation result
-  - `accessor`: Function to extract part of result (e.g., `first`, `last`, `x -> x[1]`)
-  - `destination`: Integer or Symbol for final position
-  - All outputs must be explicitly remapped if remap is provided
+- Positional arguments can be:
+  - `:` to mark this position for grouping
+  - An aggregation function (e.g., `mean`, `median`, `std`) to aggregate this position
+- Named arguments are aggregation functions for named mappings (e.g., `color = mean`)
 
 # Examples
 
 ```julia
-# Basic: aggregate 2nd position grouped by 1st
+# Aggregate y values (position 2), group by x (position 1)
 data(...) * mapping(:time, :value) * 
-    aggregate(2 => median, groupby=1)
+    aggregate(:, median)
 
-# Multiple aggregations
-data(...) * mapping(:time, :value, :score) * 
-    aggregate(2 => mean, 3 => std, groupby=1)
+# Aggregate x values (position 1), group by y (position 2)
+data(...) * mapping(:value, :time) * 
+    aggregate(mean, :)
 
-# Split extrema output into separate positions
-data(...) * mapping(:time, :value) * 
-    aggregate(2 => extrema, groupby=1, remap=[
-        2 => first => 2,   # lower bound to position 2
-        2 => last => 3     # upper bound to position 3
-    ])
-
-# Complex remapping with multiple aggregations
-data(...) * mapping(:x, :y, :z, color=:group) * 
-    aggregate(
-        2 => extrema,      # y bounds
-        3 => mean,         # z mean
-        :group => maximum, # max group
-        groupby=1,
-        remap=[
-            2 => first => 2,   # y lower
-            2 => last => 3,    # y upper
-            3 => 4,            # z mean to position 4
-            :group => :group   # keep group as is
-        ]
-    )
+# Multiple aggregations with named argument
+data(...) * mapping(:time, :value, color=:group) * 
+    aggregate(:, mean, color = length)
 
 # Group by multiple dimensions
 data(...) * mapping(:x, :y, :z) * 
-    aggregate(3 => mean, groupby=(1, 2))
+    aggregate(:, :, mean)
 ```
 """
-function aggregate(aggregations::Pair...; groupby, remap=nothing)
-    return transformation(AggregateAnalysis(aggregations, groupby, remap))
+function aggregate(args...; named_aggs...)
+    # Parse positional arguments to separate groupby indices from aggregations
+    groupby_indices = Int[]
+    aggregations = Pair[]
+    
+    for (i, arg) in enumerate(args)
+        if arg === (:)
+            push!(groupby_indices, i)
+        else
+            # arg should be an aggregation function
+            push!(aggregations, i => arg)
+        end
+    end
+    
+    # Add named aggregations
+    for (name, aggfunc) in pairs(named_aggs)
+        push!(aggregations, name => aggfunc)
+    end
+    
+    # Convert groupby to tuple or single value
+    groupby = length(groupby_indices) == 1 ? groupby_indices[1] : Tuple(groupby_indices)
+    
+    return transformation(AggregateAnalysis(Tuple(aggregations), groupby))
 end
 
 # Apply aggregation function directly on grouped data
@@ -129,6 +122,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         cell_results = Dict{Any, Any}()
         
         for (target, aggfunc) in a.aggregations
+            # Validate target and extract target values
             if target isa Integer
                 if target < 1 || target > N
                     throw(ArgumentError("aggregation target $target out of bounds for $N positional arguments"))
@@ -136,105 +130,26 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 if target in grouping_indices
                     throw(ArgumentError("cannot aggregate column $target which is used for grouping"))
                 end
-                
-                # Extract grouping keys and target values for this cell
-                keys = Tuple(p[idx] for idx in grouping_indices)
                 target_values = p[target]
-                values_tuple = (keys..., target_values)
-                
-                # Apply aggregation directly on grouped data
-                result = _aggregate_direct(aggfunc, Tuple(summaries), values_tuple)
-                
-                cell_results[target] = result
-                
             elseif target isa Symbol
-                # Symbol-based aggregation for named arguments
                 if !haskey(n, target)
                     throw(ArgumentError("aggregation target :$target not found in named arguments"))
                 end
-                
-                # Extract grouping keys and target values for this cell
-                keys = Tuple(p[idx] for idx in grouping_indices)
                 target_values = n[target]
-                values_tuple = (keys..., target_values)
-                
-                # Apply aggregation directly on grouped data
-                result = _aggregate_direct(aggfunc, Tuple(summaries), values_tuple)
-                
-                cell_results[target] = result
             else
                 throw(ArgumentError("aggregation target must be an Integer or Symbol, got $(typeof(target))"))
             end
-        end
-        
-        # Apply remapping and build final positional/named structure
-        if a.remap !== nothing
-            # Build remapped results for this cell
-            remapped = Dict{Any, Any}()
             
-            for remap_spec in a.remap
-                if remap_spec isa Pair
-                    source, dest_or_accessor = remap_spec
-                    
-                    if dest_or_accessor isa Pair
-                        # Format: source => accessor => destination
-                        accessor, destination = dest_or_accessor
-                        
-                        if !haskey(cell_results, source)
-                            throw(ArgumentError("remap source $source not found in aggregation results"))
-                        end
-                        
-                        # Apply accessor to extract part of the result
-                        source_data = cell_results[source]
-                        extracted = map(accessor, source_data)
-                        
-                        if haskey(remapped, destination)
-                            throw(ArgumentError("remap destination $destination specified multiple times"))
-                        end
-                        
-                        remapped[destination] = extracted
-                    else
-                        # Format: source => destination (no accessor)
-                        destination = dest_or_accessor
-                        
-                        if !haskey(cell_results, source)
-                            throw(ArgumentError("remap source $source not found in aggregation results"))
-                        end
-                        
-                        if haskey(remapped, destination)
-                            throw(ArgumentError("remap destination $destination specified multiple times"))
-                        end
-                        
-                        remapped[destination] = cell_results[source]
-                    end
-                else
-                    throw(ArgumentError("remap specification must be a Pair"))
-                end
-            end
-            
-            # Check that all aggregation results are remapped
-            for key in keys(cell_results)
-                found = false
-                for remap_spec in a.remap
-                    if remap_spec isa Pair && first(remap_spec) == key
-                        found = true
-                        break
-                    end
-                end
-                if !found
-                    throw(ArgumentError("aggregation result $key not remapped. All outputs must be explicitly specified in remap."))
-                end
-            end
-            
-            final_results = remapped
-        else
-            # No remapping, use results as-is
-            final_results = cell_results
+            # Extract grouping keys and apply aggregation
+            keys = Tuple(p[idx] for idx in grouping_indices)
+            values_tuple = (keys..., target_values)
+            result = _aggregate_direct(aggfunc, Tuple(summaries), values_tuple)
+            cell_results[target] = result
         end
         
         # Separate positional and named results
-        positional_keys = sort([k for k in keys(final_results) if k isa Integer])
-        named_keys = [k for k in keys(final_results) if k isa Symbol]
+        positional_keys = sort([k for k in keys(cell_results) if k isa Integer])
+        named_keys = [k for k in keys(cell_results) if k isa Symbol]
         
         # Build positional array preserving original positions
         # Grouping indices get their summaries, aggregated indices get their aggregated values
@@ -247,13 +162,13 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         
         # Fill in aggregated values for their original positions
         for k in positional_keys
-            positional[k] = final_results[k]
+            positional[k] = cell_results[k]
         end
         
         # Build named arguments from symbol-keyed results
         named_dict = Dictionary{Symbol, Any}()
         for k in named_keys
-            insert!(named_dict, k, final_results[k])
+            insert!(named_dict, k, cell_results[k])
         end
         
         named = merge(n, named_dict)
