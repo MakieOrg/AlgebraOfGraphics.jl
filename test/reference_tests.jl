@@ -1807,3 +1807,27 @@ reftest("aggregate sum heatmap custom scale and label") do
         visual(Heatmap)
     draw(layer, scales(color2 = (; colormap = :Blues)))
 end
+
+reftest("aggregate extrema split custom labels and scale") do
+    # Split extrema: min becomes y position with label, max becomes color with custom scale
+    df = (;
+        x = [
+            1, 1, 1, 1,  # 4 points at x=1
+            2, 2, 2, 2, 2,  # 5 points at x=2
+            3, 3, 3, 3, 3, 3  # 6 points at x=3
+        ],
+        y = [
+            1.5, 2.0, 2.5, 2.2,  # min = 1.5, max = 2.5
+            4.3, 5.0, 5.7, 4.8, 5.2,  # min = 4.3, max = 5.7
+            2.0, 3.0, 4.0, 2.5, 3.5, 3.2  # min = 2.0, max = 4.0
+        ]
+    )
+    layer_raw = data(df) * mapping(:x, :y => "") * visual(Scatter, color = :gray)
+    layer_agg = data(df) * mapping(:x, :y) * 
+        aggregate(:, extrema => [
+            first => 2 => "Min",  # Lower bound as y coordinate with label "Min"
+            last => :color => "Max" => scale(:color2)  # Upper bound as color with label "Max" and custom scale
+        ]) * 
+        visual(Scatter, markersize = 25)
+    draw(layer_raw + layer_agg, scales(color2 = (; colormap = :thermal)))
+end
