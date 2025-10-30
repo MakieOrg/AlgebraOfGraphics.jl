@@ -5,33 +5,6 @@ using Statistics: mean, median
 
 
 
-## Mean with color mapping aggregation
-
-# Create test data with DIFFERENT group sizes
-x_vals = vcat(
-    fill(1, 5),   # 5 points
-    fill(2, 10),  # 10 points
-    fill(3, 15),  # 15 points
-    fill(4, 8),   # 8 points
-    fill(5, 12),  # 12 points
-)
-y_vals = x_vals .* 2 .+ randn(length(x_vals)) .* 0.5  # Linear relationship with noise
-color_vals = randn(length(x_vals)) .+ x_vals  # Color values correlated with x
-
-data_df = (; x=x_vals, y=y_vals, color=color_vals)
-
-# Create layers: raw data (gray) + aggregated mean with group size color
-layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, alpha=0.3, color=:gray)
-layer_agg = data(data_df) * mapping(:x, :y, color=:color) * 
-    aggregate(:, mean, color = length) * 
-    visual(Scatter, markersize=20, marker=:diamond, colormap=:viridis)
-
-plt = layer_raw + layer_agg
-fig = draw(plt)
-
-
-
-
 ## Test with missing values - mean should return missing for groups with missing
 
 # Create test data where one group has a missing value
