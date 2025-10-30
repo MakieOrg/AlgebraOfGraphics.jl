@@ -1662,3 +1662,22 @@ reftest("aggregate mean with layout faceting") do
     layer_mean = data(df) * mapping(:x, :y, layout = :group) * aggregate(:, mean) * visual(Lines, color = :red, linewidth = 3)
     draw(layer_raw + layer_mean)
 end
+
+reftest("aggregate mean of x over y values") do
+    # Aggregate x values for each y group (horizontal aggregation) with zig-zag pattern
+    df = (;
+        y = [
+            1, 1, 1, 1,  # 4 points at y=1
+            2, 2, 2, 2, 2,  # 5 points at y=2
+            3, 3, 3, 3, 3, 3  # 6 points at y=3
+        ],
+        x = [
+            1.8, 2.0, 2.2, 2.0,  # mean = 2.0
+            4.8, 5.0, 5.2, 4.9, 5.1,  # mean = 5.0
+            2.7, 3.0, 3.3, 2.8, 3.2, 3.0  # mean = 3.0
+        ]
+    )
+    layer_raw = data(df) * mapping(:x, :y) * visual(Scatter, color = :gray)
+    layer_mean = data(df) * mapping(:x, :y) * aggregate(mean, :) * visual(Lines, color = :red, linewidth = 3)
+    draw(layer_raw + layer_mean)
+end

@@ -1,31 +1,11 @@
 using AlgebraOfGraphics, CairoMakie
-using Statistics: mean
+using Statistics: mean, median
 
-
-
-
-
-## Mean of x over y values
-
-# Create test data with multiple y values for each x
-y_vals = repeat([1, 2, 3, 4, 5], inner=10)
-x_vals = y_vals .* 2 .+ randn(50) .* 0.5  # Linear relationship with noise
-
-data_df = (; y=y_vals, x=x_vals)
-
-# Create layers: raw data + aggregated mean
-layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, color=(:gray, 0.3))
-layer_mean = data(data_df) * mapping(:x, :y) * aggregate(mean, :) * visual(Lines, color=:red, linewidth=3)
-
-plt = layer_raw + layer_mean
-fig = draw(plt)
 
 
 
 
 ## Mean with color mapping aggregation
-
-using Statistics: median
 
 # Create test data with DIFFERENT group sizes
 x_vals = vcat(
