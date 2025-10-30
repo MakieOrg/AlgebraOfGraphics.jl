@@ -105,7 +105,7 @@ using Statistics: sum
 
 # Create test data with multiple z values for each x,y combination
 # Random points scattered in a 5x5 grid
-n_points = 200
+n_points = 50
 x_vals = rand(1:5, n_points)
 y_vals = rand(1:5, n_points)
 z_vals = randn(n_points) .+ 10  # Random values around 10

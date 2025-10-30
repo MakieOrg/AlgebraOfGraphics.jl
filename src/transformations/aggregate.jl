@@ -71,25 +71,6 @@ function aggregate(args...; named_aggs...)
     return transformation(AggregateAnalysis(Tuple(aggregations), groupby))
 end
 
-# Apply aggregation function directly on grouped data
-# This is more efficient than collecting values in an intermediate array
-function _aggregate_direct(aggfunc, summaries::Tuple, values::Tuple)
-    keys, data = front(values), last(values)
-    sa = StructArray(map(fast_hashed, keys))
-    perm = sortperm(sa)
-    
-    # Map over each group, applying the aggregation function directly
-    # Julia automatically infers the correct output type (e.g., Union{Float64, Missing})
-    results = map(GroupPerm(sa, perm)) do idxs
-        # Apply aggregation function directly on view of data for this group
-        group_indices = perm[idxs]
-        group_values = view(data, group_indices)
-        return aggfunc(group_values)
-    end
-    
-    return results
-end
-
 function (a::AggregateAnalysis)(input::ProcessedLayer)
     N = length(input.positional)
     
@@ -118,7 +99,20 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
     
     # Perform aggregations and build output in a single map over input
     output = map(input) do p, n
-        # For this cell, perform all aggregations
+        # Extract grouping keys once (same for all aggregations)
+        grouping_key_columns = Tuple(p[idx] for idx in grouping_indices)
+        sa = StructArray(map(fast_hashed, grouping_key_columns))
+        perm = sortperm(sa)
+        group_perm = GroupPerm(sa, perm)
+        
+        # Extract actual keys that exist in the data (unhashed)
+        actual_keys = map(group_perm) do idxs
+            idx = perm[first(idxs)]
+            # Extract the unhashed key values for this group
+            return map(k -> k[idx], grouping_key_columns)
+        end
+        
+        # For this cell, perform all aggregations using the same grouping
         cell_results = Dict{Any, Any}()
         
         for (target, aggfunc) in a.aggregations
@@ -140,10 +134,13 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 throw(ArgumentError("aggregation target must be an Integer or Symbol, got $(typeof(target))"))
             end
             
-            # Extract grouping keys and apply aggregation
-            keys = Tuple(p[idx] for idx in grouping_indices)
-            values_tuple = (keys..., target_values)
-            result = _aggregate_direct(aggfunc, Tuple(summaries), values_tuple)
+            # Apply aggregation using the precomputed GroupPerm
+            result = map(group_perm) do idxs
+                group_indices = perm[idxs]
+                group_values = view(target_values, group_indices)
+                return aggfunc(group_values)
+            end
+            
             cell_results[target] = result
         end
         
@@ -152,15 +149,12 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         named_keys = [k for k in keys(cell_results) if k isa Symbol]
         
         # Build positional array preserving original positions
-        # For multiple grouping dimensions, we need to expand into a Cartesian grid
         positional = Vector{Any}(undef, N)
         
-        # Create Cartesian product of all grouping dimensions
-        grid = collect(Iterators.product(summaries...))
-        
-        # Extract each component into its own vector
+        # Extract each grouping dimension component from actual_keys
+        # actual_keys is a vector of tuples, each containing unhashed key values
         for (i, group_idx) in enumerate(grouping_indices)
-            positional[group_idx] = map(x -> x[i], vec(grid))
+            positional[group_idx] = [key[i] for key in actual_keys]
         end
         
         # Fill in aggregated values for their original positions (flatten if multidimensional)
