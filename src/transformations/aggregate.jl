@@ -52,6 +52,19 @@ data(...) * mapping(:x, :y) *
     visual(Rangebars)
 ```
 """
+# Helper to parse aggregation spec: just a function
+_parse_agg_spec(f) = (aggfunc=f, splits=nothing, label=nothing)
+
+# Helper to parse aggregation spec: function => label
+_parse_agg_spec(p::Pair{<:Function, <:AbstractString}) = (aggfunc=first(p), splits=nothing, label=last(p))
+
+# Helper to parse aggregation spec: function => splits (for result splitting)
+_parse_agg_spec(p::Pair{<:Function, <:AbstractVector}) = (aggfunc=first(p), splits=last(p), label=nothing)
+
+# Helper to parse aggregation spec: (function => splits) => label
+_parse_agg_spec(p::Pair{<:Pair{<:Function, <:AbstractVector}, <:AbstractString}) = 
+    (aggfunc=first(first(p)), splits=last(first(p)), label=last(p))
+
 function aggregate(args...; named_aggs...)
     # Parse positional arguments to separate groupby indices from aggregations
     groupby_indices = Int[]
@@ -61,7 +74,7 @@ function aggregate(args...; named_aggs...)
         if arg === (:)
             push!(groupby_indices, i)
         else
-            # arg should be an aggregation function
+            # arg should be an aggregation specification
             push!(aggregations, i => arg)
         end
     end
@@ -103,6 +116,38 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         for idx in grouping_indices
     ]
     
+    # Parse all aggregation specs once and compute labels
+    parsed_aggregations = map(a.aggregations) do (target, agg_spec)
+        parsed = _parse_agg_spec(agg_spec)
+        
+        # Get original label for this target
+        original_label = get(input.labels, target, "")
+        
+        # Generate label for aggregated output
+        if parsed.label !== nothing
+            generated_label = parsed.label
+        else
+            func_name = string(nameof(parsed.aggfunc))
+            generated_label = isempty(original_label) ? func_name : "$(func_name)($(original_label))"
+        end
+        
+        return (target=target, aggfunc=parsed.aggfunc, splits=parsed.splits, label=generated_label)
+    end
+    
+    # Build output labels dictionary
+    output_labels = Dict{Union{Int, Symbol}, String}()
+    for parsed in parsed_aggregations
+        if parsed.splits === nothing
+            output_labels[parsed.target] = parsed.label
+        else
+            for split_pair in parsed.splits
+                accessor, destination = split_pair
+                accessor_name = string(nameof(accessor))
+                output_labels[destination] = "$(accessor_name)($(parsed.label))"
+            end
+        end
+    end
+    
     # Perform aggregations and build output in a single map over input
     output = map(input) do p, n
         # Extract grouping keys once (same for all aggregations)
@@ -127,15 +172,10 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         end
         
         # Now process all aggregations
-        for (target, aggfunc_or_split) in a.aggregations
-            # Check if this is a splitting aggregation (aggfunc => [accessor => dest, ...])
-            if aggfunc_or_split isa Pair
-                aggfunc, splits = aggfunc_or_split
-                # splits should be a vector of (accessor => destination) pairs
-            else
-                aggfunc = aggfunc_or_split
-                splits = nothing
-            end
+        for parsed in parsed_aggregations
+            target = parsed.target
+            aggfunc = parsed.aggfunc
+            splits = parsed.splits
             
             # Validate target and extract target values
             if target isa Integer
@@ -218,5 +258,8 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
     default_plottype = categoricalplottypes[N_groups]
     plottype = Makie.plottype(output.plottype, default_plottype)
     
-    return ProcessedLayer(output; plottype)
+    # Apply labels to the output
+    labels = set(output.labels, (k => v for (k, v) in output_labels)...)
+    
+    return ProcessedLayer(output; plottype, labels)
 end

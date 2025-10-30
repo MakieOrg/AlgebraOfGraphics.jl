@@ -162,4 +162,25 @@ fig = draw(plt)
 
 
 
+## Heatmap with custom label
+
+
+# Create test data with multiple z values for each x,y combination
+n_points = 50
+x_vals = rand(1:5, n_points)
+y_vals = rand(1:5, n_points)
+z_vals = randn(n_points) .+ 10  # Random values around 10
+
+data_df = (; x=x_vals, y=y_vals, z=z_vals)
+
+# Create heatmap using aggregate with custom label "Total"
+layer_heatmap = data(data_df) * mapping(:x, :y, :z) * 
+    aggregate(:, :, sum => "Total") * 
+    visual(Heatmap)
+
+fig = draw(layer_heatmap)
+
+
+
+
 ##
