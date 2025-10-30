@@ -13,13 +13,6 @@ y_vals = x_vals .* 2 .+ randn(50) .* 0.5  # Linear relationship with noise
 
 data_df = (; x=x_vals, y=y_vals)
 
-# Show what the means should be
-println("Expected means for each x:")
-for x in unique(x_vals)
-    y_for_x = y_vals[x_vals .== x]
-    println("x=$x: mean(y) = $(mean(y_for_x))")
-end
-
 # Create layers: raw data + aggregated mean
 layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, color=(:gray, 0.3))
 layer_mean = data(data_df) * mapping(:x, :y) * aggregate(:, mean) * visual(Lines, color=:red, linewidth=3)
