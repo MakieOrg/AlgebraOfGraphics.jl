@@ -1776,3 +1776,34 @@ reftest("aggregate extrema rangebars") do
         visual(Rangebars, color = :red, linewidth = 3)
     draw(layer_raw + layer_range)
 end
+
+reftest("aggregate sum heatmap custom scale and label") do
+    df = (;
+        x = [
+            1, 1, 1,  # (1,1): sum = 6.0
+            1, 1,  # (1,2): sum = 5.0
+            1, 1, 1,  # (1,3): sum = 9.0
+            2, 2,  # (2,1): sum = 7.0
+            # (2,2): missing - no data points
+            2, 2, 2, 2  # (2,3): sum = 12.0
+        ],
+        y = [
+            1, 1, 1,
+            2, 2,
+            3, 3, 3,
+            1, 1,
+            3, 3, 3, 3
+        ],
+        z = [
+            2.0, 2.0, 2.0,  # sum = 6.0
+            2.5, 2.5,  # sum = 5.0
+            3.0, 3.0, 3.0,  # sum = 9.0
+            3.0, 4.0,  # sum = 7.0
+            3.0, 3.0, 3.0, 3.0  # sum = 12.0
+        ]
+    )
+    layer = data(df) * mapping(:x, :y, :z) * 
+        aggregate(:, :, sum => rich("total ", rich("of z", font = :bold)) => scale(:color2)) * 
+        visual(Heatmap)
+    draw(layer, scales(color2 = (; colormap = :Blues)))
+end
