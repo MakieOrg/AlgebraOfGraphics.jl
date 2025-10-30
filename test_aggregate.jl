@@ -2,6 +2,9 @@ using AlgebraOfGraphics, CairoMakie
 using Statistics: mean
 
 
+
+
+
 ## Simple mean of y over x values
 
 # Create test data with multiple y values for each x
@@ -24,6 +27,9 @@ layer_mean = data(data_df) * mapping(:x, :y) * aggregate(:, mean) * visual(Lines
 plt = layer_raw + layer_mean
 fig = draw(plt)
 
+
+
+
 ## Mean of x over y values
 
 # Create test data with multiple y values for each x
@@ -32,19 +38,15 @@ x_vals = y_vals .* 2 .+ randn(50) .* 0.5  # Linear relationship with noise
 
 data_df = (; y=y_vals, x=x_vals)
 
-# Show what the means should be
-println("Expected means for each y:")
-for y in unique(y_vals)
-    y_for_x = x_vals[y_vals .== y]
-    println("y=$y: mean(x) = $(mean(y_for_x))")
-end
-
 # Create layers: raw data + aggregated mean
 layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, color=(:gray, 0.3))
 layer_mean = data(data_df) * mapping(:x, :y) * aggregate(mean, :) * visual(Lines, color=:red, linewidth=3)
 
 plt = layer_raw + layer_mean
 fig = draw(plt)
+
+
+
 
 ## Mean with color mapping aggregation
 
@@ -63,15 +65,6 @@ color_vals = randn(length(x_vals)) .+ x_vals  # Color values correlated with x
 
 data_df = (; x=x_vals, y=y_vals, color=color_vals)
 
-# Show what the aggregations should be
-println("\nExpected aggregations for each x:")
-for x in unique(x_vals)
-    mask = x_vals .== x
-    println("x=$x: mean(y) = $(mean(y_vals[mask])), median(color) = $(median(color_vals[mask]))")
-end
-
-data_df = (; x=x_vals, y=y_vals, color=color_vals)
-
 # Create layers: raw data (gray) + aggregated mean with group size color
 layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, alpha=0.3, color=:gray)
 layer_agg = data(data_df) * mapping(:x, :y, color=:color) * 
@@ -80,6 +73,9 @@ layer_agg = data(data_df) * mapping(:x, :y, color=:color) *
 
 plt = layer_raw + layer_agg
 fig = draw(plt)
+
+
+
 
 ## Test with missing values - mean should return missing for groups with missing
 
@@ -93,18 +89,37 @@ y_vals_with_missing[15] = missing  # One value in x=2 group
 
 data_df = (; x=x_vals, y=y_vals_with_missing)
 
-# Show what the means should be (mean of values with missing returns missing)
-println("\nExpected means for each x (with one missing in x=2 group):")
-for x in unique(x_vals)
-    y_for_x = y_vals_with_missing[x_vals .== x]
-    println("x=$x: mean(y) = $(mean(y_for_x))")
-end
-
 # Create layers: raw data + aggregated mean
 layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, color=(:gray, 0.3))
 layer_mean = data(data_df) * mapping(:x, :y) * aggregate(:, mean) * visual(Scatter, color=:blue, markersize=20)
 
 plt = layer_raw + layer_mean
 fig = draw(plt)
+
+
+
+
+## Heatmap by grouping over x and y, aggregating z with sum
+
+using Statistics: sum
+
+# Create test data with multiple z values for each x,y combination
+# Random points scattered in a 5x5 grid
+n_points = 200
+x_vals = rand(1:5, n_points)
+y_vals = rand(1:5, n_points)
+z_vals = randn(n_points) .+ 10  # Random values around 10
+
+data_df = (; x=x_vals, y=y_vals, z=z_vals)
+
+# Create heatmap using aggregate with two grouping dimensions
+layer_heatmap = data(data_df) * mapping(:x, :y, :z) * 
+    aggregate(:, :, sum) * 
+    visual(Heatmap)
+
+fig = draw(layer_heatmap)
+
+
+
 
 ##

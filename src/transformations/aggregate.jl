@@ -152,17 +152,22 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         named_keys = [k for k in keys(cell_results) if k isa Symbol]
         
         # Build positional array preserving original positions
-        # Grouping indices get their summaries, aggregated indices get their aggregated values
+        # For multiple grouping dimensions, we need to expand into a Cartesian grid
         positional = Vector{Any}(undef, N)
         
-        # Fill in summaries for grouping positions
+        # Create Cartesian product of all grouping dimensions
+        grid = collect(Iterators.product(summaries...))
+        
+        # Extract each component into its own vector
         for (i, group_idx) in enumerate(grouping_indices)
-            positional[group_idx] = summaries[i]
+            positional[group_idx] = map(x -> x[i], vec(grid))
         end
         
-        # Fill in aggregated values for their original positions
+        # Fill in aggregated values for their original positions (flatten if multidimensional)
         for k in positional_keys
-            positional[k] = cell_results[k]
+            result = cell_results[k]
+            # Flatten multidimensional aggregation results to vector
+            positional[k] = result isa AbstractArray && ndims(result) > 1 ? vec(result) : result
         end
         
         # Build named arguments from symbol-keyed results
