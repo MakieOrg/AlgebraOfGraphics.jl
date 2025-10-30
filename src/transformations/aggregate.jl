@@ -110,21 +110,21 @@ end
 _parse_agg_spec(target, f::Base.Callable) = 
     ParsedAggregation(target, f, [AggregationOutput(nothing, target, nothing, nothing)])
 
-# Helper to parse the "rest" part of function => rest
-_parse_rest(target, aggfunc, splits::AbstractVector) = 
+# Helper to parse the splits/label part of function => splits_or_label
+_parse_outputs(target, aggfunc, splits::AbstractVector) = 
     ParsedAggregation(target, aggfunc, map(_parse_split, splits))
 
-function _parse_rest(target, aggfunc, rest)
-    # Not a vector, so it's label or label => scale_id
-    label, scaleid = _parse_label_and_scale(rest)
+function _parse_outputs(target, aggfunc, label_and_or_scale)
+    # Not a vector, so it's label and/or scale_id
+    label, scaleid = _parse_label_and_scale(label_and_or_scale)
     return ParsedAggregation(target, aggfunc, [AggregationOutput(nothing, target, label, scaleid)])
 end
 
 # Helper to parse aggregation spec: function => something
 function _parse_agg_spec(target, p::Pair{<:Base.Callable})
     aggfunc = first(p)
-    rest = last(p)
-    return _parse_rest(target, aggfunc, rest)
+    outputs_spec = last(p)
+    return _parse_outputs(target, aggfunc, outputs_spec)
 end
 
 function aggregate(args...; named_aggs...)
