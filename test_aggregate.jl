@@ -5,28 +5,6 @@ using Statistics: mean, median, sum, extrema
 
 
 
-## Range bars using extrema split into min and max
-
-using Statistics: extrema
-
-# Create test data with multiple y values for each x (varying spread)
-x_vals = repeat([1, 2, 3, 4, 5], inner=10)
-y_vals = x_vals .* 2 .+ randn(50) .* (0.5 .+ x_vals .* 0.2)  # Increasing variance
-
-data_df = (; x=x_vals, y=y_vals)
-
-# Create layers: raw data + range bars showing min/max
-layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, alpha=0.3, color=:gray)
-layer_range = data(data_df) * mapping(:x, :y) * 
-    aggregate(:, extrema => [first => 2, last => 3]) * 
-    visual(Rangebars, color=:red, linewidth=3)
-
-plt = layer_raw + layer_range
-fig = draw(plt)
-
-
-
-
 ## Heatmap with custom label
 
 

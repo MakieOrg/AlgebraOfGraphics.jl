@@ -1755,3 +1755,24 @@ reftest("aggregate sum heatmap 2d") do
     )
     data(df) * mapping(:x, :y, :z) * aggregate(:, :, sum) * visual(Heatmap) |> draw
 end
+
+reftest("aggregate extrema rangebars") do
+    # Extrema split into min and max for range bars with zig-zag pattern
+    df = (;
+        x = [
+            1, 1, 1, 1,  # 4 points at x=1
+            2, 2, 2, 2, 2,  # 5 points at x=2
+            3, 3, 3, 3, 3, 3  # 6 points at x=3
+        ],
+        y = [
+            1.5, 2.0, 2.5, 2.2,  # min = 1.5, max = 2.5
+            4.3, 5.0, 5.7, 4.8, 5.2,  # min = 4.3, max = 5.7
+            2.0, 3.0, 4.0, 2.5, 3.5, 3.2  # min = 2.0, max = 4.0
+        ]
+    )
+    layer_raw = data(df) * mapping(:x, :y) * visual(Scatter, color = :gray)
+    layer_range = data(df) * mapping(:x, :y) * 
+        aggregate(:, extrema => [first => 2, last => 3]) * 
+        visual(Rangebars, color = :red, linewidth = 3)
+    draw(layer_raw + layer_range)
+end
