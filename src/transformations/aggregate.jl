@@ -106,6 +106,23 @@ function _parse_split(p::Pair{<:Base.Callable, <:Pair})
     return AggregationOutput(accessor, output.destination, output.label, output.scaleid)
 end
 
+# Fallback for when the array element type is inferred as Pair{Function, Any}
+# This delegates to internal dispatch methods
+function _parse_split(p::Pair{<:Union{Function, Type}})
+    accessor = first(p)
+    dest_spec = last(p)
+    return _parse_split_internal(accessor, dest_spec)
+end
+
+# Internal dispatch for split parsing
+_parse_split_internal(accessor, dest::Union{Int, Symbol}) = 
+    AggregationOutput(accessor, dest, nothing, nothing)
+
+function _parse_split_internal(accessor, dest_spec::Pair)
+    output = _parse_output_spec(dest_spec)
+    return AggregationOutput(accessor, output.destination, output.label, output.scaleid)
+end
+
 # Helper to parse aggregation spec: just a function
 _parse_agg_spec(target, f::Base.Callable) = 
     ParsedAggregation(target, f, [AggregationOutput(nothing, target, nothing, nothing)])

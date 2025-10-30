@@ -1831,3 +1831,35 @@ reftest("aggregate extrema split custom labels and scale") do
         visual(Scatter, markersize = 25)
     draw(layer_raw + layer_agg, scales(color2 = (; colormap = :thermal)))
 end
+
+reftest("aggregate categorical from numerical") do
+    # Custom aggregation function that returns both category and mean value
+    function categorize_mean(values)
+        m = mean(values)
+        category = if m < 3.0
+            "low"
+        elseif m < 6.0
+            "mid"
+        else
+            "high"
+        end
+        return (category, m)
+    end
+    
+    df = (;
+        x = [
+            1, 1, 1, 1,  # 4 points at x=1
+            2, 2, 2, 2, 2,  # 5 points at x=2
+            3, 3, 3, 3, 3, 3  # 6 points at x=3
+        ],
+        y = [
+            1.8, 2.0, 2.2, 2.0,  # mean = 2.0 → ("low", 2.0)
+            4.8, 5.0, 5.2, 4.9, 5.1,  # mean = 5.0 → ("mid", 5.0)
+            6.7, 7.0, 7.3, 6.8, 7.2, 7.0  # mean = 7.0 → ("high", 7.0)
+        ]
+    )
+    spec = data(df) * mapping(:x, :y) * 
+        aggregate(:, categorize_mean => [first => 2 => "category", verbatim ∘ last => :bar_labels]) * 
+        visual(BarPlot, direction = :x)
+    draw(spec, scales(X = (; categories = ["low", "mid", "high"])))
+end
