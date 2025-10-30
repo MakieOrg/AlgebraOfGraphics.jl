@@ -1641,3 +1641,24 @@ reftest("aggregate mean over x values") do
     layer_mean = data(df) * mapping(:x, :y) * aggregate(:, mean) * visual(Lines, color = :red, linewidth = 3)
     draw(layer_raw + layer_mean)
 end
+
+reftest("aggregate mean with layout faceting") do
+    # Two groups (A and B) with different linear relationships
+    df = (;
+        x = [
+            1, 1, 1, 2, 2, 2, 3, 3, 3,  # Group A x values
+            1, 1, 1, 2, 2, 2, 3, 3, 3   # Group B x values
+        ],
+        y = [
+            1.8, 2.0, 2.2, 3.8, 4.0, 4.2, 5.7, 6.0, 6.3,  # Group A: y ≈ 2x (means: 2.0, 4.0, 6.0)
+            2.7, 3.0, 3.3, 5.7, 6.0, 6.3, 8.7, 9.0, 9.3   # Group B: y ≈ 3x (means: 3.0, 6.0, 9.0)
+        ],
+        group = [
+            "A", "A", "A", "A", "A", "A", "A", "A", "A",
+            "B", "B", "B", "B", "B", "B", "B", "B", "B"
+        ]
+    )
+    layer_raw = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter, color = :gray)
+    layer_mean = data(df) * mapping(:x, :y, layout = :group) * aggregate(:, mean) * visual(Lines, color = :red, linewidth = 3)
+    draw(layer_raw + layer_mean)
+end

@@ -5,49 +5,6 @@ using Statistics: mean
 
 
 
-## Simple mean of y over x values
-
-# Create test data with multiple y values for each x
-x_vals = repeat([1, 2, 3, 4, 5], inner=10)
-y_vals = x_vals .* 2 .+ randn(50) .* 0.5  # Linear relationship with noise
-
-data_df = (; x=x_vals, y=y_vals)
-
-# Create layers: raw data + aggregated mean
-layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, color=(:gray, 0.3))
-layer_mean = data(data_df) * mapping(:x, :y) * aggregate(:, mean) * visual(Lines, color=:red, linewidth=3)
-
-plt = layer_raw + layer_mean
-fig = draw(plt)
-
-
-
-
-## Aggregation with layout faceting
-
-# Create test data with multiple y values for each x, separated by groups
-x_vals = repeat([1, 2, 3, 4, 5], inner=10)
-y_vals_a = x_vals .* 2 .+ randn(50) .* 0.5  # Group A: y = 2x + noise
-y_vals_b = x_vals .* 3 .+ randn(50) .* 0.7  # Group B: y = 3x + more noise
-
-data_df = (;
-    x = vcat(x_vals, x_vals),
-    y = vcat(y_vals_a, y_vals_b),
-    group = vcat(fill("A", 50), fill("B", 50))
-)
-
-# Create layers with layout faceting: raw data + aggregated mean per group
-layer_raw = data(data_df) * mapping(:x, :y, layout=:group) * visual(Scatter, color=(:gray, 0.3))
-layer_mean = data(data_df) * mapping(:x, :y, layout=:group) * 
-    aggregate(:, mean) * 
-    visual(Lines, color=:red, linewidth=3)
-
-plt = layer_raw + layer_mean
-fig = draw(plt)
-
-
-
-
 ## Mean of x over y values
 
 # Create test data with multiple y values for each x
