@@ -175,7 +175,7 @@ data_df = (; x=x_vals, y=y_vals, z=z_vals)
 
 # Create heatmap using aggregate with custom label "Total"
 layer_heatmap = data(data_df) * mapping(:x, :y, :z) * 
-    aggregate(:, :, sum => "Total") * 
+    aggregate(:, :, sum => rich("total ", rich("of z", font = :bold))) * 
     visual(Heatmap)
 
 fig = draw(layer_heatmap)

@@ -55,14 +55,14 @@ data(...) * mapping(:x, :y) *
 # Helper to parse aggregation spec: just a function
 _parse_agg_spec(f) = (aggfunc=f, splits=nothing, label=nothing)
 
-# Helper to parse aggregation spec: function => label
-_parse_agg_spec(p::Pair{<:Function, <:AbstractString}) = (aggfunc=first(p), splits=nothing, label=last(p))
-
 # Helper to parse aggregation spec: function => splits (for result splitting)
 _parse_agg_spec(p::Pair{<:Function, <:AbstractVector}) = (aggfunc=first(p), splits=last(p), label=nothing)
 
+# Helper to parse aggregation spec: function => label (accepts any label type like String, RichText, etc.)
+_parse_agg_spec(p::Pair{<:Function}) = (aggfunc=first(p), splits=nothing, label=last(p))
+
 # Helper to parse aggregation spec: (function => splits) => label
-_parse_agg_spec(p::Pair{<:Pair{<:Function, <:AbstractVector}, <:AbstractString}) = 
+_parse_agg_spec(p::Pair{<:Pair{<:Function, <:AbstractVector}}) = 
     (aggfunc=first(first(p)), splits=last(first(p)), label=last(p))
 
 function aggregate(args...; named_aggs...)
@@ -134,16 +134,17 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         return (target=target, aggfunc=parsed.aggfunc, splits=parsed.splits, label=generated_label)
     end
     
-    # Build output labels dictionary
-    output_labels = Dict{Union{Int, Symbol}, String}()
+    # Build output labels dictionary (Any to support RichText, String, etc.)
+    # Wrap labels in fill() to make them broadcastable
+    output_labels = Dict{Union{Int, Symbol}, Any}()
     for parsed in parsed_aggregations
         if parsed.splits === nothing
-            output_labels[parsed.target] = parsed.label
+            output_labels[parsed.target] = fill(parsed.label)
         else
             for split_pair in parsed.splits
                 accessor, destination = split_pair
                 accessor_name = string(nameof(accessor))
-                output_labels[destination] = "$(accessor_name)($(parsed.label))"
+                output_labels[destination] = fill("$(accessor_name)($(parsed.label))")
             end
         end
     end
