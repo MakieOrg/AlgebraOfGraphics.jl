@@ -1,9 +1,26 @@
+"""
+    AggregationOutput
+
+Represents a single output from an aggregation, with an optional accessor function,
+destination position/name, optional label, and optional scale id.
+"""
+struct AggregationOutput
+    accessor::Union{Nothing, Base.Callable}  # Function to extract from aggregation result (nothing means use as-is)
+    destination::Union{Int, Symbol}  # Where to place this output
+    label::Any  # Optional label (can be String, RichText, etc.)
+    scaleid::Union{Nothing, ScaleID}  # Optional scale id
+end
+
+"""
+    ParsedAggregation
+
+Internal struct to hold parsed aggregation specification.
+Each aggregation of a target produces one or more outputs.
+"""
 struct ParsedAggregation
-    target::Union{Int, Symbol}
-    aggfunc::Base.Callable
-    splits::Any
-    label::Any
-    scaleid::Union{Nothing, ScaleID}
+    target::Union{Int, Symbol}  # Source column to aggregate
+    aggfunc::Base.Callable  # Aggregation function
+    outputs::Vector{AggregationOutput}  # One or more outputs from this aggregation
 end
 
 """
@@ -58,28 +75,66 @@ data(...) * mapping(:x, :y) *
     visual(Rangebars)
 ```
 """
+# Parse a single output spec: destination or destination => label or destination => label => scale_id
+function _parse_output_spec(dest::Union{Int, Symbol})
+    return AggregationOutput(nothing, dest, nothing, nothing)
+end
+
+function _parse_output_spec(p::Pair)
+    dest = first(p)
+    # dest should be Int or Symbol
+    if !(dest isa Union{Int, Symbol})
+        throw(ArgumentError("Output destination must be Int or Symbol, got $(typeof(dest))"))
+    end
+    
+    label_or_pair = last(p)
+    if label_or_pair isa Pair && last(label_or_pair) isa ScaleID
+        # dest => label => scale_id
+        return AggregationOutput(nothing, dest, first(label_or_pair), last(label_or_pair))
+    else
+        # dest => label
+        return AggregationOutput(nothing, dest, label_or_pair, nothing)
+    end
+end
+
+# Parse split spec: accessor => output_spec
+function _parse_split(p::Pair{<:Base.Callable, <:Union{Int, Symbol}})
+    accessor = first(p)
+    dest = last(p)
+    return AggregationOutput(accessor, dest, nothing, nothing)
+end
+
+function _parse_split(p::Pair{<:Base.Callable, <:Pair})
+    accessor = first(p)
+    dest_spec = last(p)
+    output = _parse_output_spec(dest_spec)
+    return AggregationOutput(accessor, output.destination, output.label, output.scaleid)
+end
+
 # Helper to parse aggregation spec: just a function
-_parse_agg_spec(target, f) = ParsedAggregation(target, f, nothing, nothing, nothing)
+_parse_agg_spec(target, f::Base.Callable) = 
+    ParsedAggregation(target, f, [AggregationOutput(nothing, target, nothing, nothing)])
 
-# Helper to parse aggregation spec: function => splits (for result splitting)
-_parse_agg_spec(target, p::Pair{<:Function, <:AbstractVector}) = 
-    ParsedAggregation(target, first(p), last(p), nothing, nothing)
-
-# Helper to parse aggregation spec: function => label (accepts any label type like String, RichText, etc.)
-_parse_agg_spec(target, p::Pair{<:Function}) = 
-    ParsedAggregation(target, first(p), nothing, last(p), nothing)
-
-# Helper to parse aggregation spec: (function => splits) => label
-_parse_agg_spec(target, p::Pair{<:Pair{<:Function, <:AbstractVector}}) = 
-    ParsedAggregation(target, first(first(p)), last(first(p)), last(p), nothing)
-
-# Helper to parse aggregation spec: function => (label => scale_id)
-_parse_agg_spec(target, p::Pair{<:Function, <:Pair{<:Any, ScaleID}}) = 
-    ParsedAggregation(target, first(p), nothing, first(last(p)), last(last(p)))
-
-# Helper to parse aggregation spec: (function => splits) => (label => scale_id)
-_parse_agg_spec(target, p::Pair{<:Pair{<:Function, <:AbstractVector}, <:Pair{<:Any, ScaleID}}) = 
-    ParsedAggregation(target, first(first(p)), last(first(p)), first(last(p)), last(last(p)))
+# Helper to parse aggregation spec: function => label or function => (label => scale_id)
+function _parse_agg_spec(target, p::Pair{<:Base.Callable})
+    aggfunc = first(p)
+    rest = last(p)
+    
+    # Check if it's splits (vector) or label/scale
+    if rest isa AbstractVector
+        # function => [splits...]
+        outputs = map(_parse_split, rest)
+        return ParsedAggregation(target, aggfunc, outputs)
+    else
+        # function => label or function => (label => scale_id)
+        output = if rest isa Pair && last(rest) isa ScaleID
+            AggregationOutput(nothing, target, first(rest), last(rest))
+        else
+            AggregationOutput(nothing, target, rest, nothing)
+        end
+        return ParsedAggregation(target, aggfunc, [output])
+    end
+end
 
 function aggregate(args...; named_aggs...)
     # Parse positional arguments to separate groupby indices from aggregations
@@ -132,44 +187,47 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         for idx in grouping_indices
     ]
     
-    # Parse all aggregation specs once and compute labels
+    # Parse all aggregation specs once and compute labels for each output
     parsed_aggregations = map(a.aggregations) do (target, agg_spec)
         parsed = _parse_agg_spec(target, agg_spec)
         
         # Get original label for this target
         original_label = get(input.labels, target, "")
         
-        # Generate label for aggregated output
-        if parsed.label !== nothing
-            generated_label = parsed.label
-        else
-            func_name = string(nameof(parsed.aggfunc))
-            generated_label = isempty(original_label) ? func_name : "$(func_name)($(original_label))"
+        # Generate labels for each output
+        func_name = string(nameof(parsed.aggfunc))
+        base_label = isempty(original_label) ? func_name : "$(func_name)($(original_label))"
+        
+        # Update outputs with generated labels where not provided
+        outputs = map(parsed.outputs) do output
+            if output.label !== nothing
+                # User provided explicit label
+                return output
+            elseif output.accessor !== nothing
+                # Generate label with accessor name
+                accessor_name = string(nameof(output.accessor))
+                generated_label = "$(accessor_name)($(base_label))"
+                return AggregationOutput(output.accessor, output.destination, generated_label, output.scaleid)
+            else
+                # Use base label
+                return AggregationOutput(output.accessor, output.destination, base_label, output.scaleid)
+            end
         end
         
-        return ParsedAggregation(target, parsed.aggfunc, parsed.splits, generated_label, parsed.scaleid)
+        return ParsedAggregation(target, parsed.aggfunc, outputs)
     end
     
     # Build output labels dictionary (Any to support RichText, String, etc.)
     # Wrap labels in fill() to make them broadcastable
+    # Also build scale_mapping dictionary to map positions/names to custom scale ids
     output_labels = Dict{Union{Int, Symbol}, Any}()
-    # Build scale_mapping dictionary to map positions/names to custom scale ids
     scale_mapping = Dictionary{KeyType, Symbol}()
     
     for parsed in parsed_aggregations
-        if parsed.splits === nothing
-            output_labels[parsed.target] = fill(parsed.label)
-            if parsed.scaleid !== nothing
-                insert!(scale_mapping, parsed.target, parsed.scaleid.id)
-            end
-        else
-            for split_pair in parsed.splits
-                accessor, destination = split_pair
-                accessor_name = string(nameof(accessor))
-                output_labels[destination] = fill("$(accessor_name)($(parsed.label))")
-                if parsed.scaleid !== nothing
-                    insert!(scale_mapping, destination, parsed.scaleid.id)
-                end
+        for output in parsed.outputs
+            output_labels[output.destination] = fill(output.label)
+            if output.scaleid !== nothing
+                insert!(scale_mapping, output.destination, output.scaleid.id)
             end
         end
     end
@@ -201,7 +259,6 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         for parsed in parsed_aggregations
             target = parsed.target
             aggfunc = parsed.aggfunc
-            splits = parsed.splits
             
             # Validate target and extract target values
             if target isa Integer
@@ -231,23 +288,22 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             # Flatten multidimensional results
             result = result isa AbstractArray && ndims(result) > 1 ? vec(result) : result
             
-            # Handle result splitting or direct storage
-            if splits === nothing
-                # No splitting, store directly at target position
-                if haskey(outputs, target)
-                    throw(ArgumentError("output position $target already assigned"))
+            # Process each output from this aggregation
+            for output in parsed.outputs
+                destination = output.destination
+                
+                if haskey(outputs, destination)
+                    throw(ArgumentError("output position $destination already assigned"))
                 end
-                outputs[target] = result
-            else
-                # Split the result using accessors
-                for split_pair in splits
-                    accessor, destination = split_pair
-                    if haskey(outputs, destination)
-                        throw(ArgumentError("output position $destination already assigned"))
-                    end
-                    split_result = map(accessor, result)
-                    outputs[destination] = split_result
+                
+                # Apply accessor if present, otherwise use result as-is
+                final_result = if output.accessor !== nothing
+                    map(output.accessor, result)
+                else
+                    result
                 end
+                
+                outputs[destination] = final_result
             end
         end
         
