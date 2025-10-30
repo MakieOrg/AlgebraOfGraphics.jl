@@ -78,50 +78,23 @@ function aggregate(aggregations::Pair...; groupby, remap=nothing)
     return transformation(AggregateAnalysis(aggregations, groupby, remap))
 end
 
-# Helper to create aggregator in the format _groupreduce expects
-function make_aggregator(aggfunc)
-    return (
-        init = () -> Any[],
-        op = (acc, val) -> begin
-            push!(acc, val)
-            return acc
-        end,
-        value = acc -> begin
-            isempty(acc) ? missing : aggfunc(acc)
-        end
-    )
-end
-
-# Optimized aggregators for common cases
-const MeanAgg = (
-    init = () -> (0, 0.0),
-    op = ((n, sum), val) -> (n + 1, sum + val),
-    value = ((n, sum),) -> n == 0 ? missing : sum / n
-)
-
-const SumAgg = (
-    init = () -> 0.0,
-    op = (sum, val) -> sum + val,
-    value = identity
-)
-
-const CountAgg = (
-    init = () -> 0,
-    op = (n, _) -> n + 1,
-    value = identity
-)
-
-function optimize_aggregator(aggfunc)
-    # Optimize common cases
-    # if aggfunc === Statistics.mean
-    #     return MeanAgg
-    # elseif aggfunc === sum
-    #     return SumAgg
-    # elseif aggfunc === length
-    #     return CountAgg
-    # else
-        return make_aggregator(aggfunc)
-    # end
+# Apply aggregation function directly on grouped data
+# This is more efficient than collecting values in an intermediate array
+function _aggregate_direct(aggfunc, summaries::Tuple, values::Tuple)
+    keys, data = front(values), last(values)
+    sa = StructArray(map(fast_hashed, keys))
+    perm = sortperm(sa)
+    
+    # Map over each group, applying the aggregation function directly
+    # Julia automatically infers the correct output type (e.g., Union{Float64, Missing})
+    results = map(GroupPerm(sa, perm)) do idxs
+        # Apply aggregation function directly on view of data for this group
+        group_indices = perm[idxs]
+        group_values = view(data, group_indices)
+        return aggfunc(group_values)
+    end
+    
+    return results
 end
 
 function (a::AggregateAnalysis)(input::ProcessedLayer)
@@ -164,16 +137,13 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                     throw(ArgumentError("cannot aggregate column $target which is used for grouping"))
                 end
                 
-                # Create aggregator
-                agg = optimize_aggregator(aggfunc)
-                
                 # Extract grouping keys and target values for this cell
                 keys = Tuple(p[idx] for idx in grouping_indices)
                 target_values = p[target]
                 values_tuple = (keys..., target_values)
                 
-                # Use _groupreduce to get aggregated array
-                result = _groupreduce(agg, Tuple(summaries), values_tuple)
+                # Apply aggregation directly on grouped data
+                result = _aggregate_direct(aggfunc, Tuple(summaries), values_tuple)
                 
                 cell_results[target] = result
                 
@@ -183,16 +153,13 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                     throw(ArgumentError("aggregation target :$target not found in named arguments"))
                 end
                 
-                # Create aggregator
-                agg = optimize_aggregator(aggfunc)
-                
                 # Extract grouping keys and target values for this cell
                 keys = Tuple(p[idx] for idx in grouping_indices)
                 target_values = n[target]
                 values_tuple = (keys..., target_values)
                 
-                # Use _groupreduce to get aggregated array
-                result = _groupreduce(agg, Tuple(summaries), values_tuple)
+                # Apply aggregation directly on grouped data
+                result = _aggregate_direct(aggfunc, Tuple(summaries), values_tuple)
                 
                 cell_results[target] = result
             else
