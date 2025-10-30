@@ -204,6 +204,3 @@ layer_scatter = data(data_df) * mapping(:x, :y) *
 fig = draw(layer_scatter, scales(color2 = (; colormap = :thermal)))
 
 
-
-
-##

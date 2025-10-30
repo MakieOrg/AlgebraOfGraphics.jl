@@ -80,21 +80,16 @@ function _parse_output_spec(dest::Union{Int, Symbol})
     return AggregationOutput(nothing, dest, nothing, nothing)
 end
 
+# Helper to parse the "rest" part after destination
+_parse_label_and_scale(label) = (label, nothing)
+_parse_label_and_scale(p::Pair{<:Any, ScaleID}) = (first(p), last(p))
+
+# dest => something (dispatch on the something)
 function _parse_output_spec(p::Pair)
     dest = first(p)
-    # dest should be Int or Symbol
-    if !(dest isa Union{Int, Symbol})
-        throw(ArgumentError("Output destination must be Int or Symbol, got $(typeof(dest))"))
-    end
-    
-    label_or_pair = last(p)
-    if label_or_pair isa Pair && last(label_or_pair) isa ScaleID
-        # dest => label => scale_id
-        return AggregationOutput(nothing, dest, first(label_or_pair), last(label_or_pair))
-    else
-        # dest => label
-        return AggregationOutput(nothing, dest, label_or_pair, nothing)
-    end
+    rest = last(p)
+    label, scaleid = _parse_label_and_scale(rest)
+    return AggregationOutput(nothing, dest, label, scaleid)
 end
 
 # Parse split spec: accessor => output_spec
@@ -115,25 +110,21 @@ end
 _parse_agg_spec(target, f::Base.Callable) = 
     ParsedAggregation(target, f, [AggregationOutput(nothing, target, nothing, nothing)])
 
-# Helper to parse aggregation spec: function => label or function => (label => scale_id)
+# Helper to parse the "rest" part of function => rest
+_parse_rest(target, aggfunc, splits::AbstractVector) = 
+    ParsedAggregation(target, aggfunc, map(_parse_split, splits))
+
+function _parse_rest(target, aggfunc, rest)
+    # Not a vector, so it's label or label => scale_id
+    label, scaleid = _parse_label_and_scale(rest)
+    return ParsedAggregation(target, aggfunc, [AggregationOutput(nothing, target, label, scaleid)])
+end
+
+# Helper to parse aggregation spec: function => something
 function _parse_agg_spec(target, p::Pair{<:Base.Callable})
     aggfunc = first(p)
     rest = last(p)
-    
-    # Check if it's splits (vector) or label/scale
-    if rest isa AbstractVector
-        # function => [splits...]
-        outputs = map(_parse_split, rest)
-        return ParsedAggregation(target, aggfunc, outputs)
-    else
-        # function => label or function => (label => scale_id)
-        output = if rest isa Pair && last(rest) isa ScaleID
-            AggregationOutput(nothing, target, first(rest), last(rest))
-        else
-            AggregationOutput(nothing, target, rest, nothing)
-        end
-        return ParsedAggregation(target, aggfunc, [output])
-    end
+    return _parse_rest(target, aggfunc, rest)
 end
 
 function aggregate(args...; named_aggs...)
