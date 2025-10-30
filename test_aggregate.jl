@@ -1,28 +1,6 @@
 using AlgebraOfGraphics, CairoMakie
-using Statistics: mean, median
+using Statistics: mean, median, sum
 
-
-
-
-
-## Test with missing values - mean should return missing for groups with missing
-
-# Create test data where one group has a missing value
-x_vals = repeat([1, 2, 3, 4, 5], inner=10)
-y_vals = x_vals .* 2 .+ randn(50) .* 0.5  # Linear relationship with noise
-
-# Add a missing value to the second group (x=2)
-y_vals_with_missing = Vector{Union{Float64, Missing}}(y_vals)
-y_vals_with_missing[15] = missing  # One value in x=2 group
-
-data_df = (; x=x_vals, y=y_vals_with_missing)
-
-# Create layers: raw data + aggregated mean
-layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, color=(:gray, 0.3))
-layer_mean = data(data_df) * mapping(:x, :y) * aggregate(:, mean) * visual(Scatter, color=:blue, markersize=20)
-
-plt = layer_raw + layer_mean
-fig = draw(plt)
 
 
 

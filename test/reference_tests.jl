@@ -1707,3 +1707,22 @@ reftest("aggregate mean with color aggregation") do
         visual(Scatter, markersize = 20, marker = :diamond, colormap = :viridis)
     draw(layer_raw + layer_agg)
 end
+
+reftest("aggregate mean with missing values") do
+    # One group has a missing value - mean should return missing for that group
+    df = (;
+        x = [
+            1, 1, 1, 1,  # 4 points at x=1
+            2, 2, 2, 2, 2,  # 5 points at x=2, one will be missing
+            3, 3, 3, 3, 3, 3  # 6 points at x=3
+        ],
+        y = [
+            1.8, 2.0, 2.2, 2.0,  # mean = 2.0
+            4.8, missing, 5.2, 4.9, 5.1,  # mean = missing (because one value is missing)
+            2.7, 3.0, 3.3, 2.8, 3.2, 3.0  # mean = 3.0
+        ]
+    )
+    layer_raw = data(df) * mapping(:x, :y) * visual(Scatter, color = :gray)
+    layer_mean = data(df) * mapping(:x, :y) * aggregate(:, mean) * visual(Scatter, color = :blue, markersize = 20)
+    draw(layer_raw + layer_mean)
+end
