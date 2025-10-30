@@ -177,9 +177,26 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 
                 cell_results[target] = result
                 
+            elseif target isa Symbol
+                # Symbol-based aggregation for named arguments
+                if !haskey(n, target)
+                    throw(ArgumentError("aggregation target :$target not found in named arguments"))
+                end
+                
+                # Create aggregator
+                agg = optimize_aggregator(aggfunc)
+                
+                # Extract grouping keys and target values for this cell
+                keys = Tuple(p[idx] for idx in grouping_indices)
+                target_values = n[target]
+                values_tuple = (keys..., target_values)
+                
+                # Use _groupreduce to get aggregated array
+                result = _groupreduce(agg, Tuple(summaries), values_tuple)
+                
+                cell_results[target] = result
             else
-                # Symbol-based aggregation - to be implemented later
-                error("Symbol-based aggregation targets not yet implemented")
+                throw(ArgumentError("aggregation target must be an Integer or Symbol, got $(typeof(target))"))
             end
         end
         

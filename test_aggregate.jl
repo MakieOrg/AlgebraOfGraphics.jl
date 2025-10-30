@@ -50,10 +50,16 @@ fig = draw(plt)
 
 using Statistics: median
 
-# Create test data with color values
-x_vals = repeat([1, 2, 3, 4, 5], inner=10)
-y_vals = x_vals .* 2 .+ randn(50) .* 0.5  # Linear relationship with noise
-color_vals = randn(50) .+ x_vals  # Color values correlated with x
+# Create test data with DIFFERENT group sizes
+x_vals = vcat(
+    fill(1, 5),   # 5 points
+    fill(2, 10),  # 10 points
+    fill(3, 15),  # 15 points
+    fill(4, 8),   # 8 points
+    fill(5, 12),  # 12 points
+)
+y_vals = x_vals .* 2 .+ randn(length(x_vals)) .* 0.5  # Linear relationship with noise
+color_vals = randn(length(x_vals)) .+ x_vals  # Color values correlated with x
 
 data_df = (; x=x_vals, y=y_vals, color=color_vals)
 
@@ -64,10 +70,12 @@ for x in unique(x_vals)
     println("x=$x: mean(y) = $(mean(y_vals[mask])), median(color) = $(median(color_vals[mask]))")
 end
 
-# Create layers: raw data + aggregated mean and median
-layer_raw = data(data_df) * mapping(:x, :y, color=:color) * visual(Scatter, alpha=0.3)
+data_df = (; x=x_vals, y=y_vals, color=color_vals)
+
+# Create layers: raw data (gray) + aggregated mean with group size color
+layer_raw = data(data_df) * mapping(:x, :y) * visual(Scatter, alpha=0.3, color=:gray)
 layer_agg = data(data_df) * mapping(:x, :y, color=:color) * 
-    aggregate(2 => mean, :color => median, groupby=1) * 
+    aggregate(2 => mean, :color => length, groupby=1) * 
     visual(Scatter, markersize=20, marker=:diamond, colormap=:viridis)
 
 plt = layer_raw + layer_agg
