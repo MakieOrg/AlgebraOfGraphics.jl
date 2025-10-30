@@ -1622,3 +1622,22 @@ reftest("all-missing groups") do
     draw!(f[1, 2], spec2)
     f
 end
+
+reftest("aggregate mean over x values") do
+    # Three groups with different numbers of points (4, 5, 6) and mean line going up and down
+    df = (;
+        x = [
+            1, 1, 1, 1,  # 4 points at x=1
+            2, 2, 2, 2, 2,  # 5 points at x=2
+            3, 3, 3, 3, 3, 3  # 6 points at x=3
+        ],
+        y = [
+            2.0, 2.2, 1.8, 2.0,  # mean = 2.0
+            4.8, 5.0, 5.2, 4.9, 5.1,  # mean = 5.0
+            2.7, 3.0, 3.3, 2.8, 3.2, 3.0  # mean = 3.0
+        ]
+    )
+    layer_raw = data(df) * mapping(:x, :y) * visual(Scatter, color = :gray)
+    layer_mean = data(df) * mapping(:x, :y) * aggregate(:, mean) * visual(Lines, color = :red, linewidth = 3)
+    draw(layer_raw + layer_mean)
+end
