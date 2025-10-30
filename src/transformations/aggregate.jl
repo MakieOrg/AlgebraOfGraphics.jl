@@ -24,6 +24,7 @@ aggregation functions for dimensions to aggregate.
 - Positional arguments can be:
   - `:` to mark this position for grouping
   - An aggregation function (e.g., `mean`, `median`, `std`) to aggregate this position
+  - `aggfunc => [accessor => dest, ...]` to split aggregation results into multiple positions
 - Named arguments are aggregation functions for named mappings (e.g., `color = mean`)
 
 # Examples
@@ -44,6 +45,11 @@ data(...) * mapping(:time, :value, color=:group) *
 # Group by multiple dimensions
 data(...) * mapping(:x, :y, :z) * 
     aggregate(:, :, mean)
+
+# Split extrema into separate positions for range bars
+data(...) * mapping(:x, :y) * 
+    aggregate(:, extrema => [first => 2, last => 3]) *
+    visual(Rangebars)
 ```
 """
 function aggregate(args...; named_aggs...)
@@ -112,10 +118,25 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             return map(k -> k[idx], grouping_key_columns)
         end
         
-        # For this cell, perform all aggregations using the same grouping
-        cell_results = Dict{Any, Any}()
+        # Build output dictionary - will contain all results indexed by position or symbol
+        outputs = Dict{Union{Int, Symbol}, Any}()
         
-        for (target, aggfunc) in a.aggregations
+        # First, add grouping columns (they keep their positions with actual key values)
+        for (i, group_idx) in enumerate(grouping_indices)
+            outputs[group_idx] = [key[i] for key in actual_keys]
+        end
+        
+        # Now process all aggregations
+        for (target, aggfunc_or_split) in a.aggregations
+            # Check if this is a splitting aggregation (aggfunc => [accessor => dest, ...])
+            if aggfunc_or_split isa Pair
+                aggfunc, splits = aggfunc_or_split
+                # splits should be a vector of (accessor => destination) pairs
+            else
+                aggfunc = aggfunc_or_split
+                splits = nothing
+            end
+            
             # Validate target and extract target values
             if target isa Integer
                 if target < 1 || target > N
@@ -141,33 +162,50 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 return aggfunc(group_values)
             end
             
-            cell_results[target] = result
+            # Flatten multidimensional results
+            result = result isa AbstractArray && ndims(result) > 1 ? vec(result) : result
+            
+            # Handle result splitting or direct storage
+            if splits === nothing
+                # No splitting, store directly at target position
+                if haskey(outputs, target)
+                    throw(ArgumentError("output position $target already assigned"))
+                end
+                outputs[target] = result
+            else
+                # Split the result using accessors
+                for split_pair in splits
+                    accessor, destination = split_pair
+                    if haskey(outputs, destination)
+                        throw(ArgumentError("output position $destination already assigned"))
+                    end
+                    split_result = map(accessor, result)
+                    outputs[destination] = split_result
+                end
+            end
         end
         
         # Separate positional and named results
-        positional_keys = sort([k for k in keys(cell_results) if k isa Integer])
-        named_keys = [k for k in keys(cell_results) if k isa Symbol]
+        positional_keys = sort([k for k in keys(outputs) if k isa Integer])
+        named_keys = [k for k in keys(outputs) if k isa Symbol]
         
-        # Build positional array preserving original positions
-        positional = Vector{Any}(undef, N)
-        
-        # Extract each grouping dimension component from actual_keys
-        # actual_keys is a vector of tuples, each containing unhashed key values
-        for (i, group_idx) in enumerate(grouping_indices)
-            positional[group_idx] = [key[i] for key in actual_keys]
+        # Validate positional keys form a contiguous range from 1 to max
+        if !isempty(positional_keys)
+            max_pos = maximum(positional_keys)
+            expected = 1:max_pos
+            missing_positions = setdiff(expected, positional_keys)
+            if !isempty(missing_positions)
+                throw(ArgumentError("positional outputs must be contiguous, got $positional_keys missing $missing_positions"))
+            end
         end
         
-        # Fill in aggregated values for their original positions (flatten if multidimensional)
-        for k in positional_keys
-            result = cell_results[k]
-            # Flatten multidimensional aggregation results to vector
-            positional[k] = result isa AbstractArray && ndims(result) > 1 ? vec(result) : result
-        end
+        # Build positional array from sorted keys
+        positional = [outputs[k] for k in positional_keys]
         
         # Build named arguments from symbol-keyed results
         named_dict = Dictionary{Symbol, Any}()
         for k in named_keys
-            insert!(named_dict, k, cell_results[k])
+            insert!(named_dict, k, outputs[k])
         end
         
         named = merge(n, named_dict)
