@@ -115,7 +115,7 @@ function _parse_split(p::Pair{<:Union{Function, Type}})
 end
 
 # Internal dispatch for split parsing
-_parse_split_internal(accessor, dest::Union{Int, Symbol}) = 
+_parse_split_internal(accessor, dest::Union{Int, Symbol}) =
     AggregationOutput(accessor, dest, nothing, nothing)
 
 function _parse_split_internal(accessor, dest_spec::Pair)
@@ -124,11 +124,11 @@ function _parse_split_internal(accessor, dest_spec::Pair)
 end
 
 # Helper to parse aggregation spec: just a function
-_parse_agg_spec(target, f::Base.Callable) = 
+_parse_agg_spec(target, f::Base.Callable) =
     ParsedAggregation(target, f, [AggregationOutput(nothing, target, nothing, nothing)])
 
 # Helper to parse the splits/label part of function => splits_or_label
-_parse_outputs(target, aggfunc, splits::AbstractVector) = 
+_parse_outputs(target, aggfunc, splits::AbstractVector) =
     ParsedAggregation(target, aggfunc, map(_parse_split, splits))
 
 function _parse_outputs(target, aggfunc, label_and_or_scale)
@@ -148,7 +148,7 @@ function aggregate(args...; named_aggs...)
     # Parse positional arguments to separate groupby indices from aggregations
     groupby_indices = Int[]
     aggregations = Pair[]
-    
+
     for (i, arg) in enumerate(args)
         if arg === (:)
             push!(groupby_indices, i)
@@ -157,24 +157,24 @@ function aggregate(args...; named_aggs...)
             push!(aggregations, i => arg)
         end
     end
-    
+
     # Add named aggregations
     for (name, aggfunc) in pairs(named_aggs)
         push!(aggregations, name => aggfunc)
     end
-    
+
     # Convert groupby to tuple or single value
     groupby = length(groupby_indices) == 1 ? groupby_indices[1] : Tuple(groupby_indices)
-    
+
     return transformation(AggregateAnalysis(Tuple(aggregations), groupby))
 end
 
 function (a::AggregateAnalysis)(input::ProcessedLayer)
     N = length(input.positional)
-    
+
     # Normalize groupby to tuple
     groupby_tuple = a.groupby isa Tuple ? a.groupby : (a.groupby,)
-    
+
     # Extract grouping indices (integers only for now)
     grouping_indices = Int[]
     for idx in groupby_tuple
@@ -188,24 +188,24 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             error("Symbol-based grouping in groupby not yet implemented")
         end
     end
-    
+
     # Build summaries for unique values in grouping dimensions
     summaries = [
         mapreduce(collect ∘ uniquesorted, mergesorted, input.positional[idx])
-        for idx in grouping_indices
+            for idx in grouping_indices
     ]
-    
+
     # Parse all aggregation specs once and compute labels for each output
     parsed_aggregations = map(a.aggregations) do (target, agg_spec)
         parsed = _parse_agg_spec(target, agg_spec)
-        
+
         # Get original label for this target
         original_label = get(input.labels, target, "")
-        
+
         # Generate labels for each output
         func_name = string(nameof(parsed.aggfunc))
         base_label = isempty(original_label) ? func_name : "$(func_name)($(original_label))"
-        
+
         # Update outputs with generated labels where not provided
         outputs = map(parsed.outputs) do output
             if output.label !== nothing
@@ -221,16 +221,16 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 return AggregationOutput(output.accessor, output.destination, base_label, output.scaleid)
             end
         end
-        
+
         return ParsedAggregation(target, parsed.aggfunc, outputs)
     end
-    
+
     # Build output labels dictionary (Any to support RichText, String, etc.)
     # Wrap labels in fill() to make them broadcastable
     # Also build scale_mapping dictionary to map positions/names to custom scale ids
     output_labels = Dict{Union{Int, Symbol}, Any}()
     scale_mapping = Dictionary{KeyType, Symbol}()
-    
+
     for parsed in parsed_aggregations
         for output in parsed.outputs
             output_labels[output.destination] = fill(output.label)
@@ -239,7 +239,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             end
         end
     end
-    
+
     # Perform aggregations and build output in a single map over input
     output = map(input) do p, n
         # Extract grouping keys once (same for all aggregations)
@@ -247,27 +247,27 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         sa = StructArray(map(fast_hashed, grouping_key_columns))
         perm = sortperm(sa)
         group_perm = GroupPerm(sa, perm)
-        
+
         # Extract actual keys that exist in the data (unhashed)
         actual_keys = map(group_perm) do idxs
             idx = perm[first(idxs)]
             # Extract the unhashed key values for this group
             return map(k -> k[idx], grouping_key_columns)
         end
-        
+
         # Build output dictionary - will contain all results indexed by position or symbol
         outputs = Dict{Union{Int, Symbol}, Any}()
-        
+
         # First, add grouping columns (they keep their positions with actual key values)
         for (i, group_idx) in enumerate(grouping_indices)
             outputs[group_idx] = [key[i] for key in actual_keys]
         end
-        
+
         # Now process all aggregations
         for parsed in parsed_aggregations
             target = parsed.target
             aggfunc = parsed.aggfunc
-            
+
             # Validate target and extract target values
             if target isa Integer
                 if target < 1 || target > N
@@ -285,40 +285,40 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             else
                 throw(ArgumentError("aggregation target must be an Integer or Symbol, got $(typeof(target))"))
             end
-            
+
             # Apply aggregation using the precomputed GroupPerm
             result = map(group_perm) do idxs
                 group_indices = perm[idxs]
                 group_values = view(target_values, group_indices)
                 return aggfunc(group_values)
             end
-            
+
             # Flatten multidimensional results
             result = result isa AbstractArray && ndims(result) > 1 ? vec(result) : result
-            
+
             # Process each output from this aggregation
             for output in parsed.outputs
                 destination = output.destination
-                
+
                 if haskey(outputs, destination)
                     throw(ArgumentError("output position $destination already assigned"))
                 end
-                
+
                 # Apply accessor if present, otherwise use result as-is
                 final_result = if output.accessor !== nothing
                     map(output.accessor, result)
                 else
                     result
                 end
-                
+
                 outputs[destination] = final_result
             end
         end
-        
+
         # Separate positional and named results
         positional_keys = sort([k for k in keys(outputs) if k isa Integer])
         named_keys = [k for k in keys(outputs) if k isa Symbol]
-        
+
         # Validate positional keys form a contiguous range from 1 to max
         if !isempty(positional_keys)
             max_pos = maximum(positional_keys)
@@ -328,31 +328,31 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 throw(ArgumentError("positional outputs must be contiguous, got $positional_keys missing $missing_positions"))
             end
         end
-        
+
         # Build positional array from sorted keys
         positional = [outputs[k] for k in positional_keys]
-        
+
         # Build named arguments from symbol-keyed results
         named_dict = Dictionary{Symbol, Any}()
         for k in named_keys
             insert!(named_dict, k, outputs[k])
         end
-        
+
         named = merge(n, named_dict)
-        
+
         return positional, named
     end
-    
+
     # Set appropriate default plot type
     N_groups = length(grouping_indices)
     default_plottype = categoricalplottypes[N_groups]
     plottype = Makie.plottype(output.plottype, default_plottype)
-    
+
     # Apply labels to the output
     labels = set(output.labels, (k => v for (k, v) in output_labels)...)
-    
+
     # Merge scale_mapping with existing scale_mapping from output
     merged_scale_mapping = merge(output.scale_mapping, scale_mapping)
-    
-    return ProcessedLayer(output; plottype, labels, scale_mapping=merged_scale_mapping)
+
+    return ProcessedLayer(output; plottype, labels, scale_mapping = merged_scale_mapping)
 end

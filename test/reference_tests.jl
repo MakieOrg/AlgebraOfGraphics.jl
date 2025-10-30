@@ -1629,13 +1629,13 @@ reftest("aggregate mean over x values") do
         x = [
             1, 1, 1, 1,  # 4 points at x=1
             2, 2, 2, 2, 2,  # 5 points at x=2
-            3, 3, 3, 3, 3, 3  # 6 points at x=3
+            3, 3, 3, 3, 3, 3,  # 6 points at x=3
         ],
         y = [
             2.0, 2.2, 1.8, 2.0,  # mean = 2.0
             4.8, 5.0, 5.2, 4.9, 5.1,  # mean = 5.0
-            2.7, 3.0, 3.3, 2.8, 3.2, 3.0  # mean = 3.0
-        ]
+            2.7, 3.0, 3.3, 2.8, 3.2, 3.0,  # mean = 3.0
+        ],
     )
     layer_raw = data(df) * mapping(:x, :y) * visual(Scatter, color = :gray)
     layer_mean = data(df) * mapping(:x, :y) * aggregate(:, mean) * visual(Lines, color = :red, linewidth = 3)
@@ -1647,16 +1647,16 @@ reftest("aggregate mean with layout faceting") do
     df = (;
         x = [
             1, 1, 1, 2, 2, 2, 3, 3, 3,  # Group A x values
-            1, 1, 1, 2, 2, 2, 3, 3, 3   # Group B x values
+            1, 1, 1, 2, 2, 2, 3, 3, 3,   # Group B x values
         ],
         y = [
             1.8, 2.0, 2.2, 3.8, 4.0, 4.2, 5.7, 6.0, 6.3,  # Group A: y ≈ 2x (means: 2.0, 4.0, 6.0)
-            2.7, 3.0, 3.3, 5.7, 6.0, 6.3, 8.7, 9.0, 9.3   # Group B: y ≈ 3x (means: 3.0, 6.0, 9.0)
+            2.7, 3.0, 3.3, 5.7, 6.0, 6.3, 8.7, 9.0, 9.3,   # Group B: y ≈ 3x (means: 3.0, 6.0, 9.0)
         ],
         group = [
             "A", "A", "A", "A", "A", "A", "A", "A", "A",
-            "B", "B", "B", "B", "B", "B", "B", "B", "B"
-        ]
+            "B", "B", "B", "B", "B", "B", "B", "B", "B",
+        ],
     )
     layer_raw = data(df) * mapping(:x, :y, layout = :group) * visual(Scatter, color = :gray)
     layer_mean = data(df) * mapping(:x, :y, layout = :group) * aggregate(:, mean) * visual(Lines, color = :red, linewidth = 3)
@@ -1669,13 +1669,13 @@ reftest("aggregate mean of x over y values") do
         y = [
             1, 1, 1, 1,  # 4 points at y=1
             2, 2, 2, 2, 2,  # 5 points at y=2
-            3, 3, 3, 3, 3, 3  # 6 points at y=3
+            3, 3, 3, 3, 3, 3,  # 6 points at y=3
         ],
         x = [
             1.8, 2.0, 2.2, 2.0,  # mean = 2.0
             4.8, 5.0, 5.2, 4.9, 5.1,  # mean = 5.0
-            2.7, 3.0, 3.3, 2.8, 3.2, 3.0  # mean = 3.0
-        ]
+            2.7, 3.0, 3.3, 2.8, 3.2, 3.0,  # mean = 3.0
+        ],
     )
     layer_raw = data(df) * mapping(:x, :y) * visual(Scatter, color = :gray)
     layer_mean = data(df) * mapping(:x, :y) * aggregate(mean, :) * visual(Lines, color = :red, linewidth = 3)
@@ -1688,22 +1688,22 @@ reftest("aggregate mean with color aggregation") do
         x = [
             1, 1, 1, 1,  # 4 points at x=1
             2, 2, 2, 2, 2,  # 5 points at x=2
-            3, 3, 3, 3, 3, 3  # 6 points at x=3
+            3, 3, 3, 3, 3, 3,  # 6 points at x=3
         ],
         y = [
             1.8, 2.0, 2.2, 2.0,  # mean = 2.0
             4.8, 5.0, 5.2, 4.9, 5.1,  # mean = 5.0
-            2.7, 3.0, 3.3, 2.8, 3.2, 3.0  # mean = 3.0
+            2.7, 3.0, 3.3, 2.8, 3.2, 3.0,  # mean = 3.0
         ],
         color = [
             0.8, 1.0, 1.2, 1.0,  # mean = 1.0
             1.8, 2.0, 2.2, 1.9, 2.1,  # mean = 2.0
-            2.7, 3.0, 3.3, 2.8, 3.2, 3.0  # mean = 3.0
-        ]
+            2.7, 3.0, 3.3, 2.8, 3.2, 3.0,  # mean = 3.0
+        ],
     )
     layer_raw = data(df) * mapping(:x, :y) * visual(Scatter, color = :gray)
-    layer_agg = data(df) * mapping(:x, :y, color = :color) * 
-        aggregate(:, mean, color = length) * 
+    layer_agg = data(df) * mapping(:x, :y, color = :color) *
+        aggregate(:, mean, color = length) *
         visual(Scatter, markersize = 20, marker = :diamond, colormap = :viridis)
     draw(layer_raw + layer_agg)
 end
@@ -1714,13 +1714,13 @@ reftest("aggregate mean with missing values") do
         x = [
             1, 1, 1, 1,  # 4 points at x=1
             2, 2, 2, 2, 2,  # 5 points at x=2, one will be missing
-            3, 3, 3, 3, 3, 3  # 6 points at x=3
+            3, 3, 3, 3, 3, 3,  # 6 points at x=3
         ],
         y = [
             1.8, 2.0, 2.2, 2.0,  # mean = 2.0
             4.8, missing, 5.2, 4.9, 5.1,  # mean = missing (because one value is missing)
-            2.7, 3.0, 3.3, 2.8, 3.2, 3.0  # mean = 3.0
-        ]
+            2.7, 3.0, 3.3, 2.8, 3.2, 3.0,  # mean = 3.0
+        ],
     )
     layer_raw = data(df) * mapping(:x, :y) * visual(Scatter, color = :gray)
     layer_mean = data(df) * mapping(:x, :y) * aggregate(:, mean) * visual(Scatter, color = :blue, markersize = 20)
@@ -1736,22 +1736,22 @@ reftest("aggregate sum heatmap 2d") do
             1, 1, 1,  # (1,3): sum = 9.0
             2, 2,  # (2,1): sum = 7.0
             # (2,2): missing - no data points
-            2, 2, 2, 2  # (2,3): sum = 12.0
+            2, 2, 2, 2,  # (2,3): sum = 12.0
         ],
         y = [
             1, 1, 1,
             2, 2,
             3, 3, 3,
             1, 1,
-            3, 3, 3, 3
+            3, 3, 3, 3,
         ],
         z = [
             2.0, 2.0, 2.0,  # sum = 6.0
             2.5, 2.5,  # sum = 5.0
             3.0, 3.0, 3.0,  # sum = 9.0
             3.0, 4.0,  # sum = 7.0
-            3.0, 3.0, 3.0, 3.0  # sum = 12.0
-        ]
+            3.0, 3.0, 3.0, 3.0,  # sum = 12.0
+        ],
     )
     data(df) * mapping(:x, :y, :z) * aggregate(:, :, sum) * visual(Heatmap) |> draw
 end
@@ -1762,17 +1762,17 @@ reftest("aggregate extrema rangebars") do
         x = [
             1, 1, 1, 1,  # 4 points at x=1
             2, 2, 2, 2, 2,  # 5 points at x=2
-            3, 3, 3, 3, 3, 3  # 6 points at x=3
+            3, 3, 3, 3, 3, 3,  # 6 points at x=3
         ],
         y = [
             1.5, 2.0, 2.5, 2.2,  # min = 1.5, max = 2.5
             4.3, 5.0, 5.7, 4.8, 5.2,  # min = 4.3, max = 5.7
-            2.0, 3.0, 4.0, 2.5, 3.5, 3.2  # min = 2.0, max = 4.0
-        ]
+            2.0, 3.0, 4.0, 2.5, 3.5, 3.2,  # min = 2.0, max = 4.0
+        ],
     )
     layer_raw = data(df) * mapping(:x, :y) * visual(Scatter, color = :gray)
-    layer_range = data(df) * mapping(:x, :y) * 
-        aggregate(:, extrema => [first => 2, last => 3]) * 
+    layer_range = data(df) * mapping(:x, :y) *
+        aggregate(:, extrema => [first => 2, last => 3]) *
         visual(Rangebars, color = :red, linewidth = 3)
     draw(layer_raw + layer_range)
 end
@@ -1785,25 +1785,25 @@ reftest("aggregate sum heatmap custom scale and label") do
             1, 1, 1,  # (1,3): sum = 9.0
             2, 2,  # (2,1): sum = 7.0
             # (2,2): missing - no data points
-            2, 2, 2, 2  # (2,3): sum = 12.0
+            2, 2, 2, 2,  # (2,3): sum = 12.0
         ],
         y = [
             1, 1, 1,
             2, 2,
             3, 3, 3,
             1, 1,
-            3, 3, 3, 3
+            3, 3, 3, 3,
         ],
         z = [
             2.0, 2.0, 2.0,  # sum = 6.0
             2.5, 2.5,  # sum = 5.0
             3.0, 3.0, 3.0,  # sum = 9.0
             3.0, 4.0,  # sum = 7.0
-            3.0, 3.0, 3.0, 3.0  # sum = 12.0
-        ]
+            3.0, 3.0, 3.0, 3.0,  # sum = 12.0
+        ],
     )
-    layer = data(df) * mapping(:x, :y, :z) * 
-        aggregate(:, :, sum => rich("total ", rich("of z", font = :bold)) => scale(:color2)) * 
+    layer = data(df) * mapping(:x, :y, :z) *
+        aggregate(:, :, sum => rich("total ", rich("of z", font = :bold)) => scale(:color2)) *
         visual(Heatmap)
     draw(layer, scales(color2 = (; colormap = :Blues)))
 end
@@ -1814,20 +1814,22 @@ reftest("aggregate extrema split custom labels and scale") do
         x = [
             1, 1, 1, 1,  # 4 points at x=1
             2, 2, 2, 2, 2,  # 5 points at x=2
-            3, 3, 3, 3, 3, 3  # 6 points at x=3
+            3, 3, 3, 3, 3, 3,  # 6 points at x=3
         ],
         y = [
             1.5, 2.0, 2.5, 2.2,  # min = 1.5, max = 2.5
             4.3, 5.0, 5.7, 4.8, 5.2,  # min = 4.3, max = 5.7
-            2.0, 3.0, 4.0, 2.5, 3.5, 3.2  # min = 2.0, max = 4.0
-        ]
+            2.0, 3.0, 4.0, 2.5, 3.5, 3.2,  # min = 2.0, max = 4.0
+        ],
     )
     layer_raw = data(df) * mapping(:x, :y => "") * visual(Scatter, color = :gray)
-    layer_agg = data(df) * mapping(:x, :y) * 
-        aggregate(:, extrema => [
+    layer_agg = data(df) * mapping(:x, :y) *
+        aggregate(
+        :, extrema => [
             first => 2 => "Min",  # Lower bound as y coordinate with label "Min"
-            last => :color => "Max" => scale(:color2)  # Upper bound as color with label "Max" and custom scale
-        ]) * 
+            last => :color => "Max" => scale(:color2),  # Upper bound as color with label "Max" and custom scale
+        ]
+    ) *
         visual(Scatter, markersize = 25)
     draw(layer_raw + layer_agg, scales(color2 = (; colormap = :thermal)))
 end
@@ -1845,21 +1847,21 @@ reftest("aggregate categorical from numerical") do
         end
         return (category, m)
     end
-    
+
     df = (;
         x = [
             1, 1, 1, 1,  # 4 points at x=1
             2, 2, 2, 2, 2,  # 5 points at x=2
-            3, 3, 3, 3, 3, 3  # 6 points at x=3
+            3, 3, 3, 3, 3, 3,  # 6 points at x=3
         ],
         y = [
             1.8, 2.0, 2.2, 2.0,  # mean = 2.0 → ("low", 2.0)
             4.8, 5.0, 5.2, 4.9, 5.1,  # mean = 5.0 → ("mid", 5.0)
-            6.7, 7.0, 7.3, 6.8, 7.2, 7.0  # mean = 7.0 → ("high", 7.0)
-        ]
+            6.7, 7.0, 7.3, 6.8, 7.2, 7.0,  # mean = 7.0 → ("high", 7.0)
+        ],
     )
-    spec = data(df) * mapping(:x, :y) * 
-        aggregate(:, categorize_mean => [first => 2 => "category", verbatim ∘ last => :bar_labels]) * 
+    spec = data(df) * mapping(:x, :y) *
+        aggregate(:, categorize_mean => [first => 2 => "category", verbatim ∘ last => :bar_labels]) *
         visual(BarPlot, direction = :x)
     draw(spec, scales(X = (; categories = ["low", "mid", "high"])))
 end
