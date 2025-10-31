@@ -1865,3 +1865,31 @@ reftest("aggregate categorical from numerical") do
         visual(BarPlot, direction = :x)
     draw(spec, scales(X = (; categories = ["low", "mid", "high"])))
 end
+
+reftest("aggregate vector valued") do
+    # Vector-valued aggregation: extract lower half of points in each group
+    function lower_half(values)
+        n = length(values)
+        n_lower = div(n, 2, RoundDown)
+        sorted = sort(values)
+        return sorted[1:n_lower]
+    end
+    
+    df = (;
+        x = [
+            1, 1, 1, 1,  # 4 points at x=1 → lower 2
+            2, 2, 2, 2, 2,  # 5 points at x=2 → lower 2
+            3, 3, 3, 3, 3, 3  # 6 points at x=3 → lower 3
+        ],
+        y = [
+            1.8, 2.0, 2.2, 2.4,  # lower half: [1.8, 2.0]
+            4.6, 4.8, 5.0, 5.2, 5.4,  # lower half: [4.6, 4.8]
+            2.5, 2.7, 3.0, 3.3, 3.5, 3.7  # lower half: [2.5, 2.7, 3.0]
+        ]
+    )
+    # Show all points with larger markers
+    layer_all = data(df) * mapping(:x, :y) * visual(Scatter, markersize = 20, color = :gray80)
+    # Overlay lower half with smaller markers - should align perfectly with subset of gray points
+    layer_lower = data(df) * mapping(:x, :y) * aggregate(:, lower_half) * visual(Scatter, markersize = 10, color = :red)
+    draw(layer_all + layer_lower)
+end

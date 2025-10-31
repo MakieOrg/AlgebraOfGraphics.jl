@@ -258,12 +258,9 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         # Build output dictionary - will contain all results indexed by position or symbol
         outputs = Dict{Union{Int, Symbol}, Any}()
 
-        # First, add grouping columns (they keep their positions with actual key values)
-        for (i, group_idx) in enumerate(grouping_indices)
-            outputs[group_idx] = [key[i] for key in actual_keys]
-        end
-
-        # Now process all aggregations
+        # Process all aggregations first to determine if we need to expand groups
+        aggregation_results = Dict{Union{Int, Symbol}, Any}()
+        
         for parsed in parsed_aggregations
             target = parsed.target
             aggfunc = parsed.aggfunc
@@ -300,7 +297,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             for output in parsed.outputs
                 destination = output.destination
 
-                if haskey(outputs, destination)
+                if haskey(aggregation_results, destination)
                     throw(ArgumentError("output position $destination already assigned"))
                 end
 
@@ -311,7 +308,67 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                     result
                 end
 
-                outputs[destination] = final_result
+                aggregation_results[destination] = final_result
+            end
+        end
+        
+        # Detect if any aggregation returned vectors (vector-valued aggregation)
+        # Check the element type of the result vectors
+        vector_valued_results = Dict{Union{Int, Symbol}, Bool}()
+        for (destination, result) in aggregation_results
+            # Check if the element type is a subtype of AbstractVector
+            vector_valued_results[destination] = eltype(result) <: AbstractVector
+        end
+        
+        # Validate that all results are consistently vector-valued or scalar-valued
+        if !isempty(vector_valued_results)
+            values_set = Set(values(vector_valued_results))
+            if length(values_set) > 1
+                scalar_dests = [k for (k, v) in vector_valued_results if !v]
+                vector_dests = [k for (k, v) in vector_valued_results if v]
+                throw(ArgumentError("Mixed scalar and vector aggregation results: scalars at $scalar_dests, vectors at $vector_dests. All aggregations must return either scalars or vectors consistently."))
+            end
+        end
+        
+        has_vector_results = !isempty(vector_valued_results) && first(values(vector_valued_results))
+        
+        if has_vector_results
+            # Vector-valued aggregation: expand groups and concatenate results
+            # Compute the length of each group's result vector
+            group_lengths = map(enumerate(actual_keys)) do (group_idx, key)
+                # Get length from any aggregation result (they're all vectors)
+                for result in values(aggregation_results)
+                    if !isempty(result)
+                        return length(result[group_idx])
+                    end
+                end
+                return 0  # Should not happen if we have results
+            end
+            
+            # Expand grouping columns by repeating keys according to their result lengths
+            for (i, group_idx) in enumerate(grouping_indices)
+                expanded = mapreduce(vcat, enumerate(actual_keys)) do (gi, key)
+                    fill(key[i], group_lengths[gi])
+                end
+                outputs[group_idx] = expanded
+            end
+            
+            # Concatenate all aggregation results
+            for (destination, result) in aggregation_results
+                concatenated = mapreduce(vcat, result) do val
+                    val  # All are vectors, just concatenate
+                end
+                outputs[destination] = concatenated
+            end
+        else
+            # Scalar aggregation: use keys directly
+            for (i, group_idx) in enumerate(grouping_indices)
+                outputs[group_idx] = [key[i] for key in actual_keys]
+            end
+            
+            # Use aggregation results as-is
+            for (destination, result) in aggregation_results
+                outputs[destination] = result
             end
         end
 
