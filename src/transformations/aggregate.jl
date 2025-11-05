@@ -38,16 +38,15 @@ struct AggregateAnalysis{A, G}
 end
 
 """
-    aggregate(args...; named_args...)
+    aggregate(aggregations...; named_aggregations...)
 
-Perform flexible aggregation of data. Use `:` to mark grouping dimensions and 
-aggregation functions for dimensions to aggregate.
+Perform flexible aggregation of data. Specify which columns to aggregate explicitly;
+all other mapped columns are automatically used for grouping.
 
 # Arguments
-- Positional arguments can be:
-  - `:` to mark this position for grouping
-  - An aggregation function (e.g., `mean`, `median`, `std`) to aggregate this position
-  - `aggfunc => [accessor => dest, ...]` to split aggregation results into multiple positions
+- Positional arguments are aggregation specifications in the form:
+  - `target => aggfunc` where target is an Int (positional) or Symbol (named)
+  - `target => aggfunc => [accessor => dest, ...]` to split aggregation results
 - Named arguments are aggregation functions for named mappings (e.g., `color = mean`)
 
 # Examples
@@ -55,24 +54,28 @@ aggregation functions for dimensions to aggregate.
 ```julia
 # Aggregate y values (position 2), group by x (position 1)
 data(...) * mapping(:time, :value) * 
-    aggregate(:, median)
+    aggregate(2 => median)
 
 # Aggregate x values (position 1), group by y (position 2)
 data(...) * mapping(:value, :time) * 
-    aggregate(mean, :)
+    aggregate(1 => mean)
 
 # Multiple aggregations with named argument
 data(...) * mapping(:time, :value, color=:group) * 
-    aggregate(:, mean, color = length)
+    aggregate(2 => mean, color = length)
 
-# Group by multiple dimensions
+# Group by multiple dimensions (x and y), aggregate z
 data(...) * mapping(:x, :y, :z) * 
-    aggregate(:, :, mean)
+    aggregate(3 => mean)
 
 # Split extrema into separate positions for range bars
 data(...) * mapping(:x, :y) * 
-    aggregate(:, extrema => [first => 2, last => 3]) *
+    aggregate(2 => extrema => [first => 2, last => 3]) *
     visual(Rangebars)
+
+# Aggregate multiple columns
+data(...) * mapping(:x, :y1, :y2) *
+    aggregate(2 => mean, 3 => median)
 ```
 """
 # Parse a single output spec: destination or destination => label or destination => label => scale_id
@@ -145,17 +148,15 @@ function _parse_agg_spec(target, p::Pair{<:Base.Callable})
 end
 
 function aggregate(args...; named_aggs...)
-    # Parse positional arguments to separate groupby indices from aggregations
-    groupby_indices = Int[]
+    # All arguments should be aggregation specifications (target => aggfunc)
     aggregations = Pair[]
 
-    for (i, arg) in enumerate(args)
-        if arg === (:)
-            push!(groupby_indices, i)
-        else
-            # arg should be an aggregation specification
-            push!(aggregations, i => arg)
+    for arg in args
+        # arg should be a Pair with target => aggfunc
+        if !(arg isa Pair)
+            throw(ArgumentError("Each positional argument to aggregate must be a Pair like `target => aggfunc`, got $(typeof(arg))"))
         end
+        push!(aggregations, arg)
     end
 
     # Add named aggregations
@@ -163,29 +164,32 @@ function aggregate(args...; named_aggs...)
         push!(aggregations, name => aggfunc)
     end
 
-    # Convert groupby to tuple or single value
-    groupby = length(groupby_indices) == 1 ? groupby_indices[1] : Tuple(groupby_indices)
-
-    return transformation(AggregateAnalysis(Tuple(aggregations), groupby))
+    # No explicit groupby needed - it will be inferred from what's not aggregated
+    return transformation(AggregateAnalysis(Tuple(aggregations), nothing))
 end
 
 function (a::AggregateAnalysis)(input::ProcessedLayer)
     N = length(input.positional)
 
-    # Normalize groupby to tuple
-    groupby_tuple = a.groupby isa Tuple ? a.groupby : (a.groupby,)
+    # Collect all targets being aggregated
+    aggregated_targets = Set{Union{Int, Symbol}}()
+    for (target, _) in a.aggregations
+        push!(aggregated_targets, target)
+    end
 
-    # Extract grouping indices (integers only for now)
+    # Infer grouping columns: all positional indices not being aggregated
     grouping_indices = Int[]
-    for idx in groupby_tuple
-        if idx isa Integer
-            if idx < 1 || idx > N
-                throw(ArgumentError("groupby index $idx out of bounds for $N positional arguments"))
-            end
-            push!(grouping_indices, idx)
-        else
-            # Symbol-based grouping - to be implemented later
-            error("Symbol-based grouping in groupby not yet implemented")
+    for i in 1:N
+        if !(i in aggregated_targets)
+            push!(grouping_indices, i)
+        end
+    end
+    
+    # Also auto-group by named arguments that aren't being aggregated
+    grouping_names = Symbol[]
+    for key in keys(input.named)
+        if !(key in aggregated_targets)
+            push!(grouping_names, key)
         end
     end
 
@@ -243,7 +247,11 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
     # Perform aggregations and build output in a single map over input
     output = map(input) do p, n
         # Extract grouping keys once (same for all aggregations)
-        grouping_key_columns = Tuple(p[idx] for idx in grouping_indices)
+        # Include both positional and named grouping columns
+        positional_keys = Tuple(p[idx] for idx in grouping_indices)
+        named_keys = Tuple(n[name] for name in grouping_names)
+        grouping_key_columns = (positional_keys..., named_keys...)
+        
         sa = StructArray(map(fast_hashed, grouping_key_columns))
         perm = sortperm(sa)
         group_perm = GroupPerm(sa, perm)
@@ -272,12 +280,15 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                     throw(ArgumentError("aggregation target $target out of bounds for $N positional arguments"))
                 end
                 if target in grouping_indices
-                    throw(ArgumentError("cannot aggregate column $target which is used for grouping"))
+                    throw(ArgumentError("cannot aggregate positional argument $target which is used for grouping"))
                 end
                 target_values = p[target]
             elseif target isa Symbol
                 if !haskey(n, target)
                     throw(ArgumentError("aggregation target :$target not found in named arguments"))
+                end
+                if target in grouping_names
+                    throw(ArgumentError("cannot aggregate named argument :$target which is used for grouping"))
                 end
                 target_values = n[target]
             else
@@ -362,11 +373,22 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             end
             
             # Expand grouping columns by repeating keys according to their result lengths
+            # Handle positional grouping columns
             for (i, group_idx) in enumerate(grouping_indices)
                 expanded = mapreduce(vcat, enumerate(actual_keys)) do (gi, key)
                     fill(key[i], group_lengths[gi])
                 end
                 outputs[group_idx] = expanded
+            end
+            
+            # Handle named grouping columns
+            num_positional_groups = length(grouping_indices)
+            for (i, group_name) in enumerate(grouping_names)
+                key_idx = num_positional_groups + i
+                expanded = mapreduce(vcat, enumerate(actual_keys)) do (gi, key)
+                    fill(key[key_idx], group_lengths[gi])
+                end
+                outputs[group_name] = expanded
             end
             
             # Process all aggregation results: concatenate vectors, expand scalars
@@ -392,8 +414,16 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             end
         else
             # Scalar aggregation: use keys directly
+            # Handle positional grouping columns
             for (i, group_idx) in enumerate(grouping_indices)
                 outputs[group_idx] = [key[i] for key in actual_keys]
+            end
+            
+            # Handle named grouping columns
+            num_positional_groups = length(grouping_indices)
+            for (i, group_name) in enumerate(grouping_names)
+                key_idx = num_positional_groups + i
+                outputs[group_name] = [key[key_idx] for key in actual_keys]
             end
             
             # Use aggregation results as-is

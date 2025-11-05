@@ -666,7 +666,7 @@ end
     
     matrix_func = v -> reshape(v, 1, :)
     
-    layer = data(df) * mapping(:x, :y) * aggregate(:, matrix_func)
+    layer = data(df) * mapping(:x, :y) * aggregate(2 => matrix_func)
     
-    @test_throws_message "Aggregation of positional argument 2 returned 2-dimensional arrays with size (1, 2). Only scalars or 1-dimensional vectors are supported." AlgebraOfGraphics.ProcessedLayer(layer)
+    @test_throws "Aggregation of positional argument 2 returned 2-dimensional arrays with size (1, 2). Only scalars or 1-dimensional vectors are supported." AlgebraOfGraphics.ProcessedLayer(layer)
 end
