@@ -660,3 +660,13 @@ end
     @test x̂[2] ≈ x̂2
     @test ŷ[2] ≈ ŷ2
 end
+
+@testset "aggregate fails with higher-dimensional result" begin
+    df = (x = [1, 1, 2, 2], y = [1, 2, 3, 4])
+    
+    matrix_func = v -> reshape(v, 1, :)
+    
+    layer = data(df) * mapping(:x, :y) * aggregate(:, matrix_func)
+    
+    @test_throws_message "Aggregation of positional argument 2 returned 2-dimensional arrays with size (1, 2). Only scalars or 1-dimensional vectors are supported." AlgebraOfGraphics.ProcessedLayer(layer)
+end

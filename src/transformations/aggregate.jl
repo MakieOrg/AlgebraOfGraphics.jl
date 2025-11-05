@@ -260,6 +260,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
 
         # Process all aggregations first to determine if we need to expand groups
         aggregation_results = Dict{Union{Int, Symbol}, Any}()
+        targets = Dict{Union{Int, Symbol}, Union{Int, Symbol}}()
         
         for parsed in parsed_aggregations
             target = parsed.target
@@ -309,40 +310,55 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 end
 
                 aggregation_results[destination] = final_result
+                targets[destination] = target
             end
         end
         
-        # Detect if any aggregation returned vectors (vector-valued aggregation)
+        # Detect which results are vector-valued and determine group lengths
         # Check the element type of the result vectors
         vector_valued_results = Dict{Union{Int, Symbol}, Bool}()
         for (destination, result) in aggregation_results
             # Check if the element type is a subtype of AbstractVector
-            vector_valued_results[destination] = eltype(result) <: AbstractVector
-        end
-        
-        # Validate that all results are consistently vector-valued or scalar-valued
-        if !isempty(vector_valued_results)
-            values_set = Set(values(vector_valued_results))
-            if length(values_set) > 1
-                scalar_dests = [k for (k, v) in vector_valued_results if !v]
-                vector_dests = [k for (k, v) in vector_valued_results if v]
-                throw(ArgumentError("Mixed scalar and vector aggregation results: scalars at $scalar_dests, vectors at $vector_dests. All aggregations must return either scalars or vectors consistently."))
+            element_type = eltype(result)
+            if element_type <: AbstractArray && !(element_type <: AbstractVector)
+                target = targets[destination]
+                dims = size(first(result))
+                
+                # Build descriptive error message with column description
+                target_desc = if target isa Integer
+                    "positional argument $target"
+                else
+                    "argument :$target"
+                end
+                
+                throw(ArgumentError("Aggregation of $target_desc returned $(length(dims))-dimensional arrays with size $dims. Only scalars or 1-dimensional vectors are supported."))
             end
+            vector_valued_results[destination] = element_type <: AbstractVector
         end
         
-        has_vector_results = !isempty(vector_valued_results) && first(values(vector_valued_results))
+        # Check if we have any vector results
+        has_vector_results = any(values(vector_valued_results))
         
         if has_vector_results
-            # Vector-valued aggregation: expand groups and concatenate results
-            # Compute the length of each group's result vector
+            # Vector-valued aggregation: determine lengths and validate consistency
+            # Compute the length of each group's result vector from vector-valued results
             group_lengths = map(enumerate(actual_keys)) do (group_idx, key)
-                # Get length from any aggregation result (they're all vectors)
-                for result in values(aggregation_results)
-                    if !isempty(result)
-                        return length(result[group_idx])
+                lengths_this_group = Int[]
+                for (destination, result) in aggregation_results
+                    if vector_valued_results[destination] && !isempty(result)
+                        push!(lengths_this_group, length(result[group_idx]))
                     end
                 end
-                return 0  # Should not happen if we have results
+                
+                # Validate that all vector results for this group have the same length
+                if !isempty(lengths_this_group) && !allequal(lengths_this_group)
+                    vector_dests_lengths = [(d, length(aggregation_results[d][group_idx])) 
+                                           for (d, is_vec) in vector_valued_results 
+                                           if is_vec]
+                    throw(ArgumentError("Inconsistent vector lengths for group at index $group_idx (key=$(key)): $vector_dests_lengths. All vector-valued aggregations must return the same length for each group."))
+                end
+                
+                return isempty(lengths_this_group) ? 0 : first(lengths_this_group)
             end
             
             # Expand grouping columns by repeating keys according to their result lengths
@@ -353,12 +369,26 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 outputs[group_idx] = expanded
             end
             
-            # Concatenate all aggregation results
+            # Process all aggregation results: concatenate vectors, expand scalars
             for (destination, result) in aggregation_results
-                concatenated = mapreduce(vcat, result) do val
-                    val  # All are vectors, just concatenate
+                if vector_valued_results[destination]
+                    # Vector result: concatenate
+                    concatenated = mapreduce(vcat, result) do val
+                        val
+                    end
+                    outputs[destination] = concatenated
+                else
+                    # Scalar result: expand to match group lengths
+                    total_length = sum(group_lengths)
+                    expanded = similar(result, total_length)
+                    offset = 1
+                    for (gi, val) in enumerate(result)
+                        len = group_lengths[gi]
+                        fill!(view(expanded, offset:offset+len-1), val)
+                        offset += len
+                    end
+                    outputs[destination] = expanded
                 end
-                outputs[destination] = concatenated
             end
         else
             # Scalar aggregation: use keys directly
