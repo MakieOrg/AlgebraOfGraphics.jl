@@ -223,6 +223,7 @@ Compute the mean body mass for each penguin species:
 
 ```@example analyses
 using AlgebraOfGraphics
+using Statistics
 
 penguins = AlgebraOfGraphics.penguins()
 
@@ -248,8 +249,6 @@ data(penguins) *
 Compute both mean and standard deviation:
 
 ```@example analyses
-using Statistics
-
 data(penguins) *
     mapping(:species, :body_mass_g) *
     aggregate(2 => mean, 2 => std) *
