@@ -16,6 +16,75 @@ struct AggregateAnalysis{A, G}
     groupby::G
 end
 
+# Parse a single output spec: destination or destination => label or destination => label => scale_id
+function _parse_output_spec(dest::Union{Int, Symbol})
+    return AggregationOutput(nothing, dest, nothing, nothing)
+end
+
+# Helper to parse the "rest" part after destination
+_parse_label_and_scale(label) = (label, nothing)
+_parse_label_and_scale(p::Pair{<:Any, ScaleID}) = (first(p), last(p))
+
+# dest => something (dispatch on the something)
+function _parse_output_spec(p::Pair)
+    dest = first(p)
+    rest = last(p)
+    label, scaleid = _parse_label_and_scale(rest)
+    return AggregationOutput(nothing, dest, label, scaleid)
+end
+
+# Parse split spec: accessor => output_spec
+function _parse_split(p::Pair{<:Base.Callable, <:Union{Int, Symbol}})
+    accessor = first(p)
+    dest = last(p)
+    return AggregationOutput(accessor, dest, nothing, nothing)
+end
+
+function _parse_split(p::Pair{<:Base.Callable, <:Pair})
+    accessor = first(p)
+    dest_spec = last(p)
+    output = _parse_output_spec(dest_spec)
+    return AggregationOutput(accessor, output.destination, output.label, output.scaleid)
+end
+
+# Fallback for when the array element type is inferred as Pair{Function, Any}
+# This delegates to internal dispatch methods
+function _parse_split(p::Pair{<:Union{Function, Type}})
+    accessor = first(p)
+    dest_spec = last(p)
+    return _parse_split_internal(accessor, dest_spec)
+end
+
+# Internal dispatch for split parsing
+_parse_split_internal(accessor, dest::Union{Int, Symbol}) =
+    AggregationOutput(accessor, dest, nothing, nothing)
+
+function _parse_split_internal(accessor, dest_spec::Pair)
+    output = _parse_output_spec(dest_spec)
+    return AggregationOutput(accessor, output.destination, output.label, output.scaleid)
+end
+
+# Helper to parse aggregation spec: just a function
+_parse_agg_spec(target, f::Base.Callable) =
+    ParsedAggregation(target, f, [AggregationOutput(nothing, target, nothing, nothing)])
+
+# Helper to parse the splits/label part of function => splits_or_label
+_parse_outputs(target, aggfunc, splits::AbstractVector) =
+    ParsedAggregation(target, aggfunc, map(_parse_split, splits))
+
+function _parse_outputs(target, aggfunc, label_and_or_scale)
+    # Not a vector, so it's label and/or scale_id
+    label, scaleid = _parse_label_and_scale(label_and_or_scale)
+    return ParsedAggregation(target, aggfunc, [AggregationOutput(nothing, target, label, scaleid)])
+end
+
+# Helper to parse aggregation spec: function => something
+function _parse_agg_spec(target, p::Pair{<:Base.Callable})
+    aggfunc = first(p)
+    outputs_spec = last(p)
+    return _parse_outputs(target, aggfunc, outputs_spec)
+end
+
 """
     aggregate(aggregations...; named_aggregations...)
 
@@ -88,75 +157,6 @@ data(...) * mapping(:x, :y, :z) *
     draw(scales(mycolor = (; colormap = :viridis)))
 ```
 """
-# Parse a single output spec: destination or destination => label or destination => label => scale_id
-function _parse_output_spec(dest::Union{Int, Symbol})
-    return AggregationOutput(nothing, dest, nothing, nothing)
-end
-
-# Helper to parse the "rest" part after destination
-_parse_label_and_scale(label) = (label, nothing)
-_parse_label_and_scale(p::Pair{<:Any, ScaleID}) = (first(p), last(p))
-
-# dest => something (dispatch on the something)
-function _parse_output_spec(p::Pair)
-    dest = first(p)
-    rest = last(p)
-    label, scaleid = _parse_label_and_scale(rest)
-    return AggregationOutput(nothing, dest, label, scaleid)
-end
-
-# Parse split spec: accessor => output_spec
-function _parse_split(p::Pair{<:Base.Callable, <:Union{Int, Symbol}})
-    accessor = first(p)
-    dest = last(p)
-    return AggregationOutput(accessor, dest, nothing, nothing)
-end
-
-function _parse_split(p::Pair{<:Base.Callable, <:Pair})
-    accessor = first(p)
-    dest_spec = last(p)
-    output = _parse_output_spec(dest_spec)
-    return AggregationOutput(accessor, output.destination, output.label, output.scaleid)
-end
-
-# Fallback for when the array element type is inferred as Pair{Function, Any}
-# This delegates to internal dispatch methods
-function _parse_split(p::Pair{<:Union{Function, Type}})
-    accessor = first(p)
-    dest_spec = last(p)
-    return _parse_split_internal(accessor, dest_spec)
-end
-
-# Internal dispatch for split parsing
-_parse_split_internal(accessor, dest::Union{Int, Symbol}) =
-    AggregationOutput(accessor, dest, nothing, nothing)
-
-function _parse_split_internal(accessor, dest_spec::Pair)
-    output = _parse_output_spec(dest_spec)
-    return AggregationOutput(accessor, output.destination, output.label, output.scaleid)
-end
-
-# Helper to parse aggregation spec: just a function
-_parse_agg_spec(target, f::Base.Callable) =
-    ParsedAggregation(target, f, [AggregationOutput(nothing, target, nothing, nothing)])
-
-# Helper to parse the splits/label part of function => splits_or_label
-_parse_outputs(target, aggfunc, splits::AbstractVector) =
-    ParsedAggregation(target, aggfunc, map(_parse_split, splits))
-
-function _parse_outputs(target, aggfunc, label_and_or_scale)
-    # Not a vector, so it's label and/or scale_id
-    label, scaleid = _parse_label_and_scale(label_and_or_scale)
-    return ParsedAggregation(target, aggfunc, [AggregationOutput(nothing, target, label, scaleid)])
-end
-
-# Helper to parse aggregation spec: function => something
-function _parse_agg_spec(target, p::Pair{<:Base.Callable})
-    aggfunc = first(p)
-    outputs_spec = last(p)
-    return _parse_outputs(target, aggfunc, outputs_spec)
-end
-
 function aggregate(args...; named_aggs...)
     # All arguments should be aggregation specifications (target => aggfunc)
     aggregations = Pair[]
