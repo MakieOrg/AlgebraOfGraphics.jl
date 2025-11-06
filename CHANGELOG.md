@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `aggregate` transformation for flexible data aggregation with automatic grouping, custom labels, and support for scalar and vector-valued aggregations [#696](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/696).
+
 ## v0.11.9 - 2025-10-10
 
 - Improved error message when two layers with incompatible continuous data are combined [#692](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/692).
