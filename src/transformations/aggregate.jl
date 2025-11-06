@@ -252,15 +252,30 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         named_keys = Tuple(n[name] for name in grouping_names)
         grouping_key_columns = (positional_keys..., named_keys...)
         
-        sa = StructArray(map(fast_hashed, grouping_key_columns))
-        perm = sortperm(sa)
-        group_perm = GroupPerm(sa, perm)
-
-        # Extract actual keys that exist in the data (unhashed)
-        actual_keys = map(group_perm) do idxs
-            idx = perm[first(idxs)]
-            # Extract the unhashed key values for this group
-            return map(k -> k[idx], grouping_key_columns)
+        # Handle case where there are no grouping columns (single group)
+        perm, group_perm, actual_keys = if isempty(grouping_key_columns)
+            # No grouping - treat all data as a single group
+            # Get number of rows from first positional column
+            n_rows = length(first(p))
+            # Create identity permutation and a single group containing all indices
+            perm = 1:n_rows
+            # GroupPerm expects a vector of index ranges for each group
+            # For a single group with all rows, that's just [1:n_rows]
+            group_ranges = [1:n_rows]
+            actual_keys = [()]  # Single empty key tuple
+            (perm, group_ranges, actual_keys)
+        else
+            sa = StructArray(map(fast_hashed, grouping_key_columns))
+            perm = sortperm(sa)
+            group_perm = GroupPerm(sa, perm)
+            
+            # Extract actual keys that exist in the data (unhashed)
+            actual_keys = map(group_perm) do idxs
+                idx = perm[first(idxs)]
+                # Extract the unhashed key values for this group
+                return map(k -> k[idx], grouping_key_columns)
+            end
+            (perm, group_perm, actual_keys)
         end
 
         # Build output dictionary - will contain all results indexed by position or symbol
@@ -460,16 +475,11 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         return positional, named
     end
 
-    # Set appropriate default plot type
-    N_groups = length(grouping_indices)
-    default_plottype = categoricalplottypes[N_groups]
-    plottype = Makie.plottype(output.plottype, default_plottype)
-
     # Apply labels to the output
     labels = set(output.labels, (k => v for (k, v) in output_labels)...)
 
     # Merge scale_mapping with existing scale_mapping from output
     merged_scale_mapping = merge(output.scale_mapping, scale_mapping)
 
-    return ProcessedLayer(output; plottype, labels, scale_mapping = merged_scale_mapping)
+    return ProcessedLayer(output; labels, scale_mapping = merged_scale_mapping)
 end

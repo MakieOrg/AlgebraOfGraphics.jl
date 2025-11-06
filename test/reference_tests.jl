@@ -1893,3 +1893,13 @@ reftest("aggregate vector valued") do
     layer_lower = data(df) * mapping(:x, :y) * aggregate(2 => lower_half) * visual(Scatter, markersize = 10, color = :red)
     draw(layer_all + layer_lower)
 end
+
+reftest("aggregate no group") do
+    df = (; x = 1:5, y = 6:10)
+    spec = data(df) *
+        (
+            mapping(:x, :y) * visual(Scatter) +
+            mapping(:y) * aggregate(1 => collect ∘ extrema) * visual(HLines)
+        )
+    draw(spec)
+end
