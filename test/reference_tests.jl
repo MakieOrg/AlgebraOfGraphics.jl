@@ -1908,3 +1908,14 @@ reftest("aggregate tupleized multi input single output") do
     df = (; a = [1, 1, 1, 2, 2], b = [0, -3, 4, 0, 1], c = [1, -4, 2, 0, 2])
     data(df) * mapping(:a => nonnumeric, (:b, :c)) * aggregate(2 => (x -> mean([maximum(t) for t in x])) => "mean of maxs") * visual(Scatter) |> draw
 end
+
+reftest("two columns and assignment") do
+    df = (
+        x = [1, 1, 1, 1, 2, 2, 2, 2],
+        y = [1, 2, 3, 4, -2, 0, 4, 7],
+    )
+    data(df) *
+        mapping(:x => nonnumeric, :y) *
+        aggregate(2 => mean, 2 => std => 3) *
+        visual(Errorbars) |> draw
+end

@@ -72,8 +72,13 @@ _parse_agg_spec(target, f::Base.Callable) =
 _parse_outputs(target, aggfunc, splits::AbstractVector) =
     ParsedAggregation(target, aggfunc, map(_parse_split, splits))
 
+# When the third element is an Int or Symbol, treat it as a destination
+function _parse_outputs(target, aggfunc, dest::Union{Int, Symbol})
+    return ParsedAggregation(target, aggfunc, [AggregationOutput(nothing, dest, nothing, nothing)])
+end
+
+# Otherwise it's a label and/or scale_id
 function _parse_outputs(target, aggfunc, label_and_or_scale)
-    # Not a vector, so it's label and/or scale_id
     label, scaleid = _parse_label_and_scale(label_and_or_scale)
     return ParsedAggregation(target, aggfunc, [AggregationOutput(nothing, target, label, scaleid)])
 end
@@ -94,12 +99,13 @@ all other mapped columns are automatically used for grouping.
 # Arguments
 - Positional arguments are aggregation specifications in the form:
   - `target => aggfunc` where target is an Int (positional) or Symbol (named)
+  - `target => aggfunc => dest` to place output at a different position
   - `target => aggfunc => [accessor => dest, ...]` to split aggregation results
 - Named arguments are aggregation functions for named mappings (e.g., `color = mean`)
 
 # Labeling and Custom Scales
 You can customize labels and assign outputs to custom scales:
-- `target => aggfunc => label` - Set a custom label for the aggregated output
+- `target => aggfunc => label` - Set a custom label (if label is not an Int/Symbol)
 - `target => aggfunc => label => scale(:scaleid)` - Set label and assign to a custom scale
 - For split outputs: `accessor => dest => label` or `accessor => dest => label => scale(:scaleid)`
 
@@ -109,6 +115,11 @@ You can customize labels and assign outputs to custom scales:
 # Aggregate y values (position 2), group by x (position 1)
 data(...) * mapping(:time, :value) * 
     aggregate(2 => median)
+
+# Aggregate and place in different position
+data(...) * mapping(:time, :value) *
+    aggregate(2 => mean, 2 => std => 3) *
+    visual(Errorbars)
 
 # Aggregate x values (position 1), group by y (position 2)
 data(...) * mapping(:value, :time) * 

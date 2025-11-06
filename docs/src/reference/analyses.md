@@ -251,8 +251,10 @@ Compute both mean and standard deviation:
 ```@example analyses
 data(penguins) *
     mapping(:species, :body_mass_g) *
-    aggregate(2 => mean, 2 => std) *
-    (visual(BarPlot) + visual(Errorbars)) |> draw
+    (
+        aggregate(2 => mean) * visual(BarPlot) +
+        aggregate(2 => mean, 2 => std => 3) * visual(Errorbars)
+    ) |> draw
 ```
 
 ### Splitting Aggregation Results
