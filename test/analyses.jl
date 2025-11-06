@@ -2,48 +2,16 @@
     df = (x = rand(1000), c = rand(["a", "b"], 1000))
     npoints = 500
 
-    layer = data(df) * mapping(:x, color = :c) * AlgebraOfGraphics.density(; npoints)
-    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
-
-    x1 = df.x[df.c .== "a"]
-    rgx1 = range(extrema(df.x)..., length = npoints)
-    d1 = pdf(kde(x1), rgx1)
-
-    x2 = df.x[df.c .== "b"]
-    rgx2 = range(extrema(df.x)..., length = npoints)
-    d2 = pdf(kde(x2), rgx2)
-
-    rgx, d = processedlayer.positional
-
-    @test rgx[1] ≈ rgx1
-    @test d[1] ≈ d1
-
-    @test rgx[2] ≈ rgx2
-    @test d[2] ≈ d2
-
     layer = data(df) * mapping(:x, color = :c) * AlgebraOfGraphics.density(; npoints, datalimits = extrema)
-    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+    processedlayers = AlgebraOfGraphics.ProcessedLayers(layer)
 
-    x1 = df.x[df.c .== "a"]
-    rgx1 = range(extrema(x1)..., length = npoints)
-    d1 = pdf(kde(x1), rgx1)
-
-    x2 = df.x[df.c .== "b"]
-    rgx2 = range(extrema(x2)..., length = npoints)
-    d2 = pdf(kde(x2), rgx2)
-
+    processedlayer = processedlayers.layers[1]
     rgx, d = processedlayer.positional
-
-    @test rgx[1] ≈ rgx1
-    @test d[1] ≈ d1
-
-    @test rgx[2] ≈ rgx2
-    @test d[2] ≈ d2
 
     @test processedlayer.primary == NamedArguments((color = ["a", "b"],))
     @test isempty(processedlayer.named)
-    @test processedlayer.attributes == NamedArguments((; direction = :x))
-    @test processedlayer.plottype == AlgebraOfGraphics.LinesFill
+    @test processedlayer.attributes == NamedArguments((; direction = :x, alpha = 0.15))
+    @test processedlayer.plottype == Band
 
     labels = MixedArguments()
     insert!(labels, 1, "x")

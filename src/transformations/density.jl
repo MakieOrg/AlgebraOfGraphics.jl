@@ -35,16 +35,34 @@ function (d::DensityAnalysis)(input::ProcessedLayer)
     N = length(input.positional)
     if N == 1
         direction = d.direction === automatic ? :x : d.direction
+        labels_base = set(input.labels, N + 1 => "pdf")
+        # When direction is :y, Lines reverses the positional arguments, so we need to swap labels 1 and 2
+        labels_lines = if direction === :y
+            label1 = get(labels_base, 1, nothing)
+            label2 = get(labels_base, 2, nothing)
+            _labels = copy(labels_base)
+            delete!(_labels, 1)
+            delete!(_labels, 2)
+            if !isnothing(label1)
+                insert!(_labels, 2, label1)
+            end
+            if !isnothing(label2)
+                insert!(_labels, 1, label2)
+            end
+            _labels
+        else
+            labels_base
+        end
         linelayer = ProcessedLayer(
             map(output) do p, n
                 _p = direction === :x ? p : direction === :y ? reverse(p) : error("Invalid density direction $(repr(direction)), options are :x or :y")
                 _p, n
-            end, plottype = Lines, label = :line
+            end, plottype = Lines, label = :line, labels = labels_lines
         )
         bandlayer = ProcessedLayer(
             map(output) do p, n
                 (p[1], zero(p[2]), p[2]), n
-            end; plottype = Band, label = :area, attributes = dictionary([:alpha => 0.15, :direction => direction])
+            end; plottype = Band, label = :area, attributes = dictionary([:alpha => 0.15, :direction => direction]), labels = labels_base
         )
         return ProcessedLayers([bandlayer, linelayer])
     else
