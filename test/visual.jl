@@ -33,20 +33,20 @@ end
     layer1 = ProcessedLayer(plottype = Lines, label = :line)
     layer2 = ProcessedLayer(plottype = Band, label = :area)
     layers = ProcessedLayers([layer1, layer2])
-    
+
     sv = subvisual(:wrong_label, color = "red")
     @test_throws "subvisual target :wrong_label did not match any layer in ProcessedLayers. Available labels are :line and :area, available plottypes are Lines and Band" sv.transformation(layers)
-    
+
     # Test error when type target doesn't match in ProcessedLayers
     sv_type = subvisual(Scatter, color = "blue")
     @test_throws "subvisual target Scatter did not match any layer" sv_type.transformation(layers)
-    
+
     # Test successful match with symbol
     sv_match = subvisual(:line, color = "green")
     result = sv_match.transformation(layers)
     @test result.layers[1].attributes[:color] == "green"
     @test !haskey(result.layers[2].attributes, :color)
-    
+
     # Test successful match with type
     sv_type_match = subvisual(Lines, linewidth = 3)
     result2 = sv_type_match.transformation(layers)
