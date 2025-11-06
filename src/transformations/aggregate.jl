@@ -1,9 +1,3 @@
-"""
-    AggregationOutput
-
-Represents a single output from an aggregation, with an optional accessor function,
-destination position/name, optional label, and optional scale id.
-"""
 struct AggregationOutput
     accessor::Union{Nothing, Base.Callable}  # Function to extract from aggregation result (nothing means use as-is)
     destination::Union{Int, Symbol}  # Where to place this output
@@ -11,27 +5,12 @@ struct AggregationOutput
     scaleid::Union{Nothing, ScaleID}  # Optional scale id
 end
 
-"""
-    ParsedAggregation
-
-Internal struct to hold parsed aggregation specification.
-Each aggregation of a target produces one or more outputs.
-"""
 struct ParsedAggregation
     target::Union{Int, Symbol}  # Source column to aggregate
     aggfunc::Base.Callable  # Aggregation function
     outputs::Vector{AggregationOutput}  # One or more outputs from this aggregation
 end
 
-"""
-    AggregateAnalysis
-
-Analysis that performs flexible aggregation of data.
-
-Fields:
-- `aggregations`: Pairs of target => aggregation function
-- `groupby`: Tuple of integers specifying grouping dimensions
-"""
 struct AggregateAnalysis{A, G}
     aggregations::A
     groupby::G
@@ -48,6 +27,12 @@ all other mapped columns are automatically used for grouping.
   - `target => aggfunc` where target is an Int (positional) or Symbol (named)
   - `target => aggfunc => [accessor => dest, ...]` to split aggregation results
 - Named arguments are aggregation functions for named mappings (e.g., `color = mean`)
+
+# Labeling and Custom Scales
+You can customize labels and assign outputs to custom scales:
+- `target => aggfunc => label` - Set a custom label for the aggregated output
+- `target => aggfunc => label => scale(:scaleid)` - Set label and assign to a custom scale
+- For split outputs: `accessor => dest => label` or `accessor => dest => label => scale(:scaleid)`
 
 # Examples
 
@@ -76,6 +61,31 @@ data(...) * mapping(:x, :y) *
 # Aggregate multiple columns
 data(...) * mapping(:x, :y1, :y2) *
     aggregate(2 => mean, 3 => median)
+
+# Custom labels
+data(...) * mapping(:x, :y) *
+    aggregate(2 => mean => "Average Y")
+
+# Custom labels with LaTeX
+data(...) * mapping(:x, :y) *
+    aggregate(2 => mean => L"\\bar{y}")
+
+# Split outputs with custom labels and scale
+data(...) * mapping(:x, :y) *
+    aggregate(
+        2 => extrema => [
+            first => 2 => "Minimum",
+            last => :color => "Maximum" => scale(:color2)
+        ]
+    ) *
+    visual(Scatter) |>
+    draw(scales(color2 = (; colormap = :thermal)))
+
+# Custom scale for aggregated output
+data(...) * mapping(:x, :y, :z) *
+    aggregate(3 => sum => "Total" => scale(:mycolor)) *
+    visual(Heatmap) |>
+    draw(scales(mycolor = (; colormap = :viridis)))
 ```
 """
 # Parse a single output spec: destination or destination => label or destination => label => scale_id
