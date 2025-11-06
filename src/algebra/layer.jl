@@ -202,7 +202,7 @@ function uniquevalues(v::AbstractArray)
     return collect(uniquesorted(_v, perm))
 end
 
-to_label(label::AbstractString) = label
+to_label(label) = label
 to_label(labels::AbstractArray) = reduce(mergelabels, labels)
 
 # merge dict2 into dict but translate keys first using remapdict

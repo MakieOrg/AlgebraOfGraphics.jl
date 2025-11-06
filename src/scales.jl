@@ -415,7 +415,7 @@ continuous_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol, Any
 
 struct ContinuousScale{T}
     extrema::NTuple{2, T}
-    label::Union{AbstractString, Nothing}
+    label # nothing or any type workable as a label
     force::Bool
     props::ContinuousScaleProps
 end
