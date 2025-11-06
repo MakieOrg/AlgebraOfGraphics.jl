@@ -346,7 +346,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 destination = output.destination
 
                 if haskey(aggregation_results, destination)
-                    throw(ArgumentError("output position $destination already assigned"))
+                    throw(ArgumentError("Output slot $(repr(destination)) of `aggregate` was assigned multiple times. By default, aggregated mappings are routed to their original position, for example `2 => std` is routed to positional arg 2. You can use the pair syntax `2 => std => 3` to route to a different positional or named argument."))
                 end
 
                 # Apply accessor if present, otherwise use result as-is

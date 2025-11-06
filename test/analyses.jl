@@ -670,3 +670,8 @@ end
 
     @test_throws "Aggregation of positional argument 2 returned 2-dimensional arrays with size (1, 2). Only scalars or 1-dimensional vectors are supported." AlgebraOfGraphics.ProcessedLayer(layer)
 end
+
+@testset "aggregate fails for multiply assigned output slots" begin
+    @test_throws "Output slot 2 of `aggregate` was assigned multiple times." data((; x = [1, 1, 1], y = [1, 2, 3])) *
+        mapping(:x, :y) * aggregate(2 => mean, 2 => std) * visual(Errorbars) |> draw
+end
