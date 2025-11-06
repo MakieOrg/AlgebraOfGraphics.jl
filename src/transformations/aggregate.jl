@@ -194,7 +194,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             push!(grouping_indices, i)
         end
     end
-    
+
     # Also auto-group by named arguments that aren't being aggregated
     grouping_names = Symbol[]
     for key in keys(input.named)
@@ -261,7 +261,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         positional_keys = Tuple(p[idx] for idx in grouping_indices)
         named_keys = Tuple(n[name] for name in grouping_names)
         grouping_key_columns = (positional_keys..., named_keys...)
-        
+
         # Handle case where there are no grouping columns (single group)
         perm, group_perm, actual_keys = if isempty(grouping_key_columns)
             # No grouping - treat all data as a single group
@@ -278,7 +278,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             sa = StructArray(map(fast_hashed, grouping_key_columns))
             perm = sortperm(sa)
             group_perm = GroupPerm(sa, perm)
-            
+
             # Extract actual keys that exist in the data (unhashed)
             actual_keys = map(group_perm) do idxs
                 idx = perm[first(idxs)]
@@ -294,7 +294,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
         # Process all aggregations first to determine if we need to expand groups
         aggregation_results = Dict{Union{Int, Symbol}, Any}()
         targets = Dict{Union{Int, Symbol}, Union{Int, Symbol}}()
-        
+
         for parsed in parsed_aggregations
             target = parsed.target
             aggfunc = parsed.aggfunc
@@ -349,7 +349,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 targets[destination] = target
             end
         end
-        
+
         # Detect which results are vector-valued and determine group lengths
         # Check the element type of the result vectors
         vector_valued_results = Dict{Union{Int, Symbol}, Bool}()
@@ -359,22 +359,22 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             if element_type <: AbstractArray && !(element_type <: AbstractVector)
                 target = targets[destination]
                 dims = size(first(result))
-                
+
                 # Build descriptive error message with column description
                 target_desc = if target isa Integer
                     "positional argument $target"
                 else
                     "argument :$target"
                 end
-                
+
                 throw(ArgumentError("Aggregation of $target_desc returned $(length(dims))-dimensional arrays with size $dims. Only scalars or 1-dimensional vectors are supported."))
             end
             vector_valued_results[destination] = element_type <: AbstractVector
         end
-        
+
         # Check if we have any vector results
         has_vector_results = any(values(vector_valued_results))
-        
+
         if has_vector_results
             # Vector-valued aggregation: determine lengths and validate consistency
             # Compute the length of each group's result vector from vector-valued results
@@ -385,18 +385,20 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                         push!(lengths_this_group, length(result[group_idx]))
                     end
                 end
-                
+
                 # Validate that all vector results for this group have the same length
                 if !isempty(lengths_this_group) && !allequal(lengths_this_group)
-                    vector_dests_lengths = [(d, length(aggregation_results[d][group_idx])) 
-                                           for (d, is_vec) in vector_valued_results 
-                                           if is_vec]
+                    vector_dests_lengths = [
+                        (d, length(aggregation_results[d][group_idx]))
+                            for (d, is_vec) in vector_valued_results
+                            if is_vec
+                    ]
                     throw(ArgumentError("Inconsistent vector lengths for group at index $group_idx (key=$(key)): $vector_dests_lengths. All vector-valued aggregations must return the same length for each group."))
                 end
-                
+
                 return isempty(lengths_this_group) ? 0 : first(lengths_this_group)
             end
-            
+
             # Expand grouping columns by repeating keys according to their result lengths
             # Handle positional grouping columns
             for (i, group_idx) in enumerate(grouping_indices)
@@ -405,7 +407,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 end
                 outputs[group_idx] = expanded
             end
-            
+
             # Handle named grouping columns
             num_positional_groups = length(grouping_indices)
             for (i, group_name) in enumerate(grouping_names)
@@ -415,7 +417,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                 end
                 outputs[group_name] = expanded
             end
-            
+
             # Process all aggregation results: concatenate vectors, expand scalars
             for (destination, result) in aggregation_results
                 if vector_valued_results[destination]
@@ -431,7 +433,7 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
                     offset = 1
                     for (gi, val) in enumerate(result)
                         len = group_lengths[gi]
-                        fill!(view(expanded, offset:offset+len-1), val)
+                        fill!(view(expanded, offset:(offset + len - 1)), val)
                         offset += len
                     end
                     outputs[destination] = expanded
@@ -443,14 +445,14 @@ function (a::AggregateAnalysis)(input::ProcessedLayer)
             for (i, group_idx) in enumerate(grouping_indices)
                 outputs[group_idx] = [key[i] for key in actual_keys]
             end
-            
+
             # Handle named grouping columns
             num_positional_groups = length(grouping_indices)
             for (i, group_name) in enumerate(grouping_names)
                 key_idx = num_positional_groups + i
                 outputs[group_name] = [key[key_idx] for key in actual_keys]
             end
-            
+
             # Use aggregation results as-is
             for (destination, result) in aggregation_results
                 outputs[destination] = result

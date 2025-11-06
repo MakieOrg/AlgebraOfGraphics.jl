@@ -1874,18 +1874,18 @@ reftest("aggregate vector valued") do
         sorted = sort(values)
         return sorted[1:n_lower]
     end
-    
+
     df = (;
         x = [
             1, 1, 1, 1,  # 4 points at x=1 → lower 2
             2, 2, 2, 2, 2,  # 5 points at x=2 → lower 2
-            3, 3, 3, 3, 3, 3  # 6 points at x=3 → lower 3
+            3, 3, 3, 3, 3, 3,  # 6 points at x=3 → lower 3
         ],
         y = [
             1.8, 2.0, 2.2, 2.4,  # lower half: [1.8, 2.0]
             4.6, 4.8, 5.0, 5.2, 5.4,  # lower half: [4.6, 4.8]
-            2.5, 2.7, 3.0, 3.3, 3.5, 3.7  # lower half: [2.5, 2.7, 3.0]
-        ]
+            2.5, 2.7, 3.0, 3.3, 3.5, 3.7,  # lower half: [2.5, 2.7, 3.0]
+        ],
     )
     # Show all points with larger markers
     layer_all = data(df) * mapping(:x, :y) * visual(Scatter, markersize = 20, color = :gray80)
@@ -1898,9 +1898,9 @@ reftest("aggregate no group") do
     df = (; x = 1:5, y = 6:10)
     spec = data(df) *
         (
-            mapping(:x, :y) * visual(Scatter) +
+        mapping(:x, :y) * visual(Scatter) +
             mapping(:y) * aggregate(1 => collect ∘ extrema) * visual(HLines)
-        )
+    )
     draw(spec)
 end
 
