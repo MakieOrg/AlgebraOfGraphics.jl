@@ -1903,3 +1903,8 @@ reftest("aggregate no group") do
         )
     draw(spec)
 end
+
+reftest("aggregate tupleized multi input single output") do
+    df = (; a = [1, 1, 1, 2, 2], b = [0, -3, 4, 0, 1], c = [1, -4, 2, 0, 2])
+    data(df) * mapping(:a => nonnumeric, (:b, :c)) * aggregate(2 => (x -> mean([maximum(t) for t in x])) => "mean of maxs") * visual(Scatter) |> draw
+end
