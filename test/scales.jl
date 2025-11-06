@@ -2,7 +2,7 @@
     l = data([(x = 1, subject = "c"), (x = 2, subject = "a")]) * mapping(:x, :subject)
     pl = ProcessedLayer(l)
     aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
-    scales = map(fitscale, categoricalscales(pl, Dictionary{Type{<:AlgebraOfGraphics.Aesthetic},Any}(), aesmapping))
+    scales = map(fitscale, categoricalscales(pl, Dictionary{Type{<:AlgebraOfGraphics.Aesthetic}, Any}(), aesmapping))
     @test keys(scales) == Indices([2])
     scale = scales[2]
     @test scale isa CategoricalScale
@@ -10,8 +10,8 @@
     @test scale.label == "subject"
     @test scale.plot == 1:2
 
-    l = data([(x = 1, subject = "c", grp="f"), (x = 2, subject = "a", grp="g")]) *
-        mapping(:x, :subject, color=:grp)
+    l = data([(x = 1, subject = "c", grp = "f"), (x = 2, subject = "a", grp = "g")]) *
+        mapping(:x, :subject, color = :grp)
     pl = ProcessedLayer(l)
     aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
     scaleprops = AlgebraOfGraphics.compute_scale_properties(
@@ -65,6 +65,15 @@ end
     p = cgrad(:Accent_3)
     uv = [:a, :b, :c, :d, :e]
     @test apply_palette(p, uv) == [p[1], p[2], p[3], p[1], p[2]]
+
+    uv = 1:9
+    @test apply_palette(wrapped(), uv) == [(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3)]
+    @test apply_palette(wrapped(by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (1, 2), (2, 2), (3, 2), (1, 3), (2, 3), (3, 3)]
+    @test apply_palette(wrapped(cols = 4), uv) == [(1, 1), (1, 2), (1, 3), (1, 4), (2, 1), (2, 2), (2, 3), (2, 4), (3, 1)]
+    @test apply_palette(wrapped(cols = 4, by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (1, 2), (2, 2), (3, 2), (1, 3), (2, 3), (3, 3)]
+    @test apply_palette(wrapped(rows = 4), uv) == [(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3)]
+    @test apply_palette(wrapped(rows = 4, by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (4, 1), (1, 2), (2, 2), (3, 2), (4, 2), (1, 3)]
+    @test_throws_message "`cols` and `rows` can't both be fixed" apply_palette(wrapped(rows = 4, cols = 5), uv)
 end
 
 @testset "datetimes" begin
@@ -79,7 +88,7 @@ end
     full_labels = ["2022-01-02T02:00:00", "2022-01-02T05:00:00", "2022-01-02T08:00:00", "2022-01-02T11:00:00", "2022-01-02T14:00:00"]
     @test labels == ["02:00:00", "05:00:00", "08:00:00", "11:00:00", "14:00:00"]
     @test floats == datetime2float.(DateTime.(full_labels))
-    
+
     floats, labels = AlgebraOfGraphics.ticks((DateTime(2022, 1, 2, 1, 1, 5), DateTime(2022, 1, 2, 1, 1, 5)))
     full_labels = ["2022-01-02T01:01:05"]
     @test labels == ["01:01:05"]
@@ -94,7 +103,7 @@ end
     @test floats == datetime2float.(DateTime.(labels))
 
     floats, labels = datetimeticks(month, [Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
-    @test labels == ["1", "3",  "5"]
+    @test labels == ["1", "3", "5"]
     @test floats == datetime2float.([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
 
     floats, labels = datetimeticks([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)], ["January", "March", "May"])
@@ -140,7 +149,7 @@ end
     leg_els, el_labels, group_labels = AlgebraOfGraphics.compute_legend(axisentries, order = nothing)
     @test length(leg_els) == 1
     @test length(leg_els[]) == 4
-    
+
     ag2 = compute_axes_grid(spec1 + spec2 * mapping(color = :c => scale(:color2)))
     @test only(keys(ag2[].categoricalscales)) == AlgebraOfGraphics.AesColor
     dict = ag2[].categoricalscales[AlgebraOfGraphics.AesColor]
@@ -183,9 +192,71 @@ end
 
     pl = ProcessedLayer(l)
     aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
-    scales = map(fitscale, categoricalscales(pl, Dictionary{Type{<:AlgebraOfGraphics.Aesthetic},Any}(), aesmapping))
+    scales = map(fitscale, categoricalscales(pl, Dictionary{Type{<:AlgebraOfGraphics.Aesthetic}, Any}(), aesmapping))
     @test keys(scales) == Indices([1])
     scale = scales[1]
     @test scale isa CategoricalScale
     @test scale.data == ["Id 1", "Id 2", "Id 10", "Id 21", "Id 100"]
+
+    @test sort(["1", "10", "2"]) == ["1", "10", "2"]
+    @test sort(["1", "10", "2"], lt = AlgebraOfGraphics.natural_lt) == ["1", "2", "10"]
+
+    @test sort([("1", 1), ("10", 2), ("2", 3)]) == [("1", 1), ("10", 2), ("2", 3)]
+    @test sort([("1", 1), ("10", 2), ("2", 3)], lt = AlgebraOfGraphics.natural_lt) == [("1", 1), ("2", 3), ("10", 2)]
+end
+
+if VERSION >= v"1.9"
+    @testset "Units" begin
+        spec = data((; x1 = (1:10) .* D.us"m", x2 = (1:10) .* D.us"kg", y = 1:10)) * (mapping(:x1, :y) + mapping(:x2, :y)) * visual(Scatter)
+        @test_throws_message "Merging the extrema of two subscales of the continuous scale X failed" draw(spec)
+        spec = data((; x1 = (1:10) .* U.u"m", x2 = (1:10) .* U.u"kg", y = 1:10)) * (mapping(:x1, :y) + mapping(:x2, :y)) * visual(Scatter)
+        @test_throws_message "Merging the extrema of two subscales of the continuous scale X failed"  draw(spec)
+
+        for (xunit, yunit, xoverride, yoverride) in [(D.us"m", D.us"kg", D.us"cm", D.us"g"), (U.u"m", U.u"kg", U.u"cm", U.u"g")]
+            spec = data((; x = (1:10) .* xunit, y = (11:20) .* yunit)) * mapping(:x, :y) * visual(Scatter)
+            fg = draw(spec)
+            xscale = fg.grid[].continuousscales[AlgebraOfGraphics.AesX][nothing]
+            @test AlgebraOfGraphics.getunit(xscale) == xunit
+            yscale = fg.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
+            @test AlgebraOfGraphics.getunit(yscale) == yunit
+
+            fg2 = draw(spec, scales(X = (; unit = xoverride), Y = (; unit = yoverride)))
+            xscale = fg2.grid[].continuousscales[AlgebraOfGraphics.AesX][nothing]
+            @test AlgebraOfGraphics.getunit(xscale) == xoverride
+            yscale = fg2.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
+            @test AlgebraOfGraphics.getunit(yscale) == yoverride
+        end
+
+        @test AlgebraOfGraphics.dimensionally_compatible(nothing, nothing)
+        @test !AlgebraOfGraphics.dimensionally_compatible(U.u"kg", nothing)
+        @test !AlgebraOfGraphics.dimensionally_compatible(nothing, U.u"kg")
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", nothing)
+        @test !AlgebraOfGraphics.dimensionally_compatible(nothing, D.us"kg")
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", nothing)
+        @test !AlgebraOfGraphics.dimensionally_compatible(nothing, D.u"kg")
+
+        @test !AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"m")
+        @test AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"g")
+
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.u"m")
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.us"m")
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.us"m")
+        @test !AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.u"m")
+        @test AlgebraOfGraphics.dimensionally_compatible(D.u"kg", D.us"g")
+        @test AlgebraOfGraphics.dimensionally_compatible(D.us"kg", D.u"g")
+
+        @test_throws_message "incompatible dimensions for AesX and AesDeltaX scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:value, :id, :err) * visual(Errorbars, direction = :x))
+        @test_throws_message "incompatible dimensions for AesY and AesDeltaY scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:id, :value, :err) * visual(Errorbars))
+    end
+
+    @testset "Incompatible extrema in continuous scales" begin
+        @test_throws_message "Merging the extrema of two subscales of the continuous scale Y failed" (mapping([1]) + mapping([1 * U.u"kg"])) * visual(Scatter) |> draw
+    end
+end
+
+if VERSION >= v"1.7"
+    @testset "Aesthetics errors" begin
+        @test_throws "No aesthetic mapping defined yet for plot type `Errorbars` with 1 positional argument" mapping(1:10) * visual(Errorbars) |> draw
+        @test_throws "contains mapped attribute `alpha` which is not part of the aesthetic mapping for `Scatter`" mapping(1:10, alpha = 1:10) * visual(Scatter) |> draw
+    end
 end

@@ -1,10 +1,10 @@
 .DS_Store
-/Manifest.toml
-test/coverage/Manifest.toml
-docs/Manifest.toml
+**/Manifest.toml
 docs/build
-docs/src/gallery
 docs/src/democards
+docs/node_modules
+docs/.DS_Store
+docs/package-lock.json
+docs/src/changelog.md
 .vscode/settings.json
 /scratch
-/_readme/Manifest.toml

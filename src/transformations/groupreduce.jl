@@ -20,7 +20,7 @@ end
 
 function groupreduce(agg, input::ProcessedLayer)
     N = length(input.positional)
-    summaries = Any[mapreduce(collect∘uniquesorted, mergesorted, input.positional[idx]) for idx in 1:N-1]
+    summaries = Any[mapreduce(collect ∘ uniquesorted, mergesorted, input.positional[idx]) for idx in 1:(N - 1)]
     output = map(input) do p, n
         positional = vcat(summaries, Any[_groupreduce(agg, Tuple(summaries), Tuple(p))])
         named = n

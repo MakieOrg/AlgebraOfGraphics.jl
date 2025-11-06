@@ -9,19 +9,25 @@ $(ATTRIBUTES)
 @recipe(LinesFill) do scene
     l_theme = default_theme(scene, Lines)
     Attributes(
-        color=l_theme.color,
-        colormap=l_theme.colormap,
-        colorrange=get(l_theme.attributes, :colorrange, automatic),
-        linestyle=l_theme.linestyle,
-        linewidth=l_theme.linewidth,
-        fillalpha=0.15,
-        lower=automatic,
-        upper=automatic,
+        color = l_theme.color,
+        colormap = l_theme.colormap,
+        colorrange = get(l_theme.attributes, :colorrange, automatic),
+        linestyle = l_theme.linestyle,
+        linewidth = l_theme.linewidth,
+        fillalpha = 0.15,
+        lower = automatic,
+        upper = automatic,
+        direction = :x,
     )
 end
 
 function Makie.plot!(p::LinesFill)
-    lines!(p, p[1:2]...;
+    lineargs = lift(p[1], p[2], p.direction) do x, y, direction
+        direction in (:x, :y) || error("Invalid direction $(repr(direction)), only :x and :y are allowed.")
+        direction === :x ? Makie.Point.(x, y) : Makie.Point.(y, x)
+    end
+    lines!(
+        p, lineargs;
         color = p.color,
         linestyle = p.linestyle,
         linewidth = p.linewidth,
@@ -34,6 +40,6 @@ function Makie.plot!(p::LinesFill)
     upper = lift(p[:upper], p[2]) do upper, y
         return upper === automatic ? y : upper
     end
-    meshcolor = lift(to_color∘tuple, p.color, p.fillalpha)
-    band!(p, p[1], lower, upper; color = meshcolor)
+    meshcolor = lift(to_color ∘ tuple, p.color, p.fillalpha)
+    return band!(p, p[1], lower, upper; color = meshcolor, p.direction)
 end

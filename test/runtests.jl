@@ -1,7 +1,7 @@
 using AlgebraOfGraphics, Makie, Random, Statistics, Test, Dates
 
 using AlgebraOfGraphics: Sorted, Presorted
-using AlgebraOfGraphics: separate
+using AlgebraOfGraphics: separate_by_key_value
 using AlgebraOfGraphics: midpoints
 using AlgebraOfGraphics: apply_palette
 using AlgebraOfGraphics: datavalues
@@ -27,12 +27,17 @@ using GLM: GLM
 using Loess: Loess
 
 import Shapefile, GeometryBasics
+import Unitful
+import DynamicQuantities
+const U = Unitful
+const D = DynamicQuantities
+import DataFrames
 
 Random.seed!(1234)
 
 # This can be removed for `@test_throws` once CI only uses Julia 1.8 and up
 macro test_throws_message(message::String, exp)
-    quote
+    return quote
         threw_exception = false
         try
             $(esc(exp))
@@ -45,6 +50,8 @@ macro test_throws_message(message::String, exp)
     end
 end
 
+include("reference_tests_utils.jl")
+
 include("utils.jl")
 include("visual.jl")
 include("algebra.jl")
@@ -55,4 +62,7 @@ include("facet.jl")
 include("legend.jl")
 include("geometry.jl")
 include("paginate.jl")
-include("run_reference_tests.jl")
+
+@testset "Reference tests" begin
+    include("reference_tests.jl")
+end

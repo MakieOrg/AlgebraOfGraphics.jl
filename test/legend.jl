@@ -2,7 +2,7 @@ function _compute_legend(spec; scales = scales(), order = nothing)
     axisgrid = compute_axes_grid(spec, scales)
     figure = Figure()
     axisentries = AlgebraOfGraphics.AxisEntries.(axisgrid, Ref(figure))
-    AlgebraOfGraphics.compute_legend(axisentries; order)
+    return AlgebraOfGraphics.compute_legend(axisentries; order)
 end
 
 @testset "Merged Legend" begin
@@ -19,7 +19,7 @@ end
     @test length(leg_els[2]) == 3
     @test group_labels[1] == "z"
     @test group_labels[2] == "z"
-    
+
     leg_els, el_labels, group_labels = _compute_legend(spec1, order = [(:Color, :Marker)])
     @test length(leg_els) == 1
     @test length(leg_els[]) == 3
@@ -80,7 +80,7 @@ end
 end
 
 @testset "Scale properties" begin
-    df  = (; x = 1:3, y = 1:3, g1 = ["A", "B", "C"], g2 = ["D", "E", "F"])
+    df = (; x = 1:3, y = 1:3, g1 = ["A", "B", "C"], g2 = ["D", "E", "F"])
     spec1 = data(df) * mapping(:x, :y, color = :g1, marker = :g2) * visual(Scatter)
 
     leg_els, el_labels, group_labels = _compute_legend(spec1)
@@ -115,11 +115,11 @@ end
     df = (;
         x = repeat(1:3, 3),
         y = abs.(sin.(1:9)),
-        z=["a", "a", "a", "b", "b", "b", "c", "c", "c"]
+        z = ["a", "a", "a", "b", "b", "b", "c", "c", "c"],
     )
     for show in [true, false]
         fg = draw(
-            data(df) * mapping(:x, :y; stack=:z, color=:z) * visual(BarPlot),
+            data(df) * mapping(:x, :y; stack = :z, color = :z) * visual(BarPlot),
             legend = (; show)
         )
         @test any(x -> x isa Legend, fg.figure.content) == show
@@ -130,13 +130,28 @@ end
     df = (;
         x = 1:3,
         y = 4:6,
-        z = 7:9
+        z = 7:9,
     )
     for show in [true, false]
         fg = draw(
-            data(df) * mapping(:x, :y; color=:z) * visual(BarPlot),
+            data(df) * mapping(:x, :y; color = :z) * visual(BarPlot),
             colorbar = (; show)
         )
         @test any(x -> x isa Colorbar, fg.figure.content) == show
     end
+end
+
+@testset "alpha" begin
+    df = (;
+        x = repeat(1:3, 3),
+        y = abs.(sin.(1:9)),
+        z = ["a", "a", "a", "b", "b", "b", "c", "c", "c"],
+    )
+    spec = data(df) * mapping(:x, :y, color = :z) * ((visual(Scatter) + visual(BarPlot) + visual(Lines)) * visual(alpha = 0.5) + visual(Violin))
+    leg_els, el_labels, group_labels = _compute_legend(spec)
+    els = reduce(vcat, leg_els[])
+    @test Makie.to_value(els[1].alpha) == 0.5
+    @test Makie.to_value(els[2].alpha) == 0.5
+    @test Makie.to_value(els[3].alpha) == 0.5
+    @test Makie.to_value(els[4].alpha) == 1.0
 end

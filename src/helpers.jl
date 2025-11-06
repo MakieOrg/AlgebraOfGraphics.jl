@@ -20,8 +20,23 @@ struct Renamer{U, L}
     labels::L
 end
 
+# for `dims(2)` and up, we get indices like `CartesianIndex(1, 4)` etc, which
+# by construction are always only non-1 in one dimension, but we can't know that
+# just from a single `CartesianIndex`. As long as we only drop all the ones, and error
+# if there are two non-ones, this should be fine.
+function linearize_cartesian_index(i::CartesianIndex)
+    t = Tuple(i)
+    linearized = reduce(t; init = 1) do a, b
+        a == 1 ? b : b == 1 ? a : error("Can't linearize $(i) because it has two indices that are not one")
+    end
+    return linearized
+end
+
+linearize_cartesian_index(x) = x
+
 function (r::Renamer{Nothing})(x)
-    i = LinearIndices(r.labels)[x]
+    lx = linearize_cartesian_index(x)
+    i = LinearIndices(r.labels)[lx]
     return Sorted(i, r.labels[i])
 end
 
@@ -141,14 +156,14 @@ Base.print(io::IO, v::Verbatim) = print(io, v.x)
 end
 
 struct Bin
-    range::Tuple{Float64,Float64}
-    inclusive::Tuple{Bool,Bool}
+    range::Tuple{Float64, Float64}
+    inclusive::Tuple{Bool, Bool}
 end
 
 Base.isless(b1::Bin, b2::Bin) = isless(b1.range, b2.range)
 
 function Base.show(io::IO, b::Bin)
-    print(io, b.inclusive[1] ? "[" : "(", b.range[1], ", ", b.range[2], b.inclusive[2] ? "]" : ")")
+    return print(io, b.inclusive[1] ? "[" : "(", b.range[1], ", ", b.range[2], b.inclusive[2] ? "]" : ")")
 end
 
 struct Pregrouped end
@@ -216,10 +231,11 @@ Base.hash(p::Presorted) = hash(p.x)
 
 struct FromContinuous{T}
     continuous::T
+    relative::Bool
 end
 
 """
-    from_continuous(x)
+    from_continuous(x; relative = true)
 
 Mark a colormap as continuous such that AlgebraOfGraphics will sample
 a categorical palette from start to end in n steps, and not by using the first
@@ -229,10 +245,16 @@ You could also use `cgrad(colormap, n; categorical = true)`, however,
 this requires you to specify how many levels there are, which
 `from_continuous` detects automatically.
 
+The `relative` option applies only when the datavalues of the palette are of type `Bin`.
+In this case, if `relative = true`, the continuous colormap is sampled at the relative
+midpoints of the bins, which means that neighboring bins that are smaller have more similar
+colors because their midpoints are closer together. If `relative = false`, the colormap
+is sampled evenly.
+
 Example:
 
 ```julia
 draw(scales(Color = (; palette = from_continuous(:viridis))))
 ```
 """
-from_continuous(x) = FromContinuous(x)
+from_continuous(x; relative = true) = FromContinuous(x, relative)

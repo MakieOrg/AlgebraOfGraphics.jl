@@ -11,17 +11,19 @@ using PlotUtils: AbstractColorList
 using Makie
 using Makie: current_default_theme, to_value, automatic, Automatic, Block, ATTRIBUTES
 import Makie: hidexdecorations!,
-              hideydecorations!,
-              hidedecorations!,
-              linkaxes!,
-              linkxaxes!,
-              linkyaxes!
+    hideydecorations!,
+    hidedecorations!,
+    linkaxes!,
+    linkxaxes!,
+    linkyaxes!
 using GridLayoutBase: update!, Protrusion, protrusionsobservable
 using PooledArrays: PooledArray
 using Dictionaries: AbstractDictionary, Dictionary, Indices, getindices, set!, dictionary
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, normalize, sturges, StatsBase
 
+import Accessors
+import DataAPI
 import GLM, Loess
 import FileIO
 import RelocatableFolders
@@ -30,10 +32,10 @@ import Isoband
 import NaturalSort
 
 export hideinnerdecorations!, deleteemptyaxes!
-export Layer, Layers, ProcessedLayer, ProcessedLayers
+export Layer, Layers, ProcessedLayer, ProcessedLayers, zerolayer
 export Entry, AxisEntries
 export renamer, sorter, nonnumeric, verbatim, presorted
-export density, histogram, linear, smooth, expectation, frequency, contours, filled_contours, highlight
+export density, histogram, linear, smooth, expectation, frequency, contours, filled_contours, aggregate, highlight
 export visual, data, geodata, dims, mapping
 export datetimeticks
 export draw, draw!
@@ -44,6 +46,9 @@ export scale, scales
 export pregrouped
 export direct
 export from_continuous
+export wrapped
+export clipped
+export show_aesthetics
 
 include("dict.jl")
 include("theme.jl")
@@ -67,6 +72,7 @@ include("transformations/histogram.jl")
 include("transformations/groupreduce.jl")
 include("transformations/frequency.jl")
 include("transformations/expectation.jl")
+include("transformations/aggregate.jl")
 include("transformations/contours.jl")
 include("transformations/filled_contours.jl")
 include("transformations/highlight.jl")
@@ -75,6 +81,7 @@ include("guides/legend.jl")
 include("guides/colorbar.jl")
 include("draw.jl")
 include("paginate.jl")
+include("testdata.jl")
 
 include("precompiles.jl")
 

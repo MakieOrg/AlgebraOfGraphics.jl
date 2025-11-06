@@ -2,18 +2,21 @@
 
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="/docs/src/assets/logo-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="/docs/src/assets/logo.svg">
-    <img alt="AlgebraOfGraphics Logo" src="/docs/src/assets/logo.svg" width="350">
+    <source media="(prefers-color-scheme: dark)" srcset="/docs/src/assets/logo_with_text_dark.svg">
+    <img alt="AlgebraOfGraphics Logo" src="/docs/src/assets/logo_with_text.svg" height="100">
   </picture>
+
+  <p>
+    
+  [![CI](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml)
+  [![codecov.io](https://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl/coverage.svg?branch=master)](http://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl?branch=master)
+  [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://aog.makie.org/stable)
+  [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://aog.makie.org/dev)
+  
+  </p>
 </div>
 
-# AlgebraOfGraphics
 
-[![CI](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/MakieOrg/AlgebraOfGraphics.jl/actions/workflows/ci.yml)
-[![codecov.io](https://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl/coverage.svg?branch=master)](http://codecov.io/github/MakieOrg/AlgebraOfGraphics.jl?branch=master)
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://aog.makie.org/stable)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://aog.makie.org/dev)
 
 Visualize your data using a few simple building blocks that can be
 composed using `+` and `*`. AlgebraOfGraphics puts a new algebraic spin
@@ -27,9 +30,9 @@ capabilities available to tweak figures produced by AlgebraOfGraphics.
 ## Example
 
 ``` julia
-using AlgebraOfGraphics, CairoMakie, PalmerPenguins, DataFrames
+using AlgebraOfGraphics, CairoMakie
 
-penguins = dropmissing(DataFrame(PalmerPenguins.load()))
+penguins = AlgebraOfGraphics.penguins()
 
 set_aog_theme!()
 update_theme!(Axis = (; width = 150, height = 150))
@@ -80,4 +83,3 @@ Analyses rely on
 [GLM.jl](https://github.com/JuliaStats/GLM.jl). Some of their
 documentation is transcribed here.
 
-Logo and favicon made with 🧡 by @dyogurt.

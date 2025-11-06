@@ -21,13 +21,13 @@ positional and named arguments, as well as a transformation to be applied to tho
 yielding a [`AlgebraOfGraphics.Layers`](@ref) object.
 """
 Base.@kwdef struct Layer <: AbstractAlgebraic
-    transformation::Any=identity
-    data::Any=nothing
-    positional::Arguments=Arguments()
-    named::NamedArguments=NamedArguments()
+    transformation::Any = identity
+    data::Any = nothing
+    positional::Arguments = Arguments()
+    named::NamedArguments = NamedArguments()
 end
 
-transformation(f) = Layer(transformation=f)
+transformation(f) = Layer(transformation = f)
 
 """
     data(table)
@@ -44,8 +44,8 @@ To create a fully specified layer, the layer created with `data` needs to be mul
 spec = data(...) * mapping(...)
 ```
 """
-data(df) = Layer(data=Columns(columns(df)))
-data(p::Pregrouped) = Layer(data=p)
+data(df) = Layer(data = Columns(columns(df)))
+data(p::Pregrouped) = Layer(data = p)
 
 """
     mapping(positional...; named...)
@@ -111,7 +111,7 @@ pregrouped(
 )
 ```
 """
-mapping(args...; kwargs...) = Layer(positional=collect(Any, args), named=NamedArguments(kwargs))
+mapping(args...; kwargs...) = Layer(positional = collect(Any, args), named = NamedArguments(kwargs))
 
 ⨟(f, g) = f === identity ? g : g === identity ? f : g ∘ f
 
@@ -127,13 +127,13 @@ end
 const PlotType = Type{<:Plot}
 
 Base.@kwdef struct ProcessedLayer <: AbstractDrawable
-    plottype::PlotType=Plot{plot}
-    primary::NamedArguments=NamedArguments()
-    positional::Arguments=Arguments()
-    named::NamedArguments=NamedArguments()
-    labels::MixedArguments=MixedArguments()
-    attributes::NamedArguments=NamedArguments()
-    scale_mapping::Dictionary{KeyType,Symbol}=Dictionary{KeyType,Symbol}() # maps mapping entries to scale ids for use of additional scales
+    plottype::PlotType = Plot{plot}
+    primary::NamedArguments = NamedArguments()
+    positional::Arguments = Arguments()
+    named::NamedArguments = NamedArguments()
+    labels::MixedArguments = MixedArguments()
+    attributes::NamedArguments = NamedArguments()
+    scale_mapping::Dictionary{KeyType, Symbol} = Dictionary{KeyType, Symbol}() # maps mapping entries to scale ids for use of additional scales
 end
 
 function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
@@ -213,10 +213,10 @@ end
 function uniquevalues(v::AbstractArray)
     _v = vec(v)
     perm = sortperm(_v; lt = natural_lt)
-    collect(uniquesorted(_v, perm))
+    return collect(uniquesorted(_v, perm))
 end
 
-to_label(label::AbstractString) = label
+to_label(label) = label
 to_label(labels::AbstractArray) = reduce(mergelabels, labels)
 
 # merge dict2 into dict but translate keys first using remapdict
@@ -232,21 +232,22 @@ function merge_with_key_remap!(dict, dict2, remapdict)
 end
 
 
-
-_default_categorical_palette(::Type{<:Union{AesX,AesY}}) = Makie.automatic
+_default_categorical_palette(::Type{<:Union{AesX, AesY}}) = Makie.automatic
 _default_categorical_palette(::Type{AesColor}) = _default_categorical_colors
 _default_categorical_palette(::Type{AesMarker}) = to_value(Makie.current_default_theme()[:palette][:marker])
 _default_categorical_palette(::Type{AesLineStyle}) = to_value(Makie.current_default_theme()[:palette][:linestyle])
-_default_categorical_palette(::Type{AesLayout}) = wrap
-_default_categorical_palette(::Type{<:Union{AesRow,AesCol}}) = Makie.automatic
+_default_categorical_palette(::Type{AesLayout}) = wrapped()
+_default_categorical_palette(::Type{<:Union{AesRow, AesCol}}) = Makie.automatic
 _default_categorical_palette(::Type{AesGroup}) = Makie.automatic
-_default_categorical_palette(::Type{AesDodge}) = Makie.automatic
+_default_categorical_palette(::Type{AesDodgeX}) = Makie.automatic
+_default_categorical_palette(::Type{AesDodgeY}) = Makie.automatic
 _default_categorical_palette(::Type{AesStack}) = Makie.automatic
 _default_categorical_palette(::Type{AesViolinSide}) = [:left, :right]
+_default_categorical_palette(::Type{AesLineWidth}) = Makie.automatic
 
 function _default_categorical_colors(categories::AbstractVector{Bin})
     cmap = to_value(Makie.current_default_theme()[:colormap])
-    return cgrad(cmap, length(categories); categorical = true)
+    return apply_palette(from_continuous(cmap), categories)
 end
 function _default_categorical_colors(categories::AbstractVector)
     cycler = Cycler(to_value(Makie.current_default_theme()[:palette][:color]))
@@ -259,25 +260,22 @@ function get_categorical_palette(scale_props, aestype, scale_id)
     haskey(subdict, scale_id) || return _default_categorical_palette(aestype)
     object = subdict[scale_id]
     haskey(object, :palette) || return _default_categorical_palette(aestype)
-    get_categorical_palette(aestype, object[:palette])
+    return get_categorical_palette(aestype, object[:palette])
 end
 
 get_categorical_palette(anytype::Type{<:Aesthetic}, ::Nothing) = _default_categorical_palette(anytype)
-get_categorical_palette(_, func::Function) = func
+get_categorical_palette(::Type{<:Aesthetic}, any) = any
 get_categorical_palette(::Type{AesColor}, colormap::Symbol) = Makie.to_colormap(colormap)
-get_categorical_palette(::Type{AesColor}, grad::Makie.PlotUtils.CategoricalColorGradient) = grad
-get_categorical_palette(::Type{AesColor}, fc::FromContinuous) = fc
-get_categorical_palette(anytype::Type{<:Aesthetic}, palettevalues::AbstractVector) = palettevalues
 
-const AestheticMapping = Dictionary{Union{Int,Symbol},Type{<:Aesthetic}}
+const AestheticMapping = Dictionary{Union{Int, Symbol}, Type{<:Aesthetic}}
 
-function get_scale_props(scale_props, aes::Type{<:Aesthetic}, scale_id::Union{Symbol,Nothing})::Dictionary{Symbol,Any}
+function get_scale_props(scale_props, aes::Type{<:Aesthetic}, scale_id::Union{Symbol, Nothing})::Dictionary{Symbol, Any}
     if !haskey(scale_props, aes)
-        return Dictionary{Symbol,Any}()
+        return Dictionary{Symbol, Any}()
     end
     props_dict = scale_props[aes]
     if !haskey(props_dict, scale_id)
-        return Dictionary{Symbol,Any}()
+        return Dictionary{Symbol, Any}()
     end
     return props_dict[scale_id]
 end
@@ -322,6 +320,9 @@ function continuousscales(processedlayer::ProcessedLayer, scale_props)
 
     continuousscales = similar(keys(continuous), ContinuousScale)
     map!(continuousscales, keys(continuous), continuous) do key, val
+        if hardcoded_mapping(key) !== nothing
+            error("The `$key` mapping was used with continuous data but can only be used with categorical data. Consider using the `=> nonnumeric` modifier to turn numerical data into categorical.")
+        end
         aes = aes_mapping[key]
         scale_id = get(processedlayer.scale_mapping, key, nothing)
         props = get_scale_props(scale_props, aes, scale_id)
@@ -362,32 +363,48 @@ end
 
 ## Machinery to convert a `ProcessedLayer` to a grid of slices of `ProcessedLayer`s
 
-function compute_grid_positions(categoricalscales, primary=NamedArguments())
+function compute_grid_positions(categoricalscales, primary = NamedArguments())::Vector{Tuple{Int, Int}}
 
     aes_keyword(::Type{AesRow}) = :row
     aes_keyword(::Type{AesCol}) = :col
 
-    return map((AesRow, AesCol), (first, last)) do aes, f
-        scale = extract_single(aes, categoricalscales)
-        lscale = extract_single(AesLayout, categoricalscales)
-        return if !isnothing(scale)
-            rg = Base.OneTo(maximum(plotvalues(scale)))
-            aeskw = aes_keyword(aes)
-            haskey(primary, aeskw) ? fill(primary[aeskw]) : rg
-        elseif !isnothing(lscale)
-            rg = Base.OneTo(maximum(f, plotvalues(lscale)))
-            haskey(primary, :layout) ? fill(f(primary[:layout])) : rg
+
+    rowscale = extract_single(AesRow, categoricalscales)
+    colscale = extract_single(AesCol, categoricalscales)
+    layoutscale = extract_single(AesLayout, categoricalscales)
+
+    return if !isnothing(layoutscale)
+        if haskey(primary, :layout)
+            [primary[:layout]]
         else
-            Base.OneTo(1)
+            plotvalues(layoutscale)
         end
+    elseif !isnothing(rowscale) || !isnothing(colscale)
+        rowrange = if isnothing(rowscale)
+            [1]
+        elseif haskey(primary, :row)
+            [primary[:row]]
+        else
+            plotvalues(rowscale)
+        end
+        colrange = if isnothing(colscale)
+            [1]
+        elseif haskey(primary, :col)
+            [primary[:col]]
+        else
+            plotvalues(colscale)
+        end
+        [(i, j) for i in rowrange for j in colrange]
+    else
+        [(1, 1)]
     end
 end
 
-const MultiAesScaleDict{T} = Dictionary{Type{<:Aesthetic},Dictionary{Union{Nothing,Symbol},T}}
+const MultiAesScaleDict{T} = Dictionary{Type{<:Aesthetic}, Dictionary{Union{Nothing, Symbol}, T}}
 
 # function rescale(p::ProcessedLayer, categoricalscales::MultiAesScaleDict{CategoricalScale})
 #     aes_mapping = aesthetic_mapping(p)
-    
+
 #     primary = map(keys(p.primary), p.primary) do key, values
 #         aes = hardcoded_or_mapped_aes(p, key, aes_mapping)
 #         scale_id = get(p.scale_mapping, key, nothing)
@@ -416,16 +433,16 @@ const MultiAesScaleDict{T} = Dictionary{Type{<:Aesthetic},Dictionary{Union{Nothi
 
 function rescale(p::ProcessedLayer, categoricalscales::MultiAesScaleDict{CategoricalScale})
     aes_mapping = aesthetic_mapping(p)
-    
+
     primary = map(keys(p.primary), p.primary) do key, values
         aes = hardcoded_or_mapped_aes(p, key, aes_mapping)
         # we only rescale those columns early that are not used in the plot objects
         # and so will never need any special plot-dependent logic
-        if aes <: Union{AesCol,AesRow,AesGroup,AesLayout}
+        if aes <: Union{AesCol, AesRow, AesGroup, AesLayout}
             scale_id = get(p.scale_mapping, key, nothing)
             scale_dict = get(categoricalscales, aes, nothing)
             scale = scale_dict === nothing ? nothing : get(scale_dict, scale_id, nothing)
-            return rescale(values, scale)
+            return rescale(values, scale; allow_continuous = false) # we know these aesthetics are always categorical so we don't the option to mix continuous into it here (like drawing a scatter dot at 1.5 between A and B)
         else
             return values
         end
@@ -437,17 +454,36 @@ end
 # Determine whether entries from a `ProcessedLayer` should be merged
 function mergeable(processedlayer::ProcessedLayer)
     plottype, primary = processedlayer.plottype, processedlayer.primary
-    # merge violins for correct renormalization
-    plottype <: Violin && return true
-    # merge stacked or dodged barplots
-    plottype <: Union{BarPlot,CrossBar} && return true
-    # merge waterfall plots
-    plottype <: Waterfall && return true
-    # merge dodged boxplots
-    plottype <: BoxPlot && haskey(primary, :dodge) && return true
-    # do not merge by default
+    return mergeable(plottype, primary)
+end
+
+# Default fallback implementation
+"""
+    mergeable(plottype::Type{<: Plot}, primary::Dictionaries.AbstractDictionary)::Bool
+
+Return whether the entries for the layer with `plottype` and `primary` should be merged.
+Merging means that all the data will be passed to a single plot call, instead of creating
+one plot object per scale.
+
+Return `true` if they **should** be merged, and `false` if **not** (the default).
+
+Extending packages should also extend this function on their own plot types 
+if they deem it necessary.  For example, beeswarm plots and violin plots
+need to be merged for correctness.
+"""
+function mergeable(plottype::Type{<:Plot}, primary)
     return false
 end
+
+# merge violins for correct renormalization
+mergeable(::Type{<:Violin}, primary) = true
+# merge stacked or dodged barplots
+mergeable(::Type{<:Union{BarPlot, CrossBar}}, primary) = true
+# merge waterfall plots
+mergeable(::Type{<:Waterfall}, primary) = true
+# merge dodged boxplots
+mergeable(::Type{<:BoxPlot}, primary) = haskey(primary, :dodge)
+
 
 # This method works on a list of "sliced" `ProcessedLayer`s
 function concatenate(pls::AbstractVector{ProcessedLayer})
@@ -466,8 +502,8 @@ function append_processedlayers!(pls_grid, processedlayer::ProcessedLayer, categ
     tmp_pls_grid = map(_ -> ProcessedLayer[], pls_grid)
     for c in CartesianIndices(shape(processedlayer))
         pl = slice(processedlayer, c)
-        rows, cols = compute_grid_positions(categoricalscales, pl.primary)
-        for i in rows, j in cols
+        gridpositions = compute_grid_positions(categoricalscales, pl.primary)
+        for (i, j) in gridpositions
             push!(tmp_pls_grid[i, j], pl)
         end
     end
@@ -497,10 +533,12 @@ Process attributes of a `ProcessedLayer`. In particular,
 - set correct `colorrange`.
 Return computed attributes.
 """
-function compute_attributes(pl::ProcessedLayer,
-                            categoricalscales,
-                            continuousscales_grid::AbstractMatrix,
-                            continuousscales::MultiAesScaleDict{ContinuousScale})
+function compute_attributes(
+        pl::ProcessedLayer,
+        categoricalscales,
+        continuousscales_grid::AbstractMatrix,
+        continuousscales::MultiAesScaleDict{ContinuousScale}
+    )
     plottype, primary, named, attributes = pl.plottype, pl.primary, pl.named, pl.attributes
 
     attrs = NamedArguments()
@@ -544,7 +582,7 @@ end
 
 function Base.show(_io::IO, l::Layer; indent = 0, index = nothing)
     io = IOContext(_io, :limit => true)
-    ind = "  " ^ indent
+    ind = "  "^indent
     printstyled(io, ind, "Layer ", index === nothing ? "" : index, "\n", bold = true)
     println(io, ind, "  transformation: ", l.transformation)
     println(io, ind, "  data: ", typeof(l.data)) # print only type here as data source could be anything and print a lot of stuff
@@ -556,4 +594,5 @@ function Base.show(_io::IO, l::Layer; indent = 0, index = nothing)
     for (name, named) in pairs(l.named)
         println(io, ind, "    ", name, ": ", named)
     end
+    return
 end

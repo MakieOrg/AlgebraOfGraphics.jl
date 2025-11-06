@@ -1,62 +1,106 @@
 using AlgebraOfGraphics
 using Documenter
+using DocumenterVitepress
 using Literate, Glob
 using CairoMakie
-using DemoCards
 
-CairoMakie.activate!(type="svg")
+DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics); recursive = true)
 
-ENV["DATADEPS_ALWAYS_ACCEPT"] = true
-
-# generate examples
-GENERATED = joinpath(@__DIR__, "src", "generated")
-SOURCE_FILES = Glob.glob("*.jl", GENERATED)
-foreach(fn -> Literate.markdown(fn, GENERATED), SOURCE_FILES)
-
-DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics); recursive=true)
-
-gallery, postprocess_cb, gallery_assets = makedemos("gallery")
-
-cp(joinpath(@__DIR__, "..", "CHANGELOG.md"), joinpath(@__DIR__, "src", "changelog.md"))
+cp(joinpath(@__DIR__, "..", "CHANGELOG.md"), joinpath(@__DIR__, "src", "changelog.md"), force = true)
 
 makedocs(;
-    modules=[AlgebraOfGraphics],
-    authors="Pietro Vertechi",
-    repo=Documenter.Remotes.GitHub("MakieOrg", "AlgebraOfGraphics.jl"),
-    sitename="Algebra of Graphics",
-    format=Documenter.HTML(;
-        prettyurls=get(ENV, "CI", "false") == "true",
-        assets=["assets/favicon.ico", gallery_assets],
+    modules = [AlgebraOfGraphics],
+    authors = "Pietro Vertechi",
+    repo = "https://github.com/MakieOrg/AlgebraOfGraphics.jl",
+    sitename = "AlgebraOfGraphics",
+    format = DocumenterVitepress.MarkdownVitepress(;
+        repo = "https://github.com/MakieOrg/AlgebraOfGraphics.jl",
+        deploy_url = "https://aog.makie.org",
     ),
-    pages=Any[
+    pages = Any[
         "Home" => "index.md",
-        "Getting Started" => [
-            "generated/penguins.md",
-            gallery
+        "Tutorials" => [
+            "tutorials/intro-i.md",
+            "tutorials/intro-ii.md",
+            "tutorials/intro-iii.md",
+            "tutorials/intro-iv.md",
+            "tutorials/intro-v.md",
+            "tutorials/intro-vi.md",
+            "tutorials/intro-vii.md",
         ],
-        "Algebra of Layers" => [
-            "layers/introduction.md",
-            "layers/data.md",
-            "layers/mapping.md",
-            "generated/visual.md",
-            "generated/analyses.md",
-            "layers/operations.md",
-            "layers/draw.md",
+        "Examples" => [
+            "Basic Visualizations" => [
+                "examples/basic-visualizations/lines-and-markers.md",
+                "examples/basic-visualizations/statistical-visualizations.md",
+            ],
+            "Data Manipulations" => [
+                "examples/data-manipulations/new-columns-on-the-fly.md",
+                "examples/data-manipulations/no-data.md",
+                "examples/data-manipulations/pre-grouped-data.md",
+                "examples/data-manipulations/presorted-data.md",
+                "examples/data-manipulations/wide-data.md",
+            ],
+            "Scales" => [
+                "examples/scales/continuous-scales.md",
+                "examples/scales/custom-scales.md",
+                "examples/scales/discrete-scales.md",
+                "examples/scales/dodging.md",
+                "examples/scales/legend-merging.md",
+                "examples/scales/multiple-color-scales.md",
+                "examples/scales/prescaled-data.md",
+                "examples/scales/secondary-scales.md",
+                "examples/scales/split-scales-facet.md",
+                "examples/scales/units.md",
+            ],
+            "Statistical Analyses" => [
+                "examples/statistical-analyses/density-plots.md",
+                "examples/statistical-analyses/histograms.md",
+                "examples/statistical-analyses/regression-plots.md",
+            ],
+            "Customization" => [
+                "examples/customization/axis.md",
+                "examples/customization/colorbar.md",
+                "examples/customization/figure.md",
+                "examples/customization/legend.md",
+            ],
+            "Layout" => [
+                "examples/layout/faceting.md",
+                "examples/layout/nested-layouts.md",
+            ],
+            "Applications" => [
+                "examples/applications/geographic.md",
+                "examples/applications/geometries.md",
+                "examples/applications/time-series.md",
+            ],
         ],
-        "API" => [
-            "API/types.md",
-            "API/functions.md",
-            "API/recipes.md",
+        "Reference" => [
+            "reference/introduction.md",
+            "reference/data.md",
+            "reference/mapping.md",
+            "reference/visual.md",
+            "reference/analyses.md",
+            "reference/operations.md",
+            "reference/draw.md",
         ],
-        "FAQs.md",
-        "philosophy.md",
-        "changelog.md",
+        "Resources" => [
+            "FAQs.md",
+            "philosophy.md",
+            "changelog.md",
+            "API" => [
+                "API/types.md",
+                "API/functions.md",
+                "API/recipes.md",
+            ],
+        ],
     ],
-    warnonly=false,
+    warnonly = get(ENV, "CI", "false") != "true",
+    pagesonly = true,
 )
-postprocess_cb() # redirect url for DemoCards generated files
 
-deploydocs(;
-    repo="github.com/MakieOrg/AlgebraOfGraphics.jl",
-    push_preview=true,
+DocumenterVitepress.deploydocs(;
+    repo = "github.com/MakieOrg/AlgebraOfGraphics.jl",
+    target = joinpath(@__DIR__, "build"),
+    branch = "gh-pages",
+    devbranch = "master",
+    push_preview = true,
 )

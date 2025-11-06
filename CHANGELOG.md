@@ -2,7 +2,174 @@
 
 ## Unreleased
 
+- Added `aggregate` transformation for flexible data aggregation with automatic grouping, custom labels, and support for scalar and vector-valued aggregations [#696](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/696).
+
+## v0.11.9 - 2025-10-10
+
+- Improved error message when two layers with incompatible continuous data are combined [#692](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/692).
+
+## v0.11.8 - 2025-10-09
+
+- Improved handling of all-missing subgroups in some cases [#689](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/689).
+
+## v0.11.7 - 2025-08-26
+
+- Fixed a bug where adding a layer without `layout` mapping could result in `layout` facets that should not have been visible at all [#683](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/683).
+
+## v0.11.6 - 2025-08-19
+
+- Remove accidentally left in `@show` macro [#682](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/682).
+
+## v0.11.5 - 2025-08-19
+
+- Always treat `layout`, `row`, `col` and `group` mappings as categorical to simplify common scenarios where grouping information is stored as integers [#681](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/681).
+- Make `mapping(key = (:col1, :col2))` work automatically, equivalent to `(:col1, :col2) => tuple` [#681](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/681).
+
+## v0.11.4 - 2025-08-15
+
+- Bumped julia compat to `1.10` to match Makie going forward.
+- Added the experimental `draw_to_spec` function. This can be used as an alternative to `draw` to create a Makie.SpecApi spec that can be updated interactively using observables [#609](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/609).
+
+## v0.11.3 - 2025-06-24
+
+- Added the ability to set `scale`, `ticks` and `tickformat` for continuous X, Y and Z scales via the `scales` options which allows to set these in multi-scale facet scenarios [#675](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/675).
+
+## v0.11.2 - 2025-06-23
+
+- Added compatibility for Makie 0.24 [#674](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/674).
+- Added the `show_aesthetics` function which can be used to print information about the aesthetic mappings supported for a given Makie plot type [#673](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/673).
+
+
+## v0.11.1 - 2025-06-20
+
+- Added support for Makie's new `TextLabel` recipe [#671](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/671).
+
+## v0.11.0 - 2025-06-16
+
+- **Breaking** Added Makie 0.23 compat. As Makie 0.23 split up `Arrows` in `Arrows2D` and `Arrows3D`, `visual(Arrows2D)` needs to be specified explicitly now in AlgebraOfGraphics. As `Arrows2D` plots polygon shapes now and not a mixture of scatters and lines, the categorical `arrowhead` marker aesthetic had to be removed [#666](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/666).
+
+## v0.10.9 - 2025-08-27
+
+- **[Backport #683](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/683)**: Fixed a bug where adding a layer without layout mapping could result in layout facets that should not have been visible at all [#684](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/684).
+
+## v0.10.8 - 2025-06-06
+
+- Added support for Makie's new `Annotation` recipe [#663](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/663).
+
+## v0.10.7 - 2025-05-27
+
+- Fixed facet labels in paginated plots with a `Layout` scale in which categories were also relabeled using the `categories = pairs` mechanism [#661](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/661).
+
+## v0.10.6 - 2025-05-21
+
+- If available, column metadata with the key `"label"` will be used instead of the column name for determining a mapping's label [#660](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/660).
+
+## v0.10.5 - 2025-05-14
+
+- Added a new `AesLineWidth` aesthetic for `Lines`, `ScatterLines`, `HLines` and `VLines` [#656](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/656).
+- Added the `linestyle` aesthetic to `HLines` and `VLines` [#656](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/656).
+- Added handling for the new `direction` keyword of `Band` to the aesthetics for `Band`. Also added a `direction` keyword to the internal `LinesFill` recipe which uses `Band` and now allows to use `AlgebraOfGraphics.density() * visual(direction = :y)` [#655](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/655).
+
+## v0.10.4 - 2025-04-22
+
+- Any attribute can now be used with a `=> verbatim` mapping, not just those that are registered aesthetics for the used plot type. This makes it possible to use array-valued attributes which are sliced correctly using facet groupings, unlike attributes passed via `visual` [#652](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/652).
+- Fixed bug with `mapping` without `data` when passing `arr => f` or `value => f` [#651](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/651).
+
+## v0.10.3 - 2025-04-11
+
+- Fixed breakage due to change of internal function in Makie 0.22.3 [#646](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/646).
+
+## v0.10.2 - 2025-03-31
+
+- Revert accidental docstring changes [#638](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/638).
+
+## v0.10.1 - 2025-03-31
+
+- Changed default limits of categorical axes such that all categories are always visible and widthless plots are not squished into the borders [#636](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/636).
+- Added better error messages for the common case of failing to construct single element NamedTuples in calls like `draw(axis = (key = value))` [#630](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/630).
+- Fixed bug when color or markersize mappings had singular limits by expanding the limits to `(0, v)`, `(-v, 0)` or `(0, 1)` [#634](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/634).
+
+## v0.10.0 - 2025-03-30
+
+- **Breaking**: The `colorbar!` function now returns a `Vector{Colorbar}` with zero or more entries. Before it would return `Union{Nothing,Colorbar}`, but now it's possible to draw more than one colorbar if there are multiple colorscales [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
+- **Breaking**: `filled_contours` does not create a legend by default but a colorbar. The colorbar can be disabled again by setting, e.g., `scales(Color = (; colorbar = false))` [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
+- **Breaking**: Changed the behavior of the `from_continuous` palette in combination with a scale consisting of `Bin`s. Colors will now be sampled relative to the positions of their bins' midpoints, meaning that smaller bins that lie closer together have more similar colors. The previous behavior with colors sampled evenly can be regained by using `from_continuous(cmap; relative = false)` [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
+- Added the ability to display a colorbar for categorical color scales. The colorbar normally consists of evenly spaced, labelled sections, one for each category. In the special case that the data values of the categorical scale are of type `Bin`, the colorbar displays each bin's color at the correct numerical positions [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
+- Added the `clipped` function which is primarily meant to set highclip and lowclip colors on top of categorical color palettes, for use with categorical scales with `Bin`s if those bins extend to plus/minus infinity [#628](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/628).
+
+## v0.9.7 - 2025-03-28
+
+- Added `wrapped` convenience function for the `Layout` scale palette which allows to cap either rows or columns and change layout direction [#625](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/625).
+- Replaced unnecessary `show_labels` keyword for `Row`, `Col` and `Layout` scales with 
+- Fixed hiding of duplicate axis labels in unlinked layouts of either only col or only row [#623](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/623).
+
+## v0.9.6 - 2025-03-26
+
+- Added support for input data with units attached, either through Unitful.jl or DynamicQuantities.jl extensions, available from Julia 1.9 on [#619](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/619).
+- The provisional `MarkerSize` tick calculation method is replaced with Makie's default tick finder `WilkinsonTicks`. Ticks and tickformat can be changed using the new `ticks` and `tickformat` scale options [#621](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/621).
+- Added `plottype` argument to `histogram` to allow for different plot types [#591](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/591).
+
+## v0.9.5 - 2025-03-14
+
+- Added `mergeable(layer.plottype, layer.primary)` function, intended for extension by third-party packages that define recipes [#592](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/592).
+
+## v0.9.4 - 2025-03-08
+
+- Added internal copy of the Palmer Penguins dataset to AoG to reduce friction in the intro tutorials, accessible via the `AlgebraOfGraphics.penguins()` function [#613](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/613).
+
+## v0.9.3 - 2025-02-12
+
+- Fixed use of `from_continuous` with colormap specifications like `(colormap, alpha)` [#603](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/603).
+
+## v0.9.2 - 2025-02-03
+
+- Fixed `data(...) * mapping(col => func => label => scale)` label-extraction bug [#596](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/596).
+
+## v0.9.1 - 2025-01-31
+
+- Fixed passing `axis` keyword to `draw(::Pagination, ...)` [#595](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/595).
+
+## v0.9.0 - 2025-01-30
+
+- **Breaking**: `paginate` now splits facet plots into pages _after_ fitting scales and not _before_ [#593](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/593). This means that, e.g., categorical color mappings are consistent across pages where before each page could have a different mapping if some groups were not represented on a given page. This change also makes pagination work with the split X and Y scales feature enabled by version 0.8.14. `paginate`'s return type changes from `PaginatedLayers` to `Pagination` because no layers are stored in that type anymore. The interface to use `Pagination` with `draw` and other functions doesn't change compared to `PaginatedLayers`. `paginate` now also accepts an optional second positional argument which are the scales that are normally passed to `draw` when not paginating, but which must be available prior to pagination to fit all scales accordingly.
+
+## v0.8.14 - 2025-01-16
+
+- Added automatic `alpha` forwarding to all legend elements which will have an effect from Makie 0.22.1 on [#588](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/588).
+- Added the ability to use multiple different X and Y scales within one facet layout. The requirement is that not more than one X and Y scale is used per facet. `Row`, `Col` and `Layout` scales got the ability to set `show_labels = false` in `scales`. Also added the `zerolayer` function which can be used as a basis to build up the required mappings iteratively [#586](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/586).
+- Increased compat to Makie 0.22 and GeometryBasics 0.5 [#587](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/587).
+- Increased compat to Colors 0.13 [#589](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/589).
+
+## v0.8.13 - 2024-10-21
+
+- Added aesthetics for `Stairs` [#573](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/573).
+
+## v0.8.12 - 2024-10-07
+
+- Added `legend` keyword in `visual` to allow overriding legend element attributes [#570](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/570).
+
+## v0.8.11 - 2024-09-25
+
+- Fixed lexicographic natural sorting of tuples (this would fall back to default sort order before) [#568](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/568).
+
+## v0.8.10 - 2024-09-24
+
+- Fixed markercolor in `ScatterLines` legends when it did not match `color` [#567](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/567).
+
+## v0.8.9 - 2024-09-24
+
+- Added ability to include layers in the legend without using scales by adding `visual(label = "some label")` [#565](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/565).
+
+## v0.8.8 - 2024-09-17
+
+- Fixed aesthetics of `errorbar` so that x and y stay labelled correctly when using `direction = :x` [#560](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/560).
+- Added ability to specify `title`, `subtitle` and `footnotes` plus settings in the `draw` function [#556](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/556).
+- Added `dodge_x` and `dodge_y` keywords to `mapping` that allow to dodge any plot types that have `AesX` or `AesY` data [#558](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/558).
+
+## v0.8.7 - 2024-09-06
+
 - Added ability to return `ProcessedLayers` from transformations, thereby enabling multi-layer transformations, such as scatter plus errorbars [#549](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/549).
+- Fixed bug where `mergesorted` applied on string vectors used `isless` instead of natural sort [#553](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/553).
 
 ## v0.8.6 - 2024-09-02
 
@@ -61,7 +228,7 @@
 
 ## v0.6.11 - 2022-08-08
 
-- Added `paginate` for pagination of large facet plots. 
+- Added `paginate` for pagination of large facet plots.
 
 ## v0.6.8 - 2022-06-14
 

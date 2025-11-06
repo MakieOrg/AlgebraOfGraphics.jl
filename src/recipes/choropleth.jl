@@ -4,7 +4,7 @@ const trivialtransformation = TrivialTransformation()
 
 (::TrivialTransformation)(pt) = pt[1], pt[2]
 
-to_points(transf, ring) = map(Point2f∘transf, ring)
+to_points(transf, ring) = map(Point2f ∘ transf, ring)
 
 function to_polygon(transf, rings)
     exterior, interiors... = map(Base.Fix1(to_points, transf), rings)
@@ -71,10 +71,12 @@ end
 
 Makie.used_attributes(::Type{<:Choropleth}, v::AbstractVector) = (:transformation,)
 
-function Makie.convert_arguments(::Type{<:Choropleth}, v::AbstractVector;
-                                 transformation=trivialtransformation)
+function Makie.convert_arguments(
+        ::Type{<:Choropleth}, v::AbstractVector;
+        transformation = trivialtransformation
+    )
     geometries = map(Base.Fix1(to_geometry, transformation), v)
-    (geometries,)
+    return (geometries,)
 end
 
 function Makie.plot!(p::Choropleth)

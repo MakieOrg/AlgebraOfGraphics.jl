@@ -11,6 +11,10 @@
     @test AlgebraOfGraphics.extend_extrema(e1, e2) == (-5, 11)
 
     @test AlgebraOfGraphics.midpoints(1:10) == 1.5:9.5
+
+    # issue 552
+    v = ["1", "9", "10"]
+    @test AlgebraOfGraphics.mergesorted(v, v) == v
 end
 
 @testset "arguments" begin
@@ -22,19 +26,24 @@ end
     @test t == ["key 1 and value 10", "key 2 and value 20", "key 3 and value 30"]
 
     s = NamedArguments([:a, :b, :c], [10, 20, 30])
-    @test s == NamedArguments((a=10, b=20, c=30))
+    @test s == NamedArguments((a = 10, b = 20, c = 30))
     t = map(keys(s), s) do k, v
         return "key $k and value $v"
     end
     @test t == NamedArguments(
-        [:a, :b, :c],    
+        [:a, :b, :c],
         ["key a and value 10", "key b and value 20", "key c and value 30"]
     )
 
     s = NamedArguments([:a, :b, :c], [1, 2, 3])
-    odd, even = separate(isodd, s)
-    @test odd == NamedArguments((a=1, c=3))
-    @test even == NamedArguments((b=2,))
+    odd, even = separate_by_key_value((k, v) -> isodd(v), s)
+    @test odd == NamedArguments((a = 1, c = 3))
+    @test even == NamedArguments((b = 2,))
+
+    s = NamedArguments([:a, :b, :c], [1, 2, 3])
+    is_a, is_not_a = separate_by_key_value((k, v) -> k == :a, s)
+    @test is_a == NamedArguments((a = 1,))
+    @test is_not_a == NamedArguments((b = 2, c = 3))
 
     t = AlgebraOfGraphics.set(s, :d => 5, :a => 3)
     @test t == NamedArguments([:a, :b, :c, :d], [3, 2, 3, 5])
@@ -66,4 +75,57 @@ end
 @testset "shiftdims" begin
     @test AlgebraOfGraphics.shiftdims("a") == "a"
     @test AlgebraOfGraphics.shiftdims([1, 2]) == [1 2]
+end
+
+if VERSION >= v"1.7"
+    @testset "show aesthetics" begin
+        _text(type) = sprint(AlgebraOfGraphics.show_aesthetics, type; context = :color => false)
+        @test _text(Lines) == """
+            Found 3 aesthetic mappings for `Lines`:
+
+            With 1 positional argument: 
+             - 1 (categorical/continuous) → Y
+             - color → Color
+             - linestyle → LineStyle
+             - linewidth → LineWidth
+
+            With 2 positional arguments: 
+             - 1 (categorical/continuous) → X
+             - 2 (categorical/continuous) → Y
+             - color → Color
+             - linestyle → LineStyle
+             - linewidth → LineWidth
+
+            With 3 positional arguments: 
+             - 1 (categorical/continuous) → X
+             - 2 (categorical/continuous) → Y
+             - 3 (categorical/continuous) → Z
+             - color → Color
+             - linestyle → LineStyle
+             - linewidth → LineWidth
+            """
+
+        @test _text(Errorbars) == """
+            Found 2 aesthetic mappings for `Errorbars`:
+
+            With 3 positional arguments: 
+             - 1 (categorical/continuous) → X
+             - 2 (categorical/continuous) → Y
+             - 3 (categorical/continuous) depends on direction:
+                :x → DeltaX
+                :y → DeltaY
+             - color → Color
+
+            With 4 positional arguments: 
+             - 1 (categorical/continuous) → X
+             - 2 (categorical/continuous) → Y
+             - 3 (categorical/continuous) depends on direction:
+                :x → DeltaX
+                :y → DeltaY
+             - 4 (categorical/continuous) depends on direction:
+                :x → DeltaX
+                :y → DeltaY
+             - color → Color
+            """
+    end
 end

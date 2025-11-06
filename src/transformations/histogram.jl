@@ -12,17 +12,19 @@ end
 
 function midpoints(edges::AbstractVector)
     i0, i1 = firstindex(edges), lastindex(edges)
-    front, tail = view(edges, i0:i1-1), view(edges, i0+1:i1)
+    front, tail = view(edges, i0:(i1 - 1)), view(edges, (i0 + 1):i1)
     return (front .+ tail) ./ 2
 end
 
 function midpoints(edges::AbstractRange)
     min, s, l = minimum(edges), step(edges), length(edges)
-    return range(min + s / 2, step=s, length=l - 1)
+    return range(min + s / 2, step = s, length = l - 1)
 end
 
-function _histogram(vs::Tuple; bins=sturges(length(vs[1])), weights=automatic,
-    normalization::Symbol, datalimits, closed::Symbol)
+function _histogram(
+        vs::Tuple; bins = sturges(length(vs[1])), weights = automatic,
+        normalization::Symbol, datalimits, closed::Symbol
+    )
 
     intervals = applydatalimits(datalimits, vs)
     edges = compute_edges(intervals, bins, closed)
@@ -31,44 +33,70 @@ function _histogram(vs::Tuple; bins=sturges(length(vs[1])), weights=automatic,
     else
         fit(Histogram, vs, StatsBase.weights(weights), edges)
     end
-    return normalize(h, mode=normalization)
+    return normalize(h, mode = normalization)
 end
 
-Base.@kwdef struct HistogramAnalysis{D, B}
-    datalimits::D=automatic
-    bins::B=automatic
-    closed::Symbol=:left
-    normalization::Symbol=:none
+struct HistogramAnalysis{plottype <: Plot, D, B}
+    datalimits::D
+    bins::B
+    closed::Symbol
+    normalization::Symbol
 end
 
-function (h::HistogramAnalysis)(input::ProcessedLayer)
+function HistogramAnalysis{plottype}(;
+        datalimits::D = automatic,
+        bins::B = automatic,
+        closed::Symbol = :left,
+        normalization::Symbol = :none,
+    ) where {plottype <: Plot, D, B}
+    return HistogramAnalysis{plottype, D, B}(datalimits, bins, closed, normalization)
+end
+HistogramAnalysis(; options...) = HistogramAnalysis{Plot{plot}}(; options...)
+
+histogram_preprocess_named(::Type{<:Plot}, edges, weights) = (;)
+histogram_preprocess_named(::Type{BarPlot}, edges, weights) = (; width = diff(first(edges)))
+histogram_preprocess_positional(::Type{<:Plot}, edges, weights) = (map(midpoints, edges)..., weights)
+function histogram_preprocess_positional(::Type{Stairs}, edges, weights)
+    edges = only(edges)
+    phantomedge = edges[end] # to bring step back to baseline
+    edges = vcat(edges, phantomedge)
+    z = zero(eltype(weights))
+    heights = vcat(z, weights, z)
+    return (edges, heights)
+end
+histogram_default_attributes(::Type{<:Plot}) = NamedArguments()
+histogram_default_attributes(::Type{BarPlot}) = NamedArguments((; :gap => 0, :dodge_gap => 0))
+
+function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plottype}
     datalimits = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
     options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
+
+    N = length(input.positional)
+    default_plottype = categoricalplottypes[N]
+    plottype = Makie.plottype(_plottype, input.plottype, default_plottype)
 
     output = map(input) do p, n
         hist = _histogram(Tuple(p); pairs(n)..., pairs(options)...)
         edges, weights = hist.edges, hist.weights
-        named = length(edges) == 1 ? (; width=diff(first(edges))) : (;)
-        return (map(midpoints, edges)..., weights), named
+        named = histogram_preprocess_named(plottype, edges, weights)
+        positional = histogram_preprocess_positional(plottype, edges, weights)
+        return positional, named
     end
 
-    N = length(input.positional)
     label = h.normalization == :none ? "count" : string(h.normalization)
-    labels = set(output.labels, N+1 => label)
-    attributes = if N == 1
-        set(output.attributes, :gap => 0, :dodge_gap => 0)
-    else
-        output.attributes
-    end
-    default_plottype = categoricalplottypes[N]
-    plottype = Makie.plottype(output.plottype, default_plottype)
+    labels = set(output.labels, N + 1 => label)
+    attributes = merge(output.attributes, histogram_default_attributes(plottype))
     return ProcessedLayer(output; plottype, labels, attributes)
 end
 
 """
-    histogram(; bins=automatic, datalimits=automatic, closed=:left, normalization=:none)
+    histogram(plottype::Type{<:Plot} = Plot{plot}; bins=automatic, datalimits=automatic, closed=:left, normalization=:none)
 
 Compute a histogram.
+
+A plot type can be passed as the first argument controlling the type of plot the histogram
+is displayed as, e.g. `histogram(Stairs)` creates a stephist. The default plot type for
+1-dimensional histograms is `BarPlot`, `Heatmap` for 2d, and `Volume` for 3d histograms.
 
 The attribute `bins` can be an `Integer`, an `AbstractVector` (in particular, a range), or
 a `Tuple` of either integers or abstract vectors (useful for 2- or 3-dimensional histograms).
@@ -97,5 +125,6 @@ Weighted data is supported via the keyword `weights` (passed to `mapping`).
 
     Normalizations are computed withing groups. For example, in the case of
     `normalization=:pdf`, sum of weights *within each group* will be equal to `1`.
+
 """
-histogram(; options...) = transformation(HistogramAnalysis(; options...))
+histogram(plottype::Type{<:Plot} = Plot{plot}; options...) = transformation(HistogramAnalysis{plottype}(; options...))
