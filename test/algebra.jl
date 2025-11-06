@@ -225,8 +225,7 @@ end
             duplicate_shifted() *
             visual(color = :red) *
             subvisual(Scatter, markersize = 30) *
-            subvisual(BarPlot, Lines, linewidth = 20) *
-            subvisual(p -> p.plottype == Lines, linestyle = :dash) |> draw
+            subvisual(BarPlot, Lines, linewidth = 20) |> draw
 
         pls = fg.grid[].processedlayers
         @test length(pls) == 2
@@ -236,7 +235,6 @@ end
         @test pls[2].attributes[:color] == :red
         @test pls[1].attributes[:markersize] == 30
         @test pls[2].attributes[:linewidth] == 20
-        @test pls[2].attributes[:linestyle] == :dash
     end
 end
 

@@ -7,6 +7,10 @@ end
 Visual(plottype::PlotType = Plot{plot}; kwargs...) = Visual(plottype, NamedArguments(kwargs), nothing)
 
 function (v::Visual)(input::ProcessedLayer)
+    # If a target is specified on a single ProcessedLayer, it should match
+    if !isnothing(v.target) && !target_matches(v.target, input)::Bool
+        error("subvisual target did not match. Target was $(repr(v.target)), but layer has plottype $(input.plottype) and label $(repr(input.label))")
+    end
     if target_matches(v.target, input)::Bool
         plottype = Makie.plottype(v.plottype, input.plottype)
         attributes = merge(input.attributes, v.attributes)
@@ -19,12 +23,26 @@ end
 target_matches(::Nothing, input) = true
 target_matches(t::Symbol, input) = input.label === t
 target_matches(t::Type, input) = input.plottype <: t
-target_matches(t::Function, input) = t(input)::Bool
 
 function (v::Visual)(inputs::ProcessedLayers)
+    # Check if target matches at least one layer when a target is specified
+    if !isnothing(v.target)
+        matches = map(pl -> target_matches(v.target, pl)::Bool, inputs.layers)
+        if !any(matches)
+            available_labels = [pl.label for pl in inputs.layers]
+            available_plottypes = [pl.plottype for pl in inputs.layers]
+            error("subvisual target $(repr(v.target)) did not match any layer in ProcessedLayers. Available labels are $(join([repr(a) for a in available_labels], ", ", " and ")), available plottypes are $(join([string(p) for p in available_plottypes], ", ", " and "))")
+        end
+    end
     return ProcessedLayers(
         map(inputs.layers) do pl
-            v(pl)
+            if target_matches(v.target, pl)::Bool
+                plottype = Makie.plottype(v.plottype, pl.plottype)
+                attributes = merge(pl.attributes, v.attributes)
+                return ProcessedLayer(pl; plottype, attributes)
+            else
+                return pl
+            end
         end
     )
 end
