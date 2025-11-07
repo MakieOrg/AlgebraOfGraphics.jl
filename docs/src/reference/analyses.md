@@ -219,7 +219,7 @@ aggregate
 The `aggregate` transformation allows you to perform flexible aggregations on your data.
 All mapped columns that are not explicitly aggregated are automatically used for grouping.
 
-This analysis layer is intended for aggregations that are only needed for a visualization, otherwise it may make more sense to compute values in a separate data wrangling step and add a separate `data` layer.
+This analysis layer is intended for aggregations that are only needed for a visualization, otherwise it may make more sense to compute values in a separate data wrangling step and add another `data` layer.
 
 ### Basic Aggregation
 
@@ -299,3 +299,62 @@ data(penguins) *
     aggregate(2 => mean => "Average Mass (g)") *
     visual(BarPlot) |> draw
 ```
+
+## Selection
+
+```@docs
+selection
+```
+
+The `selection` layer allows you drop some groups or observations on the fly using predicate functions.
+
+This analysis layer is intended for selections that are only needed for a visualization, otherwise it may make more sense to compute values in a separate data wrangling step and add another `data` layer.
+
+### Examples
+
+Filter out groups by returning a `Bool` from the predicate function. Here, only species with a mean body mass above 4000g are shown:
+
+```@example selection
+using AlgebraOfGraphics, CairoMakie
+
+df = AlgebraOfGraphics.penguins()
+plt = data(df) *
+    mapping(:bill_length_mm, :body_mass_g, color=:species) *
+    selection(2 => v -> mean(v) > 4000) *
+    visual(Scatter)
+draw(plt)
+```
+
+Filter individual rows by applying a predicate that returns a vector of booleans. Only penguins with body mass above 4500g are shown:
+
+```@example selection
+plt = data(df) *
+    mapping(:bill_length_mm, :body_mass_g, color=:species) *
+    selection(2 => v -> v .> 4500) *
+    visual(Scatter)
+draw(plt)
+```
+
+If the selection function returns a scalar other than a bool, you can use `show_max` and `show_min` to select groups with extreme values. This example shows the 3 species/sex groups with the highest average body mass:
+
+```@example selection
+plt = data(df) *
+    mapping(:bill_length_mm, :body_mass_g, color=:species, marker = :sex) *
+    selection(2 => mean, show_max = 3) *
+    visual(Scatter)
+draw(plt)
+```
+
+You can also rank individual data points across all groups and keep the top or bottom N. Here, the 10 penguins with the highest body mass to bill length ratio are highlighted on top of all penguins shown in gray. Note that `missing` or `NaN` values are always sorted last.
+
+```@example selection
+plt = data(df) * mapping(:bill_length_mm, :body_mass_g) * (
+        visual(color = :gray90) +
+        mapping(color = :species) *
+        selection((2, 1) => (mass, bill) -> mass ./ bill, show_max = 10)
+    ) * visual(Scatter)
+draw(plt)
+```
+
+
+Note that due to analysis layers working on the intermediate `ProcessedLayer` infrastructure, you can currently only filter based on columns that are included in `mapping()`. If you need to include other columns that might be present in the data source, you have to handle this in a separate data wrangling step.
