@@ -21,17 +21,15 @@ Internal structure representing a selection analysis transformation.
 - `predicates`: Tuple of SelectionPredicate objects
 - `show_max`: Maximum number of groups to keep (highest ranking)
 - `show_min`: Minimum number of groups to keep (lowest ranking)
-- `skipmissing`: Whether to skip groups with missing predicate results
 """
 struct SelectionAnalysis{P}
     predicates::P
     show_max::Union{Nothing, Int}
     show_min::Union{Nothing, Int}
-    skipmissing::Bool
 end
 
 """
-    selection(predicate_specs...; show_max = nothing, show_min = nothing, skipmissing = false)
+    selection(predicate_specs...; show_max = nothing, show_min = nothing)
 
 Filter data based on predicates applied to mapping slots. Supports four main modes:
 
@@ -48,7 +46,6 @@ Filter data based on predicates applied to mapping slots. Supports four main mod
 # Keyword Arguments
 - `show_max::Union{Nothing, Int}`: Keep the N groups with the largest ranking values
 - `show_min::Union{Nothing, Int}`: Keep the N groups with the smallest ranking values
-- `skipmissing::Bool`: If true, skip groups where predicate returns `missing` in Bool modes
 
 # Mode Details
 
@@ -110,11 +107,6 @@ data(...) * mapping(:x, :y, :z, color = :group) *
 data(...) * mapping(:x, :y, color = :group) * 
     selection(:color => grp -> first(grp) == "A") *
     visual(Scatter)
-
-# Skip groups with missing predicate results
-data(...) * mapping(:x, :y, color = :group) * 
-    selection(2 => v -> mean(v) > 10, skipmissing = true) *
-    visual(Scatter)
 ```
 
 !!! note "Important Limitation"
@@ -136,7 +128,7 @@ data(...) * mapping(:x, :y, color = :group) *
         visual(Scatter)
     ```
 """
-function selection(args...; show_max = nothing, show_min = nothing, skipmissing = false)
+function selection(args...; show_max = nothing, show_min = nothing)
     # Validate that at most one of show_max or show_min is specified
     if show_max !== nothing && show_min !== nothing
         throw(ArgumentError("Cannot specify both `show_max` and `show_min`"))
@@ -187,7 +179,7 @@ function selection(args...; show_max = nothing, show_min = nothing, skipmissing 
         throw(ArgumentError("`selection` requires at least one predicate"))
     end
     
-    return transformation(SelectionAnalysis(Tuple(predicates), show_max, show_min, skipmissing))
+    return transformation(SelectionAnalysis(Tuple(predicates), show_max, show_min))
 end
 
 # Helper to extract target value(s) from positional and named arguments
@@ -250,7 +242,7 @@ function (s::SelectionAnalysis)(input::ProcessedLayer)
     result_eltype = eltype(first_result)
     
     # Determine mode
-    mode = if result_eltype <: Bool || (s.skipmissing && result_eltype <: Union{Bool, Missing})
+    mode = if result_eltype <: Bool
         :bool
     elseif result_eltype <: AbstractVector && eltype(result_eltype) <: Bool
         :vector_bool
@@ -272,8 +264,8 @@ function (s::SelectionAnalysis)(input::ProcessedLayer)
     for (i, result) in enumerate(predicate_results)
         et = eltype(result)
         if mode == :bool
-            if !(et <: Bool || (s.skipmissing && et <: Union{Bool, Missing}))
-                throw(ArgumentError("Predicate $(i) returned type $et but Bool mode was detected. All predicates must return Bool (or Union{Bool, Missing} with skipmissing=true)"))
+            if !(et <: Bool)
+                throw(ArgumentError("Predicate $(i) returned type $et but Bool mode was detected. All predicates must return Bool"))
             end
         elseif mode == :vector_bool
             if !(et <: AbstractVector && eltype(et) <: Bool)
@@ -299,15 +291,6 @@ function (s::SelectionAnalysis)(input::ProcessedLayer)
         # Combine predicates with AND logic to determine which groups to keep
         keep_groups = map(1:n_groups) do group_idx
             results = [pred_result[group_idx] for pred_result in predicate_results]
-            
-            # Check for missing values
-            if any(ismissing, results)
-                if s.skipmissing
-                    return false  # Skip groups with missing
-                else
-                    throw(ArgumentError("Predicate returned missing for group $group_idx but skipmissing=false"))
-                end
-            end
             
             # All must be true
             return all(results)
