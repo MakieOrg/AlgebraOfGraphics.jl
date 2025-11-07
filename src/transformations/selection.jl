@@ -19,25 +19,26 @@ Internal structure representing a selection analysis transformation.
 
 # Fields
 - `predicates`: Tuple of SelectionPredicate objects
-- `max_n`: Maximum number of groups to keep (highest ranking)
-- `min_n`: Minimum number of groups to keep (lowest ranking)
+- `show_max`: Maximum number of groups to keep (highest ranking)
+- `show_min`: Minimum number of groups to keep (lowest ranking)
 - `skipmissing`: Whether to skip groups with missing predicate results
 """
 struct SelectionAnalysis{P}
     predicates::P
-    max_n::Union{Nothing, Int}
-    min_n::Union{Nothing, Int}
+    show_max::Union{Nothing, Int}
+    show_min::Union{Nothing, Int}
     skipmissing::Bool
 end
 
 """
-    selection(predicate_specs...; max_n = nothing, min_n = nothing, skipmissing = false)
+    selection(predicate_specs...; show_max = nothing, show_min = nothing, skipmissing = false)
 
-Filter data based on predicates applied to mapping slots. Supports three main modes:
+Filter data based on predicates applied to mapping slots. Supports four main modes:
 
 1. **Bool mode**: Predicates return `Bool` → filter complete groups (keep or remove)
 2. **Vector{Bool} mode**: Predicates return `Vector{Bool}` → filter individual rows
 3. **Sortable mode**: Predicates return sortable values → rank groups and keep top/bottom N
+4. **Vector{Sortable} mode**: Predicates return `Vector{<sortable>}` → rank individual data points across all groups and keep top/bottom N
 
 # Arguments
 - `predicate_specs...`: One or more predicate specifications of the form:
@@ -45,8 +46,8 @@ Filter data based on predicates applied to mapping slots. Supports three main mo
   - `(target1, target2, ...) => predicate_func` for multi-column predicates
 
 # Keyword Arguments
-- `max_n::Union{Nothing, Int}`: Keep the N groups with the largest ranking values
-- `min_n::Union{Nothing, Int}`: Keep the N groups with the smallest ranking values
+- `show_max::Union{Nothing, Int}`: Keep the N groups with the largest ranking values
+- `show_min::Union{Nothing, Int}`: Keep the N groups with the smallest ranking values
 - `skipmissing::Bool`: If true, skip groups where predicate returns `missing` in Bool modes
 
 # Mode Details
@@ -61,8 +62,13 @@ if all predicates return `true` for that row.
 
 ## Sortable Mode
 Each predicate returns a sortable value (Number, Date, String, etc.) for ranking groups.
-Use `max_n` to keep the top N groups or `min_n` to keep the bottom N groups. Multiple
+Use `show_max` to keep the top N groups or `show_min` to keep the bottom N groups. Multiple
 predicates create lexicographic ordering.
+
+## Vector{Sortable} Mode
+Each predicate returns a `Vector` of sortable values (Numbers, Dates, Strings, etc.) for ranking
+individual data points across all groups. Use `show_max` to keep the top N data points or `show_min`
+to keep the bottom N data points. Multiple predicates create lexicographic ordering.
 
 # Examples
 
@@ -79,8 +85,13 @@ data(...) * mapping(:x, :y) *
 
 # Sortable mode - Keep top 3 groups by maximum value
 data(...) * mapping(:time, :value, color = :group) * 
-    selection(2 => maximum, max_n = 3) *
+    selection(2 => maximum, show_max = 3) *
     visual(Lines)
+
+# Vector{Sortable} mode - Keep top 10 individual data points by value across all groups
+data(...) * mapping(:x, :y) * 
+    selection(2 => identity, show_max = 10) *
+    visual(Scatter)
 
 # Multiple predicates (AND-ed together)
 data(...) * mapping(:x, :y, color = :group) * 
@@ -105,19 +116,38 @@ data(...) * mapping(:x, :y, color = :group) *
     selection(2 => v -> mean(v) > 10, skipmissing = true) *
     visual(Scatter)
 ```
+
+!!! note "Important Limitation"
+    You can only filter on columns that are included in `mapping()`. Unlike `gghighlight` 
+    in R, `selection` operates on `ProcessedLayer` objects which only contain the mapped 
+    columns from the transformation pipeline.
+    
+    **There is no workaround** within the `selection` transformation. You cannot add extra 
+    columns to `mapping()` just for filtering because they would be passed to the visual, 
+    potentially causing errors or unwanted visual effects.
+    
+    **Alternative**: If you need to filter by unmapped columns, pre-filter the DataFrame:
+    ```julia
+    # Filter DataFrame before passing to data()
+    filtered_df = filter(row -> row.quality > 0.5, df)
+    
+    data(filtered_df) * 
+        mapping(:x, :y, color = :group) * 
+        visual(Scatter)
+    ```
 """
-function selection(args...; max_n = nothing, min_n = nothing, skipmissing = false)
-    # Validate that at most one of max_n or min_n is specified
-    if max_n !== nothing && min_n !== nothing
-        throw(ArgumentError("Cannot specify both `max_n` and `min_n`"))
+function selection(args...; show_max = nothing, show_min = nothing, skipmissing = false)
+    # Validate that at most one of show_max or show_min is specified
+    if show_max !== nothing && show_min !== nothing
+        throw(ArgumentError("Cannot specify both `show_max` and `show_min`"))
     end
     
-    # Validate max_n and min_n are positive integers
-    if max_n !== nothing && max_n < 1
-        throw(ArgumentError("`max_n` must be a positive integer, got $max_n"))
+    # Validate show_max and show_min are positive integers
+    if show_max !== nothing && show_max < 1
+        throw(ArgumentError("`show_max` must be a positive integer, got $show_max"))
     end
-    if min_n !== nothing && min_n < 1
-        throw(ArgumentError("`min_n` must be a positive integer, got $min_n"))
+    if show_min !== nothing && show_min < 1
+        throw(ArgumentError("`show_min` must be a positive integer, got $show_min"))
     end
     
     # Parse predicate specifications
@@ -157,7 +187,7 @@ function selection(args...; max_n = nothing, min_n = nothing, skipmissing = fals
         throw(ArgumentError("`selection` requires at least one predicate"))
     end
     
-    return transformation(SelectionAnalysis(Tuple(predicates), max_n, min_n, skipmissing))
+    return transformation(SelectionAnalysis(Tuple(predicates), show_max, show_min, skipmissing))
 end
 
 # Helper to extract target value(s) from positional and named arguments
@@ -220,19 +250,22 @@ function (s::SelectionAnalysis)(input::ProcessedLayer)
     result_eltype = eltype(first_result)
     
     # Determine mode
-    mode = if s.max_n !== nothing || s.min_n !== nothing
-        :sortable
-    elseif result_eltype <: Bool || (s.skipmissing && result_eltype <: Union{Bool, Missing})
+    mode = if result_eltype <: Bool || (s.skipmissing && result_eltype <: Union{Bool, Missing})
         :bool
     elseif result_eltype <: AbstractVector && eltype(result_eltype) <: Bool
         :vector_bool
-    else
-        # Check if it's a sortable type (not an array)
-        if result_eltype <: AbstractArray
-            throw(ArgumentError("Predicate returned array type $result_eltype which is not supported. Expected Bool, Vector{Bool}, or a sortable value."))
+    elseif result_eltype <: AbstractVector
+        # Vector of sortable values
+        if s.show_max === nothing && s.show_min === nothing
+            throw(ArgumentError("Predicates returned Vector of sortable values but neither `show_max` nor `show_min` was specified"))
         end
-        # If max_n/min_n not specified but we have sortable values, that's an error
-        throw(ArgumentError("Predicates returned sortable values but neither `max_n` nor `min_n` was specified"))
+        :vector_sortable
+    elseif s.show_max !== nothing || s.show_min !== nothing
+        # Scalar sortable values
+        :sortable
+    else
+        # Scalar non-bool values without show_max/show_min
+        throw(ArgumentError("Predicates returned sortable values but neither `show_max` nor `show_min` was specified"))
     end
     
     # Validate all predicates return the same mode
@@ -245,6 +278,14 @@ function (s::SelectionAnalysis)(input::ProcessedLayer)
         elseif mode == :vector_bool
             if !(et <: AbstractVector && eltype(et) <: Bool)
                 throw(ArgumentError("Predicate $(i) returned type $et but Vector{Bool} mode was detected. All predicates must return Vector{Bool}"))
+            end
+        elseif mode == :vector_sortable
+            if !(et <: AbstractVector)
+                throw(ArgumentError("Predicate $(i) returned type $et but Vector{Sortable} mode was detected. All predicates must return Vectors"))
+            end
+            # Check that the element type is sortable (not another vector)
+            if eltype(et) <: AbstractArray
+                throw(ArgumentError("Predicate $(i) returned nested array type $et. Expected Vector of sortable values"))
             end
         elseif mode == :sortable
             if et <: AbstractArray
@@ -329,12 +370,236 @@ function (s::SelectionAnalysis)(input::ProcessedLayer)
             insert!(new_named, k, filtered)
         end
         
-        # In Vector{Bool} mode, primary values remain unchanged
-        # They are just group labels that don't change when filtering rows within groups
-        new_primary = input.primary
+        # Remove empty groups (groups with no rows remaining)
+        # Identify non-empty groups
+        non_empty_groups = findall(1:n_groups) do group_idx
+            length(new_positional[1][group_idx]) > 0
+        end
+        
+        # Filter to keep only non-empty groups
+        new_positional = [col[non_empty_groups] for col in new_positional]
+        
+        new_named_filtered = Dictionary{Symbol, Any}()
+        for (k, v) in pairs(new_named)
+            insert!(new_named_filtered, k, v[non_empty_groups])
+        end
+        new_named = new_named_filtered
+        
+        new_primary = Dictionary{Symbol, Any}()
+        for (k, v) in pairs(input.primary)
+            insert!(new_primary, k, v[non_empty_groups])
+        end
+        
+    elseif mode == :vector_sortable
+        # Vector{Sortable} mode: rank individual data points across all groups and keep top/bottom N
+        
+        # First validate that all predicates return same-length vectors for each group
+        for group_idx in 1:n_groups
+            lengths = [length(pred_result[group_idx]) for pred_result in predicate_results]
+            if !allequal(lengths)
+                throw(ArgumentError("Vector predicates returned different lengths for group $group_idx: $lengths"))
+            end
+            # Also validate length matches group size
+            group_size = length(input.positional[1][group_idx])
+            if !allequal([lengths..., group_size])
+                throw(ArgumentError("Vector predicate returned length $(first(lengths)) but group $group_idx has $group_size rows"))
+            end
+        end
+        
+        # Collect all data points with their rankings and (group_idx, row_idx) locations
+        all_points = Tuple{Tuple, Int, Int}[]  # (ranking_tuple, group_idx, row_idx)
+        
+        for group_idx in 1:n_groups
+            group_size = length(input.positional[1][group_idx])
+            for row_idx in 1:group_size
+                ranking_tuple = tuple((pred_result[group_idx][row_idx] for pred_result in predicate_results)...)
+                push!(all_points, (ranking_tuple, group_idx, row_idx))
+            end
+        end
+        
+        # Sort all points by their ranking tuples
+        if s.show_max !== nothing
+            # Sort descending - we want the largest values first
+            sorted_points = sort(all_points; rev=true, by=first, lt=(a, b) -> begin
+                # Custom comparison that handles NaN (same as sortable mode)
+                for (x, y) in zip(a, b)
+                    if isnan(x) && isnan(y)
+                        continue
+                    end
+                    if isnan(x)
+                        return true
+                    end
+                    if isnan(y)
+                        return false
+                    end
+                    if x != y
+                        return x < y
+                    end
+                end
+                return false
+            end)
+            n_keep = min(s.show_max, length(all_points))
+            kept_points = sorted_points[1:n_keep]
+        else  # s.show_min !== nothing
+            # Sort ascending - we want the smallest values first
+            sorted_points = sort(all_points; by=first, lt=(a, b) -> begin
+                # Custom comparison that handles NaN (same as sortable mode)
+                for (x, y) in zip(a, b)
+                    if isnan(x) && isnan(y)
+                        continue
+                    end
+                    if isnan(x)
+                        return false
+                    end
+                    if isnan(y)
+                        return true
+                    end
+                    if x != y
+                        return x < y
+                    end
+                end
+                return false
+            end)
+            n_keep = min(s.show_min, length(all_points))
+            kept_points = sorted_points[1:n_keep]
+        end
+        
+        # Build a dictionary of which rows to keep for each group
+        rows_to_keep = Dict{Int, Vector{Int}}()
+        for (_, group_idx, row_idx) in kept_points
+            if !haskey(rows_to_keep, group_idx)
+                rows_to_keep[group_idx] = Int[]
+            end
+            push!(rows_to_keep[group_idx], row_idx)
+        end
+        
+        # Sort the row indices for each group to maintain order
+        for (k, v) in rows_to_keep
+            sort!(v)
+        end
+        
+        # Filter data for each group
+        new_positional = map(input.positional) do col
+            map(1:n_groups) do group_idx
+                if haskey(rows_to_keep, group_idx)
+                    return col[group_idx][rows_to_keep[group_idx]]
+                else
+                    # No rows kept from this group, return empty array of same type
+                    return similar(col[group_idx], 0)
+                end
+            end
+        end
+        
+        new_named = Dictionary{Symbol, Any}()
+        for (k, v) in pairs(input.named)
+            filtered = map(1:n_groups) do group_idx
+                if haskey(rows_to_keep, group_idx)
+                    return v[group_idx][rows_to_keep[group_idx]]
+                else
+                    return similar(v[group_idx], 0)
+                end
+            end
+            insert!(new_named, k, filtered)
+        end
+        
+        # Remove empty groups (groups with no rows remaining)
+        # Identify non-empty groups
+        non_empty_groups = findall(1:n_groups) do group_idx
+            length(new_positional[1][group_idx]) > 0
+        end
+        
+        # Filter to keep only non-empty groups
+        new_positional = [col[non_empty_groups] for col in new_positional]
+        
+        new_named_filtered = Dictionary{Symbol, Any}()
+        for (k, v) in pairs(new_named)
+            insert!(new_named_filtered, k, v[non_empty_groups])
+        end
+        new_named = new_named_filtered
+        
+        new_primary = Dictionary{Symbol, Any}()
+        for (k, v) in pairs(input.primary)
+            insert!(new_primary, k, v[non_empty_groups])
+        end
         
     elseif mode == :sortable
-        throw(ErrorException("Sortable mode not yet implemented (Phase 4)"))
+        # Sortable mode: rank groups by predicate values and keep top/bottom N
+        
+        # Combine all predicate results into tuples for lexicographic sorting
+        ranking_tuples = map(1:n_groups) do group_idx
+            tuple((pred_result[group_idx] for pred_result in predicate_results)...)
+        end
+        
+        # Sort groups by ranking tuples
+        # For show_max: sort in descending order (largest first)
+        # For show_min: sort in ascending order (smallest first)
+        if s.show_max !== nothing
+            # Sort descending - we want the largest values first
+            # Handle NaN by treating them as smaller than any finite number
+            sorted_indices = sortperm(ranking_tuples; rev=true, lt=(a, b) -> begin
+                # Custom comparison that handles NaN
+                # NaN should always be considered "smaller" (lower priority)
+                for (x, y) in zip(a, b)
+                    # If both are NaN, continue to next element
+                    if isnan(x) && isnan(y)
+                        continue
+                    end
+                    # NaN is always less than non-NaN
+                    if isnan(x)
+                        return true  # a < b (x is NaN, so a has lower priority)
+                    end
+                    if isnan(y)
+                        return false  # a >= b (y is NaN, so b has lower priority)
+                    end
+                    # Neither is NaN, use regular comparison
+                    if x != y
+                        return x < y
+                    end
+                end
+                return false  # All elements equal
+            end)
+            n_keep = min(s.show_max, n_groups)
+            kept_group_indices = sort(sorted_indices[1:n_keep])
+        else  # s.show_min !== nothing
+            # Sort ascending - we want the smallest values first
+            sorted_indices = sortperm(ranking_tuples; lt=(a, b) -> begin
+                # Custom comparison that handles NaN
+                # NaN should always be considered "larger" (lower priority)
+                for (x, y) in zip(a, b)
+                    # If both are NaN, continue to next element
+                    if isnan(x) && isnan(y)
+                        continue
+                    end
+                    # NaN is always greater than non-NaN
+                    if isnan(x)
+                        return false  # a >= b (x is NaN, so a has lower priority)
+                    end
+                    if isnan(y)
+                        return true   # a < b (y is NaN, so b has lower priority)
+                    end
+                    # Neither is NaN, use regular comparison
+                    if x != y
+                        return x < y
+                    end
+                end
+                return false  # All elements equal
+            end)
+            n_keep = min(s.show_min, n_groups)
+            kept_group_indices = sort(sorted_indices[1:n_keep])
+        end
+        
+        # Slice nested arrays to keep only selected groups
+        new_positional = [col[kept_group_indices] for col in input.positional]
+        
+        new_named = Dictionary{Symbol, Any}()
+        for (k, v) in pairs(input.named)
+            insert!(new_named, k, v[kept_group_indices])
+        end
+        
+        new_primary = Dictionary{Symbol, Any}()
+        for (k, v) in pairs(input.primary)
+            insert!(new_primary, k, v[kept_group_indices])
+        end
     end
     
     # Return new ProcessedLayer with filtered data
