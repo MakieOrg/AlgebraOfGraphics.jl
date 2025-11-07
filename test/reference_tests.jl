@@ -1919,3 +1919,84 @@ reftest("two columns and assignment") do
         aggregate(2 => mean, 2 => std => 3) *
         visual(Errorbars) |> draw
 end
+
+reftest("selection bool mode") do
+    df = AlgebraOfGraphics.penguins()
+    data(df) *
+        mapping(:bill_length_mm, :body_mass_g, color = :species) *
+        selection(2 => v -> mean(skipmissing(v)) > 4000) *
+        visual(Scatter) |> draw
+end
+
+reftest("selection vector bool mode") do
+    df = AlgebraOfGraphics.penguins()
+    data(df) *
+        mapping(:bill_length_mm, :body_mass_g, color = :species) *
+        selection(2 => v -> v .> 4500) *
+        visual(Scatter) |> draw
+end
+
+reftest("selection sortable mode show_max") do
+    df = AlgebraOfGraphics.penguins()
+    data(df) *
+        mapping(:bill_length_mm, :body_mass_g, color = :species, marker = :sex) *
+        selection(2 => maximum ∘ skipmissing, show_max = 3) *
+        visual(Scatter) |> draw
+end
+
+reftest("selection sortable mode show_min") do
+    df = AlgebraOfGraphics.penguins()
+    data(df) *
+        mapping(:bill_length_mm, :body_mass_g, color = :species, marker = :sex) *
+        selection(1 => minimum ∘ skipmissing, show_min = 2) *
+        visual(Scatter) |> draw
+end
+
+reftest("selection vector sortable mode") do
+    df = AlgebraOfGraphics.penguins()
+    data(df) *
+        mapping(:bill_length_mm, :body_mass_g, color = :species) *
+        selection(2 => identity, show_max = 20) *
+        visual(Scatter) |> draw
+end
+
+reftest("selection multi-column predicate") do
+    df = AlgebraOfGraphics.penguins()
+    data(df) *
+        mapping(:bill_length_mm, :body_mass_g, color = :species, marker = :sex) *
+        selection((1, 2) => (bill, mass) -> mean(bill ./ mass), show_max = 3) *
+        visual(Scatter) |> draw
+end
+
+reftest("selection layering") do
+    df = AlgebraOfGraphics.penguins()
+    layer_all = data(df) * mapping(:bill_length_mm, :body_mass_g) * visual(Scatter, color = (:gray, 0.3))
+    layer_top = data(df) *
+        mapping(:bill_length_mm, :body_mass_g, color = :species) *
+        selection((2, 1) => (mass, bill) -> mass ./ bill, show_max = 10) *
+        visual(Scatter, markersize = 12)
+    draw(layer_all + layer_top)
+end
+
+reftest("selection multiple predicates") do
+    df = AlgebraOfGraphics.penguins()
+    data(df) *
+        mapping(:bill_length_mm, :body_mass_g, color = :species, marker = :sex) *
+        selection(
+            2 => v -> mean(skipmissing(v)) > 3800,
+            1 => v -> mean(skipmissing(v)) > 44
+        ) *
+        visual(Scatter) |> draw
+end
+
+reftest("selection on histogram") do
+    values = sin.(range(-pi/2, pi/2, length = 1000))
+    groups = repeat(["A", "B"], inner = 500)
+    spec = mapping(values, layout = groups) * histogram(bins = 30) *
+        (
+            visual(color = :gray90) +
+            selection(2 => counts -> counts .> 40) *
+                visual(color = :red, label = "Over 40")
+        )
+    draw(spec)
+end
