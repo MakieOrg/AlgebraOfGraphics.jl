@@ -217,7 +217,27 @@ end
     @test pls[2].plottype == BarPlot
     @test pls[1].positional == [[1, 2, 3], [4, 5, 6]]
     @test pls[2].positional == [[11, 12, 13], [14, 15, 16]]
+
+    @testset "subvisual with processedlayers" begin
+        fg = data((; x = 1:3, y = 4:6)) *
+            mapping(:x, :y) *
+            visual(Scatter) *
+            duplicate_shifted() *
+            visual(color = :red) *
+            subvisual(Scatter, markersize = 30) *
+            subvisual(BarPlot, Lines, linewidth = 20) |> draw
+
+        pls = fg.grid[].processedlayers
+        @test length(pls) == 2
+        @test pls[1].plottype == Scatter
+        @test pls[2].plottype == Lines
+        @test pls[1].attributes[:color] == :red
+        @test pls[2].attributes[:color] == :red
+        @test pls[1].attributes[:markersize] == 30
+        @test pls[2].attributes[:linewidth] == 20
+    end
 end
+
 
 @testset "verbatim works without scales" begin
     colors = RGBf.(range(0, 1, length = 10), 0.5, 0.5)

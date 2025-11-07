@@ -1,13 +1,50 @@
 struct Visual
     plottype::PlotType
     attributes::NamedArguments
+    target
 end
-Visual(plottype::PlotType = Plot{plot}; kwargs...) = Visual(plottype, NamedArguments(kwargs))
+
+Visual(plottype::PlotType = Plot{plot}; kwargs...) = Visual(plottype, NamedArguments(kwargs), nothing)
 
 function (v::Visual)(input::ProcessedLayer)
-    plottype = Makie.plottype(v.plottype, input.plottype)
-    attributes = merge(input.attributes, v.attributes)
-    return ProcessedLayer(input; plottype, attributes)
+    # If a target is specified on a single ProcessedLayer, it should match
+    if !isnothing(v.target) && !target_matches(v.target, input)::Bool
+        error("subvisual target did not match. Target was $(repr(v.target)), but layer has plottype $(input.plottype) and label $(repr(input.label))")
+    end
+    if target_matches(v.target, input)::Bool
+        plottype = Makie.plottype(v.plottype, input.plottype)
+        attributes = merge(input.attributes, v.attributes)
+        return ProcessedLayer(input; plottype, attributes)
+    else
+        return input
+    end
+end
+
+target_matches(::Nothing, input) = true
+target_matches(t::Symbol, input) = input.label === t
+target_matches(t::Type, input) = input.plottype <: t
+
+function (v::Visual)(inputs::ProcessedLayers)
+    # Check if target matches at least one layer when a target is specified
+    if !isnothing(v.target)
+        matches = map(pl -> target_matches(v.target, pl)::Bool, inputs.layers)
+        if !any(matches)
+            available_labels = [pl.label for pl in inputs.layers]
+            available_plottypes = [pl.plottype for pl in inputs.layers]
+            error("subvisual target $(repr(v.target)) did not match any layer in ProcessedLayers. Available labels are $(join([repr(a) for a in available_labels], ", ", " and ")), available plottypes are $(join([string(p) for p in available_plottypes], ", ", " and "))")
+        end
+    end
+    return ProcessedLayers(
+        map(inputs.layers) do pl
+            if target_matches(v.target, pl)::Bool
+                plottype = Makie.plottype(v.plottype, pl.plottype)
+                attributes = merge(pl.attributes, v.attributes)
+                return ProcessedLayer(pl; plottype, attributes)
+            else
+                return pl
+            end
+        end
+    )
 end
 
 # In the future, consider switching from `visual(Plot{T})` to `visual(T)`.
@@ -37,6 +74,27 @@ For example, `visual(BarPlot)` will show mapping 1 on the x axis and 2 on the y 
 shows mapping 1 on y and 2 on x.
 """
 visual(plottype::PlotType = Plot{plot}; kwargs...) = transformation(Visual(plottype; kwargs...))
+
+"""
+    subvisual(target, args...; kwargs...)
+
+Create a layer that works like `visual(args...; kwargs...)` but only applies to `ProcessedLayer`s that
+match the `target` argument. This is mainly intended for usage with transformation layers
+which create multiple layers, but can be used with normal layers as well.
+
+The types of `target` that can be used are:
+- `Symbol`: Can be used to pick processed layers by label if they have one. Transformations which create multiple processed layers should label them to facilitate this. For example, the `linear` transformation creates a `:prediction` and a `:ci` layer.
+- `Type`: e.g. `BarPlot` or `Scatter`. Only layers with plot type `<:T` are selected.
+- `Function`: Must be of the form `f(p::ProcessedLayer)::Bool`. Only layers with return value `true` are selected.
+
+Example:
+
+```julia
+data(...) * mapping(...) * linear() * subvisual(:prediction, ...) * subvisual(:ci, ...)
+```
+"""
+subvisual(target, plot = Plot{plot}; kwargs...) = transformation(Visual(plot, NamedArguments(kwargs), target))
+
 
 # For backward compatibility, still allow `visual(Any)`.
 @deprecate visual(::Type{Any}; kwargs...) visual(; kwargs...)

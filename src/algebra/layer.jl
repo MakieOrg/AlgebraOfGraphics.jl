@@ -134,6 +134,7 @@ Base.@kwdef struct ProcessedLayer <: AbstractDrawable
     labels::MixedArguments = MixedArguments()
     attributes::NamedArguments = NamedArguments()
     scale_mapping::Dictionary{KeyType, Symbol} = Dictionary{KeyType, Symbol}() # maps mapping entries to scale ids for use of additional scales
+    label::Union{Nothing, Symbol} = nothing # for selective styling via `visual(target(label))`
 end
 
 function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
@@ -145,6 +146,7 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
         processedlayer.labels,
         processedlayer.attributes,
         processedlayer.scale_mapping,
+        processedlayer.label,
     )
     return ProcessedLayer(; merge(nt, values(kwargs))...)
 end
@@ -530,10 +532,10 @@ function compute_attributes(
     merge!(attrs, primary)
     merge!(attrs, named)
 
-    # implement alpha transparency
-    alpha = get(attrs, :alpha, automatic)
-    color = get(attrs, :color, automatic)
-    (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
+    # # implement alpha transparency
+    # alpha = get(attrs, :alpha, automatic)
+    # color = get(attrs, :color, automatic)
+    # (color !== automatic) && (alpha !== automatic) && (color = (color, alpha))
 
     # opt out of the default cycling mechanism
     cycle = nothing

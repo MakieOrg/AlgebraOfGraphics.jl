@@ -36,7 +36,7 @@ export Layer, Layers, ProcessedLayer, ProcessedLayers, zerolayer
 export Entry, AxisEntries
 export renamer, sorter, nonnumeric, verbatim, presorted
 export density, histogram, linear, smooth, expectation, frequency, contours, filled_contours, aggregate
-export visual, data, geodata, dims, mapping
+export visual, subvisual, data, geodata, dims, mapping
 export datetimeticks
 export draw, draw!
 export facet!, colorbar!, legend!
@@ -61,7 +61,6 @@ include("algebra/layers.jl")
 include("algebra/select.jl")
 include("algebra/processing.jl")
 include("recipes/choropleth.jl")
-include("recipes/linesfill.jl")
 include("recipes/poly.jl")
 include("aesthetics.jl")
 include("transformations/visual.jl")

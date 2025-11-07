@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `subvisual` which is a version of `visual` that restricts its effect to only those layers specified by a `target` argument. Intended for the styling of transformations creating multiple plot layers [#678](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/678).
+- **Breaking**: Removed the internal `LinesFill` recipe which had been used for `linear` and `density` transformations. Instead, both transformations now create `ProcessedLayers` with `Band`s and `Lines` layers. This means that certain `visual`s multiplied with those transformations may lead to incompatible attribute errors now when calling `draw` if they use attributes that `Band` and `Lines` do not share. On the other hand, you can style layers completely independently with `subvisual` now. To replace `density() * visual(direction = :y)` you can now do `density(direction = :y)` directly.
 - Added `aggregate` transformation for flexible data aggregation with automatic grouping, custom labels, and support for scalar and vector-valued aggregations [#696](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/696).
 
 ## v0.11.9 - 2025-10-10

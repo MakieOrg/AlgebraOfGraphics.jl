@@ -118,4 +118,39 @@ These are the attributes you can override (note that some of them have convenien
  More information about legend overrides can be found in [Makie's documentation](https://docs.makie.org/stable/reference/blocks/legend#Overriding-legend-entry-attributes).
 
 
+## Targeting sublayers with `subvisual`
 
+```@docs
+subvisual
+```
+
+In this example, we first create a `linear` transformation which makes two sublayers, labelled `:prediction` and `:ci`, respectively. With `visual`, we can only set attributes for both sublayers at once:
+
+```@example subvisual
+using AlgebraOfGraphics
+using CairoMakie
+
+base = mapping(1:20, 2 .* randn(20) .+ (1:20)) * linear()
+
+draw(base * visual(color = :tomato, label = "Prediction + CI"))
+```
+
+We can separately style these layers using `subvisual`. We can even set separate labels to split them apart in the legend:
+
+```@example subvisual
+modified = base *
+  subvisual(:prediction, color = :tomato, label = "Prediction") *
+  subvisual(:ci, color = :teal, label = "CI")
+
+draw(modified)
+```
+
+Note that in this case you could make the same selection by specifying the layer plot types, but this may not always work if multiple layers of a transformation have the same type:
+
+```@example subvisual
+modified_types = base *
+  subvisual(Lines, color = :tomato, label = "Prediction") *
+  subvisual(Band, color = :teal, label = "CI")
+
+draw(modified_types)
+```
