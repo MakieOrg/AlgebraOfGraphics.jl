@@ -54,11 +54,15 @@ draw(specs)
 ```
 
 ```@example analyses
-data(df) * mapping(:x, layout=:z) * AlgebraOfGraphics.density(datalimits = (0, 8)) |> draw
+data(df) *
+    mapping(:x, layout=:z) *
+    AlgebraOfGraphics.density(datalimits = (0, 8)) |> draw
 ```
 
 ```@example analyses
-draw(specs * visual(direction = :y))
+data(df) *
+    mapping(:x, layout=:z) *
+    AlgebraOfGraphics.density(datalimits = (0, 8), direction = :y) |> draw
 ```
 
 ```@example analyses
