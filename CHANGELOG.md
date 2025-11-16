@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added more examples and explanations of wide vs long data to the docs [#698](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/698)
+
 ## v0.11.9 - 2025-10-10
 
 - Improved error message when two layers with incompatible continuous data are combined [#692](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/692).
