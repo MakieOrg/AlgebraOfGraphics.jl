@@ -88,7 +88,8 @@ df = DataFrame(m, nms)
 
 # Long format
 dfl = stack(df, ys)
-rename!(dfl, :value => :y, :variable => :group)
+# just to rename the y-data as "y" and data group as "group"
+rename!(dfl, :value => :y, :variable => :group) 
 
 nothing # hide
 ````
@@ -175,11 +176,11 @@ data(dfl) * mapping(:x, :y, marker = :group) * visual(Scatter) |> draw
 
 ## Understanding Wide Format Mappings
 
-When you use wide format, you're creating a multidimensional mapping. Think of it as a "tensor" of mappings where each element gets processed through the full grouping pipeline.
+When you use wide format, you're creating a multidimensional mapping. Each element of the array gets processed through the full grouping pipeline.
 
-In the example `mapping(:x, ys)` where `ys = ["y1", "y2", "y3", "y4", "y5"]`, you're creating a one-dimensional tensor with 5 elements. Each column becomes a separate trace in the plot.
+In the example `mapping(:x, ys)` where `ys = ["y1", "y2", "y3", "y4", "y5"]`, you're creating a one-dimensional array with 5 elements. These elements refer to columns of the data, and each column becomes a separate trace in the plot.
 
-The `dims(1)` helper creates a categorical variable along the first dimension of this tensor. This is what allows you to map that dimension to aesthetics like `color` or `linestyle`. The `renamer(ys)` function gives meaningful names to the categories instead of generic labels.
+The `dims(1)` helper creates a categorical variable along the first dimension of this array. This is what allows you to map that dimension to aesthetics like `color` or `linestyle`. The `renamer(ys)` function gives meaningful names to the categories instead of generic labels.
 
 ## Advanced: Axes are linked when they correspond to the same variable
 
