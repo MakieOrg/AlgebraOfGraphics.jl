@@ -8,11 +8,11 @@
     @test colwise_consistent_xlabels(aes)
     @test rowwise_consistent_ylabels(aes)
     @test clean_facet_attributes(aes, hidexdecorations = automatic) ==
-        (linkxaxes = :all, linkyaxes = :all, hidexdecorations = true, hideydecorations = true)
+        (linkxaxes = :all, linkyaxes = :all, hidexdecorations = true, hideydecorations = true, singlexlabel = true, singleylabel = true)
     @test clean_facet_attributes(aes, hidexdecorations = automatic, linkxaxes = false) ==
-        (linkxaxes = :none, linkyaxes = :all, hidexdecorations = false, hideydecorations = true)
+        (linkxaxes = :none, linkyaxes = :all, hidexdecorations = false, hideydecorations = true, singlexlabel = true, singleylabel = true)
     @test clean_facet_attributes(aes, hideydecorations = false, linkyaxes = :minimal) ==
-        (linkxaxes = :all, linkyaxes = :rowwise, hidexdecorations = true, hideydecorations = false)
+        (linkxaxes = :all, linkyaxes = :rowwise, hidexdecorations = true, hideydecorations = false, singlexlabel = true, singleylabel = true)
 
     @test @test_logs(
         (
@@ -20,14 +20,14 @@
                 "Valid values are :all, :colwise, :minimal, :none, true, false, or automatic.",
         ),
         clean_facet_attributes(aes, hidexdecorations = automatic, linkxaxes = :rowwise)
-    ) == (linkxaxes = :all, linkyaxes = :all, hidexdecorations = true, hideydecorations = true)
+    ) == (linkxaxes = :all, linkyaxes = :all, hidexdecorations = true, hideydecorations = true, singlexlabel = true, singleylabel = true)
     @test @test_logs(
         (
             :warn, "Replaced invalid keyword hidexdecorations = nothing by automatic. " *
                 "Valid values are true, false, or automatic.",
         ),
         clean_facet_attributes(aes, hidexdecorations = nothing, linkxaxes = :colwise)
-    ) == (linkxaxes = :colwise, linkyaxes = :all, hidexdecorations = true, hideydecorations = true)
+    ) == (linkxaxes = :colwise, linkyaxes = :all, hidexdecorations = true, hideydecorations = true, singlexlabel = true, singleylabel = true)
 
     # consistent `x` and directionally consistent `y` labels
     df = (x = rand(100), y1 = rand(100), y2 = rand(100), i = rand(["a", "b", "c"], 100))
@@ -38,11 +38,11 @@
     @test colwise_consistent_xlabels(aes)
     @test rowwise_consistent_ylabels(aes)
     @test clean_facet_attributes(aes, hidexdecorations = automatic) ==
-        (linkxaxes = :all, linkyaxes = :rowwise, hidexdecorations = true, hideydecorations = true)
+        (linkxaxes = :all, linkyaxes = :rowwise, hidexdecorations = true, hideydecorations = true, singlexlabel = true, singleylabel = false)
     @test clean_facet_attributes(aes, hidexdecorations = automatic, linkxaxes = false) ==
-        (linkxaxes = :none, linkyaxes = :rowwise, hidexdecorations = false, hideydecorations = true)
+        (linkxaxes = :none, linkyaxes = :rowwise, hidexdecorations = false, hideydecorations = true, singlexlabel = true, singleylabel = false)
     @test clean_facet_attributes(aes, hideydecorations = false, linkxaxes = :minimal) ==
-        (linkxaxes = :colwise, linkyaxes = :rowwise, hidexdecorations = true, hideydecorations = false)
+        (linkxaxes = :colwise, linkyaxes = :rowwise, hidexdecorations = true, hideydecorations = false, singlexlabel = true, singleylabel = false)
 
     # facet wrap
     df = (x = rand(100), y = rand(100), i = rand(["a", "b", "c", "d"], 100))
@@ -53,11 +53,11 @@
     @test colwise_consistent_xlabels(aes)
     @test rowwise_consistent_ylabels(aes)
     @test clean_facet_attributes(aes, hidexdecorations = automatic) ==
-        (linkxaxes = :all, linkyaxes = :all, hidexdecorations = true, hideydecorations = true)
+        (linkxaxes = :all, linkyaxes = :all, hidexdecorations = true, hideydecorations = true, singlexlabel = true, singleylabel = true)
     @test clean_facet_attributes(aes, hidexdecorations = automatic, linkxaxes = false) ==
-        (linkxaxes = :none, linkyaxes = :all, hidexdecorations = false, hideydecorations = true)
+        (linkxaxes = :none, linkyaxes = :all, hidexdecorations = false, hideydecorations = true, singlexlabel = true, singleylabel = true)
     @test clean_facet_attributes(aes, hideydecorations = false, linkyaxes = :minimal) ==
-        (linkxaxes = :all, linkyaxes = :rowwise, hidexdecorations = true, hideydecorations = false)
+        (linkxaxes = :all, linkyaxes = :rowwise, hidexdecorations = true, hideydecorations = false, singlexlabel = true, singleylabel = true)
 end
 
 @testset "facet labels" begin
