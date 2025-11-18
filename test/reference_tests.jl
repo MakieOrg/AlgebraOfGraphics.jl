@@ -1622,3 +1622,11 @@ reftest("all-missing groups") do
     draw!(f[1, 2], spec2)
     f
 end
+
+reftest("single xy label") do
+    f = Figure(size = (900, 400))
+    spec = mapping(1:90 => "X", 1:90 => "Y", row = repeat(1:3, inner = 30), col = repeat('A':'C', 30))
+    draw!(f[1, 1], spec; facet = (; singlexlabel = false))
+    draw!(f[1, 2], spec; facet = (; singleylabel = false, hideydecorations = false))
+    f
+end

@@ -14,6 +14,14 @@ function normalize_link(link, var, consistent, directionally_consistent)
     return default
 end
 
+function normalize_single_label(single, var, consistent)
+    default = consistent
+    single === automatic && return default
+    single isa Bool && return single
+    attribute = Symbol(:single, var, :label)
+    error("Invalid keyword $attribute = $(repr(single)). Valid values are true, false, or automatic.")
+end
+
 function normalize_hide(hide, link, var)
     default = link != :none
     hide === automatic && return default
@@ -27,13 +35,16 @@ end
 function clean_facet_attributes(
         aes;
         linkxaxes = automatic, linkyaxes = automatic,
-        hidexdecorations = automatic, hideydecorations = automatic
+        hidexdecorations = automatic, hideydecorations = automatic,
+        singlexlabel = automatic, singleylabel = automatic
     )
     linkxaxes = normalize_link(linkxaxes, :x, consistent_xaxis(aes), colwise_consistent_xaxis(aes))
     linkyaxes = normalize_link(linkyaxes, :y, consistent_yaxis(aes), rowwise_consistent_yaxis(aes))
     hidexdecorations = normalize_hide(hidexdecorations, linkxaxes, :x)
     hideydecorations = normalize_hide(hideydecorations, linkyaxes, :y)
-    return (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations)
+    singlexlabel = normalize_single_label(singlexlabel, :x, consistent_xlabels(aes))
+    singleylabel = normalize_single_label(singleylabel, :y, consistent_ylabels(aes))
+    return (; linkxaxes, linkyaxes, hidexdecorations, hideydecorations, singlexlabel, singleylabel)
 end
 
 ## Label computation and layout
@@ -134,10 +145,10 @@ function facet_wrap!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     # span axis labels if appropriate
     is2d = all(isaxis2d, nonemptyaxes(aes))
 
-    if is2d && consistent_ylabels(aes)
+    if is2d && attrs.singleylabel
         span_ylabel!(fig, aes)
     end
-    if is2d && consistent_xlabels(aes)
+    if is2d && attrs.singlexlabel
         span_xlabel!(fig, aes)
     end
 
@@ -157,8 +168,8 @@ function facet_grid!(fig, aes::AbstractMatrix{AxisEntries}; facet)
     # span axis labels if appropriate
     is2d = all(isaxis2d, nonemptyaxes(aes))
 
-    is2d && consistent_ylabels(aes) && span_ylabel!(fig, aes)
-    is2d && consistent_xlabels(aes) && span_xlabel!(fig, aes)
+    is2d && attrs.singleylabel && span_ylabel!(fig, aes)
+    is2d && attrs.singlexlabel && span_xlabel!(fig, aes)
 
     if !isnothing(row_scale)
         row_scale.props.legend && row_labels!(fig, aes, row_scale)

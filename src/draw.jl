@@ -85,6 +85,17 @@ The `title`, `subtitle` and `footnotes` arguments accept objects of any kind tha
 - `footnotecolor`
 - `footnotealign`
 - `footnotelineheight`
+
+## Facet options
+
+AlgebraOfGraphics accepts the following keywords under the `facet` keyword:
+
+- `linkxaxes`: Control x-axis linking. Valid values are `automatic`, `:all`, `:colwise`, `:minimal`, `:none`, `true`, or `false`.
+- `linkyaxes`: Control y-axis linking. Valid values are `automatic`, `:all`, `:rowwise`, `:minimal`, `:none`, `true`, or `false`.
+- `hidexdecorations`: Whether to hide x-axis decorations on inner panels. Valid values are `automatic`, `true`, or `false`.
+- `hideydecorations`: Whether to hide y-axis decorations on inner panels. Valid values are `automatic`, `true`, or `false`.
+- `singlexlabel`: Whether to show a single spanning x-axis label instead of labels on each panel. Valid values are `automatic`, `true`, or `false`. Default is `automatic`, which compacts labels when they are consistent across panels.
+- `singleylabel`: Whether to show a single spanning y-axis label instead of labels on each panel. Valid values are `automatic`, `true`, or `false`. Default is `automatic`, which compacts labels when they are consistent across panels.
 """
 function draw(
         d::AbstractDrawable, scales::Scales = scales();
