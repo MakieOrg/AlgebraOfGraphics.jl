@@ -661,11 +661,13 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
             [
                 :colormap => @something(scale.props.aesprops.colormap, default_colormap()),
                 :colorrange => nonsingular_colorrange(scale),
+                :colorscale => @something(scale.props.aesprops.colorscale, identity),
                 :nan_color => @something(scale.props.aesprops.nan_color, :transparent),
                 :lowclip => @something(scale.props.aesprops.lowclip, Makie.automatic),
                 :highclip => @something(scale.props.aesprops.highclip, Makie.automatic),
             ]
         )
+        @info color_attributes
     end
 
     positional = Any[
