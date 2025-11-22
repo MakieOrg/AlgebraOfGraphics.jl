@@ -667,7 +667,6 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
                 :highclip => @something(scale.props.aesprops.highclip, Makie.automatic),
             ]
         )
-        @info color_attributes
     end
 
     positional = Any[
