@@ -568,6 +568,7 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     props = scale.props.aesprops::AesColorContinuousProps
     colormap = Makie.to_colormap(@something(props.colormap, default_colormap()))
     colorrange = Makie.Vec2(nonsingular_colorrange(scale))
+    colorscale = props.colorscale
     lowclip = Makie.to_color(@something(props.lowclip, first(colormap)))
     highclip = Makie.to_color(@something(props.highclip, last(colormap)))
     nan_color = Makie.to_color(@something(props.nan_color, RGBAf(0, 0, 0, 0)))
@@ -577,6 +578,7 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
         colormap,
         identity,
         colorrange,
+        colorscale,
         lowclip,
         highclip,
         nan_color,

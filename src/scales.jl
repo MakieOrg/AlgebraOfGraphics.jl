@@ -380,6 +380,7 @@ struct EmptyContinuousProps <: ContinuousAesProps end
 Base.@kwdef struct AesColorContinuousProps <: ContinuousAesProps
     colormap = nothing
     colorrange = nothing
+    colorscale = nothing
     lowclip = nothing
     highclip = nothing
     nan_color = nothing
