@@ -576,9 +576,8 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     return Makie.numbers_to_colors(
         Makie.convert_single_argument(collect(data)),
         colormap,
-        identity,
-        colorrange,
         colorscale,
+        colorrange,
         lowclip,
         highclip,
         nan_color,
