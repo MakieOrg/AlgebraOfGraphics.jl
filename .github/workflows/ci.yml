@@ -55,7 +55,6 @@ jobs:
         shell: julia --color=yes --project=docs {0}
         run: |
           using Pkg;
-          Pkg.develop(PackageSpec(path=pwd()));
           Pkg.instantiate()
       - name: Run doctests
         shell: julia --color=yes --project=docs {0}
