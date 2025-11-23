@@ -51,18 +51,21 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: '1'
-      - run: |
-          julia --project=docs -e '
-            using Pkg;
-            Pkg.develop(PackageSpec(path=pwd()));
-            Pkg.instantiate()'
-      - run: |
-          julia --project=docs -e '
-            using Documenter: DocMeta, doctest
-            using AlgebraOfGraphics
-            DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics); recursive=true)
-            doctest(AlgebraOfGraphics)'
-      - run: julia --project=docs docs/make.jl
+      - name: Setup docs environment
+        shell: julia --color=yes --project=docs {0}
+        run: |
+          using Pkg;
+          Pkg.develop(PackageSpec(path=pwd()));
+          Pkg.instantiate()
+      - name: Run doctests
+        shell: julia --color=yes --project=docs {0}
+        run: |
+          using Documenter: DocMeta, doctest
+          using AlgebraOfGraphics
+          DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics); recursive=true)
+          doctest(AlgebraOfGraphics)
+      - name: Build and deploy docs
+        run: julia --project=docs docs/make.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
