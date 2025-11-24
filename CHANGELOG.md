@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added `QQPlot` and `QQNorm` aesthetics for use with Makie 0.24.7 and up. `QQPlot` can take one positional argument and a `distribution` keyword from that version on which makes it compatible with AlgebraOfGraphics [#703](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/703).
+
 ## v0.11.9 - 2025-10-10
 
 - Improved error message when two layers with incompatible continuous data are combined [#692](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/692).
