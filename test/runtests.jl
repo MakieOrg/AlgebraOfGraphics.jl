@@ -20,6 +20,7 @@ using Makie: automatic
 using GridLayoutBase: Protrusion
 
 using Dictionaries: Indices, Dictionary
+using Distributions: Distributions
 
 using KernelDensity: kde, pdf
 using StatsBase: fit, histrange, Histogram, weights
