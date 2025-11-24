@@ -378,6 +378,19 @@ function legend_elements(T::Type{Scatter}, attributes, scale_args::MixedArgument
     ]
 end
 
+function legend_elements(T::Type{<:Union{QQPlot,QQNorm}}, attributes, scale_args::MixedArguments)
+    return [
+        MarkerElement(
+            color = _get(T, scale_args, attributes, :color),
+            markerpoints = [Point2f(0.5, 0.5)],
+            marker = _get(T, scale_args, attributes, :marker),
+            markerstrokewidth = _get(T, scale_args, attributes, :strokewidth),
+            markersize = _get(T, scale_args, attributes, :markersize),
+            markerstrokecolor = _get(T, scale_args, attributes, :strokecolor),
+        ),
+    ]
+end
+
 function legend_elements(T::Type{ScatterLines}, attributes, scale_args::MixedArguments)
     color = _get(T, scale_args, attributes, :color)
     markercolor = _get(T, scale_args, attributes, :markercolor)
