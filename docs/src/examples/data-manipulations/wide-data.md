@@ -1,4 +1,4 @@
-# Wide data
+# [Wide data](@id Wide-data)
 
 ````@example wide_data
 using AlgebraOfGraphics, CairoMakie
