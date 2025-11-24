@@ -1,6 +1,37 @@
 # Mapping
 
 Mappings determine how the data is translated into a plot.
+
+## Understanding mapping arguments
+
+The `mapping` function accepts both positional and named arguments, which get passed to
+the plotting function or analysis you're using.
+
+**Positional arguments** are passed in order to the plotting function. For example,
+`Scatter` expects x-values as the first argument and y-values as the second:
+
+```julia
+mapping(:weight, :height)  # weight → x-axis, height → y-axis
+```
+
+**Named arguments** map data to specific visual attributes. Which attributes are available
+depends on the plotting function. Common examples include `color`, `markersize`, `linestyle`:
+
+```julia
+mapping(:weight, :height, color = :age, markersize = :age)
+```
+
+To see which arguments a plotting function supports, use `show_aesthetics`:
+
+```julia
+show_aesthetics(Scatter)
+```
+
+This shows which positional arguments and keywords can be used in `mapping` with that
+plotting function, and which abstract aesthetic (like `X`, `Y`, `Color`) each corresponds to.
+
+## Basic usage
+
 For example, this `mapping` maps columns `weight` and `height` to positional arguments 1 and 2, and `age` to the `markersize` attribute of the `Scatter` plotting function:
 
 ```julia

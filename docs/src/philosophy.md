@@ -141,19 +141,26 @@ and a
 to differentiate titles and labels from tick labels via font weight, while
 using the same typeface at a readable size.
 
-## Wide format support
+## Multiple data formats
 
-Finally, AlgebraOfGraphics aims to support many different data formats. Different
-problems require organizing the data in different formats, and AlgebraOfGraphics
-should support a wide range of options.
+Data naturally comes in different shapes depending on how it was collected or organized.
+AlgebraOfGraphics is designed to work flexibly with your data rather than forcing you
+to reshape it first.
 
-This is achieved in three different ways. First, the
+The two most common tabular formats are *long* and *wide*. In long format, each row
+represents one observation, with columns for variables and grouping information. In wide
+format, multiple related measurements are spread across different columns. While long
+format leads to simpler AlgebraOfGraphics code (mappings are just column symbols), wide
+format is sometimes more natural for your data source.
+
+This flexibility is achieved in three ways. First, the
 [Tables interface](https://github.com/JuliaData/Tables.jl)
 ensures integration with a large variety of data sources.
-Second, using the [Wide data syntax](@ref "Wide-data"), users can compare
-many different columns in the same visualization, without having to
-first reshape the dataset to a long format.
+Second, using wide data syntax with multidimensional mappings, users can plot
+many columns together without first reshaping to long format.
 Finally, tabular datasets are not a requirement: users may also work directly
-with TODO REFLINK [Pre-grouped data](@ref "Pre-grouped-data"), which
-are not organized as a table, but rather as a collection of
-(possibly multi-dimensional) arrays.
+with [Pre-grouped data](@ref "Pre-grouped-data"), which are not organized as a table,
+but rather as a collection of (possibly multi-dimensional) arrays.
+
+For a detailed comparison of long and wide formats with conversion examples, see
+[Long vs Wide Data Formats](@ref).
