@@ -697,7 +697,7 @@ reftest("qqplot") do
 end
 
 reftest("qqplot distribution and qqnorm") do
-    df = (; y = sin.((1:100) .+ 0.2), group = repeat(["A", "B"], 50))
+    df = (; y = sin.((1:100) .+ 0.2) .* repeat([1, 1.2], 50), group = repeat(["A", "B"], 50))
     f = Figure()
     fg = draw!(f[1, 1], data(df) * mapping(:y, marker = :group, color = :group) * visual(QQNorm))
     legend!(f[1, 2], fg)
