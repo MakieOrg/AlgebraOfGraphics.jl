@@ -65,31 +65,18 @@ df_wide = unstack(df_long, :x, :group, :y)
 
 Let's see how the same plots look with each format. We'll use a practical example with multiple y-values for each x:
 
-````@example wide_data
+```@example wide_data
 using AlgebraOfGraphics, CairoMakie, DataFrames
 
-# Create sample data
-function make_y(v, n)
-    m = Matrix{Float64}(undef, length(v), n)
-    for i in 1:n
-        e = 0.4 + i * 0.1
-        m[:, i] = v .^ e
-    end
-    return m
-end
-
-xs = 0.0:10
-m = hcat(xs, make_y(xs, 5))
-ys = ["y$n" for n in 1:5]
-nms = vcat("x", ys)
-
 # Wide format
-df = DataFrame(m, nms)
+df_wide = DataFrame(x = 0.0:10)
+for i in 1:5
+    df_wide[!, "y$i"] = df_wide.x .^ (0.4 + i * 0.1)
+end
+ys = names(df_wide, Not(:x))
 
 # Long format
-dfl = stack(df, ys)
-# just to rename the y-data as "y" and data group as "group"
-rename!(dfl, :value => :y, :variable => :group) 
+df_long = stack(df_wide, ys, variable_name = :group, value_name = :y)
 
 nothing # hide
 ````
@@ -97,13 +84,13 @@ nothing # hide
 ### Example 1: Lines without color differentiation
 
 **Wide format:**
-````@example wide_data
-data(df) * mapping(:x, ys) * visual(Lines) |> draw
+```@example wide_data
+data(df_wide) * mapping(:x, ys) * visual(Lines) |> draw
 ````
 
 **Long format:**
-````@example wide_data
-data(dfl) * mapping(:x, :y, group = :group) * visual(Lines) |> draw
+```@example wide_data
+data(df_long) * mapping(:x, :y, group = :group) * visual(Lines) |> draw
 ````
 
 In long format, we need the `group` mapping to create separate lines. Without it, all points would connect into one zigzagging line.
@@ -111,13 +98,13 @@ In long format, we need the `group` mapping to create separate lines. Without it
 ### Example 2: Lines differentiated by color
 
 **Wide format:**
-````@example wide_data
-data(df) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Lines) |> draw
+```@example wide_data
+data(df_wide) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Lines) |> draw
 ````
 
 **Long format:**
-````@example wide_data
-data(dfl) * mapping(:x, :y, color = :group) * visual(Lines) |> draw
+```@example wide_data
+data(df_long) * mapping(:x, :y, color = :group) * visual(Lines) |> draw
 ````
 
 Notice how the long format version is simpler: just `color = :group`. The wide format needs `dims(1)` to create a categorical variable from the dimension, and `renamer(ys)` to give the categories proper names.
@@ -125,14 +112,14 @@ Notice how the long format version is simpler: just `color = :group`. The wide f
 ### Example 3: Custom color palette
 
 **Wide format:**
-````@example wide_data
-data(df) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Lines) |>
+```@example wide_data
+data(df_wide) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Lines) |>
     draw(scales(Color = (; palette = :Set1_5)))
 ````
 
 **Long format:**
-````@example wide_data
-data(dfl) * mapping(:x, :y, color = :group) * visual(Lines) |>
+```@example wide_data
+data(df_long) * mapping(:x, :y, color = :group) * visual(Lines) |>
     draw(scales(Color = (; palette = :Set1_5)))
 ````
 
@@ -141,37 +128,37 @@ The `scales` function works the same way for both formats.
 ### Example 4: Lines differentiated by style
 
 **Wide format:**
-````@example wide_data
-data(df) * mapping(:x, ys, linestyle = dims(1) => renamer(ys)) * visual(Lines) |> draw
+```@example wide_data
+data(df_wide) * mapping(:x, ys, linestyle = dims(1) => renamer(ys)) * visual(Lines) |> draw
 ````
 
 **Long format:**
-````@example wide_data
-data(dfl) * mapping(:x, :y, linestyle = :group) * visual(Lines) |> draw
+```@example wide_data
+data(df_long) * mapping(:x, :y, linestyle = :group) * visual(Lines) |> draw
 ````
 
 ### Example 5: Scatter plot with color
 
 **Wide format:**
-````@example wide_data
-data(df) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Scatter) |> draw
+```@example wide_data
+data(df_wide) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Scatter) |> draw
 ````
 
 **Long format:**
-````@example wide_data
-data(dfl) * mapping(:x, :y, color = :group) * visual(Scatter) |> draw
+```@example wide_data
+data(df_long) * mapping(:x, :y, color = :group) * visual(Scatter) |> draw
 ````
 
 ### Example 6: Scatter plot with different markers
 
 **Wide format:**
-````@example wide_data
-data(df) * mapping(:x, ys, marker = dims(1) => renamer(ys)) * visual(Scatter) |> draw
+```@example wide_data
+data(df_wide) * mapping(:x, ys, marker = dims(1) => renamer(ys)) * visual(Scatter) |> draw
 ````
 
 **Long format:**
-````@example wide_data
-data(dfl) * mapping(:x, :y, marker = :group) * visual(Scatter) |> draw
+```@example wide_data
+data(df_long) * mapping(:x, :y, marker = :group) * visual(Scatter) |> draw
 ````
 
 ## Understanding Wide Format Mappings
@@ -182,11 +169,11 @@ In the example `mapping(:x, ys)` where `ys = ["y1", "y2", "y3", "y4", "y5"]`, yo
 
 The `dims(1)` helper creates a categorical variable along the first dimension of this array. This is what allows you to map that dimension to aesthetics like `color` or `linestyle`. The `renamer(ys)` function gives meaningful names to the categories instead of generic labels.
 
-## Advanced: Axes are linked when they correspond to the same variable
+## Faceting and axis linking with wide data
 
-When using wide format with faceting, AlgebraOfGraphics intelligently links axes that represent the same variable:
+When using wide format with faceting, AlgebraOfGraphics links only those axes that have the same label:
 
-````@example wide_data
+```@example wide_data
 df_facet = (
     sepal_length = 1 .+ rand(100),
     sepal_width = 2 .+ rand(100),
@@ -202,10 +189,10 @@ draw(plt)
 
 You can control axis linking behavior:
 
-````@example wide_data
+```@example wide_data
 draw(plt, facet = (; linkxaxes = :all, linkyaxes = :all))
 ````
 
-````@example wide_data
+```@example wide_data
 draw(plt, facet = (; linkxaxes = :none, linkyaxes = :none))
 ````
