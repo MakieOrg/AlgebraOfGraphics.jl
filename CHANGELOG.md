@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.11.10 - 2025-11-18
+
+- Added `singlexlabel` and `singleylabel` keywords to `draw(facet = (; ...))` with which the behavior can be disabled where the same label across multiple axes is replaced with a single spanning one [#699](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/699).
+
 ## v0.11.9 - 2025-10-10
 
 - Improved error message when two layers with incompatible continuous data are combined [#692](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/692).
