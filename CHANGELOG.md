@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added `QQPlot` and `QQNorm` aesthetics for use with Makie 0.24.7 and up. `QQPlot` can take one positional argument and a `distribution` keyword from that version on which makes it compatible with AlgebraOfGraphics [#703](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/703).
+- Added `singlexlabel` and `singleylabel` keywords to `draw(facet = (; ...))` with which the behavior can be disabled where the same label across multiple axes is replaced with a single spanning one [#699](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/699).
 
 ## v0.11.9 - 2025-10-10
 
