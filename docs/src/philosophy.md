@@ -156,7 +156,7 @@ format is sometimes more natural for your data source.
 This flexibility is achieved in three ways. First, the
 [Tables interface](https://github.com/JuliaData/Tables.jl)
 ensures integration with a large variety of data sources.
-Second, using [Wide data](@ref "Wide-data") syntax with multidimensional mappings, users can plot
+Second, using wide data syntax with multidimensional mappings, users can plot
 many columns together without first reshaping to long format.
 Finally, tabular datasets are not a requirement: users may also work directly
 with [Pre-grouped data](@ref "Pre-grouped-data"), which are not organized as a table,
