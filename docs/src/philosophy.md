@@ -159,7 +159,7 @@ ensures integration with a large variety of data sources.
 Second, using [Wide data](@ref) syntax with multidimensional mappings, users can plot
 many columns together without first reshaping to long format.
 Finally, tabular datasets are not a requirement: users may also work directly
-with [Pre-grouped data](@ref), which are not organized as a table,
+with [Pre-grouped data](@ref "Pre-grouped-data"), which are not organized as a table,
 but rather as a collection of (possibly multi-dimensional) arrays.
 
 For a detailed comparison of long and wide formats with conversion examples, see

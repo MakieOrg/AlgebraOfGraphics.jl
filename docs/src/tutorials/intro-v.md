@@ -70,7 +70,7 @@ two_halves = two_halves_base * mapping(:bill_length_mm, :bill_depth_mm) * visual
 draw(two_halves)
 ```
 
-## Wide data
+## [Wide data](@id Wide-data-tutorial)
 
 One special power of AlgebraOfGraphics is its ability to handle wide format data.
 While every wide dataframe can be converted back and forth from a long one using `stack` and `unstack`, doing so certainly adds a bit of mental overhead which we generally like to avoid in exploratory plotting.
