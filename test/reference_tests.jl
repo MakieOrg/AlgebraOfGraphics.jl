@@ -1655,6 +1655,8 @@ reftest("color scale functions") do
             mapping(:x, :y3, color = :color => "Color sqrt" => AlgebraOfGraphics.scale(:color_sqrt))
     ) * visual(Scatter)
 
-    draw(spec, scales(color_log10 = (; scale = log10), color_sqrt = (; scale = sqrt)),
-        colorbar = (; position = :bottom))
+    draw(
+        spec, scales(color_log10 = (; scale = log10), color_sqrt = (; scale = sqrt)),
+        colorbar = (; position = :bottom)
+    )
 end
