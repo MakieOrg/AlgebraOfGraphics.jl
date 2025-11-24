@@ -378,7 +378,7 @@ function legend_elements(T::Type{Scatter}, attributes, scale_args::MixedArgument
     ]
 end
 
-function legend_elements(T::Type{<:Union{QQPlot,QQNorm}}, attributes, scale_args::MixedArguments)
+function legend_elements(T::Type{<:Union{QQPlot, QQNorm}}, attributes, scale_args::MixedArguments)
     return [
         MarkerElement(
             color = _get(T, scale_args, attributes, :color),
