@@ -69,7 +69,7 @@ function continuous_colorbar(colorscale::ContinuousScale)
     lowclip = is_lowclipped ? @something(colorscale.props.aesprops.lowclip, colormap_colors[1]) : Makie.automatic
     highclip = is_highclipped ? @something(colorscale.props.aesprops.highclip, colormap_colors[end]) : Makie.automatic
 
-    scale = something(colorscale.props.aesprops.colorscale, identity)
+    scale = something(colorscale.props.aesprops.scale, identity)
 
     return (;
         label,
