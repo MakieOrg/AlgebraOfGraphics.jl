@@ -79,19 +79,19 @@ ys = names(df_wide, Not(:x))
 df_long = stack(df_wide, ys, variable_name = :group, value_name = :y)
 
 nothing # hide
-````
+```
 
 ### Example 1: Lines without color differentiation
 
 **Wide format:**
 ```@example wide_data
 data(df_wide) * mapping(:x, ys) * visual(Lines) |> draw
-````
+```
 
 **Long format:**
 ```@example wide_data
 data(df_long) * mapping(:x, :y, group = :group) * visual(Lines) |> draw
-````
+```
 
 In long format, we need the `group` mapping to create separate lines. Without it, all points would connect into one zigzagging line.
 
@@ -100,12 +100,12 @@ In long format, we need the `group` mapping to create separate lines. Without it
 **Wide format:**
 ```@example wide_data
 data(df_wide) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Lines) |> draw
-````
+```
 
 **Long format:**
 ```@example wide_data
 data(df_long) * mapping(:x, :y, color = :group) * visual(Lines) |> draw
-````
+```
 
 Notice how the long format version is simpler: just `color = :group`. The wide format needs `dims(1)` to create a categorical variable from the dimension, and `renamer(ys)` to give the categories proper names.
 
@@ -115,13 +115,13 @@ Notice how the long format version is simpler: just `color = :group`. The wide f
 ```@example wide_data
 data(df_wide) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Lines) |>
     draw(scales(Color = (; palette = :Set1_5)))
-````
+```
 
 **Long format:**
 ```@example wide_data
 data(df_long) * mapping(:x, :y, color = :group) * visual(Lines) |>
     draw(scales(Color = (; palette = :Set1_5)))
-````
+```
 
 The `scales` function works the same way for both formats.
 
@@ -130,36 +130,36 @@ The `scales` function works the same way for both formats.
 **Wide format:**
 ```@example wide_data
 data(df_wide) * mapping(:x, ys, linestyle = dims(1) => renamer(ys)) * visual(Lines) |> draw
-````
+```
 
 **Long format:**
 ```@example wide_data
 data(df_long) * mapping(:x, :y, linestyle = :group) * visual(Lines) |> draw
-````
+```
 
 ### Example 5: Scatter plot with color
 
 **Wide format:**
 ```@example wide_data
 data(df_wide) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Scatter) |> draw
-````
+```
 
 **Long format:**
 ```@example wide_data
 data(df_long) * mapping(:x, :y, color = :group) * visual(Scatter) |> draw
-````
+```
 
 ### Example 6: Scatter plot with different markers
 
 **Wide format:**
 ```@example wide_data
 data(df_wide) * mapping(:x, ys, marker = dims(1) => renamer(ys)) * visual(Scatter) |> draw
-````
+```
 
 **Long format:**
 ```@example wide_data
 data(df_long) * mapping(:x, :y, marker = :group) * visual(Scatter) |> draw
-````
+```
 
 ## Understanding Wide Format Mappings
 
@@ -185,14 +185,14 @@ yvars = ["petal_length" "petal_width"]
 layers = linear() + visual(Scatter)
 plt = data(df_facet) * layers * mapping(xvars, yvars, col=dims(1), row=dims(2))
 draw(plt)
-````
+```
 
 You can control axis linking behavior:
 
 ```@example wide_data
 draw(plt, facet = (; linkxaxes = :all, linkyaxes = :all))
-````
+```
 
 ```@example wide_data
 draw(plt, facet = (; linkxaxes = :none, linkyaxes = :none))
-````
+```
