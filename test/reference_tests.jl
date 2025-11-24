@@ -1640,3 +1640,23 @@ reftest("single xy label") do
     draw!(f[1, 2], spec; facet = (; singleylabel = false, hideydecorations = false))
     f
 end
+
+reftest("color scale functions") do
+    df = (;
+        x = 1:10,
+        y1 = 1:10,
+        y2 = 2:11,
+        y3 = 3:12,
+        color = exp10.(range(1, 4, length = 10)),
+    )
+    spec = data(df) * (
+        mapping(:x, :y1, color = :color) +
+            mapping(:x, :y2, color = :color => "Color log10" => AlgebraOfGraphics.scale(:color_log10)) +
+            mapping(:x, :y3, color = :color => "Color sqrt" => AlgebraOfGraphics.scale(:color_sqrt))
+    ) * visual(Scatter)
+
+    draw(
+        spec, scales(color_log10 = (; scale = log10), color_sqrt = (; scale = sqrt)),
+        colorbar = (; position = :bottom)
+    )
+end
