@@ -75,7 +75,8 @@ function getlabeledarray(layer::Layer, s)
         sz = ntuple(length(axs)) do n
             return n in d.dims ? length(axs[n]) : 1
         end
-        arr = map(fill ∘ f, CartesianIndices(sz))
+        # Apply the DimsSelector to each CartesianIndex to create DimsIndex values
+        arr = map(ci -> fill(f(d(ci))), CartesianIndices(sz))
     elseif data === Pregrouped()
         vs, (f, (label, scaleid)) = select(data, s)
         isprim = any(iscategoricalcontainer, vs)

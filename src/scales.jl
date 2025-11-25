@@ -195,6 +195,7 @@ struct CategoricalScaleProps
     legend::Bool
     categories::Union{Nothing, Function, Vector}
     palette # nothing or any type workable as a palette
+    dim_labels::Union{Nothing, AbstractDict} # labels for dims selectors, indexed by DimsIndex
 end
 
 struct EmptyCategoricalProps <: CategoricalAesProps end
@@ -264,6 +265,7 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     label = _pop!(props_copy, :label, nothing)
     categories = _pop!(props_copy, :categories, nothing)
     palette = _pop!(props_copy, :palette, nothing)
+    dim_labels = _pop!(props_copy, :dim_labels, nothing)
     aes_props = categorical_aes_props(aestype, props_copy)
     return CategoricalScaleProps(
         aes_props,
@@ -271,6 +273,7 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
         legend,
         categories,
         palette,
+        dim_labels,
     )
 end
 
@@ -339,6 +342,21 @@ to_datalabel(x) = string(x)
 to_datalabel(s::Sorted) = to_datalabel(s.value)
 
 function datalabels(c::CategoricalScale)
+    # If we have dimensional labels for DimsIndex values, use them
+    if c.props.dim_labels !== nothing
+        dv = datavalues(c)
+        return map(dv) do v
+            if v isa DimsIndex && haskey(c.props.dim_labels, v)
+                # Look up the label for this DimsIndex in the dim_labels dict
+                label = c.props.dim_labels[v]
+                return to_datalabel(label)
+            else
+                # Fallback to default string representation
+                return to_datalabel(v)
+            end
+        end
+    end
+    
     return if c.props.categories === nothing
         to_datalabel.(datavalues(c))
     elseif c.props.categories isa Function

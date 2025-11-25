@@ -42,7 +42,7 @@ function (d::DimsSelector)(c::CartesianIndex{N}) where {N}
     t = ntuple(N) do n
         return n in d.dims ? c[n] : 1
     end
-    return CartesianIndex(t)
+    return DimsIndex(d.dims, CartesianIndex(t))
 end
 
 select(data, d::DimsSelector) = (d,) => identity => "" => nothing
