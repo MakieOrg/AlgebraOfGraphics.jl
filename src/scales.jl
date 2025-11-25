@@ -198,6 +198,16 @@ struct CategoricalScaleProps
     dim_labels::Union{Nothing, AbstractDict} # labels for dims selectors, indexed by DimsIndex
 end
 
+# Custom equality to handle mutable dict fields properly
+function Base.:(==)(a::CategoricalScaleProps, b::CategoricalScaleProps)
+    return a.aesprops == b.aesprops &&
+           a.label == b.label &&
+           a.legend == b.legend &&
+           a.categories == b.categories &&
+           a.palette == b.palette &&
+           a.dim_labels == b.dim_labels
+end
+
 struct EmptyCategoricalProps <: CategoricalAesProps end
 
 categorical_aes_props_type(::Type{<:Aesthetic}) = EmptyCategoricalProps
