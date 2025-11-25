@@ -99,7 +99,7 @@ In long format, we need the `group` mapping to create separate lines. Without it
 
 **Wide format:**
 ```@example wide_data
-data(df_wide) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Lines) |> draw
+data(df_wide) * mapping(:x, ys, color = dims(1)) * visual(Lines) |> draw
 ```
 
 **Long format:**
@@ -113,7 +113,7 @@ Notice how the long format version is simpler: just `color = :group`. The wide f
 
 **Wide format:**
 ```@example wide_data
-data(df_wide) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Lines) |>
+data(df_wide) * mapping(:x, ys, color = dims(1)) * visual(Lines) |>
     draw(scales(Color = (; palette = :Set1_5)))
 ```
 
@@ -129,7 +129,7 @@ The `scales` function works the same way for both formats.
 
 **Wide format:**
 ```@example wide_data
-data(df_wide) * mapping(:x, ys, linestyle = dims(1) => renamer(ys)) * visual(Lines) |> draw
+data(df_wide) * mapping(:x, ys, linestyle = dims(1)) * visual(Lines) |> draw
 ```
 
 **Long format:**
@@ -141,7 +141,7 @@ data(df_long) * mapping(:x, :y, linestyle = :group) * visual(Lines) |> draw
 
 **Wide format:**
 ```@example wide_data
-data(df_wide) * mapping(:x, ys, color = dims(1) => renamer(ys)) * visual(Scatter) |> draw
+data(df_wide) * mapping(:x, ys, color = dims(1)) * visual(Scatter) |> draw
 ```
 
 **Long format:**
@@ -153,7 +153,7 @@ data(df_long) * mapping(:x, :y, color = :group) * visual(Scatter) |> draw
 
 **Wide format:**
 ```@example wide_data
-data(df_wide) * mapping(:x, ys, marker = dims(1) => renamer(ys)) * visual(Scatter) |> draw
+data(df_wide) * mapping(:x, ys, marker = dims(1)) * visual(Scatter) |> draw
 ```
 
 **Long format:**
