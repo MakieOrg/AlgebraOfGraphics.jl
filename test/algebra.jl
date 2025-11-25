@@ -125,7 +125,7 @@ end
 @testset "grouping" begin
     df = (x = rand(1000), y = rand(1000), z = rand(1000), w = rand(1000), c = rand(["a", "b", "c"], 1000))
     df.c[1:3] .= ["a", "b", "c"] # ensure all three values exist
-    d = mapping(:x => exp, [:y, :z], color = :c, marker = dims(1) => t -> ["1", "2"][t], markersize = :w)
+    d = mapping(:x => exp, [:y, :z], color = :c, marker = dims(1) => t -> ["1", "2"][t.index], markersize = :w)
     layer = data(df) * d * visual(Scatter)
     processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
     processedlayers = map(CartesianIndices(AlgebraOfGraphics.shape(processedlayer))) do c
