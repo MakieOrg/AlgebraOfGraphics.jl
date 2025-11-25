@@ -264,6 +264,89 @@ function get_scale_props(scale_props, aes::Type{<:Aesthetic}, scale_id::Union{Sy
     return props_dict[scale_id]
 end
 
+# Extract a label string from label_array for the given DimsIndex at dimension selected_dim.
+# Returns nothing if the label cannot be extracted.
+function extract_label_from_array(label_array::AbstractArray, di::DimsIndex, selected_dim::Int, dim_to_check::Int)
+    # Check if this array has the expected size in the dimension we're interested in
+    ndims(label_array) < dim_to_check && return nothing
+    
+    idx = di.index[selected_dim]
+    array_size = size(label_array, dim_to_check)
+    
+    # Verify the index is within bounds
+    idx > array_size && return nothing
+    
+    # Build indices for extraction: 1 for all dims except the one we want
+    indices = ones(Int, ndims(label_array))
+    indices[dim_to_check] = idx
+    
+    return to_string(label_array[indices...])
+end
+
+# Collect all relevant labels for a given DimsIndex from the processedlayer's labels.
+# Searches through positional argument labels to find arrays that match the layer shape
+# in each selected dimension.
+# Note: dims(N) refers to dimension N of the original broadcast shape.
+# After shiftdims adds a leading dimension, original dimension N is at position N+1.
+function collect_labels_for_dimsindex(di::DimsIndex, processedlayer::ProcessedLayer, layer_shape)
+    labels_for_di = String[]
+    
+    for selected_dim in di.dims
+        # Adjust for shiftdims: original dimension N is now at N+1
+        dim_to_check = selected_dim + 1
+        expected_size = length(layer_shape[dim_to_check])
+        
+        # Search through positional arguments for matching label arrays
+        positional_keys = filter(k -> k isa Integer, keys(processedlayer.labels))
+        
+        for pos_key in positional_keys
+            label_value = processedlayer.labels[pos_key]
+            
+            # Skip non-arrays or arrays that don't match our expected size
+            !(label_value isa AbstractArray) && continue
+            size(label_value, dim_to_check) != expected_size && continue
+            
+            # Extract the label for this dimension
+            label = extract_label_from_array(label_value, di, selected_dim, dim_to_check)
+            !isnothing(label) && push!(labels_for_di, label)
+        end
+    end
+    
+    return labels_for_di
+end
+
+# Build a dictionary mapping each DimsIndex in datavalues to its corresponding label string.
+# Labels are extracted from the processedlayer's positional argument labels.
+function build_dims_labels_dict(datavalues, processedlayer::ProcessedLayer)
+    layer_shape = shape(processedlayer)
+    dim_labels_dict = Dict{DimsIndex, String}()
+    
+    for di in datavalues
+        labels_for_di = collect_labels_for_dimsindex(di, processedlayer, layer_shape)
+        
+        # Join multiple labels with commas, or use the single label directly
+        if !isempty(labels_for_di)
+            dim_labels_dict[di] = length(labels_for_di) == 1 ? 
+                only(labels_for_di) : 
+                join(labels_for_di, ", ")
+        end
+    end
+    
+    return dim_labels_dict
+end
+
+# Add dimensional labels to the scale properties if datavalues contains DimsIndex entries.
+# Returns the original props if no dims labels are needed, or a new dictionary with :dim_labels added.
+function add_dims_labels_if_needed(props, datavalues, processedlayer::ProcessedLayer)
+    eltype(datavalues) <: AlgebraOfGraphics.DimsIndex || return props
+    
+    dim_labels_dict = build_dims_labels_dict(datavalues, processedlayer)
+    
+    isempty(dim_labels_dict) && return props
+    
+    return merge(props, dictionary([:dim_labels => dim_labels_dict]))
+end
+
 function categoricalscales(processedlayer::ProcessedLayer, scale_props, aes_mapping::AestheticMapping)
     categoricals = MixedArguments()
     merge!(categoricals, processedlayer.primary)
@@ -280,53 +363,8 @@ function categoricalscales(processedlayer::ProcessedLayer, scale_props, aes_mapp
         label = to_label(get(processedlayer.labels, key, ""))
         props = get_scale_props(scale_props, aestype, scale_id)
         
-        # Check if datavalues are DimsIndex (from dims selector)
-        # If so, try to extract dimensional labels from processedlayer.labels
-        if !isempty(datavalues) && first(datavalues) isa DimsIndex
-            # Get the shape of the processedlayer to know what size each dimension should be
-            layer_shape = shape(processedlayer)
-            
-            # Build a dict that maps each DimsIndex to its corresponding label
-            dim_labels_dict = Dict{DimsIndex, String}()
-            for di in datavalues
-                # For each selected dimension in di.dims, collect labels from
-                # positional arguments whose label arrays match the layer shape in that dimension
-                labels_for_di = String[]
-                for selected_dim in di.dims
-                    # dims(N) refers to dimension N of the original broadcast shape
-                    # After shiftdims adds a leading dimension, original dimension N is at N+1
-                    # We check dimension N+1 in both the layer shape and label arrays
-                    dim_to_check = selected_dim + 1
-                    expected_size = length(layer_shape[dim_to_check])
-                    
-                    # Look through all positional arguments for arrays that have the expected size
-                    # in the same dimension
-                    for pos_key in sort(filter(k -> k isa Integer, collect(keys(processedlayer.labels))))
-                        label_value = processedlayer.labels[pos_key]
-                        if label_value isa AbstractArray && 
-                           ndims(label_value) >= dim_to_check && 
-                           size(label_value, dim_to_check) == expected_size
-                            # This array has the expected size in this dimension
-                            idx = di.index[selected_dim]
-                            if expected_size >= idx
-                                # Build indices for all dimensions, setting non-selected dims to 1
-                                indices = ones(Int, ndims(label_value))
-                                indices[dim_to_check] = idx
-                                push!(labels_for_di, to_string(label_value[indices...]))
-                            end
-                        end
-                    end
-                end
-                # If we found labels, join them; otherwise leave the DimsIndex unlabeled
-                if !isempty(labels_for_di)
-                    dim_labels_dict[di] = length(labels_for_di) == 1 ? only(labels_for_di) : join(labels_for_di, ", ")
-                end
-            end
-            # Only add dim_labels if we actually found some labels
-            if !isempty(dim_labels_dict)
-                props = insert!(copy(props), :dim_labels, dim_labels_dict)
-            end
-        end
+        # Add dimensional labels if this scale uses DimsIndex values
+        props = add_dims_labels_if_needed(props, datavalues, processedlayer)
         
         return CategoricalScale(aestype, datavalues, label, props)
     end
