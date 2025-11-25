@@ -283,32 +283,36 @@ function categoricalscales(processedlayer::ProcessedLayer, scale_props, aes_mapp
         # Check if datavalues are DimsIndex (from dims selector)
         # If so, try to extract dimensional labels from processedlayer.labels
         if !isempty(datavalues) && first(datavalues) isa DimsIndex
+            # Get the shape of the processedlayer to know what size each dimension should be
+            layer_shape = shape(processedlayer)
+            
             # Build a dict that maps each DimsIndex to its corresponding label
             dim_labels_dict = Dict{DimsIndex, String}()
             for di in datavalues
                 # For each selected dimension in di.dims, collect labels from
-                # positional arguments whose arrays vary in that dimension
+                # positional arguments whose label arrays match the layer shape in that dimension
                 labels_for_di = String[]
                 for selected_dim in di.dims
-                    # Look through all positional arguments for arrays
+                    # dims(N) refers to dimension N of the original broadcast shape
+                    # After shiftdims adds a leading dimension, original dimension N is at N+1
+                    # We check dimension N+1 in both the layer shape and label arrays
+                    dim_to_check = selected_dim + 1
+                    expected_size = length(layer_shape[dim_to_check])
+                    
+                    # Look through all positional arguments for arrays that have the expected size
+                    # in the same dimension
                     for pos_key in sort(filter(k -> k isa Integer, collect(keys(processedlayer.labels))))
                         label_value = processedlayer.labels[pos_key]
-                        if label_value isa AbstractArray
-                            # Labels have been transformed by shiftdims which adds a leading dimension
-                            # So dimension N in the original shape is now at dimension N+1
-                            adjusted_dim = selected_dim + 1
-                            
-                            # An array contributes to dimension N if it has size > 1 in dimension N+1 (after shiftdims)
-                            contributes_to_dim = ndims(label_value) >= adjusted_dim && size(label_value, adjusted_dim) > 1
-                            
-                            if contributes_to_dim
-                                idx = di.index[selected_dim]
-                                if size(label_value, adjusted_dim) >= idx
-                                    # Build indices for all dimensions, setting non-selected dims to 1
-                                    indices = ones(Int, ndims(label_value))
-                                    indices[adjusted_dim] = idx
-                                    push!(labels_for_di, to_string(label_value[indices...]))
-                                end
+                        if label_value isa AbstractArray && 
+                           ndims(label_value) >= dim_to_check && 
+                           size(label_value, dim_to_check) == expected_size
+                            # This array has the expected size in this dimension
+                            idx = di.index[selected_dim]
+                            if expected_size >= idx
+                                # Build indices for all dimensions, setting non-selected dims to 1
+                                indices = ones(Int, ndims(label_value))
+                                indices[dim_to_check] = idx
+                                push!(labels_for_di, to_string(label_value[indices...]))
                             end
                         end
                     end
