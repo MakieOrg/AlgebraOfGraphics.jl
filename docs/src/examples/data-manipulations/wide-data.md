@@ -107,7 +107,7 @@ data(df_wide) * mapping(:x, ys, color = dims(1)) * visual(Lines) |> draw
 data(df_long) * mapping(:x, :y, color = :group) * visual(Lines) |> draw
 ```
 
-Notice how the long format version is simpler: just `color = :group`. The wide format needs `dims(1)` to create a categorical variable from the dimension, and `renamer(ys)` to give the categories proper names.
+Notice how the long format version is a bit simpler: just `color = :group`. The wide format uses `dims(1)` to create a categorical variable from the first dimension, the column labels are automatically used as labels of the categorical values that `dims` creates. Because there are two different y-labels, the y axis doesn't have a label by default in wide mode.
 
 ### Example 3: Custom color palette
 
@@ -167,7 +167,7 @@ When you use wide format, you're creating a multidimensional mapping. Each eleme
 
 In the example `mapping(:x, ys)` where `ys = ["y1", "y2", "y3", "y4", "y5"]`, you're creating a one-dimensional array with 5 elements. These elements refer to columns of the data, and each column becomes a separate trace in the plot.
 
-The `dims(1)` helper creates a categorical variable along the first dimension of this array. This is what allows you to map that dimension to aesthetics like `color` or `linestyle`. The `renamer(ys)` function gives meaningful names to the categories instead of generic labels.
+The `dims(1)` helper creates a categorical variable along the first dimension of this array. This is what allows you to map that dimension to aesthetics like `color` or `linestyle`. The column labels are automatically used as category labels in legends and other visual elements.
 
 ## Faceting and axis linking with wide data
 
