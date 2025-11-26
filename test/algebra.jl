@@ -291,14 +291,14 @@ end
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
     labels = AlgebraOfGraphics.datalabels(color_scale)
     @test labels == ["y1", "y2"]
-    
+
     # Two sets of one-dimensional labels (both match dimension 1)
     wide_data2 = (; x1 = [1, 2], x2 = [1.5, 2.5], y1 = [3, 4], y2 = [5, 6])
     fg = draw(data(wide_data2) * mapping([:x1, :x2], [:y1, :y2], color = dims(1)) * visual(Scatter))
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
     labels = AlgebraOfGraphics.datalabels(color_scale)
     @test labels == ["x1, y1", "x2, y2"]
-    
+
     # Single-element array
     fg = draw(data(wide_data2) * mapping(:x1, [:y1], color = dims(1)) * visual(Scatter))
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
@@ -310,25 +310,25 @@ end
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
     labels = AlgebraOfGraphics.datalabels(color_scale)
     @test only(labels) isa Makie.RichText
-    
+
     # Two vectors with single elements each
     fg = draw(data(wide_data2) * mapping([:x1], [:y1], color = dims(1)) * visual(Scatter))
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
     labels = AlgebraOfGraphics.datalabels(color_scale)
     @test labels == ["x1, y1"]
-    
+
     # Multidimensional case - dims(2) with row vector
     fg = draw(data(wide_data2) * mapping([:x1, :x2], [:y1 :y2], color = dims(2)) * visual(Scatter))
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
     labels = AlgebraOfGraphics.datalabels(color_scale)
     @test labels == ["y1", "y2"]
-    
+
     # Multidimensional case - dims(1) with column and row vectors
     fg = draw(data(wide_data2) * mapping([:x1, :x2], [:y1 :y2], color = dims(1)) * visual(Scatter))
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
     labels = AlgebraOfGraphics.datalabels(color_scale)
     @test labels == ["x1", "x2"]
-    
+
     # Multidimensional case with multiple dims
     fg = draw(data(wide_data2) * mapping([:x1, :x2], [:y1 :y2], color = dims(1, 2)) * visual(Scatter))
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
@@ -349,15 +349,17 @@ end
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
     labels = AlgebraOfGraphics.datalabels(color_scale)
     @test labels == ["y1, x1", "y2, x1", "y1, x2", "y2, x2"]
-    
+
     # dims with renamer should still work
     times = [[1, 2, 3], [1, 2, 3, 4], [1, 2, 3]]
     measurements = [randn(3), randn(4), randn(3)]
-    fg = draw(pregrouped(
-        times => "Time",
-        measurements => "Measurement",
-        color = dims(1) => renamer(["Subject 1", "Subject 2", "Subject 3"]),
-    ) * visual(Lines))
+    fg = draw(
+        pregrouped(
+            times => "Time",
+            measurements => "Measurement",
+            color = dims(1) => renamer(["Subject 1", "Subject 2", "Subject 3"]),
+        ) * visual(Lines)
+    )
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
     labels = AlgebraOfGraphics.datalabels(color_scale)
     @test labels == ["Subject 1", "Subject 2", "Subject 3"]

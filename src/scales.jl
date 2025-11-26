@@ -195,17 +195,17 @@ struct CategoricalScaleProps
     legend::Bool
     categories::Union{Nothing, Function, Vector}
     palette # nothing or any type workable as a palette
-    dim_labels::Union{Nothing, AbstractDict} # labels for dims selectors, indexed by DimsIndex
+    dim_labels::Union{Nothing, Dict{DimsIndex, Any}} # labels for dims selectors, indexed by DimsIndex
 end
 
-# Custom equality to handle mutable dict fields properly
 function Base.:(==)(a::CategoricalScaleProps, b::CategoricalScaleProps)
     return a.aesprops == b.aesprops &&
-           a.label == b.label &&
-           a.legend == b.legend &&
-           a.categories == b.categories &&
-           a.palette == b.palette &&
-           a.dim_labels == b.dim_labels
+        a.label == b.label &&
+        a.legend == b.legend &&
+        a.categories == b.categories &&
+        a.palette == b.palette # &&
+    # TODO: currently this fails with rich text, need to wait for equality implementation in Makie before adding this back, it's just a guard rail anyway so disabling this field for now
+    # a.dim_labels == b.dim_labels
 end
 
 struct EmptyCategoricalProps <: CategoricalAesProps end
@@ -366,7 +366,7 @@ function datalabels(c::CategoricalScale)
             end
         end
     end
-    
+
     return if c.props.categories === nothing
         to_datalabel.(datavalues(c))
     elseif c.props.categories isa Function

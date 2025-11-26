@@ -271,17 +271,17 @@ end
 function extract_label_from_array(label_array::AbstractArray, di::DimsIndex, selected_dim::Int, dim_to_check::Int)
     # Check if this array has the expected size in the dimension we're interested in
     ndims(label_array) < dim_to_check && return nothing
-    
+
     idx = di.index[selected_dim]
     array_size = size(label_array, dim_to_check)
-    
+
     # Verify the index is within bounds
     idx > array_size && return nothing
-    
+
     # Build indices for extraction: 1 for all dims except the one we want
     indices = ones(Int, ndims(label_array))
     indices[dim_to_check] = idx
-    
+
     return label_array[indices...]
 end
 
@@ -292,28 +292,28 @@ end
 # After shiftdims adds a leading dimension, original dimension N is at position N+1.
 function collect_labels_for_dimsindex(di::DimsIndex, processedlayer::ProcessedLayer, layer_shape)
     labels_for_di = Any[]
-    
+
     for selected_dim in di.dims
         # Adjust for shiftdims: original dimension N is now at N+1
         dim_to_check = selected_dim + 1
         expected_size = length(layer_shape[dim_to_check])
-        
+
         # Search through positional arguments for matching label arrays
         positional_keys = filter(k -> k isa Integer, keys(processedlayer.labels))
-        
+
         for pos_key in positional_keys
             label_value = processedlayer.labels[pos_key]
-            
+
             # Skip non-arrays or arrays that don't match our expected size
             !(label_value isa AbstractArray) && continue
             size(label_value, dim_to_check) != expected_size && continue
-            
+
             # Extract the label for this dimension
             label = extract_label_from_array(label_value, di, selected_dim, dim_to_check)
             !isnothing(label) && push!(labels_for_di, label)
         end
     end
-    
+
     return labels_for_di
 end
 
@@ -323,23 +323,23 @@ end
 function build_dims_labels_dict(datavalues, processedlayer::ProcessedLayer)
     layer_shape = shape(processedlayer)
     dim_labels_dict = Dict{DimsIndex, Any}()
-    
+
     for di in datavalues
         labels_for_di = collect_labels_for_dimsindex(di, processedlayer, layer_shape)
-        
+
         # Join multiple labels with commas, or use the single label directly
         if !isempty(labels_for_di)
-            dim_labels_dict[di] = length(labels_for_di) == 1 ? 
-                only(labels_for_di) : 
+            dim_labels_dict[di] = length(labels_for_di) == 1 ?
+                only(labels_for_di) :
                 labeljoin(labels_for_di, ", ")
         end
     end
-    
+
     return dim_labels_dict
 end
 
 function labeljoin(labels, sep)
-    foldl((l1, l2) -> _labeljoin(l1, l2, sep), labels)
+    return foldl((l1, l2) -> _labeljoin(l1, l2, sep), labels)
 end
 
 _labeljoin(s1::AbstractString, s2::AbstractString, sep) = join((s1, s2), sep)
@@ -351,11 +351,11 @@ _labeljoin(s1::Makie.RichText, s2::Makie.RichText, sep) = rich(s1, sep, s2)
 # Returns the original props if no dims labels are needed, or a new dictionary with :dim_labels added.
 function add_dims_labels_if_needed(props, datavalues, processedlayer::ProcessedLayer)
     eltype(datavalues) <: AlgebraOfGraphics.DimsIndex || return props
-    
+
     dim_labels_dict = build_dims_labels_dict(datavalues, processedlayer)
-    
+
     isempty(dim_labels_dict) && return props
-    
+
     return merge(props, dictionary([:dim_labels => dim_labels_dict]))
 end
 
@@ -374,10 +374,10 @@ function categoricalscales(processedlayer::ProcessedLayer, scale_props, aes_mapp
         datavalues = key isa Integer ? mapreduce(uniquevalues, mergesorted, val) : uniquevalues(val)
         label = to_label(get(processedlayer.labels, key, ""))
         props = get_scale_props(scale_props, aestype, scale_id)
-        
+
         # Add dimensional labels if this scale uses DimsIndex values
         props = add_dims_labels_if_needed(props, datavalues, processedlayer)
-        
+
         return CategoricalScale(aestype, datavalues, label, props)
     end
     return categoricalscales
