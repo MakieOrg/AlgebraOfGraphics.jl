@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added an auto-label mechanism when using `dims` which picks up the column labels from the positional arguments of `mapping` and assigns them to the categorical values created by `dims`. Slightly breaking in that the categorical scale now does not consist of `CartesianIndex` values anymore but the custom type `DimsIndex` that contains information about which dims were requested.
+
 ## v0.11.10 - 2025-11-24
 
 - Added `QQPlot` and `QQNorm` aesthetics for use with Makie 0.24.7 and up. `QQPlot` can take one positional argument and a `distribution` keyword from that version on which makes it compatible with AlgebraOfGraphics [#703](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/703).
