@@ -168,7 +168,18 @@ end
 
 function process(layer::Layer)
     processedlayer = process_mappings(layer)
-    grouped_entry = layer.data === Pregrouped() ? processedlayer : group(processedlayer)
+    grouped_entry = if layer.data === Pregrouped()
+        # For pregrouped data, apply shiftdims to match the structure of grouped data
+        # This adds a leading dimension to both data and labels
+        # TODO: determine if this is all really needed or if shiftdims can be removed completely at some point
+        primary = map(shiftdims, processedlayer.primary)
+        positional = map(shiftdims, processedlayer.positional)
+        named = map(shiftdims, processedlayer.named)
+        labels = map(shiftdims, processedlayer.labels)
+        ProcessedLayer(processedlayer; primary, positional, named, labels)
+    else
+        group(processedlayer)
+    end
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
     transformed_processlayers = ProcessedLayers(layer.transformation(ProcessedLayer(grouped_entry; primary)))
     return ProcessedLayers(
