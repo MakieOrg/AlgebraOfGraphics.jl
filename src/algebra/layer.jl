@@ -201,6 +201,7 @@ function uniquevalues(v::AbstractArray)
 end
 
 to_label(label::AbstractString) = label
+to_label(label::Makie.RichText) = label
 to_label(labels::AbstractArray) = reduce(mergelabels, labels)
 
 # merge dict2 into dict but translate keys first using remapdict
@@ -264,8 +265,9 @@ function get_scale_props(scale_props, aes::Type{<:Aesthetic}, scale_id::Union{Sy
     return props_dict[scale_id]
 end
 
-# Extract a label string from label_array for the given DimsIndex at dimension selected_dim.
+# Extract a label from label_array for the given DimsIndex at dimension selected_dim.
 # Returns nothing if the label cannot be extracted.
+# The label can be any type (String, RichText, etc.)
 function extract_label_from_array(label_array::AbstractArray, di::DimsIndex, selected_dim::Int, dim_to_check::Int)
     # Check if this array has the expected size in the dimension we're interested in
     ndims(label_array) < dim_to_check && return nothing
@@ -280,7 +282,7 @@ function extract_label_from_array(label_array::AbstractArray, di::DimsIndex, sel
     indices = ones(Int, ndims(label_array))
     indices[dim_to_check] = idx
     
-    return to_string(label_array[indices...])
+    return label_array[indices...]
 end
 
 # Collect all relevant labels for a given DimsIndex from the processedlayer's labels.
@@ -289,7 +291,7 @@ end
 # Note: dims(N) refers to dimension N of the original broadcast shape.
 # After shiftdims adds a leading dimension, original dimension N is at position N+1.
 function collect_labels_for_dimsindex(di::DimsIndex, processedlayer::ProcessedLayer, layer_shape)
-    labels_for_di = String[]
+    labels_for_di = Any[]
     
     for selected_dim in di.dims
         # Adjust for shiftdims: original dimension N is now at N+1
@@ -315,11 +317,12 @@ function collect_labels_for_dimsindex(di::DimsIndex, processedlayer::ProcessedLa
     return labels_for_di
 end
 
-# Build a dictionary mapping each DimsIndex in datavalues to its corresponding label string.
+# Build a dictionary mapping each DimsIndex in datavalues to its corresponding label.
 # Labels are extracted from the processedlayer's positional argument labels.
+# Labels can be String, RichText, or other types.
 function build_dims_labels_dict(datavalues, processedlayer::ProcessedLayer)
     layer_shape = shape(processedlayer)
-    dim_labels_dict = Dict{DimsIndex, String}()
+    dim_labels_dict = Dict{DimsIndex, Any}()
     
     for di in datavalues
         labels_for_di = collect_labels_for_dimsindex(di, processedlayer, layer_shape)
@@ -328,12 +331,21 @@ function build_dims_labels_dict(datavalues, processedlayer::ProcessedLayer)
         if !isempty(labels_for_di)
             dim_labels_dict[di] = length(labels_for_di) == 1 ? 
                 only(labels_for_di) : 
-                join(labels_for_di, ", ")
+                labeljoin(labels_for_di, ", ")
         end
     end
     
     return dim_labels_dict
 end
+
+function labeljoin(labels, sep)
+    foldl((l1, l2) -> _labeljoin(l1, l2, sep), labels)
+end
+
+_labeljoin(s1::AbstractString, s2::AbstractString, sep) = join((s1, s2), sep)
+_labeljoin(s1::Makie.RichText, s2, sep) = rich(s1, sep, s2)
+_labeljoin(s1, s2::Makie.RichText, sep) = rich(s1, sep, s2)
+_labeljoin(s1::Makie.RichText, s2::Makie.RichText, sep) = rich(s1, sep, s2)
 
 # Add dimensional labels to the scale properties if datavalues contains DimsIndex entries.
 # Returns the original props if no dims labels are needed, or a new dictionary with :dim_labels added.

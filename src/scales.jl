@@ -444,7 +444,7 @@ continuous_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol, Any
 
 struct ContinuousScale{T}
     extrema::NTuple{2, T}
-    label::Union{AbstractString, Nothing}
+    label # nothing or some kind of label object
     force::Bool
     props::ContinuousScaleProps
 end
@@ -556,6 +556,9 @@ function rescale(values, c::CategoricalScale; allow_continuous = true)
     return plotvalues(c)[idxs]
 end
 
+_isempty(s::AbstractString) = isempty(s)
+_isempty(r::Makie.RichText) = all(_isempty, r.children)
+
 Base.length(c::CategoricalScale) = length(datavalues(c))
 
 function mergelabels(label1, label2)
@@ -563,9 +566,9 @@ function mergelabels(label1, label2)
         nothing
     elseif isequal(label1, label2)
         label1
-    elseif isempty(label1)
+    elseif _isempty(label1)
         label2
-    elseif isempty(label2)
+    elseif _isempty(label2)
         label1
     else
         nothing # no reasonable label found

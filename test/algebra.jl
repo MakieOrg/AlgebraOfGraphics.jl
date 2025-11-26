@@ -304,6 +304,12 @@ end
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
     labels = AlgebraOfGraphics.datalabels(color_scale)
     @test labels == ["y1"]
+
+    # Rich text label
+    fg = draw(data(wide_data2) * mapping(:x1, [:y1 => rich("Y")], color = dims(1)) * visual(Scatter))
+    color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
+    labels = AlgebraOfGraphics.datalabels(color_scale)
+    @test only(labels) isa Makie.RichText
     
     # Two vectors with single elements each
     fg = draw(data(wide_data2) * mapping([:x1], [:y1], color = dims(1)) * visual(Scatter))
@@ -328,6 +334,15 @@ end
     color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
     labels = AlgebraOfGraphics.datalabels(color_scale)
     @test labels == ["x1, y1", "x1, y2", "x2, y1", "x2, y2"]
+
+    # Multidimensional with `rich` as one label which is joined with strings
+    fg = draw(data(wide_data2) * mapping([:x1, :x2], [:y1 :y2 => rich("y2")], color = dims(1, 2)) * visual(Scatter))
+    color_scale = fg.grid[1].categoricalscales[AlgebraOfGraphics.AesColor][nothing]
+    labels = AlgebraOfGraphics.datalabels(color_scale)
+    @test labels[1] == "x1, y1"
+    @test labels[2] isa Makie.RichText
+    @test labels[3] == "x2, y1"
+    @test labels[4] isa Makie.RichText
 
     # flip to dims(2, 1)
     fg = draw(data(wide_data2) * mapping([:x1, :x2], [:y1 :y2], color = dims(2, 1)) * visual(Scatter))
