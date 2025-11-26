@@ -3,13 +3,9 @@
 to_string(s) = string(s)
 to_string(s::AbstractString) = s
 
-"""
-    DimsIndex
-
-A wrapper around `CartesianIndex` that also stores which dimensions were selected
-via the `dims()` selector. This allows proper label extraction later, as we can
-identify which dimension(s) each index component refers to.
-"""
+# A wrapper around `CartesianIndex` that also stores which dimensions were selected
+# via the `dims()` selector. This allows proper label extraction later, as we can
+# identify which dimension(s) each index component refers to.
 struct DimsIndex{N, M}
     dims::NTuple{N, Int}  # which dimensions were selected (e.g., (1, 2) for dims(1, 2))
     index::CartesianIndex{M}  # the actual index values
