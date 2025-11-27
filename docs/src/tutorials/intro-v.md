@@ -1,6 +1,6 @@
 # Intro to AoG - V - Alternative input data formats
 
-So far, every example you've seen in this tutorial series was using a long-format or "tidy" dataframe in the tradition of ggplot2.
+So far, every example you've seen in this tutorial series was using a long-format or ["tidy"](https://tidyr.tidyverse.org/articles/tidy-data.html) dataframe in the tradition of ggplot2.
 
 Sometimes, however, our data does not come in this format, and we don't want to spend the time to transform it before we start plotting. In this case, it's good to be aware of alternative methods of specifying and handling input data that AlgebraOfGraphics offers.
 

@@ -4,7 +4,7 @@ AlgebraOfGraphics works with both long and wide data formats. Understanding the 
 
 ## What is Long Format?
 
-In long format (also called "tidy" format), each row represents one observation. If you have multiple groups or categories, they're indicated by values in a categorical column rather than spread across separate columns.
+In long format (also called ["tidy"](https://tidyr.tidyverse.org/articles/tidy-data.html) format), each row represents one observation. If you have multiple groups or categories, they're indicated by values in a categorical column rather than spread across separate columns.
 
 Here's an example of long format data:
 
