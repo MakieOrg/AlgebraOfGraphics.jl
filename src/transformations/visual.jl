@@ -79,13 +79,12 @@ visual(plottype::PlotType = Plot{plot}; kwargs...) = transformation(Visual(plott
     subvisual(target, args...; kwargs...)
 
 Create a layer that works like `visual(args...; kwargs...)` but only applies to `ProcessedLayer`s that
-match the `target` argument. This is mainly intended for usage with transformation layers
-which create multiple layers, but can be used with normal layers as well.
+match the `target` argument. This is intended for usage with transformation layers
+which create multiple layers themselves.
 
 The types of `target` that can be used are:
 - `Symbol`: Can be used to pick processed layers by label if they have one. Transformations which create multiple processed layers should label them to facilitate this. For example, the `linear` transformation creates a `:prediction` and a `:ci` layer.
 - `Type`: e.g. `BarPlot` or `Scatter`. Only layers with plot type `<:T` are selected.
-- `Function`: Must be of the form `f(p::ProcessedLayer)::Bool`. Only layers with return value `true` are selected.
 
 Example:
 
