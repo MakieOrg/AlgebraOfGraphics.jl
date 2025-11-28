@@ -574,7 +574,7 @@ end
     df = (x = rand(1000), y = rand(1000), c = rand(["a", "b"], 1000))
     npoints = 150
     layer = data(df) * mapping(:x, :y, color = :c) * smooth(; npoints)
-    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+    processedlayers = AlgebraOfGraphics.ProcessedLayers(layer)
 
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
@@ -588,6 +588,7 @@ end
     x̂2 = range(extrema(x2)...; length = npoints)
     ŷ2 = Loess.predict(loess2, x̂2)
 
+    processedlayer = processedlayers.layers[2]
     x̂, ŷ = processedlayer.positional
 
     @test x̂[1] ≈ x̂1
@@ -612,7 +613,8 @@ end
     df = (x = rand(1:3, 1000), y = rand(1000), c = rand(["a", "b"], 1000))
     npoints = 150
     layer = data(df) * mapping(:x, :y, color = :c) * smooth(; npoints)
-    processedlayer = AlgebraOfGraphics.ProcessedLayer(layer)
+    processedlayers = AlgebraOfGraphics.ProcessedLayers(layer)
+    processedlayer = processedlayers.layers[2]
 
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
