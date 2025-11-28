@@ -1,6 +1,6 @@
 # Intro to AoG - V - Alternative input data formats
 
-So far, every example you've seen in this tutorial series was using a long-format or "tidy" dataframe in the tradition of ggplot2.
+So far, every example you've seen in this tutorial series was using a long-format or ["tidy"](https://tidyr.tidyverse.org/articles/tidy-data.html) dataframe in the tradition of ggplot2.
 
 Sometimes, however, our data does not come in this format, and we don't want to spend the time to transform it before we start plotting. In this case, it's good to be aware of alternative methods of specifying and handling input data that AlgebraOfGraphics offers.
 
@@ -131,15 +131,14 @@ That is because AlgebraOfGraphics has the ability to extract labels across multi
 The input shape in our case is `(4,)` which is equivalent to the size of our four-column vectors. So there are four labels.
 
 The expression `col = dims(1)` means that we want to split the dataset into `col` facets using the indices of the first dimension of our input shape `(4,)`.
-That results in the `CartesianIndex(1,)` to `CartesianIndex(4,)` titles of the column facets.
 
-We can assign a separate label to each column by broadcasting (`.=>`) label pairs with the column vector. We could specify four different labels, but in this case, the y axis is always the same. So we just broadcast the same label to all of them:
+We can assign a separate label to each column by creating label pairs in the column vector. These labels will by default apply both to the y axes and the facets, because `dims` takes its labels from all the involved column arrays by default.
 
 ```@example tut
 wide_spec_labeled = data(season_penguins) *
     mapping(
         :sex,
-        [:body_mass_spring, :body_mass_summer, :body_mass_autumn, :body_mass_winter] .=> "Body Mass (g)",
+        [:body_mass_spring => "Spring", :body_mass_summer => "Summer", :body_mass_autumn => "Autumn", :body_mass_winter => "Winter"],
         col = dims(1)
     ) *
     visual(Violin)
@@ -147,23 +146,20 @@ wide_spec_labeled = data(season_penguins) *
 draw(wide_spec_labeled)
 ```
 
-The four y axis labels are now all the same again, so the axis linking also goes into effect as usual and the three redundant labels are hidden.
-But the column labels are not nice, yet, because they just enumerate the indices of the first input dimension.
-The simplest way to rename these is to use the `renamer` utility that we have seen before.
+We can either assign the same label to all y entries and use `renamer` on `col = dims(1)` to explicitly change only the facet labels.
+Or we can keep the labels in place and simply change the y axis label globally using the scale settings. Once all axes have the same label again, automatic axis linking goes into effect, too.
 
 ```@example tut
 wide_spec_final = data(season_penguins) *
     mapping(
         :sex,
-        [:body_mass_spring, :body_mass_summer, :body_mass_autumn, :body_mass_winter] .=> "Body Mass (g)",
-        col = dims(1) => renamer(["Spring", "Summer", "Autumn", "Winter"])
+        [:body_mass_spring => "Spring", :body_mass_summer => "Summer", :body_mass_autumn => "Autumn", :body_mass_winter => "Winter"],
+        col = dims(1)
     ) *
     visual(Violin)
 
-draw(wide_spec_final)
+draw(wide_spec_final, scales(Y = (; label = "Body Mass (g)")))
 ```
-
-That looks much better!
 
 ### More dimensions
 

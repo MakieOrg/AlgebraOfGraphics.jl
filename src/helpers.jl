@@ -3,6 +3,20 @@
 to_string(s) = string(s)
 to_string(s::AbstractString) = s
 
+# A wrapper around `CartesianIndex` that also stores which dimensions were selected
+# via the `dims()` selector. This allows proper label extraction later, as we can
+# identify which dimension(s) each index component refers to.
+struct DimsIndex{N, M}
+    dims::NTuple{N, Int}  # which dimensions were selected (e.g., (1, 2) for dims(1, 2))
+    index::CartesianIndex{M}  # the actual index values
+end
+
+Base.show(io::IO, d::DimsIndex) = print(io, "DimsIndex(dims=", d.dims, ", index=", d.index, ")")
+Base.hash(d::DimsIndex, h::UInt) = hash(d.index, hash(d.dims, hash(:DimsIndex, h)))
+Base.:(==)(d1::DimsIndex, d2::DimsIndex) = d1.dims == d2.dims && d1.index == d2.index
+Base.isequal(d1::DimsIndex, d2::DimsIndex) = isequal(d1.dims, d2.dims) && isequal(d1.index, d2.index)
+Base.isless(d1::DimsIndex, d2::DimsIndex) = isless((d1.dims, Tuple(d1.index)), (d2.dims, Tuple(d2.index)))
+
 struct Sorted{T}
     idx::UInt32
     value::T
@@ -31,6 +45,8 @@ function linearize_cartesian_index(i::CartesianIndex)
     end
     return linearized
 end
+
+linearize_cartesian_index(d::DimsIndex) = linearize_cartesian_index(d.index)
 
 linearize_cartesian_index(x) = x
 

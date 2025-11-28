@@ -26,7 +26,7 @@ Here's a short overview of similarities and differences between ggplot2 and Alge
 |Defines all of the visual infrastructure itself, outputs low level graphics objects that are hard to modify directly.|Creates high-level Makie building blocks like `Figure`, `Axis` or `Legend` as well as plot objects like `Lines` or `Scatter` which can be modified more easily.|
 |`geom`s specify visual components and `stats` statistical transformations, but some `geoms` have default `stat`s and vice versa | Layers with the `visual` transformation feed their associated data directly to Makie plotting functions. Layers with other `transformation`s apply more complex modifications to the data first and can result in multiple output layers.|
 
-AlgebraOfGraphics primarily works with long format data, where each row is one observation and columns represent variables. For example, the penguins dataset we'll use has one row per penguin, with columns like `bill_length_mm` and `species`. Wide format data (where multiple measurements are spread across columns) is also supported. If you're wondering about the difference between long and wide formats, see [Long vs Wide Data Formats](@ref) for a detailed comparison with examples.
+AlgebraOfGraphics primarily works with long format ("tidy")[https://tidyr.tidyverse.org/articles/tidy-data.html] data, where rows are observations and columns are variables. For example, the penguins dataset we'll use has one row per penguin, with columns like `bill_length_mm` and `species`. Wide format data (where multiple measurements are spread across columns) is also supported. If you're wondering about the difference between long and wide formats, see [Long vs Wide Data Formats](@ref) for a detailed comparison with examples.
 
 ## Preparations
 

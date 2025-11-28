@@ -1670,3 +1670,8 @@ reftest("color scale functions") do
         colorbar = (; position = :bottom)
     )
 end
+
+reftest("auto dims labels multiple joined") do
+    df = (a = 1:10, b = 11:20, x = sin.(1:10), y = cos.(1:10))
+    data(df) * mapping([:a, :b], [:x, :y => rich("Y", color = :red, font = :bold)], color = dims(1)) * (visual(Scatter) + smooth()) |> draw
+end
