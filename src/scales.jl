@@ -195,6 +195,17 @@ struct CategoricalScaleProps
     legend::Bool
     categories::Union{Nothing, Function, Vector}
     palette # nothing or any type workable as a palette
+    dim_labels::Union{Nothing, Dict{DimsIndex, Any}} # labels for dims selectors, indexed by DimsIndex
+end
+
+function Base.:(==)(a::CategoricalScaleProps, b::CategoricalScaleProps)
+    return a.aesprops == b.aesprops &&
+        a.label == b.label &&
+        a.legend == b.legend &&
+        a.categories == b.categories &&
+        a.palette == b.palette # &&
+    # TODO: currently this fails with rich text, need to wait for equality implementation in Makie before adding this back, it's just a guard rail anyway so disabling this field for now
+    # a.dim_labels == b.dim_labels
 end
 
 struct EmptyCategoricalProps <: CategoricalAesProps end
@@ -264,6 +275,7 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     label = _pop!(props_copy, :label, nothing)
     categories = _pop!(props_copy, :categories, nothing)
     palette = _pop!(props_copy, :palette, nothing)
+    dim_labels = _pop!(props_copy, :dim_labels, nothing)
     aes_props = categorical_aes_props(aestype, props_copy)
     return CategoricalScaleProps(
         aes_props,
@@ -271,6 +283,7 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
         legend,
         categories,
         palette,
+        dim_labels,
     )
 end
 
@@ -339,6 +352,21 @@ to_datalabel(x) = string(x)
 to_datalabel(s::Sorted) = to_datalabel(s.value)
 
 function datalabels(c::CategoricalScale)
+    # If we have dimensional labels for DimsIndex values, use them
+    if c.props.dim_labels !== nothing
+        dv = datavalues(c)
+        return map(dv) do v
+            if v isa DimsIndex && haskey(c.props.dim_labels, v)
+                # Look up the label for this DimsIndex in the dim_labels dict
+                label = c.props.dim_labels[v]
+                return to_datalabel(label)
+            else
+                # Fallback to default string representation
+                return to_datalabel(v)
+            end
+        end
+    end
+
     return if c.props.categories === nothing
         to_datalabel.(datavalues(c))
     elseif c.props.categories isa Function
@@ -416,7 +444,7 @@ continuous_aes_props(type::Type{<:Aesthetic}, props_dict::Dictionary{Symbol, Any
 
 struct ContinuousScale{T}
     extrema::NTuple{2, T}
-    label::Union{AbstractString, Nothing}
+    label # nothing or some kind of label object
     force::Bool
     props::ContinuousScaleProps
 end
@@ -528,6 +556,9 @@ function rescale(values, c::CategoricalScale; allow_continuous = true)
     return plotvalues(c)[idxs]
 end
 
+_isempty(s::AbstractString) = isempty(s)
+_isempty(r::Makie.RichText) = all(_isempty, r.children)
+
 Base.length(c::CategoricalScale) = length(datavalues(c))
 
 function mergelabels(label1, label2)
@@ -535,9 +566,9 @@ function mergelabels(label1, label2)
         nothing
     elseif isequal(label1, label2)
         label1
-    elseif isempty(label1)
+    elseif _isempty(label1)
         label2
-    elseif isempty(label2)
+    elseif _isempty(label2)
         label1
     else
         nothing # no reasonable label found

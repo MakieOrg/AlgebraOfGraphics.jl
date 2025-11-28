@@ -2,6 +2,13 @@ struct DimsSelector{N}
     dims::NTuple{N, Int}
 end
 
+# Trait to distinguish labels from transformation functions/functors
+# Labels are values that should be used directly as axis/legend labels
+# Everything else is treated as a transformation function or functor
+is_label(::AbstractString) = true
+is_label(::Makie.RichText) = true
+is_label(::Any) = false
+
 """
     dims(args...)
 
@@ -42,7 +49,7 @@ function (d::DimsSelector)(c::CartesianIndex{N}) where {N}
     t = ntuple(N) do n
         return n in d.dims ? c[n] : 1
     end
-    return CartesianIndex(t)
+    return DimsIndex(d.dims, CartesianIndex(t))
 end
 
 select(data, d::DimsSelector) = (d,) => identity => "" => nothing
@@ -118,17 +125,32 @@ end
 # treat a tuple of columns as a column of tuples by default
 select(data, x::Tuple{Vararg{Union{Symbol, String}}}) = select(data, x => tuple)
 
+# Use is_label trait to distinguish labels from transformation functions/functors
 function select(data, x::Pair{<:Any, <:Any})
-    name, transformation = x
-    if name isa Tuple
-        vs = map(name) do n
-            only(first(select(data, n)))
-        end
-        label = ""
-    else
+    name, value = x
+
+    # Check if value is a label (using trait) or a ScaleID
+    if is_label(value)
+        # It's a label
+        vs, _ = select(data, name)
+        return vs => identity => value => nothing
+    elseif value isa ScaleID
+        # ScaleID alone means use identity transformation with this scale ID
         vs, (_, (label, _)) = select(data, name)
+        return vs => identity => label => value
+    else
+        # It's a transformation function or functor
+        transformation = value
+        if name isa Tuple
+            vs = map(name) do n
+                only(first(select(data, n)))
+            end
+            label = ""
+        else
+            vs, (_, (label, _)) = select(data, name)
+        end
+        return vs => transformation => label => identity
     end
-    return vs => transformation => label => identity
 end
 
 function select(data, x::Pair{<:Any, <:Pair})
