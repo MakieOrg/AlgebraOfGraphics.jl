@@ -328,7 +328,7 @@ reftest("density layout visual direction y") do
     x = sin.(1:40) .+ repeat([0, 2], inner = 20)
     z = repeat(["A", "B"], inner = 20)
     data((; x, z)) *
-        mapping(:x, row = :z) * AlgebraOfGraphics.density() * visual(direction = :y) |>
+        mapping(:x, row = :z) * AlgebraOfGraphics.density(direction = :y) |>
         draw
 end
 
@@ -374,7 +374,17 @@ reftest("smooth cat color") do
     x = 1:50
     y = sin.(range(0, 2pi, length = 50)) .+ sin.(1:50)
     z = repeat(["A", "B"], inner = 25)
-    data((; x, y, z)) * mapping(:x, :y, color = :z) * (visual(Scatter) + smooth()) |> draw
+    layer(; kwargs...) = data((; x, y, z)) * mapping(:x, :y, color = :z) * (visual(Scatter) + smooth(; kwargs...))
+
+    f = Figure(size = (700, 700))
+    draw!(f[1, 1], layer())
+    fg1 = draw!(f[1, 2], layer(; interval = nothing))
+    draw!(f[2, 1], layer(; level = 0.5))
+    fg2 = draw!(f[2, 2], data((; x, y, z)) * mapping(:x, :y, color = :z) * (visual(Scatter) + smooth() * subvisual(:prediction, linestyle = :dash) * subvisual(:ci, alpha = 0.4)))
+
+    legend!(f[1, 3], fg1)
+    legend!(f[2, 3], fg2)
+    f
 end
 
 reftest("frequency") do

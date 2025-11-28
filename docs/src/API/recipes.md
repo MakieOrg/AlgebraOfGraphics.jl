@@ -2,5 +2,4 @@
 
 ```@docs
 choropleth
-linesfill
 ```

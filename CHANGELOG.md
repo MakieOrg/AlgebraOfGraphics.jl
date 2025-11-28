@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-- Added an auto-label mechanism when using `dims` which picks up the column labels from the positional arguments of `mapping` and assigns them to the categorical values created by `dims`. Slightly breaking in that the categorical scale now does not consist of `CartesianIndex` values anymore but the custom type `DimsIndex` that contains information about which dims were requested.
+- Added `subvisual` which is a version of `visual` that restricts its effect to only those layers specified by a `target` argument. Intended for the styling of transformations creating multiple plot layers [#678](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/678).
+- **Breaking**: Removed the internal `LinesFill` recipe which had been used for `linear` and `density` transformations. Instead, both transformations now create `ProcessedLayers` with `Band`s and `Lines` layers. This means that certain `visual`s multiplied with those transformations may lead to incompatible attribute errors now when calling `draw` if they use attributes that `Band` and `Lines` do not share. On the other hand, you can style layers completely independently with `subvisual` now. To replace `density() * visual(direction = :y)` you can now do `density(direction = :y)` directly.
+- **Breaking**: Added a confidence interval layer to `smooth` which is enabled by default and can be disabled with `interval = nothing`. This will cause breakage where `smooth() * visual(...)` was used with attributes that `Band` does not know. You can use `smooth() * subvisual(:ci/:prediction, ...)` to target the components specifically. Note that Loess confidence intervals have quadratic memory scaling so they should not be used with very large numbers of observations.
+- Added an auto-label mechanism when using `dims` which picks up the column labels from the positional arguments of `mapping` and assigns them to the categorical values created by `dims`. Slightly **breaking** in that the categorical scale now does not consist of `CartesianIndex` values anymore but the custom type `DimsIndex` that contains information about which dims were requested.
 
 ## v0.11.10 - 2025-11-24
 
