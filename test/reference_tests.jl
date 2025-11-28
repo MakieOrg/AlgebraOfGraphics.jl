@@ -706,6 +706,16 @@ reftest("qqplot") do
     data((; x = sin.(1:100), y = sin.((1:100) .+ 0.2))) * mapping(:x, :y) * visual(QQPlot, qqline = :identity) |> draw
 end
 
+reftest("qqplot distribution and qqnorm") do
+    df = (; y = sin.((1:100) .+ 0.2) .* repeat([1, 1.2], 50), group = repeat(["A", "B"], 50))
+    f = Figure()
+    fg = draw!(f[1, 1], data(df) * mapping(:y, marker = :group, color = :group) * visual(QQNorm))
+    legend!(f[1, 2], fg)
+    fg2 = draw!(f[2, 1], data(df) * mapping(:y, marker = :group, color = :group) * visual(QQPlot, distribution = Distributions.Normal(3, 1)))
+    legend!(f[2, 2], fg2)
+    f
+end
+
 reftest("arrows cat color") do
     x = repeat(1:10, inner = 10)
     y = repeat(1:10, outer = 10)
@@ -1631,4 +1641,32 @@ reftest("all-missing groups") do
     draw!(f[1, 1], spec1)
     draw!(f[1, 2], spec2)
     f
+end
+
+reftest("single xy label") do
+    f = Figure(size = (900, 400))
+    spec = mapping(1:90 => "X", 1:90 => "Y", row = repeat(1:3, inner = 30), col = repeat('A':'C', 30))
+    draw!(f[1, 1], spec; facet = (; singlexlabel = false))
+    draw!(f[1, 2], spec; facet = (; singleylabel = false, hideydecorations = false))
+    f
+end
+
+reftest("color scale functions") do
+    df = (;
+        x = 1:10,
+        y1 = 1:10,
+        y2 = 2:11,
+        y3 = 3:12,
+        color = exp10.(range(1, 4, length = 10)),
+    )
+    spec = data(df) * (
+        mapping(:x, :y1, color = :color) +
+            mapping(:x, :y2, color = :color => "Color log10" => AlgebraOfGraphics.scale(:color_log10)) +
+            mapping(:x, :y3, color = :color => "Color sqrt" => AlgebraOfGraphics.scale(:color_sqrt))
+    ) * visual(Scatter)
+
+    draw(
+        spec, scales(color_log10 = (; scale = log10), color_sqrt = (; scale = sqrt)),
+        colorbar = (; position = :bottom)
+    )
 end

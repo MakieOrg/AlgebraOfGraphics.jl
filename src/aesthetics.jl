@@ -429,6 +429,32 @@ function aesthetic_mapping(::Type{QQPlot}, ::Normal, ::Normal)
             1 => AesX,
             2 => AesY,
             :color => AesColor,
+            :marker => AesMarker,
+            :markersize => AesMarkerSize,
+            :linestyle => AesLineStyle,
+        ]
+    )
+end
+
+function aesthetic_mapping(::Type{QQPlot}, ::Normal)
+    return dictionary(
+        [
+            1 => AesY,
+            :color => AesColor,
+            :marker => AesMarker,
+            :markersize => AesMarkerSize,
+            :linestyle => AesLineStyle,
+        ]
+    )
+end
+
+function aesthetic_mapping(::Type{QQNorm}, ::Normal)
+    return dictionary(
+        [
+            1 => AesY,
+            :color => AesColor,
+            :marker => AesMarker,
+            :markersize => AesMarkerSize,
             :linestyle => AesLineStyle,
         ]
     )

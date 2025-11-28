@@ -6,6 +6,12 @@
 - **Breaking**: Removed the internal `LinesFill` recipe which had been used for `linear` and `density` transformations. Instead, both transformations now create `ProcessedLayers` with `Band`s and `Lines` layers. This means that certain `visual`s multiplied with those transformations may lead to incompatible attribute errors now when calling `draw` if they use attributes that `Band` and `Lines` do not share. On the other hand, you can style layers completely independently with `subvisual` now. To replace `density() * visual(direction = :y)` you can now do `density(direction = :y)` directly.
 - **Breaking**: Added a confidence interval layer to `smooth` which is enabled by default and can be disabled with `interval = nothing`. This will cause breakage where `smooth() * visual(...)` was used with attributes that `Band` does not know. You can use `smooth() * subvisual(:ci/:prediction, ...)` to target the components specifically. Note that Loess confidence intervals have quadratic memory scaling so they should not be used with very large numbers of observations.
 
+## v0.11.10 - 2025-11-24
+
+- Added `QQPlot` and `QQNorm` aesthetics for use with Makie 0.24.7 and up. `QQPlot` can take one positional argument and a `distribution` keyword from that version on which makes it compatible with AlgebraOfGraphics [#703](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/703).
+- Added `singlexlabel` and `singleylabel` keywords to `draw(facet = (; ...))` with which the behavior can be disabled where the same label across multiple axes is replaced with a single spanning one [#699](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/699).
+- Added `scale` to `AesColor` scale properties which allows to transform continuous colors with functions such as `log10` [#700](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/700).
+
 ## v0.11.9 - 2025-10-10
 
 - Improved error message when two layers with incompatible continuous data are combined [#692](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/692).

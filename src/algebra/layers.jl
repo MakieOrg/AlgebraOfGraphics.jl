@@ -568,6 +568,7 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     props = scale.props.aesprops::AesColorContinuousProps
     colormap = Makie.to_colormap(@something(props.colormap, default_colormap()))
     colorrange = Makie.Vec2(nonsingular_colorrange(scale))
+    colorscale = props.scale
     lowclip = Makie.to_color(@something(props.lowclip, first(colormap)))
     highclip = Makie.to_color(@something(props.highclip, last(colormap)))
     nan_color = Makie.to_color(@something(props.nan_color, RGBAf(0, 0, 0, 0)))
@@ -575,7 +576,7 @@ function full_rescale(data, aes::Type{AesColor}, scale::ContinuousScale)
     return Makie.numbers_to_colors(
         Makie.convert_single_argument(collect(data)),
         colormap,
-        identity,
+        colorscale,
         colorrange,
         lowclip,
         highclip,
@@ -660,6 +661,7 @@ function to_entry(P::Type{Heatmap}, p::ProcessedLayer, categoricalscales::Dictio
             [
                 :colormap => @something(scale.props.aesprops.colormap, default_colormap()),
                 :colorrange => nonsingular_colorrange(scale),
+                :colorscale => @something(scale.props.aesprops.scale, identity),
                 :nan_color => @something(scale.props.aesprops.nan_color, :transparent),
                 :lowclip => @something(scale.props.aesprops.lowclip, Makie.automatic),
                 :highclip => @something(scale.props.aesprops.highclip, Makie.automatic),

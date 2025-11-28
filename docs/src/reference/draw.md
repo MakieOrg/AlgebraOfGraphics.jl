@@ -403,7 +403,7 @@ f
 
 #### Color
 
-Continuous color scales can be modified using the familiar Makie attributes `colormap`, `colorrange`, `highclip`, `lowclip` and `nan_color`. By default, `colorrange` is set to the extrema of the encountered values, so no clipping occurs.
+Continuous color scales can be modified using the familiar Makie attributes `colormap`, `colorrange`, `highclip`, `lowclip` and `nan_color`. By default, `colorrange` is set to the extrema of the encountered values, so no clipping occurs. A transform function can be set via the `scale` attribute.
 
 ```@example
 using AlgebraOfGraphics
@@ -423,6 +423,20 @@ draw(spec, scales(
     )
 ))
 ```
+
+This example shows a log-transformed color scale:
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+spec = data((; x = 1:10, y = 1:10, z = exp10.(range(1, 4, length = 10)))) *
+    mapping(:x, :y, color = :z) *
+    visual(Scatter, markersize = 20)
+
+draw(spec, scales(Color = (; scale = log10)))
+```
+
 
 #### MarkerSize
 
