@@ -375,7 +375,7 @@ reftest("smooth cat color") do
     y = sin.(range(0, 2pi, length = 50)) .+ sin.(1:50)
     z = repeat(["A", "B"], inner = 25)
     layer(; kwargs...) = data((; x, y, z)) * mapping(:x, :y, color = :z) * (visual(Scatter) + smooth(; kwargs...))
-    
+
     f = Figure(size = (700, 700))
     draw!(f[1, 1], layer())
     fg1 = draw!(f[1, 2], layer(; interval = nothing))
