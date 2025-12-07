@@ -3,7 +3,8 @@ Base.@kwdef struct LinearAnalysis{I}
     dropcollinear::Bool = false
     interval::I = automatic
     level::Float64 = 0.95
-    weightkind = GLM.aweights
+    weightkind = GLM.fweights
+    weighttransform = identity
     distr::GLM.Distribution = GLM.Normal()
 end
 
@@ -23,7 +24,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         lin_model = if isempty(weights)
             GLM.lm(add_intercept_column(x), y; l.dropcollinear)
         else
-            GLM.glm(add_intercept_column(x), y, l.distr; wts = l.weightkind(weights), l.dropcollinear)
+            GLM.glm(add_intercept_column(x), y, l.distr; wts = l.weightkind(l.weighttransform(weights)), l.dropcollinear)
         end
         x̂ = range(extrema(x)..., length = l.npoints)
         interval = l.interval === automatic ? :confidence : l.interval
@@ -50,7 +51,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
 end
 
 """
-    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200, weightkind=GLM.aweights, distr=GLM.Normal())
+    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200, weightkind=GLM.fweights, weighttransform=identity, distr=GLM.Normal())
 
 Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent,
@@ -64,7 +65,8 @@ it is possible to set `dropcollinear=true`.
 
 Weighted data is supported via the keyword `weights` (passed to `mapping`). Additional
 uncertainty support is provided via the `weightkind` and `distr` keywords that are passed to
-`GLM.glm`. See the GLM.jl documentation for more on working with these keywords.
+`GLM.glm`. See the GLM.jl documentation for more on working with these keywords. A `weighttransform`
+keyword is also provided to transform the weights before they are passed.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """
