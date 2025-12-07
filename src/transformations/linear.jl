@@ -4,6 +4,7 @@ Base.@kwdef struct LinearAnalysis{I}
     interval::I = automatic
     level::Float64 = 0.95
     weightfunc = GLM.aweights 
+    distr::GLM.Distribution = GLM.Normal()
 end
 
 function add_intercept_column(x::AbstractVector{T}) where {T}
@@ -22,7 +23,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         lin_model = if isempty(weights)
             GLM.lm(add_intercept_column(x), y; l.dropcollinear)
         else
-            GLM.glm(add_intercept_column(x), y, GLM.Normal(); wts = l.weightfunc(weights), l.dropcollinear)
+            GLM.glm(add_intercept_column(x), y, l.distr; wts = l.weightfunc(weights), l.dropcollinear)
         end
         x̂ = range(extrema(x)..., length = l.npoints)
         interval = l.interval === automatic ? :confidence : l.interval
