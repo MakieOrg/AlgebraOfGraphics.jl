@@ -3,6 +3,9 @@ Base.@kwdef struct LinearAnalysis{I}
     dropcollinear::Bool = false
     interval::I = automatic
     level::Float64 = 0.95
+    weightkind = GLM.fweights
+    weighttransform = identity
+    distr::GLM.Distribution = GLM.Normal()
 end
 
 function add_intercept_column(x::AbstractVector{T}) where {T}
@@ -17,19 +20,17 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
         x, y = p
         weights = get(n, :weights, similar(x, 0))
-        default_interval = length(weights) > 0 ? nothing : :confidence
-        interval = l.interval === automatic ? default_interval : l.interval
         # FIXME: handle collinear case gracefully
-        lin_model = GLM.lm(add_intercept_column(x), y; wts = weights, l.dropcollinear)
-        x̂ = range(extrema(x)..., length = l.npoints)
-        pred = GLM.predict(lin_model, add_intercept_column(x̂); interval, l.level)
-        return if !isnothing(interval)
-            ŷ, lower, upper = pred
-            (x̂, ŷ, x̂, lower, upper), (;)
+        lin_model = if isempty(weights)
+            GLM.lm(add_intercept_column(x), y; l.dropcollinear)
         else
-            ŷ = pred
-            (x̂, ŷ, empty(x̂), empty(ŷ), empty(ŷ)), (;)
+            GLM.glm(add_intercept_column(x), y, l.distr; wts = l.weightkind(l.weighttransform(weights)), l.dropcollinear)
         end
+        x̂ = range(extrema(x)..., length = l.npoints)
+        interval = l.interval === automatic ? :confidence : l.interval
+        pred = GLM.predict(lin_model, add_intercept_column(x̂); interval, l.level)
+        ŷ, lower, upper = pred
+        return (x̂, ŷ, x̂, lower, upper), (;)
     end
 
     lineslayer = ProcessedLayer(
@@ -50,7 +51,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
 end
 
 """
-    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200)
+    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200, weightkind=GLM.fweights, weighttransform=identity, distr=GLM.Normal())
 
 Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent,
@@ -62,7 +63,10 @@ By default, this analysis errors on singular (collinear) data. To avoid that,
 it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.
 
-Weighted data is supported via the keyword `weights` (passed to `mapping`).
+Weighted data is supported via the keyword `weights` (passed to `mapping`). Additional
+uncertainty support is provided via the `weightkind` and `distr` keywords that are passed to
+`GLM.glm`. See the GLM.jl documentation for more on working with these keywords. A `weighttransform`
+keyword is also provided to transform the weights before they are passed.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """
