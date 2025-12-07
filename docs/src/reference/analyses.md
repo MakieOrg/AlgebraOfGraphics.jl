@@ -152,6 +152,31 @@ specs = data(df) * mapping(:x, :y, color=:a => nonnumeric) * (
 draw(specs)
 ```
 
+Below are a few examples showing the `linear` interface for performing weighted fits:
+
+```@example analyses
+colors = Makie.wong_colors()
+df = let
+    x = 1:5
+    y_err = randn(length(x))
+    y = x .+ y_err
+    y_unc = abs.(y_err)
+    (; x, y, y_unc)
+end
+specs = data(df) * mapping(:x, :y) * (
+    (visual(Scatter) + mapping(:y_unc) * visual(Errorbars)) * visual(; label = "data") +
+    mapping(; weights = :y_unc) * (
+        linear(; weightkind = aweights) * visual(; color = colors[1], label = "aweights") +
+        linear(; weightkind = fweights) * visual(; color = colors[2], label = "fweights") +
+        linear(; weightkind = pweights) * visual(; color = colors[3], label = "pweights")
+    )
+
+)
+draw(specs)
+```
+
+Note that the usual caveats still apply for working with different kinds of weights. See the [StatsBase.jl documentation](https://juliastats.org/StatsBase.jl/stable/weights/) for more.
+
 ## Smoothing
 
 ```@docs

@@ -50,7 +50,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
 end
 
 """
-    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200)
+    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200, weightkind=GLM.aweights, distr=GLM.Normal())
 
 Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent,
@@ -62,7 +62,9 @@ By default, this analysis errors on singular (collinear) data. To avoid that,
 it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.
 
-Weighted data is supported via the keyword `weights` (passed to `mapping`).
+Weighted data is supported via the keyword `weights` (passed to `mapping`). Additional
+uncertainty support is provided via the `weightkind` and `distr` keywords that are passed to
+`GLM.glm`. See the GLM.jl documentation for more on working with these keywords.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """
