@@ -27,6 +27,19 @@ reftest("barplot cat color palette") do
         draw(scales(Color = (; palette = :Set1_3)))
 end
 
+reftest("barplot cat strokecolor") do
+    data((; x = 1:4, y = ["A", "B", "C", "D"], z = ["X", "X", "Y", "Y"])) * mapping(:x, :y, strokecolor = :z) * visual(BarPlot, direction = :x, strokewidth = 5) |> draw
+end
+
+reftest("barplot con strokecolor") do
+    data((; x = 1:4, y = ["A", "B", "C", "D"], z = 1:4)) * mapping(:x, :y, strokecolor = :z) * visual(BarPlot, strokewidth = 5) |> draw
+end
+
+reftest("barplot cat strokecolor palette") do
+    data((; x = 1:4, y = ["A", "B", "C", "D"], z = ["X", "X", "Y", "Y"])) * mapping(:x, :y, strokecolor = :z) * visual(BarPlot, direction = :x, strokewidth = 5) |>
+        draw(scales(Color = (; palette = :Set1_3)))
+end
+
 reftest("barplot layout") do
     data((; x = ["A", "B", "C"], y = 1:3, z = ["X", "Y", "Z"])) * mapping(:x, :y; layout = :z) * visual(BarPlot) |> draw
 end
@@ -514,6 +527,13 @@ reftest("boxplot cat color") do
     draw(plt)
 end
 
+reftest("boxplot cat strokecolor") do
+    df = (x = repeat(["a", "b", "c"], inner = 20), y = 1:60)
+    plt = data(df) *
+        mapping(:x, :y, strokecolor = :x) * visual(BoxPlot, strokewidth = 5)
+    draw(plt)
+end
+
 reftest("boxplot dodge") do
     df = (x = repeat(["a", "b", "c"], inner = 20), x2 = repeat(["x", "y"], 30), y = 1:60)
     plt = data(df) *
@@ -760,10 +780,13 @@ reftest("makie density") do
     group = repeat(["A", "B"], inner = 50)
     spec1 = data((; x, group)) * mapping(:x) * visual(Density)
     spec2 = data((; x, group)) * mapping(:x, color = :group) * visual(Density, strokewidth = 1, strokecolor = :black)
+    spec3 = data((; x, group)) * mapping(:x, strokecolor = :group) * visual(Density, strokewidth = 5, color = :transparent)
     f = Figure()
     draw!(f[1, 1], spec1)
     fg = draw!(f[2, 1], spec2)
     legend!(f[2, 2], fg)
+    fg = draw!(f[3, 1], spec3)
+    legend!(f[3, 2], fg)
     f
 end
 
@@ -825,10 +848,13 @@ reftest("crossbar") do
     df = (; x, y, ylow, yhigh, group)
     spec1 = data(df) * mapping(:x, :y, :ylow, :yhigh) * visual(CrossBar)
     spec2 = data(df) * mapping(:x, :y, :ylow, :yhigh, color = :group) * visual(CrossBar, strokecolor = :black, strokewidth = 1)
+    spec3 = data(df) * mapping(:x, :y, :ylow, :yhigh, strokecolor = :group) * visual(CrossBar, color = :transparent, strokewidth = 1)
     f = Figure()
     draw!(f[1, 1], spec1)
     fg = draw!(f[2, 1], spec2)
     legend!(f[2, 2], fg)
+    fg = draw!(f[3, 1], spec3)
+    legend!(f[3, 2], fg)
     f
 end
 
