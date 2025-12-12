@@ -134,7 +134,7 @@ function plottable(args...)
     v
 end
 
-section(str) = "\n#block(sticky: true)[$str\n#line(length: 100%)]\n"
+section(str) = "\n#block(sticky: true)[== $str\n#line(length: 100%)]\n"
 
 logo = SVG(joinpath(@__DIR__, "src", "assets", "logo_with_text.svg"))
 
