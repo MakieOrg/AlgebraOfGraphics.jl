@@ -39,16 +39,30 @@ function to_typst(io::IO, s::SVG)
     print(io, "#image($(repr(p)))")
 end
 
-function render(x)
+"""
+    render_cheatsheet(x; pdf_path, png_path)
+
+Render the cheatsheet document `x` to PDF and optionally PNG.
+If `pdf_path` is provided, the PDF will be saved there.
+If `png_path` is provided, a PNG preview will be saved there.
+"""
+function render_cheatsheet(x; pdf_path = joinpath(@__DIR__, "cheatsheet.pdf"), png_path = nothing)
     assetcounter = Ref(0)
     mktempdir() do dir
         cd(dir) do
             open("script.typ", "w") do io
                 to_typst(IOContext(io, :assetcounter => assetcounter), x)
             end
-            run(`$(typst()) compile script.typ --font-path $(Makie.assetpath("fonts"))`)
+            fontpath = Makie.assetpath("fonts")
+            run(`$(typst()) compile script.typ --font-path $fontpath`)
+            if png_path !== nothing
+                run(`$(typst()) compile script.typ script.png --font-path $fontpath --ppi 150`)
+            end
         end
-        cp(joinpath(dir, "script.pdf"), joinpath(@__DIR__, "cheatsheet.pdf"), force = true)
+        cp(joinpath(dir, "script.pdf"), pdf_path, force = true)
+        if png_path !== nothing
+            cp(joinpath(dir, "script.png"), png_path, force = true)
+        end
     end
 end
 
@@ -270,5 +284,3 @@ doc = [
     )),
     "] // columns",
 ]
-
-render(doc)

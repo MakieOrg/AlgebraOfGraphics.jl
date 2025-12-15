@@ -24,6 +24,15 @@ hero:
 
 AlgebraOfGraphics (AoG) defines a language for data visualization, inspired by the grammar-of-graphics system made popular by the R library [ggplot2](https://ggplot2.tidyverse.org/). It is based on the plotting package [Makie.jl](https://docs.makie.org/stable/) which means that most capabilities of Makie are available, and AoG plots can be freely composed with normal Makie figures.
 
+## Cheat Sheet
+
+````@raw html
+<a href="./assets/cheatsheet.pdf" target="_blank" style="display: block; max-width: 640px;">
+  <img src="./assets/cheatsheet.png" alt="AlgebraOfGraphics Cheat Sheet" style="width: 100%; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+</a>
+<p style="margin-top: 0.5em;"><a href="./assets/cheatsheet.pdf" target="_blank">📄 Download Cheat Sheet (PDF)</a></p>
+````
+
 ## Example
 
 In AlgebraOfGraphics, a few simple building blocks can be combined using `+` and `*` to quickly create complex visualizations, like this:

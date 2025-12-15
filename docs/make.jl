@@ -8,6 +8,15 @@ DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics)
 
 cp(joinpath(@__DIR__, "..", "CHANGELOG.md"), joinpath(@__DIR__, "src", "changelog.md"), force = true)
 
+module Cheatsheet
+    @info "Building cheatsheet..."
+    include(joinpath(@__DIR__, "cheatsheet.jl"))
+    cheatsheet_pdf = joinpath(@__DIR__, "src", "assets", "cheatsheet.pdf")
+    cheatsheet_png = joinpath(@__DIR__, "src", "assets", "cheatsheet.png")
+    render_cheatsheet(; pdf_path = cheatsheet_pdf, png_path = cheatsheet_png)
+    @info "Cheatsheet built successfully"
+end
+
 makedocs(;
     modules = [AlgebraOfGraphics],
     authors = "Pietro Vertechi",
