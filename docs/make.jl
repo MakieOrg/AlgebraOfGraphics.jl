@@ -13,7 +13,7 @@ module Cheatsheet
     include(joinpath(@__DIR__, "cheatsheet.jl"))
     cheatsheet_pdf = joinpath(@__DIR__, "src", "assets", "cheatsheet.pdf")
     cheatsheet_png = joinpath(@__DIR__, "src", "assets", "cheatsheet.png")
-    render_cheatsheet(; pdf_path = cheatsheet_pdf, png_path = cheatsheet_png)
+    build_cheatsheet(; pdf_path = cheatsheet_pdf, png_path = cheatsheet_png)
     @info "Cheatsheet built successfully"
 end
 

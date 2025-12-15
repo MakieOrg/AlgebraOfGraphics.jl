@@ -40,13 +40,13 @@ function to_typst(io::IO, s::SVG)
 end
 
 """
-    render_cheatsheet(x; pdf_path, png_path)
+    render(x; pdf_path, png_path)
 
 Render the cheatsheet document `x` to PDF and optionally PNG.
 If `pdf_path` is provided, the PDF will be saved there.
 If `png_path` is provided, a PNG preview will be saved there.
 """
-function render_cheatsheet(x; pdf_path = joinpath(@__DIR__, "cheatsheet.pdf"), png_path = nothing)
+function render(x; pdf_path = joinpath(@__DIR__, "cheatsheet.pdf"), png_path = nothing)
     assetcounter = Ref(0)
     mktempdir() do dir
         cd(dir) do
@@ -284,3 +284,7 @@ doc = [
     )),
     "] // columns",
 ]
+
+function build_cheatsheet(; pdf_path = joinpath(@__DIR__, "cheatsheet.pdf"), png_path = nothing)
+    render(doc; pdf_path, png_path)
+end
