@@ -10,10 +10,11 @@ cp(joinpath(@__DIR__, "..", "CHANGELOG.md"), joinpath(@__DIR__, "src", "changelo
 
 module Cheatsheet
     @info "Building cheatsheet..."
+    assetpath = joinpath(@__DIR__, "src", "assets")
+    pdf_path = joinpath(assetpath, "cheatsheet.pdf")
+    png_path = joinpath(assetpath, "cheatsheet.png")
     include(joinpath(@__DIR__, "cheatsheet.jl"))
-    cheatsheet_pdf = joinpath(@__DIR__, "src", "assets", "cheatsheet.pdf")
-    cheatsheet_png = joinpath(@__DIR__, "src", "assets", "cheatsheet.png")
-    build_cheatsheet(; pdf_path = cheatsheet_pdf, png_path = cheatsheet_png)
+    build_cheatsheet(; pdf_path, png_path)
     @info "Cheatsheet built successfully"
 end
 
