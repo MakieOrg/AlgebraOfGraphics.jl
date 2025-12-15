@@ -46,7 +46,7 @@ function render(x)
             open("script.typ", "w") do io
                 to_typst(IOContext(io, :assetcounter => assetcounter), x)
             end
-            run(`$(typst()) compile script.typ`)
+            run(`$(typst()) compile script.typ --font-path $(Makie.assetpath("fonts"))`)
         end
         cp(joinpath(dir, "script.pdf"), joinpath(@__DIR__, "cheatsheet.pdf"), force = true)
     end
@@ -149,6 +149,7 @@ doc = [
     @vec("""
     #set page(width: 297mm, height: 210mm, margin: 0.5cm)
     #set text(font: "Helvetica", size: 7pt)
+    #show raw: set text(font: "Dejavu Sans Mono")
 
     #table(
         columns: 3,
@@ -160,7 +161,7 @@ doc = [
         table.cell(
             text(size: 3em, fill: gray, weight: "bold", style: "italic")[Cheat Sheet],
         ),
-        table.cell(block(raw($(repr(datasets))), fill: luma(240), inset: 4pt, radius: 4pt)),
+        table.cell(block(raw($(repr(datasets))), fill: oklch(97%, 0.02, 270deg), inset: 4pt, radius: 4pt)),
     )
 
     #columns(4, gutter: 1em)[
@@ -260,6 +261,12 @@ doc = [
         "`* mapping(group=:O)\n* visual(Lines)`",
         data(df_six) * (mapping(:U, :R, dodge=:Q, color=:Q) * visual(BarPlot) + mapping(:U, :R, :S, dodge_x=:Q) * visual(Errorbars, color = :black)) |> draw,
         "`* (mapping(:U,:R,dodge=:Q,color=:Q) * visual(BarPlot)\n+ mapping(:U,:R,:S,dodge_x=:Q) * visual(Errorbars))`",
+    )),
+    block("Others", plottable(
+        data(df_one) * mapping(:A, :B) * visual(Scatter) + mapping(2, 0.4) * visual(ABLines) |> draw,
+        "`data(df_one) * mapping(:A,:B) * visual(Scatter) + mapping(2,0.4) * visual(ABLines)`",
+        data(df_one) * mapping(:A, :B) * visual(Scatter) + mapping(-5, -17, 4, 6) * visual(Annotation, color = :black, text = "Here", shrink = (0, 5), style = Ann.Styles.LineArrow(head = Ann.Arrows.Line(length = 3))) |> draw,
+        "`mapping(-5,-17,4,6) * visual(Annotation, text=\"Here\", style=Ann.Styles.LineArrow())`",
     )),
     "] // columns",
 ]
