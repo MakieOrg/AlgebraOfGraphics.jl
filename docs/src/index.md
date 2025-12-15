@@ -27,10 +27,10 @@ AlgebraOfGraphics (AoG) defines a language for data visualization, inspired by t
 ## Cheat Sheet
 
 ````@raw html
-<a href="/cheatsheet.pdf" target="_blank" style="display: block; max-width: 20em;">
+<a href="./cheatsheet.pdf" target="_blank" style="display: block; max-width: 20em;">
   <img src="/cheatsheet.png" alt="AlgebraOfGraphics Cheat Sheet" style="width: 100%; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
 </a>
-<p style="margin-top: 0.5em;"><a href="/cheatsheet.pdf" target="_blank">📄 Download Cheat Sheet (PDF)</a></p>
+<p style="margin-top: 0.5em;"><a href="./cheatsheet.pdf" target="_blank">📄 Download Cheat Sheet (PDF)</a></p>
 ````
 
 ## Example
