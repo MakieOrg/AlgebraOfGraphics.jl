@@ -135,9 +135,11 @@ function plottable(args...)
     v
 end
 
-section(str) = "\n#block(sticky: true)[== $str\n#line(length: 100%)]\n"
-
-block(title, content) = ["#block(fill: oklch(97%, 0.02, 0deg), inset: 4pt, radius: 4pt, [", section(title), content, "])"]
+block(title, content) = [
+    "#block(fill: oklch(97%, 0.02, 0deg), inset: 0pt, radius: 4pt, clip: true, [#block(fill: oklch(92%, 0.04, 0deg), width: 100%, inset: 4pt, sticky: true)[$title]\n#block(inset: 4pt)[",
+    content,
+    "]])"
+]
 
 logo = SVG(joinpath(@__DIR__, "src", "assets", "logo_with_text.svg"))
 
