@@ -138,7 +138,7 @@ function plottable(args...)
 end
 
 block(title, content) = [
-    "#block(fill: oklch(97%, 0.02, 0deg), inset: 0pt, radius: 4pt, clip: true, [#block(fill: oklch(92%, 0.04, 0deg), width: 100%, inset: 4pt, sticky: true)[$title]\n#block(inset: 4pt)[",
+    "#block(fill: oklch(97%, 0.02, 0deg), inset: 0pt, radius: 4pt, clip: true, [#block(fill: oklch(92%, 0.04, 0deg), width: 100%, inset: 4pt, sticky: true)[*$title*]\n#block(inset: 4pt)[",
     content,
     "]])"
 ]
