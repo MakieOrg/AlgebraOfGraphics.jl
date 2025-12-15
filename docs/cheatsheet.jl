@@ -111,11 +111,12 @@ end
 
 
 datasets = """
-df_one = (; A = [1, 4, 6, 8], B = [2, 6, 4, 5], C = [3, 2, 1, 0], D = ["a", "b", "c", "d"])
-df_two = (; E = repeat(["e", "f"], inner = 50), F = [randn(50); randn(50) .+ 3])
-df_three = (; G = 1:30, H = sin.(range(0, 2pi, 30)) .+ rand.(), I = cos.(range(0, 2pi, 30)) .+ rand.())
-df_four = (; J = repeat(1:3, 3), K = repeat(1:3, inner = 3), L = [0, 1, 2, 0.5, 2, 4, 1, 4, 5])
-df_five = (; M = repeat(1:3, 3), N = [0, 2, 3, 0.5, 3.5, 5, 1, 5, 7], O = repeat(["g", "h", "i"], inner = 3))
+df_one = (A=[1,4,6,8], B=[2,6,4,5], C=[3,2,1,0], D=["a","b","c","d"])
+df_two = (E=repeat(["e","f"],inner=50), F=[randn(50);randn(50).+3])
+df_three = (G=1:30, H=sin.(range(0,2pi,30)).+rand.(), I=cos.(range(0,2pi,30)).+rand.())
+df_four = (J=repeat(1:3,3), K=repeat(1:3,inner=3), L=[0,1,2,0.5,2,4,1,4,5])
+df_five = (M=repeat(1:3,3), N=[0,2,3,0.5,3.5,5,1,5,7], O=repeat(["g","h","i"],inner=3))
+df_six = (P=1:4, Q=["A","B","A","B"], R=4:-1:1, S=[0.5,0.6,0.3,0.7], T=[5.1,3.9,2.7,1.5], U=[1,1,2,2])
 """
 
 eval(Meta.parseall(datasets))
@@ -135,6 +136,8 @@ function plottable(args...)
 end
 
 section(str) = "\n#block(sticky: true)[== $str\n#line(length: 100%)]\n"
+
+block(title, content) = ["#block(fill: oklch(97%, 0.02, 0deg), inset: 4pt, radius: 4pt, [", section(title), content, "])"]
 
 logo = SVG(joinpath(@__DIR__, "src", "assets", "logo_with_text.svg"))
 
@@ -158,9 +161,7 @@ doc = [
 
     #columns(4, gutter: 1em)[
     """),
-    "#block(fill: oklch(97%, 0.02, 0deg), inset: 4pt, radius: 4pt, [",
-    section("`data(df_one) * mapping(:A, :B)`"),
-    plottable(
+    block("`data(df_one) * mapping(:A, :B)`", plottable(
         data(df_one) * mapping(:A, :B) * visual(Scatter) |> draw,
         "`* visual(Scatter)`",
         data(df_one) * mapping(:A, :B, color = :C) * visual(Scatter) |> draw,
@@ -185,20 +186,14 @@ doc = [
         "`* mapping(text=:D=>verbatim)\n* visual(Makie.Text)`",
         data(df_one) * (mapping(:A, :B) * visual(Scatter, markersize = 5) + mapping(:A, :B, text = :D => verbatim) * visual(Annotation, color = :black)) |> draw,
         "`* mapping(text=:D=>verbatim)\n* visual(Annotation)`",
-    ),
-    "])",
-    "#block(fill: oklch(97%, 0.02, 0deg), inset: 4pt, radius: 4pt, [",
-    section("`data(df_one) * mapping(:A)`"),
-    plottable(
+    )),
+    block("`data(df_one) * mapping(:A)`", plottable(
         data(df_one) * mapping(:A) * visual(HLines) |> draw,
         "`* visual(HLines)`",
         data(df_one) * mapping(:A) * visual(VLines) |> draw,
         "`* visual(VLines)`",
-    ),
-    "])",
-    "#block(fill: oklch(97%, 0.02, 0deg), inset: 4pt, radius: 4pt, [",
-    section("`data(df_two) * mapping(:E, :F)`"),
-    plottable(
+    )),
+    block("`data(df_two) * mapping(:E, :F)`", plottable(
         data(df_two) * mapping(:E, :F) * visual(Violin) |> draw,
         "`* visual(Violin)`",
         data(df_two) * mapping(:E, :F) * visual(Violin, orientation = :horizontal) |> draw,
@@ -207,44 +202,32 @@ doc = [
          "`* visual(BoxPlot)`",
          data(df_two) * mapping(:E, :F) * visual(BoxPlot, orientation = :horizontal, strokecolor = makiered, color = :white, strokewidth = 1, outliercolor = makiered, markersize = 5) |> draw,
          "`* visual(BoxPlot,orientation=:horizontal)`",
-    ),
-    "])",
-    "#block(fill: oklch(97%, 0.02, 0deg), inset: 4pt, radius: 4pt, [",
-    section("`data(df_two) * mapping(:F)`"),
-    plottable(
+    )),
+    block("`data(df_two) * mapping(:F)`", plottable(
          data(df_two) * mapping(:F) * histogram() |> draw,
          "`* histogram()`",
          data(df_two) * mapping(:F) * AlgebraOfGraphics.density() |> draw,
          "`* AoG.density()`",
          data(df_two) * mapping(:F) * visual(QQNorm, markersize = 3, qqline = :fit) |> draw,
          "`* visual(QQNorm)`",
-    ),
-    "])",
-    "#block(fill: oklch(97%, 0.02, 0deg), inset: 4pt, radius: 4pt, [",
-    section("`data(df_three) * mapping(:G, :H)`"),
-    plottable(
+    )),
+    block("`data(df_three) * mapping(:G, :H)`", plottable(
         data(df_three) * mapping(:G, :H) * (visual(Scatter, markersize = 2) + smooth()) |> draw,
         "`* smooth()`",
         data(df_three) * mapping(:G, :H) * (visual(Scatter, markersize = 2) + linear()) |> draw,
         "`* linear()`",
         data(df_three) * mapping(:H, :I) * (AlgebraOfGraphics.density() + visual(Scatter, markersize = 2)) |> draw,
         "`* AoG.density()`",
-    ),
-    "])",
-    "#block(fill: oklch(97%, 0.02, 0deg), inset: 4pt, radius: 4pt, [",
-    section("`data(df_four) * mapping(:J, :K, :L)`"),
-    plottable(
+    )),
+    block("`data(df_four) * mapping(:J, :K, :L)`", plottable(
         data(df_four) * mapping(:J, :K, :L) * visual(Heatmap) |> draw,
         "`* visual(Heatmap)`",
         data(df_four) * mapping(:J, :K, :L) * contours(levels = 5) |> draw,
         "`* contours(bands=4)`",
         data(df_four) * mapping(:J, :K, :L) * filled_contours(bands = 4) |> draw,
         "`* filled_contours(bands=4)`",
-    ),
-    "])",
-    "#block(fill: oklch(97%, 0.02, 0deg), inset: 4pt, radius: 4pt, [",
-    section("`data(df_five) * mapping(:M, :N)`"),
-    plottable(
+    )),
+    block("`data(df_five) * mapping(:M, :N)`", plottable(
         data(df_five) * mapping(:M, :N, group = :O) * visual(Lines) |> draw,
         "`* mapping(group=:O)\n* visual(Lines)`",
         data(df_five) * mapping(:M, :N, color = :O) * visual(Lines) |> draw,
@@ -263,8 +246,17 @@ doc = [
         "`* mapping(col=:O)\n* visual(Lines)`",
         data(df_five) * mapping(:M, :N, layout = :O) * visual(Lines) |> draw(axis = (; width = 20, height = 20)),
         "`* mapping(layout=:O)\n* visual(Lines)`",
-    ),
-    "])",
+    )),
+    block("`data(df_six)`", plottable(
+        data(df_six) * (mapping(:P, :R) * visual(BarPlot) + mapping(:P, :R, :S) * visual(Errorbars, color = :black)) |> draw,
+        "`* (mapping(:P,:R) * visual(BarPlot)\n+ mapping(:P,:R,:S) * visual(Errorbars))`",
+        data(df_six) * (mapping(:P, :R) * visual(BarPlot) + mapping(:P, :R, :S, :S => x -> 2x) * visual(Errorbars, color = :black)) |> draw,
+        "`* (mapping(:P,:R) * visual(BarPlot)\n+ mapping(:P,:R,:S,:S=>x->2x) * visual(Errorbars))`",
+        data(df_six) * (mapping(:P, :R) * visual(BarPlot) + mapping(:P, :S, :T) * visual(Rangebars, color = :black)) |> draw,
+        "`* mapping(group=:O)\n* visual(Lines)`",
+        data(df_six) * (mapping(:U, :R, dodge=:Q, color=:Q) * visual(BarPlot) + mapping(:U, :R, :S, dodge_x=:Q) * visual(Errorbars, color = :black)) |> draw,
+        "`* (mapping(:U,:R,dodge=:Q,color=:Q) * visual(BarPlot)\n+ mapping(:U,:R,:S,dodge_x=:Q) * visual(Errorbars))`",
+    )),
     "] // columns",
 ]
 
