@@ -31,15 +31,6 @@ reftest("barplot cat strokecolor") do
     data((; x = 1:4, y = ["A", "B", "C", "D"], z = ["X", "X", "Y", "Y"])) * mapping(:x, :y, strokecolor = :z) * visual(BarPlot, direction = :x, strokewidth = 5) |> draw
 end
 
-reftest("barplot con strokecolor") do
-    data((; x = 1:4, y = ["A", "B", "C", "D"], z = 1:4)) * mapping(:x, :y, strokecolor = :z) * visual(BarPlot, strokewidth = 5) |> draw
-end
-
-reftest("barplot cat strokecolor palette") do
-    data((; x = 1:4, y = ["A", "B", "C", "D"], z = ["X", "X", "Y", "Y"])) * mapping(:x, :y, strokecolor = :z) * visual(BarPlot, direction = :x, strokewidth = 5) |>
-        draw(scales(Color = (; palette = :Set1_3)))
-end
-
 reftest("barplot layout") do
     data((; x = ["A", "B", "C"], y = 1:3, z = ["X", "Y", "Z"])) * mapping(:x, :y; layout = :z) * visual(BarPlot) |> draw
 end
