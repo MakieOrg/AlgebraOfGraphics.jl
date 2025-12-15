@@ -125,11 +125,13 @@ function plottable(args...)
     @assert iseven(length(args))
     v = Any["#table(columns: 2, stroke: none, inset: 0pt, column-gutter: 5pt"]
     for (i, j) in Iterators.partition(args, 2)
-        push!(v, ",[")
-        push!(v, i)
-        push!(v, "],table.cell(align: horizon, [")
-        push!(v, j)
-        push!(v, "])")
+        push!(
+            v, ",[",
+            i,
+            "],table.cell(align: horizon, [",
+            j,
+            "])"
+        )
     end
     push!(v, ")")
     v
