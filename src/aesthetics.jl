@@ -111,6 +111,7 @@ function aesthetic_mapping(::Type{BarPlot}, N::Int)
         [
             positionals...,
             :color => AesColor,
+            :strokecolor => AesColor,
             :width => :direction => dictionary(
                 [
                     :y => AesDeltaX,
@@ -360,6 +361,7 @@ function aesthetic_mapping(::Type{BoxPlot}, ::Normal, ::Normal)
                 ]
             ),
             :color => AesColor,
+            :strokecolor => AesColor,
             :dodge => :orientation => dictionary(
                 [
                     :horizontal => AesDodgeY,
@@ -398,6 +400,7 @@ function aesthetic_mapping(::Type{CrossBar}, ::Normal, ::Normal, ::Normal, ::Nor
                 ]
             ),
             :color => AesColor,
+            :strokecolor => AesColor,
             :dodge => :orientation => dictionary(
                 [
                     :horizontal => AesDodgeY,
@@ -570,6 +573,7 @@ function aesthetic_mapping(::Type{Density}, ::Normal)
                 ]
             ),
             :color => AesColor,
+            :strokecolor => AesColor,
         ]
     )
 end
