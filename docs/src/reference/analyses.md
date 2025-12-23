@@ -168,11 +168,11 @@ end
 specs = data(df) * mapping(:x, :y) * (
     (visual(Scatter) + mapping(:y_unc) * visual(Errorbars)) * visual(; label = "data") +
     mapping(; weights = :y_unc) * (
-        linear(; weightkind = aweights, weighttransform = x -> inv.(x .^ 2)) * visual(; color = :red, label = "aweights") +
-        linear(; weightkind = fweights) * visual(; color = :blue, label = "fweights") +
-        linear(; weightkind = pweights) * visual(; color = :green, label = "pweights")
+        linear(; weightkind = :aweights, weighttransform = x -> inv.(x .^ 2)) * visual(; color = colors[1], label = "aweights") +
+        linear(; weightkind = :fweights) * visual(; color = colors[2], label = "fweights") +
+        linear(; weightkind = :pweights) * visual(; color = colors[3], label = "pweights")
     )
-) |> draw
+)
 draw(specs)
 ```
 
