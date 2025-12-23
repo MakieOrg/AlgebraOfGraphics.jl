@@ -3,7 +3,7 @@ Base.@kwdef struct LinearAnalysis{I}
     dropcollinear::Bool = false
     interval::I = automatic
     level::Float64 = 0.95
-    weightkind = GLM.fweights
+    weightkind::Symbol = :fweights
     weighttransform = identity
     distr::GLM.Distribution = GLM.Normal()
 end
@@ -16,6 +16,22 @@ function add_intercept_column(x::AbstractVector{T}) where {T}
 end
 
 # TODO: add multidimensional version
+function get_weightkind(s::Symbol)
+    weightkind = if s == :aweights
+        GLM.aweights
+    elseif s == :pweights
+        GLM.pweights
+    elseif s == :uweights
+        GLM.uweights
+    elseif s == :eweights
+        GLM.ewights
+    else
+        GLM.fweights
+    end
+
+    return weightkind
+end
+
 function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
         x, y = p
@@ -24,7 +40,8 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         lin_model = if isempty(weights)
             GLM.lm(add_intercept_column(x), y; l.dropcollinear)
         else
-            GLM.glm(add_intercept_column(x), y, l.distr; wts = l.weightkind(l.weighttransform(weights)), l.dropcollinear)
+            weightkind = get_weightkind(l.weightkind)
+            GLM.glm(add_intercept_column(x), y, l.distr; wts = weightkind(l.weighttransform(weights)), l.dropcollinear)
         end
         x̂ = range(extrema(x)..., length = l.npoints)
         interval = l.interval === automatic ? :confidence : l.interval
@@ -51,7 +68,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
 end
 
 """
-    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200, weightkind=GLM.fweights, weighttransform=identity, distr=GLM.Normal())
+    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200, weightkind=:fweights, weighttransform=identity, distr=GLM.Normal())
 
 Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent,
