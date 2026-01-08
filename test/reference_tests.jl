@@ -938,6 +938,23 @@ reftest("presorted wide") do
     draw(spec)
 end
 
+reftest("presorted with categorical color scale") do
+    df = (; Pet = ["Fish", "Dog", "Cat", "Bird"], Ranking = 1:4)
+    plot = data(df) *
+        mapping(:Pet => presorted, :Ranking, color = :Pet => presorted) *
+        visual(BarPlot)
+
+    palette = [
+        "Cat" => :green,
+        "Dog" => :red,
+        "Fish" => :blue,
+        "Bird" => :yellow,
+    ]
+    colorscales = scales(Color = (; palette))
+
+    draw(plot, colorscales)
+end
+
 reftest("categorical color from continuous") do
     f = Figure()
     for (i, n) in enumerate([3, 5, 7])
