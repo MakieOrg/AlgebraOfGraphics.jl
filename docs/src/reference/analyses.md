@@ -168,9 +168,11 @@ end
 specs = data(df) * mapping(:x, :y) * (
     (visual(Scatter) + mapping(:y_unc) * visual(Errorbars)) * visual(; label = "data") +
     mapping(; weights = :y_unc) * (
-        linear(; weightkind = :aweights, weighttransform = x -> inv.(x .^ 2)) * visual(; color = colors[1], label = "aweights") +
-        linear(; weightkind = :fweights) * visual(; color = colors[2], label = "fweights") +
-        linear(; weightkind = :pweights) * visual(; color = colors[3], label = "pweights")
+        linear(; weighttype = :fweights, weighttransform = x -> inv.(x .^ 2)) * visual(; color = colors[1], label = "fweights")
+
+        # Other weights available once GLM v2 is released
+        #linear(; weighttype = :aweights) * visual(; color = colors[2], label = "aweights")
+        #linear(; weighttype = :pweights) * visual(; color = colors[3], label = "pweights")
     )
 )
 draw(specs)
