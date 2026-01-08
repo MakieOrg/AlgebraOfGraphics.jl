@@ -40,8 +40,7 @@ end
 function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
         x, y = p
-        weighttype = get_weighttype(l.weighttype)
-        weights = (weighttype ∘ l.weighttransform)(get(n, :weights, similar(x, 0)))
+        weights = (get_weighttype(l.weighttype) ∘ l.weighttransform)(get(n, :weights, similar(x, 0)))
         default_interval = length(weights) > 0 ? :confidence : nothing
         interval = l.interval === automatic ? default_interval : l.interval
         # FIXME: handle collinear case gracefully
