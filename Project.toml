@@ -40,9 +40,6 @@ AlgebraOfGraphicsUnitfulExt = "Unitful"
 DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
-[sources]
-GLM = {rev = "master", url = "https://github.com/JuliaStats/GLM.jl"}
-
 [compat]
 Accessors = "0.1"
 Colors = "0.12, 0.13"
@@ -50,7 +47,7 @@ DataAPI = "1"
 Dictionaries = "0.3, 0.4"
 DynamicQuantities = "1"
 FileIO = "1.1"
-GLM = "2.0"
+GLM = "1.9.2"
 GeoInterface = "1"
 GeometryBasics = "0.4.1, 0.5"
 GridLayoutBase = "0.6, 0.7, 0.8, 0.9, 0.10, 0.11"
