@@ -3,7 +3,7 @@ Base.@kwdef struct LinearAnalysis{I}
     dropcollinear::Bool = false
     interval::I = automatic
     level::Float64 = 0.95
-    weightkind::Symbol = :fweights
+    weighttype::Symbol = :fweights
     weighttransform = identity
     distr::GLM.Distribution = GLM.Normal()
 end
@@ -15,39 +15,50 @@ function add_intercept_column(x::AbstractVector{T}) where {T}
     return mat
 end
 
-# TODO: add multidimensional version
-function get_weightkind(s::Symbol)
-    weightkind = if s == :aweights
-        GLM.aweights
-    elseif s == :pweights
-        GLM.pweights
-    elseif s == :uweights
-        GLM.uweights
-    elseif s == :eweights
-        GLM.ewights
+function get_weighttype(s::Symbol)
+    weighttype = if s == :fweights
+        StatsBase.fweights
     else
-        GLM.fweights
+        throw(ArgumentError("Currently, StatsBase.jl only supports `fweights`."))
     end
 
-    return weightkind
+    # TODO: Uncomment when GLM v2.0 is released
+    #weighttype = if s == :aweights
+    #    StatsBase.aweights
+    #elseif s == :pweights
+    #    StatsBase.pweights
+    #elseif s == :fweights
+    #    StatsBase.fweights
+    #else
+    #    throw(ArgumentError("Currently, GLM.jl only supports `aweights`, `pweights`, and `fweights`."))
+    #end
+
+    return weighttype
 end
 
+# TODO: add multidimensional version
 function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
         x, y = p
-        weights = get(n, :weights, similar(x, 0))
+        weighttype = get_weighttype(l.weighttype)
+        weights = (weighttype ∘ l.weighttransform)(get(n, :weights, similar(x, 0)))
+        default_interval = length(weights) > 0 ? :confidence : nothing
+        interval = l.interval === automatic ? default_interval : l.interval
         # FIXME: handle collinear case gracefully
         lin_model = if isempty(weights)
             GLM.lm(add_intercept_column(x), y; l.dropcollinear)
         else
-            weightkind = get_weightkind(l.weightkind)
-            GLM.glm(add_intercept_column(x), y, l.distr; wts = weightkind(l.weighttransform(weights)), l.dropcollinear)
+            GLM.glm(add_intercept_column(x), y, l.distr; weights, l.dropcollinear)
         end
         x̂ = range(extrema(x)..., length = l.npoints)
-        interval = l.interval === automatic ? :confidence : l.interval
         pred = GLM.predict(lin_model, add_intercept_column(x̂); interval, l.level)
-        ŷ, lower, upper = pred
-        return (x̂, ŷ, x̂, lower, upper), (;)
+        return if !isnothing(interval)
+            ŷ, lower, upper = pred
+            (x̂, ŷ, x̂, lower, upper), (;)
+        else
+            ŷ = pred
+            (x̂, ŷ, empty(x̂), empty(ŷ), empty(ŷ)), (;)
+        end
     end
 
     lineslayer = ProcessedLayer(
@@ -68,7 +79,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
 end
 
 """
-    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200, weightkind=:fweights, weighttransform=identity, distr=GLM.Normal())
+    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200, weighttype=:fweights, weighttransform=identity, distr=GLM.Normal())
 
 Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent,
@@ -80,10 +91,12 @@ By default, this analysis errors on singular (collinear) data. To avoid that,
 it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.
 
-Weighted data is supported via the keyword `weights` (passed to `mapping`). Additional
-uncertainty support is provided via the `weightkind` and `distr` keywords that are passed to
-`GLM.glm`. See the GLM.jl documentation for more on working with these keywords. A `weighttransform`
-keyword is also provided to transform the weights before they are passed.
+Weighted data is supported via the `weights` keyword passed to `mapping`.
+Additional weight support is provided via the `weighttype`, `weighttransform`, and `distr` keywords.
+`weightype` specifies the `StatsBase.AbstractWeights` type to use.
+`weighttransform` accepts an optional function to transform the weights before they are passed to `GLM.glm`.
+`distr` is forwarded to `GLM.glm`.
+See the GLM.jl documentation for more on working with weighted data.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """

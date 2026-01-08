@@ -1,7 +1,7 @@
 name = "AlgebraOfGraphics"
 uuid = "cbdf2221-f076-402e-a563-3d30da359d67"
 authors = ["Pietro Vertechi", "Julius Krumbiegel"]
-version = "0.12.0"
+version = "0.12.1"
 
 [deps]
 Accessors = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
@@ -41,7 +41,7 @@ DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [sources]
-GLM = {rev = "JuliaStats-master", url = "https://github.com/gragusa/GLM.jl"}
+GLM = {rev = "master", url = "https://github.com/JuliaStats/GLM.jl"}
 
 [compat]
 Accessors = "0.1"
@@ -50,7 +50,7 @@ DataAPI = "1"
 Dictionaries = "0.3, 0.4"
 DynamicQuantities = "1"
 FileIO = "1.1"
-GLM = "1.7, 2.0"
+GLM = "2.0"
 GeoInterface = "1"
 GeometryBasics = "0.4.1, 0.5"
 GridLayoutBase = "0.6, 0.7, 0.8, 0.9, 0.10, 0.11"

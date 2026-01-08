@@ -2,9 +2,10 @@
 
 ## Unreleased
 
-## v0.12.1 - 2025-12-12
+## v0.12.1 - 2026-01-07
 
 - Make the `visual`s `BarPlot`, `BoxPlot`, `Density` and `CrossBar` aware of the `strokecolor` aesthetic. Note that, for some `visual`s, it is necessary to specify a `strokewidth` strictly larger than 0 to appreciate the effect of the `strokecolor` mapping. Note also that the `strokecolor` aesthetic in itself was already available, and it is defined so that it behaves as the `Color` aesthetic (for example, in terms of scales). Indeed, the `visual`s `Scatter`, `ScatterLines` and `Hist` were already aware of `strokecolor`. There are other `visual`s that also could use `strokecolor` (for example, [violin plots](https://docs.makie.org/stable/reference/plots/violin#strokecolor)), but implementing `strokecolor` for all of them is left for later.
+- Fix deprecation warnings in `linear(...)` with GLM >= 1.9.1.  
 
 ## v0.12.0 - 2025-11-28
 

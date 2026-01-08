@@ -23,7 +23,7 @@ using Dictionaries: Indices, Dictionary
 using Distributions: Distributions
 
 using KernelDensity: kde, pdf
-using StatsBase: fit, histrange, Histogram, weights
+using StatsBase: fit, histrange, Histogram, weights, fweights
 using GLM: GLM
 using Loess: Loess
 
