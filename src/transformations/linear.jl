@@ -19,7 +19,7 @@ function get_weighttype(s::Symbol)
     weighttype = if s == :fweights
         StatsBase.fweights
     else
-        throw(ArgumentError("Currently, StatsBase.jl only supports `fweights`."))
+        throw(ArgumentError("Currently, GLM.jl only supports `StatsBase.fweights`."))
     end
 
     # TODO: Uncomment when GLM v2.0 is released
@@ -48,7 +48,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         lin_model = if isempty(weights)
             GLM.lm(add_intercept_column(x), y; l.dropcollinear)
         else
-            GLM.glm(add_intercept_column(x), y, l.distr; weights, l.dropcollinear)
+            GLM.glm(add_intercept_column(x), y, l.distr; wts = weights, l.dropcollinear)
         end
         x̂ = range(extrema(x)..., length = l.npoints)
         pred = GLM.predict(lin_model, add_intercept_column(x̂); interval, l.level)
@@ -91,7 +91,7 @@ By default, this analysis errors on singular (collinear) data. To avoid that,
 it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.
 
-Weighted data is supported via the `weights` keyword passed to `mapping`.
+Weighted data is supported via the keyword `weights` (passed to `mapping`).
 Additional weight support is provided via the `weighttype`, `weighttransform`, and `distr` keywords.
 `weightype` specifies the `StatsBase.AbstractWeights` type to use.
 `weighttransform` accepts an optional function to transform the weights before they are passed to `GLM.glm`.
