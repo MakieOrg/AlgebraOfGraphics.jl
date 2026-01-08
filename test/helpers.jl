@@ -68,6 +68,12 @@ end
     @test unique(p) == p[1:3]
     @test hash(Presorted("a", 0x0000)) == hash(Presorted("a", 0x0001))
 
+    p1 = Presorted("a", 0x0000)
+    p2 = Presorted("a", 0x0001)
+    @test isequal(p1, p2)
+    @test isequal(p1)("a")
+    @test isequal(p2)("a")
+
     p1 = [Presorted("b", 0x0000), Presorted("c", 0x0001)]
     p2 = [Presorted("a", 0x0000), Presorted("b", 0x0001)]
     @test AlgebraOfGraphics.possibly_mergesorted(p1, p2) == [Presorted("b", 0x0000), Presorted("c", 0x0001), Presorted("a", 0x0000)]

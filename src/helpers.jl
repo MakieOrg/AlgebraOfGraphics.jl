@@ -242,6 +242,7 @@ Base.show(io::IO, p::Presorted) = print(io, p.x)
 # so that the same value appearing in different positions in two datasets is considered the same when plotting
 Base.isless(p::Presorted, p2::Presorted) = isless(p.i, p2.i)
 Base.isequal(p::Presorted, p2::Presorted) = isequal(p.x, p2.x)
+Base.isequal(p::Presorted) = isequal(p.x)
 Base.:(==)(p::Presorted, p2::Presorted) = p.x == p2.x
 Base.hash(p::Presorted) = hash(p.x)
 
