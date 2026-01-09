@@ -53,16 +53,16 @@ end
 
 include("reference_tests_utils.jl")
 
-#include("utils.jl")
-#include("visual.jl")
-#include("algebra.jl")
+include("utils.jl")
+include("visual.jl")
+include("algebra.jl")
 include("analyses.jl")
-#include("scales.jl")
-#include("helpers.jl")
-#include("facet.jl")
-#include("legend.jl")
-#include("geometry.jl")
-#include("paginate.jl")
+include("scales.jl")
+include("helpers.jl")
+include("facet.jl")
+include("legend.jl")
+include("geometry.jl")
+include("paginate.jl")
 
 @testset "Reference tests" begin
     include("reference_tests.jl")
