@@ -527,22 +527,22 @@ end
 end
 
 @testset "weightedlinear" begin
-    df = (x = rand(1000), y = rand(1000), z = rand(1000), c = rand(["a", "b"], 1000))
+    df = (x = rand(1000), y = rand(1000), z = rand(1:5, 1000), c = rand(["a", "b"], 1000))
     npoints, dropcollinear = 150, false
     layer = data(df) * mapping(:x, :y, color = :c, weights = :z) * linear(; npoints, dropcollinear)
     processedlayers = AlgebraOfGraphics.ProcessedLayers(layer)
 
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
-    z1 = df.z[df.c .== "a"]
-    lm1 = GLM.lm([fill(one(eltype(x1)), length(x1)) x1], y1; dropcollinear, wts = z1)
+    z1 = fweights(df.z[df.c .== "a"])
+    lm1 = GLM.lm([fill(one(eltype(x1)), length(x1)) x1], y1; dropcollinear, weights = z1)
     x̂1 = range(extrema(x1)...; length = npoints)
     ŷ1 = vec(GLM.predict(lm1, [ones(length(x̂1)) x̂1]; interval = nothing))
 
     x2 = df.x[df.c .== "b"]
     y2 = df.y[df.c .== "b"]
-    z2 = df.z[df.c .== "b"]
-    lm2 = GLM.lm([fill(one(eltype(x2)), length(x2)) x2], y2; dropcollinear, wts = z2)
+    z2 = fweights(df.z[df.c .== "b"])
+    lm2 = GLM.lm([fill(one(eltype(x2)), length(x2)) x2], y2; dropcollinear, weights = z2)
     x̂2 = range(extrema(x2)...; length = npoints)
     ŷ2 = vec(GLM.predict(lm2, [ones(length(x̂2)) x̂2]; interval = nothing))
 

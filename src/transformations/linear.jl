@@ -16,11 +16,11 @@ end
 function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
         x, y = p
-        weights = get(n, :weights, similar(x, 0))
+        weights = StatsBase.fweights(get(n, :weights, similar(x, 0)))
         default_interval = length(weights) > 0 ? nothing : :confidence
         interval = l.interval === automatic ? default_interval : l.interval
         # FIXME: handle collinear case gracefully
-        lin_model = GLM.lm(add_intercept_column(x), y; wts = weights, l.dropcollinear)
+        lin_model = GLM.lm(add_intercept_column(x), y; weights, l.dropcollinear)
         x̂ = range(extrema(x)..., length = l.npoints)
         pred = GLM.predict(lin_model, add_intercept_column(x̂); interval, l.level)
         return if !isnothing(interval)
