@@ -8,6 +8,18 @@ DocMeta.setdocmeta!(AlgebraOfGraphics, :DocTestSetup, :(using AlgebraOfGraphics)
 
 cp(joinpath(@__DIR__, "..", "CHANGELOG.md"), joinpath(@__DIR__, "src", "changelog.md"), force = true)
 
+module Cheatsheet
+    @info "Building cheatsheet..."
+    # VitePress serves files from the public folder at the site root
+    publicpath = joinpath(@__DIR__, "src", "public")
+    mkpath(publicpath)
+    pdf_path = joinpath(publicpath, "cheatsheet.pdf")
+    png_path = joinpath(publicpath, "cheatsheet.png")
+    include(joinpath(@__DIR__, "cheatsheet.jl"))
+    build_cheatsheet(; pdf_path, png_path)
+    @info "Cheatsheet built successfully"
+end
+
 makedocs(;
     modules = [AlgebraOfGraphics],
     authors = "Pietro Vertechi",
