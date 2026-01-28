@@ -4,8 +4,8 @@ Base.@kwdef struct LinearAnalysis{I}
     interval::I = automatic
     level::Float64 = 0.95
     weighttype::Symbol = :fweights
-    weighttransform = identity
     distr::GLM.Distribution = GLM.Normal()
+    link::GLM.Link = GLM.canonicallink(distr)
 end
 
 function add_intercept_column(x::AbstractVector{T}) where {T}
@@ -16,23 +16,23 @@ function add_intercept_column(x::AbstractVector{T}) where {T}
 end
 
 function get_weighttype(s::Symbol)
-    weighttype = if s == :fweights
-        StatsBase.fweights
-    else
-        throw(ArgumentError("Currently, GLM.jl only supports `StatsBase.fweights`."))
-    end
+    #weighttype = if s == :fweights
+    #    StatsBase.fweights
+    #else
+    #    throw(ArgumentError("Currently, GLM.jl only supports `StatsBase.fweights`."))
+    #end
 
     # TODO: Can support these weights as well after GLM v2 is released
     # https://github.com/JuliaStats/GLM.jl/pull/619
-    #weighttype = if s == :aweights
-    #    StatsBase.aweights
-    #elseif s == :pweights
-    #    StatsBase.pweights
-    #elseif s == :fweights
-    #    StatsBase.fweights
-    #else
-    #    throw(ArgumentError("Currently, GLM.jl only supports `aweights`, `pweights`, and `fweights`."))
-    #end
+    weighttype = if s == :aweights
+        StatsBase.aweights
+    elseif s == :pweights
+        StatsBase.pweights
+    elseif s == :fweights
+        StatsBase.fweights
+    else
+        throw(ArgumentError("Currently, GLM.jl only supports `aweights`, `pweights`, and `fweights`."))
+    end
 
     return weighttype
 end
@@ -41,16 +41,16 @@ end
 function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
         x, y = p
-        weights = (get_weighttype(l.weighttype) ∘ l.weighttransform)(get(n, :weights, similar(x, 0)))
+        weights = get_weighttype(l.weighttype)(get(n, :weights, similar(x, 0)))
         interval = l.interval === automatic ? :confidence : l.interval
         # FIXME: handle collinear case gracefully
-        # TODO: `wts` --> `weights` after GLM v2 is released
-        # https://github.com/JuliaStats/GLM.jl/pull/631
         lin_model = if isempty(weights)
             GLM.lm(add_intercept_column(x), y; l.dropcollinear)
         else
             # Supports confidence intervals, while `GLM.lm` currently does not
-            GLM.glm(add_intercept_column(x), y, l.distr; weights, l.dropcollinear)
+            # TODO: `wts` --> `weights` after GLM v2 is released
+            # https://github.com/JuliaStats/GLM.jl/pull/631
+            GLM.glm(add_intercept_column(x), y, l.distr, l.link; wts = weights, l.dropcollinear)
         end
         x̂ = range(extrema(x)..., length = l.npoints)
         pred = GLM.predict(lin_model, add_intercept_column(x̂); interval, l.level)
