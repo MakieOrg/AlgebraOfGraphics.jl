@@ -3,6 +3,9 @@ Base.@kwdef struct LinearAnalysis{I}
     dropcollinear::Bool = false
     interval::I = automatic
     level::Float64 = 0.95
+    weighttype::Symbol = :fweights
+    distr::GLM.Distribution = GLM.Normal()
+    link::GLM.Link = GLM.canonicallink(distr)
 end
 
 function add_intercept_column(x::AbstractVector{T}) where {T}
@@ -12,15 +15,43 @@ function add_intercept_column(x::AbstractVector{T}) where {T}
     return mat
 end
 
+function get_weighttype(s::Symbol)
+    #weighttype = if s == :fweights
+    #    StatsBase.fweights
+    #else
+    #    throw(ArgumentError("Currently, GLM.jl only supports `StatsBase.fweights`."))
+    #end
+
+    # TODO: Can support these weights as well after GLM v2 is released
+    # https://github.com/JuliaStats/GLM.jl/pull/619
+    weighttype = if s == :aweights
+        StatsBase.aweights
+    elseif s == :pweights
+        StatsBase.pweights
+    elseif s == :fweights
+        StatsBase.fweights
+    else
+        throw(ArgumentError("Currently, GLM.jl only supports `aweights`, `pweights`, and `fweights`."))
+    end
+
+    return weighttype
+end
+
 # TODO: add multidimensional version
 function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
         x, y = p
-        weights = StatsBase.fweights(get(n, :weights, similar(x, 0)))
-        default_interval = length(weights) > 0 ? nothing : :confidence
-        interval = l.interval === automatic ? default_interval : l.interval
+        weights = get_weighttype(l.weighttype)(get(n, :weights, similar(x, 0)))
+        interval = l.interval === automatic ? :confidence : l.interval
         # FIXME: handle collinear case gracefully
-        lin_model = GLM.lm(add_intercept_column(x), y; weights, l.dropcollinear)
+        lin_model = if isempty(weights)
+            GLM.lm(add_intercept_column(x), y; l.dropcollinear)
+        else
+            # Supports confidence intervals, while `GLM.lm` currently does not
+            # TODO: `wts` --> `weights` after GLM v2 is released
+            # https://github.com/JuliaStats/GLM.jl/pull/631
+            GLM.glm(add_intercept_column(x), y, l.distr, l.link; wts = weights, l.dropcollinear)
+        end
         x̂ = range(extrema(x)..., length = l.npoints)
         pred = GLM.predict(lin_model, add_intercept_column(x̂); interval, l.level)
         return if !isnothing(interval)
@@ -50,7 +81,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
 end
 
 """
-    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200)
+    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200, weighttype=:fweights, weighttransform=identity, distr=GLM.Normal())
 
 Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent,
@@ -63,6 +94,11 @@ it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.
 
 Weighted data is supported via the keyword `weights` (passed to `mapping`).
+Additional weight support is provided via the `weighttype`, `weighttransform`, and `distr` keywords.
+`weightype` specifies the `StatsBase.AbstractWeights` type to use.
+`weighttransform` accepts an optional function to transform the weights before they are passed to `GLM.glm`.
+`distr` is forwarded to `GLM.glm`.
+See the GLM.jl documentation for more on working with weighted data.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """
