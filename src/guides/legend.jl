@@ -103,7 +103,7 @@ function compute_legend(grid::Matrix{<:Union{AxisEntries, AxisSpecEntries}}; ord
 
     scales = Iterators.flatten((pairs(scales_categorical), pairs(scales_continuous)))
 
-    processedlayers = first(grid).processedlayers
+    processedlayers = mapreduce(entry -> entry.processedlayers, vcat, grid)
 
     # we can't loop over all processedlayers here because one layer can be sliced into multiple processedlayers
     unique_processedlayers = unique_by(processedlayers) do pl
