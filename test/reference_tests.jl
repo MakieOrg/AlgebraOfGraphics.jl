@@ -1139,6 +1139,13 @@ reftest("manual legend labels in visual") do
     draw(spec1 + spec2)
 end
 
+reftest("manual legend labels non-first facet") do
+    data((; x = 1:2, y = 1:2, z = ["A", "B"])) *
+        mapping(:x, :y, layout = :z) * visual(Scatter, color = :red, label = "Both") +
+        data((; x = [3], y = [3], z = ["B"])) *
+        mapping(:x, :y, layout = :z) * visual(Scatter, color = :blue, label = "Second") |> draw
+end
+
 reftest("manual legend order") do
     df = (; x = repeat(1:10, 3), y = cos.(1:30), group = repeat(["A", "B", "C"], inner = 10))
     spec1 = data(df) * mapping(:x, :y, color = :group) * visual(Lines)
