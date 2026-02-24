@@ -69,6 +69,11 @@ histogram_default_attributes(::Type{BarPlot}) = NamedArguments((; :gap => 0, :do
 
 function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plottype}
     datalimits = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
+    if datalimits isa Tuple
+        datalimits = map(datalimits) do (lo, hi)
+            (to_numerical(lo), to_numerical(hi))
+        end
+    end
     options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
 
     N = length(input.positional)
@@ -76,10 +81,14 @@ function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plotty
     plottype = Makie.plottype(_plottype, input.plottype, default_plottype)
 
     output = map(input) do p, n
-        hist = _histogram(Tuple(p); pairs(n)..., pairs(options)...)
+        pn = map(to_numerical, p)
+        hist = _histogram(Tuple(pn); pairs(n)..., pairs(options)...)
         edges, weights = hist.edges, hist.weights
         named = histogram_preprocess_named(plottype, edges, weights)
         positional = histogram_preprocess_positional(plottype, edges, weights)
+        positional = ntuple(length(positional)) do i
+            i <= length(p) ? from_numerical(collect(positional[i]), p[i]) : positional[i]
+        end
         return positional, named
     end
 

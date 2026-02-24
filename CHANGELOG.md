@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Fixed legend labels missing when a layer only exists in non-first facets [#721](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/721).
+- Fixed `smooth()`, `linear()` and `histogram()` failing with `Date`/`DateTime` axes [#724](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/724).
 
 ## v0.12.1 - 2026-01-07
 

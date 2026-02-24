@@ -527,6 +527,25 @@ function datetimeticks(f, datetimes::AbstractVector{<:TimeType})
     return datetimeticks(datetimes, map(string ∘ f, datetimes))
 end
 
+# Analyses like Loess, GLM and StatsBase.Histogram need numeric inputs, so temporal
+# types must be converted to floats before fitting. The results are then converted back
+# to temporal types via `from_numerical`, because the continuous scale system determines
+# axis tick formatting (e.g., date labels) from the element type of the output arrays.
+# If we left the output as plain floats, that type information would be lost.
+to_numerical(x::AbstractVector{<:TimeType}) = map(datetime2float, x)
+to_numerical(x::AbstractVector) = x
+to_numerical(x::TimeType) = datetime2float(x)
+to_numerical(x) = x
+
+function from_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<:Union{DateTime, Date}})
+    epoch = DateTime(2020, 01, 01)
+    return [epoch + Millisecond(round(Int64, v)) for v in x̂]
+end
+function from_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<:Time})
+    return [Time(0) + Millisecond(round(Int64, v)) for v in x̂]
+end
+from_numerical(x̂, ::AbstractVector) = x̂
+
 # Rescaling methods that do not depend on context
 elementwise_rescale(value::Union{TimeType, Period}) = datetime2float(value)
 elementwise_rescale(value::Verbatim) = value[]
