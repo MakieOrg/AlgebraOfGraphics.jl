@@ -660,33 +660,40 @@ end
 
 ticks((min, max)::NTuple{2, Any}) = automatic
 
-temporal_resolutions(::Type{Date}) = (Year, Month, Day)
-temporal_resolutions(::Type{Time}) = (Hour, Minute, Second, Millisecond)
-temporal_resolutions(::Type{DateTime}) = (temporal_resolutions(Date)..., temporal_resolutions(Time)...)
-
-function optimal_datetime_range((x_min, x_max)::NTuple{2, T}; k_min = 2, k_max = 5) where {T <: TimeType}
-    local P, start, stop
-    for outer P in temporal_resolutions(T)
-        start, stop = trunc(x_min, P), trunc(x_max, P)
-        (start == x_min) || (start += P(1))
-        n = length(start:P(1):stop)
-        n ≥ k_min && return start:P(fld1(n, k_max)):stop
-    end
-    return start:P(1):stop
+struct DateTicksWrapper{T <: TimeType, Ticks}
+    ticks::Ticks
 end
 
-function format_datetimes(datetimes::AbstractVector{DateTime})
-    dates, times = Date.(datetimes), Time.(datetimes)
-    (dates == datetimes) && return string.(dates)
-    isequal(extrema(dates)...) && return string.(times)
-    return string.(datetimes)
+DateTicksWrapper{T}(ticks) where {T <: TimeType} = DateTicksWrapper{T, typeof(ticks)}(ticks)
+
+const DATETIME_EPOCH = DateTime(2020, 01, 01)
+
+function float_to_datetime(vmin, vmax)
+    vmin_dt = DATETIME_EPOCH + Millisecond(round(Int64, vmin))
+    vmax_dt = DATETIME_EPOCH + Millisecond(round(Int64, vmax))
+    return vmin_dt, vmax_dt
 end
 
-format_datetimes(datetimes::AbstractVector) = string.(datetimes)
+function float_to_time(vmin, vmax)
+    vmin_t = Time(0) + Millisecond(round(Int64, vmin))
+    vmax_t = Time(0) + Millisecond(round(Int64, vmax))
+    return vmin_t, vmax_t
+end
 
-function ticks(limits::NTuple{2, TimeType})
-    datetimes = optimal_datetime_range(limits)
-    return datetime2float.(datetimes), format_datetimes(datetimes)
+function Makie.get_ticks(t::DateTicksWrapper{T}, scale, formatter, vmin, vmax) where {T <: Union{DateTime, Date}}
+    vmin_dt, vmax_dt = float_to_datetime(vmin, vmax)
+    datetimes, labels = Makie.get_ticks(t.ticks, scale, formatter, vmin_dt, vmax_dt)
+    return map(datetime2float, datetimes), labels
+end
+
+function Makie.get_ticks(t::DateTicksWrapper{Time}, scale, formatter, vmin, vmax)
+    vmin_t, vmax_t = float_to_time(vmin, vmax)
+    times, labels = Makie.get_ticks(t.ticks, scale, formatter, vmin_t, vmax_t)
+    return map(datetime2float, times), labels
+end
+
+function ticks(::NTuple{2, T}) where {T <: TimeType}
+    return DateTicksWrapper{T}(Makie.automatic)
 end
 
 abstract type ScientificType end

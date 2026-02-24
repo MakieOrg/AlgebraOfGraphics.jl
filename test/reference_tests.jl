@@ -1700,6 +1700,29 @@ reftest("auto dims labels multiple joined") do
     data(df) * mapping([:a, :b], [:x, :y => rich("Y", color = :red, font = :bold)], color = dims(1)) * (visual(Scatter) + smooth()) |> draw
 end
 
+reftest("datetime ticks") do
+    y4 = [1, 2, 3, 4]
+
+    f = Figure(size = (800, 800))
+
+    dates_years = [Date(2018, 1, 1), Date(2020, 6, 1), Date(2022, 3, 1), Date(2024, 9, 1)]
+    draw!(f[1, 1], data((; x = dates_years, y = y4)) * mapping(:x, :y) * visual(Scatter); axis = (; title = "Years"))
+
+    dates_months = [Date(2022, 1, 15), Date(2022, 4, 10), Date(2022, 7, 20), Date(2022, 11, 5)]
+    draw!(f[1, 2], data((; x = dates_months, y = y4)) * mapping(:x, :y) * visual(Scatter); axis = (; title = "Months"))
+
+    dts_hours = [DateTime(2022, 3, 1, 6), DateTime(2022, 3, 1, 18), DateTime(2022, 3, 2, 8), DateTime(2022, 3, 2, 20)]
+    draw!(f[2, 1], data((; x = dts_hours, y = y4)) * mapping(:x, :y) * visual(Scatter); axis = (; title = "Hours across days"))
+
+    dts_minutes = [DateTime(2022, 3, 1, 14, 0), DateTime(2022, 3, 1, 14, 20), DateTime(2022, 3, 1, 14, 40), DateTime(2022, 3, 1, 15, 0)]
+    draw!(f[2, 2], data((; x = dts_minutes, y = y4)) * mapping(:x, :y) * visual(Scatter); axis = (; title = "Minutes"))
+
+    times = [Time(6, 0), Time(10, 30), Time(15, 0), Time(20, 45)]
+    draw!(f[3, 1:2], data((; x = times, y = y4)) * mapping(:x, :y) * visual(Scatter); axis = (; title = "Time"))
+
+    f
+end
+
 reftest("temporal axes analyses") do
     dates = Date(2022, 1, 1) .+ Day.(0:9)
     y = [0.1, 0.5, 0.9, 0.7, 0.3, -0.2, -0.6, -0.8, -0.4, 0.0]
