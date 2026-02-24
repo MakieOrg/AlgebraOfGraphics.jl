@@ -16,32 +16,34 @@ end
 function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
         x, y = p
-        weights = StatsBase.fweights(get(n, :weights, similar(x, 0)))
+        xn = to_numerical(x)
+        weights = StatsBase.fweights(get(n, :weights, similar(xn, 0)))
         default_interval = length(weights) > 0 ? nothing : :confidence
         interval = l.interval === automatic ? default_interval : l.interval
         # FIXME: handle collinear case gracefully
-        lin_model = GLM.lm(add_intercept_column(x), y; weights, l.dropcollinear)
-        x̂ = range(extrema(x)..., length = l.npoints)
-        pred = GLM.predict(lin_model, add_intercept_column(x̂); interval, l.level)
+        lin_model = GLM.lm(add_intercept_column(xn), y; weights, l.dropcollinear)
+        x̂n = collect(range(extrema(xn)..., length = l.npoints))
+        pred = GLM.predict(lin_model, add_intercept_column(x̂n); interval, l.level)
+        x̂ = from_numerical(x̂n, x)
         return if !isnothing(interval)
-            ŷ, lower, upper = pred
-            (x̂, ŷ, x̂, lower, upper), (;)
+            ŷ, lower, upper = pred
+            (x̂, ŷ, x̂, lower, upper), (;)
         else
-            ŷ = pred
-            (x̂, ŷ, empty(x̂), empty(ŷ), empty(ŷ)), (;)
+            ŷ = pred
+            (x̂, ŷ, empty(x̂), empty(ŷ), empty(ŷ)), (;)
         end
     end
 
     lineslayer = ProcessedLayer(
         map(output) do p, n
-            x̂, ŷ, x, lower, upper = p
-            (x̂, ŷ), (;)
+            x̂, ŷ, x, lower, upper = p
+            (x̂, ŷ), (;)
         end, plottype = Lines, label = :prediction
     )
 
     bandlayer = ProcessedLayer(
         map(output) do p, n
-            x̂, ŷ, x, lower, upper = p
+            x̂, ŷ, x, lower, upper = p
             (x, lower, upper), (;)
         end, plottype = Band, label = :ci, attributes = dictionary([:alpha => 0.15])
     )
@@ -57,7 +59,7 @@ Use `interval` to specify what type of interval the shaded band should represent
 for a given coverage `level` (the default `0.95` equates `alpha = 0.05`).
 Valid values of `interval` are `:confidence`, to delimit the uncertainty of the predicted
 relationship, and `:prediction`, to delimit estimated bounds for new data points.
-Use `interval = nothing` to only compute the line fit, without any uncertainty estimate. 
+Use `interval = nothing` to only compute the line fit, without any uncertainty estimate.
 By default, this analysis errors on singular (collinear) data. To avoid that,
 it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.

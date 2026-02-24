@@ -1699,3 +1699,15 @@ reftest("auto dims labels multiple joined") do
     df = (a = 1:10, b = 11:20, x = sin.(1:10), y = cos.(1:10))
     data(df) * mapping([:a, :b], [:x, :y => rich("Y", color = :red, font = :bold)], color = dims(1)) * (visual(Scatter) + smooth()) |> draw
 end
+
+reftest("temporal axes analyses") do
+    dates = Date(2022, 1, 1) .+ Day.(0:9)
+    y = [0.1, 0.5, 0.9, 0.7, 0.3, -0.2, -0.6, -0.8, -0.4, 0.0]
+    df = (; dates, y)
+
+    f = Figure(size = (800, 300))
+    draw!(f[1, 1], data(df) * mapping(:dates, :y) * (visual(Scatter) + smooth()); axis = (; xticklabelrotation = pi / 4))
+    draw!(f[1, 2], data(df) * mapping(:dates, :y) * (visual(Scatter) + linear()); axis = (; xticklabelrotation = pi / 4))
+    draw!(f[1, 3], data(df) * mapping(:dates) * histogram(); axis = (; xticklabelrotation = pi / 4))
+    f
+end
