@@ -112,6 +112,7 @@ end
     floats, labels = datetimeticks([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)], ["January", "March", "May"])
     @test labels == ["January", "March", "May"]
     @test floats == datetime2float.([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
+
 end
 
 @testset "Aesthetics switch via visual attribute" begin
@@ -166,6 +167,25 @@ end
     @test length(leg_els) == 2
     @test length(leg_els[1]) == 3
     @test length(leg_els[2]) == 1
+end
+
+@testset "Empty facet ticks propagation" begin
+    # Single scale: empty facets should get DateTicksWrapper from merged scale (#471)
+    dates = [Date(2022, 1, 1), Date(2022, 2, 1), Date(2022, 3, 1)]
+    spec = data((; x = dates, y = [1, 2, 3], r = fill("r1", 3), c = fill("c1", 3))) *
+        mapping(:x, :y, row = :r, col = :c) * visual(Scatter) +
+        data((; x = dates, y = [4, 5, 6], r = fill("r2", 3), c = fill("c2", 3))) *
+        mapping(:x, :y, row = :r, col = :c) * visual(Scatter)
+    ag = compute_axes_grid(spec)
+    empty_ae = ag[findfirst(ae -> isempty(ae.processedlayers), ag)]
+    @test empty_ae.axis.attributes[:xticks] isa AlgebraOfGraphics.DateTicksWrapper
+
+    # Multiple scales: should error
+    spec_split = data((; x = 1:3, y = 1:3, r = fill("r1", 3), c = fill("c1", 3))) *
+        mapping(:x => scale(:X1), :y, row = :r, col = :c) +
+        data((; x = 4:6, y = 4:6, r = fill("r2", 3), c = fill("c2", 3))) *
+        mapping(:x => scale(:X2), :y, row = :r, col = :c)
+    @test_throws_message "multiple candidate" draw(spec_split)
 end
 
 @testset "Invalid scale settings" begin
