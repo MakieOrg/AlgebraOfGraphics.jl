@@ -343,6 +343,7 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
     end
 
     set_dodge_width_default!(categoricalscales, processedlayers)
+    compute_plot_dependent_attributes!(processedlayers)
 
     pls_grid = compute_processedlayers_grid(processedlayers, categoricalscales)
     entries_grid, continuousscales_grid, merged_continuousscales =
@@ -800,4 +801,34 @@ function resolution(vec_of_vecs)::Float64
     iscategoricalcontainer(vec_of_vecs) && return 1.0
     s = unique(sort(reduce(vcat, vec_of_vecs)))
     return minimum((b - a for (a, b) in @views zip((s[begin:(end - 1)]), s[(begin + 1):end])))
+end
+
+compute_plot_dependent_attributes!(::Type, ::ProcessedLayer) = nothing
+
+function compute_plot_dependent_attributes!(::Type{T}, pl::ProcessedLayer) where {T <: Union{BarPlot, BoxPlot, CrossBar, Violin}}
+    haskey(pl.attributes, :width) && return
+    isempty(pl.positional) && return
+
+    xdata = pl.positional[1]
+    iscategoricalcontainer(xdata) && return
+
+    flat = reduce(vcat, xdata)
+    isempty(flat) && return
+    rescaled = contextfree_rescale(flat)
+    s = unique!(sort(rescaled))
+
+    width = if length(s) <= 1
+        1
+    else
+        minimum(s[i + 1] - s[i] for i in 1:(length(s) - 1))
+    end
+
+    return insert!(pl.attributes, :width, width)
+end
+
+function compute_plot_dependent_attributes!(processedlayers::AbstractVector{ProcessedLayer})
+    for pl in processedlayers
+        compute_plot_dependent_attributes!(pl.plottype, pl)
+    end
+    return
 end
