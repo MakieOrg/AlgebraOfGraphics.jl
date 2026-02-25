@@ -382,7 +382,25 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
             # create facet plots in which adjacent facets don't share X and Y scales at all,
             # like completely disjoint categories or categorical next to continuous data.
             used_scale_ids = get_used_scale_ids(ae, aes)
-            isempty(used_scale_ids) && continue
+            if isempty(used_scale_ids)
+                # Empty facets still need ticks from merged scales so that linked
+                # datetime axes don't fall back to raw float labels (#471).
+                if haskey(merged_continuousscales, aes)
+                    mscales = merged_continuousscales[aes]
+                    if length(mscales) == 1
+                        mscale = only(values(mscales))
+                        _ticks = ticks(mscale)
+                        if _ticks !== automatic
+                            get!(ae.axis.attributes, Symbol(var, "ticks"), _ticks)
+                            get!(ae.axis.attributes, Symbol(var, "tickformat"), mscale.props.aesprops.tickformat)
+                        end
+                    else
+                        scale_ids = collect(keys(mscales))
+                        error("An empty facet has multiple candidate $aes scales ($scale_ids). Cannot determine which scale's ticks to use.")
+                    end
+                end
+                continue
+            end
             if length(used_scale_ids) > 1
                 error("Found more than two scales of type $aes used in one AxesSpecGrid, this is currently not supported. Scales were: $used_scale_ids")
             end
