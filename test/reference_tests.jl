@@ -1734,3 +1734,22 @@ reftest("temporal axes analyses") do
     draw!(f[1, 3], data(df) * mapping(:dates) * histogram(); axis = (; xticklabelrotation = pi / 4))
     f
 end
+
+reftest("consistent width across facets") do
+    df = (; x = [10, 15, 25, 10], y = [1, 1, 1, 1], c = [1, 2, 3, 3])
+    df_spread = (;
+        x = repeat([10, 15, 25, 10], inner = 5),
+        y = repeat([1, 1, 1, 1], inner = 5) .+ repeat([-0.2, -0.1, 0, 0.1, 0.2], 4),
+        c = repeat([1, 2, 3, 3], inner = 5),
+    )
+    df_cb = (; x = [10, 15, 25, 10], y = [1, 1, 1, 1], ymin = [0.8, 0.8, 0.8, 0.8], ymax = [1.2, 1.2, 1.2, 1.2], c = [1, 2, 3, 3])
+    df_dt = (; x = [DateTime(2024, 1, 1), DateTime(2024, 1, 6), DateTime(2024, 1, 16), DateTime(2024, 1, 1)], y = [1, 1, 1, 1], c = [1, 2, 3, 3])
+
+    f = Figure(size = (1000, 500))
+    draw!(f[1, 1], data(df) * mapping(:x, :y, row = :c) * visual(BarPlot))
+    draw!(f[1, 2], data(df_spread) * mapping(:x, :y, row = :c) * visual(BoxPlot))
+    draw!(f[1, 3], data(df_spread) * mapping(:x, :y, row = :c) * visual(Violin))
+    draw!(f[1, 4], data(df_cb) * mapping(:x, :y, :ymin, :ymax, row = :c) * visual(CrossBar))
+    draw!(f[1, 5], data(df_dt) * mapping(:x, :y, row = :c) * visual(BarPlot); axis = (; xticklabelrotation = pi / 4))
+    f
+end
