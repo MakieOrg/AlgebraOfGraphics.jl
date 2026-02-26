@@ -141,6 +141,32 @@ end
     end
 end
 
+@testset "per-layer legend visible" begin
+    df = (; x = 1:3, y = 1:3, g = ["A", "B", "C"])
+
+    spec_hidden = data(df) * mapping(:x, :y, color = :g) * (visual(Scatter) + visual(Scatter, legend = (; visible = false)))
+    leg_els, el_labels, group_labels = _compute_legend(spec_hidden)
+    @test length(leg_els) == 1
+    for els in leg_els[]
+        @test length(els) == 1
+        @test els[1] isa MarkerElement
+    end
+
+    spec_visible = data(df) * mapping(:x, :y, color = :g) * (visual(Scatter) + visual(Scatter, legend = (; visible = true)))
+    leg_els2, _, _ = _compute_legend(spec_visible)
+    @test length(leg_els2) == 1
+    for els in leg_els2[]
+        @test length(els) == 2
+    end
+
+    spec_default = data(df) * mapping(:x, :y, color = :g) * (visual(Scatter) + visual(Lines))
+    leg_els3, _, _ = _compute_legend(spec_default)
+    @test length(leg_els3) == 1
+    for els in leg_els3[]
+        @test length(els) == 2
+    end
+end
+
 @testset "alpha" begin
     df = (;
         x = repeat(1:3, 3),

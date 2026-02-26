@@ -329,14 +329,20 @@ function datavalues_plotvalues_datalabels(aes::Type{AesLineWidth}, scale::Contin
 end
 
 function _legend_elements(processedlayer, scale_args::MixedArguments)
+    legend_kw = get(processedlayer.attributes, :legend, nothing)
+    if legend_kw !== nothing && get(legend_kw, :visible, true) == false
+        return LegendElement[]
+    end
+
     els = legend_elements(processedlayer, scale_args)
-    if haskey(processedlayer.attributes, :legend)
-        # LegendOverride and apply_legend_override are not public API (introduced in 0.21.13)
-        # but unlikely to change much so it's easier to just depend on them instead of copying
-        # their implementation
-        override = Makie.LegendOverride(processedlayer.attributes[:legend])
-        for el in els
-            Makie.apply_legend_override!(el, override)
+    if legend_kw !== nothing
+        d = Dict{Symbol, Any}(pairs(legend_kw))
+        delete!(d, :visible)
+        if !isempty(d)
+            override = Makie.LegendOverride(d)
+            for el in els
+                Makie.apply_legend_override!(el, override)
+            end
         end
     end
     return els
