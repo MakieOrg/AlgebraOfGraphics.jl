@@ -1173,6 +1173,24 @@ reftest("legend element overrides") do
     draw(spec)
 end
 
+reftest("per-layer legend visible") do
+    df = (; x = [1, 2, 3], y = [4, 5, 6], group = ["A", "B", "A"])
+    base = data(df) * mapping(:x, :y, color = :group)
+    cross = visual(Scatter, marker = :xcross, markersize = 25, alpha = 0.5)
+
+    spec_hidden = base * (visual(Scatter, markersize = 12) + cross * visual(legend = (; visible = false)))
+    spec_default = base * (visual(Scatter, markersize = 12) + cross * visual(legend = (; visible = true)))
+
+    fig = Figure(size = (800, 400))
+    fg1 = draw!(fig[1, 1], spec_hidden)
+    fg2 = draw!(fig[1, 3], spec_default)
+    legend!(fig[1, 2], fg1)
+    legend!(fig[1, 4], fg2)
+    Label(fig[0, 1:2], "visible = false"; fontsize = 16)
+    Label(fig[0, 3:4], "visible = true"; fontsize = 16)
+    fig
+end
+
 reftest("stairs") do
     spec = mapping(
         1:10,
