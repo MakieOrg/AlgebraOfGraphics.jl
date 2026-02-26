@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.12.2 - 2026-02-26
+
 - Added support for `visual(..., legend = (; visible = false))` to suppress a layer's legend contribution. Useful when combining multiple visual layers (e.g. `Scatter` + `Text`) that share a categorical scale, where some layers produce unwanted legend elements [#728](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/728).
 - Fixed legend labels missing when a layer only exists in non-first facets [#721](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/721).
 - Fixed `smooth()`, `linear()` and `histogram()` failing with `Date`/`DateTime` axes [#724](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/724).
