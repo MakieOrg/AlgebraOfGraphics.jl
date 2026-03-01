@@ -774,7 +774,7 @@ attribute_or_plot_default(plottype, attributes, key) = get(attributes, key) do
     to_value(Makie.default_theme(nothing, plottype)[key])
 end
 
-function determine_dodge_width(T::Type{BarPlot}, p::ProcessedLayer, aes_mapping, dodgetype, n_dodge)
+function determine_dodge_width(T::Type{<:Union{BarPlot, BoxPlot, CrossBar, Violin}}, p::ProcessedLayer, aes_mapping, dodgetype, n_dodge)
     width = attribute_or_plot_default(T, p.attributes, :width)
     gap = attribute_or_plot_default(T, p.attributes, :gap)
     dodge_gap = attribute_or_plot_default(T, p.attributes, :dodge_gap)

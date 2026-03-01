@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `BoxPlot`, `CrossBar`, and `Violin` now report an intrinsic dodge width, matching `BarPlot`. This allows companion layers (e.g., `Scatter` with `dodge_x`) to dodge correctly when combined with these plot types [#730](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/730).
+
 ## v0.12.2 - 2026-02-26
 
 - Added support for `visual(..., legend = (; visible = false))` to suppress a layer's legend contribution. Useful when combining multiple visual layers (e.g. `Scatter` + `Text`) that share a categorical scale, where some layers produce unwanted legend elements [#728](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/728).

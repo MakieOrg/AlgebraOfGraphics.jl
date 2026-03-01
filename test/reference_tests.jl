@@ -1129,6 +1129,29 @@ reftest("dodge scatter with rangebars") do
     f
 end
 
+reftest("dodge scatter with barplot boxplot violin crossbar") do
+    df = (
+        x = [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
+        y = [1.0, 2.0, 3.0, 5.0, 6.0, 7.0, 2.0, 3.0, 4.0, 4.0, 5.0, 6.0],
+        group = ["a", "a", "a", "b", "b", "b", "a", "a", "a", "b", "b", "b"],
+    )
+    df_cross = (
+        x = [1, 1, 2, 2],
+        y = [2.0, 6.0, 3.0, 5.0],
+        ymin = [1.0, 5.0, 2.0, 4.0],
+        ymax = [3.0, 7.0, 4.0, 6.0],
+        group = ["a", "b", "a", "b"],
+    )
+    f = Figure()
+    scatter_layer = mapping(:x, :y, dodge_x = :group) * visual(Scatter, color = :black, markersize = 8)
+    dodged = mapping(:x, :y, dodge = :group, color = :group)
+    draw!(f[1, 1], data(df) * (dodged * visual(BarPlot) + scatter_layer))
+    draw!(f[1, 2], data(df) * (dodged * visual(BoxPlot) + scatter_layer))
+    draw!(f[2, 1], data(df) * (dodged * visual(Violin) + scatter_layer))
+    draw!(f[2, 2], data(df_cross) * (mapping(:x, :y, :ymin, :ymax, dodge = :group, color = :group) * visual(CrossBar) + scatter_layer))
+    f
+end
+
 reftest("manual legend labels in visual") do
     df_subjects = (; x = repeat(1:10, 10), y = cos.(1:100), id = repeat(1:10, inner = 10))
     df_func = (; x = range(1, 10, length = 20), y = cos.(range(1, 10, length = 20)))
