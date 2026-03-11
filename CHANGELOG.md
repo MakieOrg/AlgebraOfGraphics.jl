@@ -5,7 +5,7 @@
 ## v0.12.3 - 2026-03-11
 
 - `BoxPlot`, `CrossBar`, and `Violin` now report an intrinsic dodge width, matching `BarPlot`. This allows companion layers (e.g., `Scatter` with `dodge_x`) to dodge correctly when combined with these plot types [#730](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/730).
-- Fixed `LongPoly` recipe (used by `filled_contours`) breaking with Makie >= 0.24.9 due to ComputePipeline migration. Converted recipe from legacy `@recipe` style to the new ComputePipeline-compatible `@recipe` style [#733](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/733).
+- Fixed `LongPoly` and `Choropleth` recipes breaking with Makie >= 0.24.9 due to ComputePipeline migration. Converted recipes from legacy `@recipe` style to the new ComputePipeline-compatible `@recipe` style [#733](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/733).
 
 ## v0.12.2 - 2026-02-26
 
