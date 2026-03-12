@@ -1,7 +1,7 @@
 """
     AbstractDrawable
 
-Abstract type encoding objects that can be drawn via [`AlgebraOfGraphics.draw`](@ref).
+Abstract type encoding objects that can be drawn via `draw`.
 """
 abstract type AbstractDrawable end
 
@@ -18,7 +18,7 @@ abstract type AbstractAlgebraic <: AbstractDrawable end
 Algebraic object encoding a single layer of a visualization. It is composed of a dataset,
 positional and named arguments, as well as a transformation to be applied to those.
 `Layer` objects can be multiplied, yielding a novel `Layer` object, or added,
-yielding a [`AlgebraOfGraphics.Layers`](@ref) object.
+yielding a `Layers` object.
 """
 Base.@kwdef struct Layer <: AbstractAlgebraic
     transformation::Any = identity

@@ -27,7 +27,7 @@ opensans(weight) = joinpath(font_folder, "OpenSans-$(weight).ttf")
     aog_theme(; fonts=[firasans("Medium"), firasans("Light")])
 
 Return a `NamedTuple` of theme settings. Intended for internal use.
-The provided functionality is exposed to the user by the function [`set_aog_theme!`](@ref).
+The provided functionality is exposed to the user by the function `set_aog_theme!`.
 """
 function aog_theme(; fonts = [firasans("Medium"), firasans("Light")])
     mediumfont = first(fonts)
@@ -133,7 +133,7 @@ end
     set_aog_theme!(; kwargs...)
 
 Set the current theme to a predefined and opinionated theme,
-as defined by the unexported internal function [`AlgebraOfGraphics.aog_theme`](@ref).
+as defined by the unexported internal function `AlgebraOfGraphics.aog_theme`.
 
 To tweak the predefined theme, use the function `Makie.update_theme!`.
 See the example below on how to change, e.g., default fontsize, title, and markersize.

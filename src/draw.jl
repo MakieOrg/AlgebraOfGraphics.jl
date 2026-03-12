@@ -50,9 +50,9 @@ end
 """
     draw(d, scales::Scales = scales(); [axis, figure, facet, legend, colorbar])
 
-Draw a [`AlgebraOfGraphics.AbstractDrawable`](@ref) object `d`.
-In practice, `d` will often be a [`AlgebraOfGraphics.Layer`](@ref) or
-[`AlgebraOfGraphics.Layers`](@ref).
+Draw a `AlgebraOfGraphics.AbstractDrawable` object `d`.
+In practice, `d` will often be a `Layer` or
+`Layers`.
 Scale options can be passed as an optional second argument.
 The output can be customized by passing named tuples or dictionaries with settings via the `axis`, `figure`, `facet`, `legend` or `colorbar` keywords.
 Legend and colorbar are drawn automatically unless `show = false` is passed to the keyword
@@ -248,9 +248,9 @@ end
 """
     draw!(fig, d::AbstractDrawable, scales::Scales = scales(); [axis, facet])
 
-Draw a [`AlgebraOfGraphics.AbstractDrawable`](@ref) object `d` on `fig`.
-In practice, `d` will often be a [`AlgebraOfGraphics.Layer`](@ref) or
-[`AlgebraOfGraphics.Layers`](@ref).
+Draw a `AlgebraOfGraphics.AbstractDrawable` object `d` on `fig`.
+In practice, `d` will often be a `Layer` or
+`Layers`.
 `fig` can be a figure, a position in a layout, or an axis if `d` has no facet specification.
 The output can be customized by passing named tuples or dictionaries with settings via the `axis` or `facet` keywords.
 """
@@ -297,7 +297,7 @@ end
     This function is considered experimental.
     It can have breaking changes or be removed at any time.
 
-Create a Makie SpecApi specification from a [`AlgebraOfGraphics.AbstractDrawable`](@ref) object `d`.
+Create a Makie SpecApi specification from a `AlgebraOfGraphics.AbstractDrawable` object `d`.
 Scale options can be passed as an optional second argument.
 The output can be customized by passing named tuples or dictionaries with settings via the `axis` or `facet` keywords.
 
