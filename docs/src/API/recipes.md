@@ -1,5 +1,0 @@
-# Recipes
-
-```@docs
-choropleth
-```

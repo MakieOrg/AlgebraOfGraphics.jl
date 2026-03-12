@@ -21,7 +21,6 @@ module Cheatsheet
 end
 
 makedocs(;
-    modules = [AlgebraOfGraphics],
     authors = "Pietro Vertechi",
     repo = "https://github.com/MakieOrg/AlgebraOfGraphics.jl",
     sitename = "AlgebraOfGraphics",
@@ -98,11 +97,7 @@ makedocs(;
             "FAQs.md",
             "philosophy.md",
             "changelog.md",
-            "API" => [
-                "API/types.md",
-                "API/functions.md",
-                "API/recipes.md",
-            ],
+            "API" => "api.md",
         ],
     ],
     warnonly = get(ENV, "CI", "false") != "true",

@@ -61,12 +61,9 @@ Use `transformation` to transform coordinates
 
     The `transformation` keyword argument is experimental and could be deprecated
     (even in a non-breaking release) in favor of a different syntax.
-
-## Attributes
-$(ATTRIBUTES)
 """
-@recipe(Choropleth) do scene
-    return default_theme(scene, Poly)
+@recipe Choropleth (geometries,) begin
+    Makie.documented_attributes(Poly)...
 end
 
 Makie.used_attributes(::Type{<:Choropleth}, v::AbstractVector) = (:transformation,)
@@ -80,6 +77,6 @@ function Makie.convert_arguments(
 end
 
 function Makie.plot!(p::Choropleth)
-    poly!(p, p.attributes, p[1])
+    poly!(p, Attributes(p), p.geometries)
     return p
 end

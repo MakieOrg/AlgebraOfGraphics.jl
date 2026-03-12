@@ -1,7 +1,7 @@
 """
     Layers(layers::Vector{Layer})
 
-Algebraic object encoding a list of [`AlgebraOfGraphics.Layer`](@ref) objects.
+Algebraic object encoding a list of `Layer` objects.
 `Layers` objects can be added or multiplied, yielding a novel `Layers` object.
 """
 struct Layers <: AbstractAlgebraic
@@ -41,7 +41,7 @@ zerolayer() = Layers(Layer[])
 """
     ProcessedLayers(layers::Vector{ProcessedLayer})
 
-Object encoding a list of [`AlgebraOfGraphics.ProcessedLayer`](@ref) objects.
+Object encoding a list of `ProcessedLayer` objects.
 `ProcessedLayers` objects are the output of the processing pipeline and can be
 drawn without further processing.
 """

@@ -221,7 +221,7 @@ Some helper functions are provided, which can be used within the pair syntax to
 either rename and reorder *unique values* of a categorical column on the fly or to
 signal whether a numerical column should be treated as categorical.
 
-The complete API of helper functions is available at [Mapping helpers](@ref), but here are a few examples:
+The complete API of helper functions is available at [API](@ref), but here are a few examples:
 
 ```julia
 # column `train` has two unique values, `true` and `false`
