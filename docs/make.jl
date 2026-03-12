@@ -21,7 +21,6 @@ module Cheatsheet
 end
 
 makedocs(;
-    modules = [AlgebraOfGraphics],
     authors = "Pietro Vertechi",
     repo = "https://github.com/MakieOrg/AlgebraOfGraphics.jl",
     sitename = "AlgebraOfGraphics",
