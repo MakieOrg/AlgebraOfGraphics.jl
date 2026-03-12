@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Empty facets with multiple candidate scales (e.g., different X scales across columns) now hide all axis decorations instead of erroring. Neighboring axes correctly retain their tick labels when adjacent to a hidden-empty facet [#734](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/734).
+
 ## v0.12.3 - 2026-03-11
 
 - `BoxPlot`, `CrossBar`, and `Violin` now report an intrinsic dodge width, matching `BarPlot`. This allows companion layers (e.g., `Scatter` with `dodge_x`) to dodge correctly when combined with these plot types [#730](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/730).
