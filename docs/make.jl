@@ -97,11 +97,7 @@ makedocs(;
             "FAQs.md",
             "philosophy.md",
             "changelog.md",
-            "API" => [
-                "API/types.md",
-                "API/functions.md",
-                "API/recipes.md",
-            ],
+            "API" => "API/api.md",
         ],
     ],
     warnonly = get(ENV, "CI", "false") != "true",
