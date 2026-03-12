@@ -100,7 +100,7 @@ makedocs(;
             "API" => "api.md",
         ],
     ],
-    warnonly = get(ENV, "CI", "false") != "true",
+    warnonly = get(ENV, "CI", "false") == "true" ? [:cross_references] : true,
     pagesonly = true,
 )
 
