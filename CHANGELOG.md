@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.12.4 - 2026-03-12
+
 - Empty facets with multiple candidate scales (e.g., different X scales across columns) now hide all axis decorations instead of erroring. Neighboring axes correctly retain their tick labels when adjacent to a hidden-empty facet [#734](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/734).
 
 ## v0.12.3 - 2026-03-11
