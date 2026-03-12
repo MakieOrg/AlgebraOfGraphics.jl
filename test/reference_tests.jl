@@ -1794,3 +1794,25 @@ reftest("consistent width across facets") do
     draw!(f[1, 5], data(df_dt) * mapping(:x, :y, row = :c) * visual(BarPlot); axis = (; xticklabelrotation = pi / 4))
     f
 end
+
+reftest("empty facet with ambiguous x scales") do
+    layers = zerolayer()
+    for row in ["A", "B", "C"]
+        for col in ["X", "Y", "Z"]
+            row == "B" && col == "Y" && continue
+            layers += mapping(string.(col, 1:3) => scale(Symbol("X_", col)), 1:3, row = row, col = col)
+        end
+    end
+    draw(layers * visual(Scatter))
+end
+
+reftest("empty facet with ambiguous y scales") do
+    layers = zerolayer()
+    for row in ["A", "B", "C"]
+        for col in ["X", "Y", "Z"]
+            row == "B" && col == "Y" && continue
+            layers += mapping(1:3, string.(row, 1:3) => scale(Symbol("Y_", row)), row = row, col = col)
+        end
+    end
+    draw(layers * visual(Scatter))
+end

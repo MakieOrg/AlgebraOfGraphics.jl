@@ -375,6 +375,7 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
     for ae in axes_grid
         ndims = isaxis2d(ae) ? 2 : 3
         aesthetics = [AesX, AesY, AesZ]
+        hide_empty_axis = false
         for (aes, var) in zip(aesthetics[1:ndims], (:x, :y, :z)[1:ndims])
             # Determine which scales of type AesX, AesY, AesZ have actually been
             # used by the processed layers in the current AxisSpecEntries.
@@ -383,22 +384,31 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
             # create facet plots in which adjacent facets don't share X and Y scales at all,
             # like completely disjoint categories or categorical next to continuous data.
             used_scale_ids = get_used_scale_ids(ae, aes)
+
             if isempty(used_scale_ids)
                 # Empty facets still need ticks from merged scales so that linked
                 # datetime axes don't fall back to raw float labels (#471).
-                if haskey(merged_continuousscales, aes)
-                    mscales = merged_continuousscales[aes]
-                    if length(mscales) == 1
-                        mscale = only(values(mscales))
-                        _ticks = ticks(mscale)
-                        if _ticks !== automatic
-                            get!(ae.axis.attributes, Symbol(var, "ticks"), _ticks)
-                            get!(ae.axis.attributes, Symbol(var, "tickformat"), mscale.props.aesprops.tickformat)
+                cont_scales = values(get(merged_continuousscales, aes, Dictionary()))
+                cat_scales = values(get(categoricalscales, aes, Dictionary()))
+                all_scales = merge(cont_scales, cat_scales)
+
+                if length(all_scales) == 1
+                    only_scale = only(all_scales)
+                    _ticks = ticks(only_scale)
+                    if _ticks !== automatic
+                        get!(ae.axis.attributes, Symbol(var, "ticks"), _ticks)
+                        if only_scale isa ContinuousScale
+                            get!(ae.axis.attributes, Symbol(var, "tickformat"), only_scale.props.aesprops.tickformat)
                         end
-                    else
-                        scale_ids = collect(keys(mscales))
-                        error("An empty facet has multiple candidate $aes scales ($scale_ids). Cannot determine which scale's ticks to use.")
                     end
+                elseif length(all_scales) > 1
+                    # Multiple candidate scales exist but we can't determine which
+                    # one's ticks to display. Mark the axis for hiding so the empty
+                    # facet appears as a blank cell. This is especially important when
+                    # the empty axis sits at the bottom row (for x) or the leftmost
+                    # column (for y), where its ticks would remain visible after
+                    # hideinnerdecorations! and could be misleading for neighboring axes.
+                    hide_empty_axis = true
                 end
                 continue
             end
@@ -437,6 +447,23 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand
                 get!(ae.axis.attributes, keyword, v)
+            end
+        end
+
+        if hide_empty_axis
+            # When an empty facet has multiple candidate scales for at least one axis
+            # dimension (e.g., different X scales in different columns of a row/col layout),
+            # it's not possible to determine which scale's ticks to display. Hide all axis
+            # decorations so the cell appears blank, similar to unfilled cells in wrapped layouts.
+            for var in (:x, :y, :z)[1:ndims]
+                for attr in (:ticksvisible, :ticklabelsvisible, :labelvisible, :gridvisible, :minorgridvisible)
+                    set!(ae.axis.attributes, Symbol(var, attr), false)
+                end
+            end
+            if isaxis2d(ae)
+                for attr in (:topspinevisible, :bottomspinevisible, :leftspinevisible, :rightspinevisible)
+                    set!(ae.axis.attributes, attr, false)
+                end
             end
         end
     end
