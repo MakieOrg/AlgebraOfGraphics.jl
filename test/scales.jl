@@ -180,12 +180,16 @@ end
     empty_ae = ag[findfirst(ae -> isempty(ae.processedlayers), ag)]
     @test empty_ae.axis.attributes[:xticks] isa AlgebraOfGraphics.DateTicksWrapper
 
-    # Multiple scales: should error
+    # Multiple scales: empty facet axis should be hidden
     spec_split = data((; x = 1:3, y = 1:3, r = fill("r1", 3), c = fill("c1", 3))) *
         mapping(:x => scale(:X1), :y, row = :r, col = :c) +
         data((; x = 4:6, y = 4:6, r = fill("r2", 3), c = fill("c2", 3))) *
         mapping(:x => scale(:X2), :y, row = :r, col = :c)
-    @test_throws_message "multiple candidate" draw(spec_split)
+    ag = compute_axes_grid(spec_split)
+    empty_ae = ag[findfirst(ae -> isempty(ae.processedlayers), ag)]
+    @test empty_ae.axis.attributes[:xticksvisible] == false
+    @test empty_ae.axis.attributes[:xlabelvisible] == false
+    @test empty_ae.axis.attributes[:topspinevisible] == false
 end
 
 @testset "Invalid scale settings" begin

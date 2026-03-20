@@ -2,7 +2,14 @@
 
 ## Unreleased
 
+## v0.12.4 - 2026-03-12
+
+- Empty facets with multiple candidate scales (e.g., different X scales across columns) now hide all axis decorations instead of erroring. Neighboring axes correctly retain their tick labels when adjacent to a hidden-empty facet [#734](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/734).
+
+## v0.12.3 - 2026-03-11
+
 - `BoxPlot`, `CrossBar`, and `Violin` now report an intrinsic dodge width, matching `BarPlot`. This allows companion layers (e.g., `Scatter` with `dodge_x`) to dodge correctly when combined with these plot types [#730](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/730).
+- Fixed `LongPoly` and `Choropleth` recipes breaking with Makie >= 0.24.9 due to ComputePipeline migration. Converted recipes from legacy `@recipe` style to the new ComputePipeline-compatible `@recipe` style [#733](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/733).
 
 ## v0.12.2 - 2026-02-26
 
