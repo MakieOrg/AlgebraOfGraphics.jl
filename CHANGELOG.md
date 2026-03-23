@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.12.5 - 2026-03-23
+
+- Fixed `paginate` discarding the layout scale palette so that one can now use `wrapped` to paginate with specific row/column shapes [#738](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/738).
+
 ## v0.12.4 - 2026-03-12
 
 - Empty facets with multiple candidate scales (e.g., different X scales across columns) now hide all axis decorations instead of erroring. Neighboring axes correctly retain their tick labels when adjacent to a hidden-empty facet [#734](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/734).
