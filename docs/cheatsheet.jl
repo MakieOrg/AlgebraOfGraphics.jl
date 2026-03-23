@@ -156,7 +156,7 @@ block(title, content) = [
     "]])",
 ]
 
-logo = SVG(joinpath(@__DIR__, "src", "assets", "logo_with_text.svg"))
+logo = SVG(joinpath(@__DIR__, "src", "public", "logo_with_text.svg"))
 
 doc = with_theme(cheatsheet_theme) do
     [

@@ -6,9 +6,9 @@ format: gfm
 ```{=html}
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="/docs/src/assets/logo-dark.svg">
-    <source media="(prefers-color-scheme: light)" srcset="/docs/src/assets/logo.svg">
-    <img alt="AlgebraOfGraphics Logo" src="/docs/src/assets/logo.svg" width="350">
+    <source media="(prefers-color-scheme: dark)" srcset="/docs/src/public/logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="/docs/src/public/logo.svg">
+    <img alt="AlgebraOfGraphics Logo" src="/docs/src/public/logo.svg" width="350">
   </picture>
 </div>
 ```
