@@ -126,5 +126,28 @@ or use `draw` with an optional second argument specifying the index of the page 
 draw(pag, 4)
 ````
 
+### Controlling rows and columns per page
+
+By default, pagination with a `Layout` scale (wrapped layout) uses a squarish arrangement on each page.
+If you want a specific number of rows and columns per page, combine a [`wrapped`](@ref) palette on the `Layout` scale with the appropriate `layout` limit.
+
+For example, to get pages with 2 columns and 3 rows, set `layout = 2 * 3` and `palette = wrapped(cols = 2)`:
+
+````@example faceting
+pag_2x3 = paginate(
+    plt,
+    scales(Layout = (; palette = wrapped(cols = 2))),
+    layout = 2 * 3,
+)
+draw(pag_2x3, 1)
+````
+
+Compare this to the default wrapping, which for 6 items would produce a 2×3 (rows×cols) layout instead:
+
+````@example faceting
+pag_default = paginate(plt, layout = 6)
+draw(pag_default, 1)
+````
+
 
 
