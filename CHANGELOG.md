@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## v0.12.5 - 2026-03-23
+
+- Fixed `paginate` discarding the `wrap` palette (e.g., `palettes = (layout = [(1, 1), (1, 2)],)`) so that per-page column/row counts are now preserved [#738](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/738).
+- Fixed missing logo and favicon in the documentation by moving doc assets to VitePress's `public/` directory [#739](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/739).
+
 ## v0.12.4 - 2026-03-12
 
 - Empty facets with multiple candidate scales (e.g., different X scales across columns) now hide all axis decorations instead of erroring. Neighboring axes correctly retain their tick labels when adjacent to a hidden-empty facet [#734](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/734).
