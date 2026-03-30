@@ -193,6 +193,7 @@ struct CategoricalScaleProps
     aesprops::CategoricalAesProps
     label # nothing or any type workable as a label
     legend::Bool
+    hide_unused_legend::Bool
     categories::Union{Nothing, Function, Vector}
     palette # nothing or any type workable as a palette
     dim_labels::Union{Nothing, Dict{DimsIndex, Any}} # labels for dims selectors, indexed by DimsIndex
@@ -202,6 +203,7 @@ function Base.:(==)(a::CategoricalScaleProps, b::CategoricalScaleProps)
     return a.aesprops == b.aesprops &&
         a.label == b.label &&
         a.legend == b.legend &&
+        a.hide_unused_legend == b.hide_unused_legend &&
         a.categories == b.categories &&
         a.palette == b.palette # &&
     # TODO: currently this fails with rich text, need to wait for equality implementation in Makie before adding this back, it's just a guard rail anyway so disabling this field for now
@@ -272,6 +274,7 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     else
         legend = _pop!(props_copy, :legend, true)
     end
+    hide_unused_legend = _pop!(props_copy, :hide_unused_legend, false)
     label = _pop!(props_copy, :label, nothing)
     categories = _pop!(props_copy, :categories, nothing)
     palette = _pop!(props_copy, :palette, nothing)
@@ -281,6 +284,7 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
         aes_props,
         label,
         legend,
+        hide_unused_legend,
         categories,
         palette,
         dim_labels,

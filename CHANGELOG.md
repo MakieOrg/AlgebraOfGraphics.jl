@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Legend entries now hide elements from plot types that have no data for a given category (`hide_unused` defaults to `true`). This fixes misleading legends when layers with different plot types share a categorical scale but cover different subsets of categories (e.g., Scatter for "A" and Lines for "B" no longer both show a marker+line for every entry). The behavior can be controlled globally via `legend = (; hide_unused = false)` in `draw`, or per scale via `scales(Color = (; hide_unused_legend = false))`. Paginated plots also benefit, as each page's legend now only shows categories present on that page [#742](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/742).
+
 ## v0.12.5 - 2026-03-23
 
 - Fixed `paginate` discarding the layout scale palette so that one can now use `wrapped` to paginate with specific row/column shapes [#738](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/738).

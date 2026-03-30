@@ -1816,3 +1816,11 @@ reftest("empty facet with ambiguous y scales") do
     end
     draw(layers * visual(Scatter))
 end
+
+reftest("hide_unused_legend") do
+    df_scatter = (; x = [1, 2, 1, 2], y = [1, 2, 3, 4], g = ["a", "a", "b", "b"])
+    df_lines = (; x = [1, 2, 1, 2], y = [2, 1, 4, 3], g = ["b", "b", "c", "c"])
+    spec = data(df_scatter) * mapping(:x, :y, color = :g) * visual(Scatter) +
+        data(df_lines) * mapping(:x, :y, color = :g) * visual(Lines)
+    draw(spec, legend = (; hide_unused = true))
+end

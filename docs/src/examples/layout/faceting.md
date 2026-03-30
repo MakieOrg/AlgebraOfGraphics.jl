@@ -149,5 +149,39 @@ pag_default = paginate(plt, layout = 6)
 draw(pag_default, 1)
 ````
 
+### Legend entries per page
+
+By default, the legend on each page only shows categories that are present on that page.
+This is controlled by the `hide_unused` legend option which defaults to `true`.
+
+````@example faceting
+df_color = (
+    x = repeat(1:5, 8),
+    y = reduce(vcat, [sin.(i .+ (1:5)) .+ offset for i in 1:4 for offset in [-1, 1]]),
+    color = repeat(["X", "Y", "X", "Y", "Y", "Z", "Y", "Z"], inner = 5),
+    layout = repeat(["A", "B", "C", "D"], inner = 10),
+)
+plt_color = data(df_color) * mapping(:x, :y, color = :color, layout = :layout) * visual(ScatterLines)
+pag_color = paginate(plt_color, layout = 2)
+````
+
+Page 1 (panels A, B) only has colors X and Y:
+
+````@example faceting
+draw(pag_color, 1)
+````
+
+Page 2 (panels C, D) only has colors Y and Z:
+
+````@example faceting
+draw(pag_color, 2)
+````
+
+Setting `hide_unused = false` shows all categories on every page, which keeps legends consistent across pages:
+
+````@example faceting
+draw(pag_color, 1; legend = (; hide_unused = false))
+````
+
 
 
