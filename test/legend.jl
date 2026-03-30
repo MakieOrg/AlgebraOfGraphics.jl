@@ -1,8 +1,8 @@
-function _compute_legend(spec; scales = scales(), order = nothing)
+function _compute_legend(spec; scales = scales(), order = nothing, hide_unused = true)
     axisgrid = compute_axes_grid(spec, scales)
     figure = Figure()
     axisentries = AlgebraOfGraphics.AxisEntries.(axisgrid, Ref(figure))
-    return AlgebraOfGraphics.compute_legend(axisentries; order)
+    return AlgebraOfGraphics.compute_legend(axisentries; order, hide_unused)
 end
 
 @testset "Merged Legend" begin
@@ -180,4 +180,149 @@ end
     @test Makie.to_value(els[2].alpha) == 0.5
     @test Makie.to_value(els[3].alpha) == 0.5
     @test Makie.to_value(els[4].alpha) == 1.0
+end
+
+@testset "hide_unused_legend" begin
+    # Disjoint categories (issue #576): Scatter has "Data 1", Lines has "Data 2"
+    @testset "disjoint categories via direct()" begin
+        df = (; x = 1:5, y = 1:5)
+        spec = data(df) * mapping(:x, :y) *
+            (mapping(color = direct("Data 1")) * visual(Scatter) + mapping(color = direct("Data 2")) * visual(Lines))
+
+        # Without hide_unused: both entries have both element types
+        leg_els, el_labels, _ = _compute_legend(spec, hide_unused = false)
+        @test length(leg_els[]) == 2
+        @test length(leg_els[][1]) == 2
+        @test length(leg_els[][2]) == 2
+
+        # With hide_unused (default): each entry has only its own element
+        leg_els, el_labels, _ = _compute_legend(spec)
+        @test length(leg_els[]) == 2
+        @test el_labels[] == ["Data 1", "Data 2"]
+        @test length(leg_els[][1]) == 1
+        @test leg_els[][1][1] isa MarkerElement
+        @test length(leg_els[][2]) == 1
+        @test leg_els[][2][1] isa LineElement
+
+        # With hide_unused via per-scale option
+        leg_els2, el_labels2, _ = _compute_legend(spec, scales = scales(Color = (; hide_unused_legend = true)))
+        @test el_labels2[] == ["Data 1", "Data 2"]
+        @test length(leg_els2[][1]) == 1
+        @test leg_els2[][1][1] isa MarkerElement
+        @test length(leg_els2[][2]) == 1
+        @test leg_els2[][2][1] isa LineElement
+    end
+
+    # Full overlap: both layers have all categories, elements should still merge
+    @testset "full overlap keeps all elements" begin
+        df = (; x = 1:3, y = 1:3, g = ["a", "b", "c"])
+        spec = data(df) * mapping(:x, :y, color = :g) * (visual(Scatter) + visual(Lines))
+
+        leg_els, _, _ = _compute_legend(spec, hide_unused = true)
+        @test length(leg_els[]) == 3
+        for els in leg_els[]
+            @test length(els) == 2
+            @test els[1] isa MarkerElement
+            @test els[2] isa LineElement
+        end
+    end
+
+    # Partial overlap: Scatter has a,b,c; Lines has b,c,d
+    @testset "partial overlap" begin
+        df1 = (; x = 1:3, y = 1:3, g = ["a", "b", "c"])
+        df2 = (; x = 1:3, y = 1:3, g = ["b", "c", "d"])
+        spec = data(df1) * mapping(:x, :y, color = :g) * visual(Scatter) +
+            data(df2) * mapping(:x, :y, color = :g) * visual(Lines)
+
+        leg_els, el_labels, _ = _compute_legend(spec, hide_unused = true)
+        @test el_labels[] == ["a", "b", "c", "d"]
+
+        # "a": only Scatter
+        @test length(leg_els[][1]) == 1
+        @test leg_els[][1][1] isa MarkerElement
+        # "b","c": both
+        @test length(leg_els[][2]) == 2
+        @test length(leg_els[][3]) == 2
+        # "d": only Lines
+        @test length(leg_els[][4]) == 1
+        @test leg_els[][4][1] isa LineElement
+    end
+
+    # Categories in scale but not in data are removed
+    @testset "unused categories removed" begin
+        df = (; x = 1:2, y = 1:2, g = ["a", "b"])
+        spec = data(df) * mapping(:x, :y, color = :g) * visual(Scatter)
+
+        leg_els, el_labels, _ = _compute_legend(
+            spec,
+            scales = scales(Color = (; categories = ["a", "b", "c", "d"], hide_unused_legend = true))
+        )
+        @test el_labels[] == ["a", "b"]
+        @test length(leg_els[]) == 2
+    end
+
+    # Pagination: each page only shows legend entries for present categories
+    @testset "pagination filters per page" begin
+        df = (
+            x = repeat(1:5, 4),
+            y = rand(20),
+            layout = repeat(["p", "q", "r", "s"], inner = 5),
+            color = [repeat(["X", "Y"], 5); repeat(["Y", "Z"], 5)],
+        )
+        spec = data(df) * mapping(:x, :y, layout = :layout, color = :color) * visual(Scatter)
+
+        pag = paginate(spec, scales(Color = (; hide_unused_legend = true)), layout = 2)
+        fgs = draw(pag)
+
+        # Page 1 (p, q): has X and Y
+        leg1 = AlgebraOfGraphics.compute_legend(fgs[1].grid; order = nothing, hide_unused = true)
+        @test length(leg1[2][1]) == 2
+        @test "X" in leg1[2][1]
+        @test "Y" in leg1[2][1]
+
+        # Page 2 (r, s): has Y and Z
+        leg2 = AlgebraOfGraphics.compute_legend(fgs[2].grid; order = nothing, hide_unused = true)
+        @test length(leg2[2][1]) == 2
+        @test "Y" in leg2[2][1]
+        @test "Z" in leg2[2][1]
+    end
+
+    # Pregrouped with empty arrays: category exists but data is empty
+    @testset "pregrouped with empty arrays" begin
+        spec = pregrouped([1:3, Int[]], [1:3, Int[]], color = ["a", "b"]) * visual(Scatter) +
+            pregrouped([Int[], 1:3], [Int[], 1:3], color = ["a", "b"]) * visual(Lines)
+
+        leg_els, el_labels, _ = _compute_legend(spec, hide_unused = true)
+        @test el_labels[] == ["a", "b"]
+        @test length(leg_els[][1]) == 1
+        @test leg_els[][1][1] isa MarkerElement
+        @test length(leg_els[][2]) == 1
+        @test leg_els[][2][1] isa LineElement
+    end
+
+    # Default is hide_unused = true
+    @testset "default hides unused" begin
+        df = (; x = 1:5, y = 1:5)
+        spec = data(df) * mapping(:x, :y) *
+            (mapping(color = direct("A")) * visual(Scatter) + mapping(color = direct("B")) * visual(Lines))
+
+        leg_els, _, _ = _compute_legend(spec)
+        @test length(leg_els[]) == 2
+        @test length(leg_els[][1]) == 1
+        @test leg_els[][1][1] isa MarkerElement
+        @test length(leg_els[][2]) == 1
+        @test leg_els[][2][1] isa LineElement
+    end
+
+    # Can opt out with hide_unused = false
+    @testset "opt out with hide_unused = false" begin
+        df = (; x = 1:5, y = 1:5)
+        spec = data(df) * mapping(:x, :y) *
+            (mapping(color = direct("A")) * visual(Scatter) + mapping(color = direct("B")) * visual(Lines))
+
+        leg_els, _, _ = _compute_legend(spec, hide_unused = false)
+        @test length(leg_els[]) == 2
+        @test length(leg_els[][1]) == 2
+        @test length(leg_els[][2]) == 2
+    end
 end

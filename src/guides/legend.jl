@@ -20,8 +20,8 @@ to reorder them like `[:MarkerSize, :custom, :Color]`, or merge multiple entries
 a nested vector like `[[:MarkerSize, :custom], :Color]`, or give merged sections a title with the
 pair syntax `[[:MarkerSize, :custom] => "Merged group", :Color]`.
 """
-function legend!(figpos, grid; order = nothing, kwargs...)
-    legend = compute_legend(grid; order)
+function legend!(figpos, grid; order = nothing, hide_unused = true, kwargs...)
+    legend = compute_legend(grid; order, hide_unused)
     return isnothing(legend) ? nothing : Legend(figpos, legend...; kwargs...)
 end
 
@@ -48,7 +48,7 @@ function plottypes_attributes(entries)
     return plottypes, attributes
 end
 
-compute_legend(fg::FigureGrid; order) = compute_legend(fg.grid; order)
+compute_legend(fg::FigureGrid; order, hide_unused = true) = compute_legend(fg.grid; order, hide_unused)
 
 # ignore positional scales and keywords that don't support legends
 function legendable_scales(kind::Val, scales)
@@ -96,7 +96,42 @@ end
 
 categorical_scales_mergeable(c1, c2) = false # there can be continuous scales in the mix, like markersize
 
-function compute_legend(grid::Matrix{<:Union{AxisEntries, AxisSpecEntries}}; order::Union{Nothing, AbstractVector})
+# Build a lookup mapping each unique layer signature (plottype, attributes)
+# to the set of data values it actually has data for.
+# This is called once per legend section with specific (aess, scale_ids),
+# so layers using different scale IDs for the same aesthetic don't conflict
+# even though they may share the same (plottype, attributes) key.
+function _build_layer_data_presence(processedlayers, aess, scale_ids)
+    result = Dict{Any, Set{Any}}()
+    for pl in processedlayers
+        # Skip processedlayers with empty data (can happen with pregrouped)
+        _has_data = any(v -> v isa AbstractArray && !isempty(v), pl.positional) ||
+            any(v -> v isa AbstractArray && !isempty(v), pl.named)
+        _has_data || continue
+
+        sig = (pl.plottype, pl.attributes)
+        aes_mapping = aesthetic_mapping(pl)
+        all_kv = merge(Dictionary(pl.positional), pl.primary, pl.named)
+        for (aes, scale_id) in zip(aess, scale_ids)
+            for (key, val) in pairs(all_kv)
+                if get(aes_mapping, key, nothing) === aes &&
+                        get(pl.scale_mapping, key, nothing) === scale_id
+                    s = get!(Set{Any}, result, sig)
+                    if val isa AbstractArray
+                        for v in val
+                            push!(s, v)
+                        end
+                    else
+                        push!(s, val)
+                    end
+                end
+            end
+        end
+    end
+    return result
+end
+
+function compute_legend(grid::Matrix{<:Union{AxisEntries, AxisSpecEntries}}; order::Union{Nothing, AbstractVector}, hide_unused::Bool = false)
     # gather valid named scales
     scales_categorical = legendable_scales(Val(:categorical), first(grid).categoricalscales)
     scales_continuous = legendable_scales(Val(:continuous), first(grid).continuousscales)
@@ -246,6 +281,19 @@ function compute_legend(grid::Matrix{<:Union{AxisEntries, AxisSpecEntries}}; ord
 
                 _legend_els = [LegendElement[] for _ in _datavals]
 
+                _has_categorical = any(s -> s isa CategoricalScale, _scales)
+                _hide_unused = _has_categorical &&
+                    (hide_unused || any(s -> s isa CategoricalScale && s.props.hide_unused_legend, _scales))
+
+                # When hide_unused_legend is set, build a lookup of which data values
+                # each (plottype, attributes) pair actually has, by iterating over all
+                # processedlayers and collecting the primary values for matching keys.
+                layer_has_dataval = if _hide_unused
+                    _build_layer_data_presence(processedlayers, aess, scale_ids)
+                else
+                    nothing
+                end
+
                 # We are layering legend elements on top of each other by deriving them from the processed layers,
                 # each processed layer can contribute a vector of legend elements for each data value in the scale.
                 for processedlayer in unique_processedlayers
@@ -278,17 +326,33 @@ function compute_legend(grid::Matrix{<:Union{AxisEntries, AxisSpecEntries}}; ord
                         merge([plotval_kwargs[i] for plotval_kwargs in all_plotval_kwargs]...)
                     end
 
+                    sig = (processedlayer.plottype, processedlayer.attributes)
+
                     for (i, kwargs) in enumerate(merged_plotval_kwargs)
                         # skip the legend element for this processed layer if the kwargs are empty
                         # which means that no scale in this merge group affected this processedlayer
                         if !isempty(kwargs)
+                            # skip legend elements for layers that have no data for this category
+                            if layer_has_dataval !== nothing
+                                vals = get(layer_has_dataval, sig, nothing)
+                                (vals === nothing || _datavals[i] ∉ vals) && continue
+                            end
                             append!(_legend_els[i], _legend_elements(processedlayer, kwargs))
                         end
                     end
                 end
 
-                append!(datalabs, _datalabs)
-                append!(legend_els, _legend_els)
+                # When filtering, remove entries where no layer contributed any elements
+                if _hide_unused
+                    for i in eachindex(_datavals)
+                        isempty(_legend_els[i]) && continue
+                        push!(legend_els, _legend_els[i])
+                        push!(datalabs, _datalabs[i])
+                    end
+                else
+                    append!(datalabs, _datalabs)
+                    append!(legend_els, _legend_els)
+                end
             end
         end
         push!(labels, datalabs)
@@ -300,6 +364,15 @@ function compute_legend(grid::Matrix{<:Union{AxisEntries, AxisSpecEntries}}; ord
     if !isempty(unused_scales)
         error("Found scales that were missing from the manual legend ordering: $(sort!(collect(unused_scales)))")
     end
+
+    # Remove empty legend sections (can happen with hide_unused_legend + pagination)
+    nonempty = findall(!isempty, labels)
+    if isempty(nonempty)
+        return nothing
+    end
+    elements_list = elements_list[nonempty]
+    labels = labels[nonempty]
+    titles = titles[nonempty]
 
     return elements_list, labels, titles
 end
