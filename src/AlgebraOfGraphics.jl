@@ -48,6 +48,7 @@ export direct
 export from_continuous
 export wrapped
 export clipped
+export FacetSize
 export show_aesthetics
 
 include("dict.jl")

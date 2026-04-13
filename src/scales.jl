@@ -170,7 +170,9 @@ end
 # fewer columns and tall axes get more.
 function resolve_lazy_wrap(linear_idxs::AbstractVector{<:Integer}, total::Integer, aspect::Real, by_col::Bool = false)
     target_cols = sqrt(total / aspect)
-    candidates = (max(1, floor(Int, target_cols)), ceil(Int, target_cols))
+    # Order candidates so that on a tie (equal log-distance) `argmin` picks the larger column count.
+    # This matches the prior `ceil(sqrt(n))` behavior for square axes (e.g. n=2 → 1×2, not 2×1).
+    candidates = (ceil(Int, target_cols), max(1, floor(Int, target_cols)))
     distance(c) = abs(log(c * aspect / ceil(Int, total / c)))
     ncols = candidates[argmin(distance.(candidates))]
     f(ij) = by_col ? reverse(ij) : ij
