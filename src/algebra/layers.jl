@@ -277,10 +277,10 @@ end
 
 function compute_axes_grid(
         fig, d::AbstractDrawable, scales::Scales = scales();
-        axis = NamedTuple()
+        axis = NamedTuple(), facet = NamedTuple()
     )
 
-    axes_grid = compute_axes_grid(d, scales; axis)
+    axes_grid = compute_axes_grid(d, scales; axis, facet)
     sz = size(axes_grid)
     if sz != (1, 1) && fig isa Axis
         msg = "You can only pass an `Axis` to `draw!` if the calculated layout only contains one element. Elements: $(sz)"
@@ -311,7 +311,46 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int, Symbol}, aes_ma
     return aes_mapping[key]
 end
 
-function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis = NamedTuple())
+# Resolve any *deferred* (linear-index) Layout scale positions into proper `(row, col)`
+# tuples using the given `aspect`. Replaces the Layout entry in `categoricalscales` with
+# fresh `CategoricalScale`s whose `plot` field holds tuples.
+function _resolve_lazy_layout!(categoricalscales::MultiAesScaleDict{CategoricalScale}, aspect::Real)
+    haskey(categoricalscales, AesLayout) || return
+    scaledict = categoricalscales[AesLayout]
+    for (key, scale) in pairs(scaledict)
+        plot = scale.plot
+        eltype(plot) <: Integer || continue  # already resolved
+        new_plot = resolve_lazy_wrap(plot, length(plot), aspect)
+        scaledict[key] = CategoricalScale(scale.data, new_plot, scale.label, scale.props, scale.aes)
+    end
+    return
+end
+
+# Apply `facet_size` to populate `axis_dict[:width]` / `axis_dict[:height]`.
+# User-supplied `width`/`height` already in `axis_dict` take precedence.
+function _apply_facet_size!(axis_dict, facet_size::FacetSize, n_rows::Int, n_cols::Int)
+    user_w = get(axis_dict, :width, nothing)
+    user_h = get(axis_dict, :height, nothing)
+    aspect = facet_size.aspect
+    if user_w isa Number && user_h isa Number
+        return  # both supplied, nothing to do
+    elseif user_w isa Number
+        insert!(axis_dict, :height, round(Int, user_w / aspect))
+    elseif user_h isa Number
+        insert!(axis_dict, :width, round(Int, user_h * aspect))
+    else
+        h = facet_size.height(n_rows, n_cols)
+        insert!(axis_dict, :height, h)
+        insert!(axis_dict, :width, round(Int, h * aspect))
+    end
+    return
+end
+
+function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis = NamedTuple(), facet = NamedTuple())
+
+    # Extract optional `facet_size::FacetSize`. User-supplied `width`/`height` in `axis` take precedence.
+    axis_dict::NamedArguments = axis isa NamedArguments ? copy(axis) : dictionary(pairs(axis))
+    facet_size = get(facet, :size, nothing)
 
     processedlayers = ProcessedLayers(d).layers
 
@@ -342,12 +381,36 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
         map!(fitscale, scaledict, scaledict)
     end
 
+    # Resolve any deferred (linear-index) Layout positions to (row, col) using the effective aspect:
+    #   1. User-supplied `width` and `height` in `axis` (both required)
+    #   2. `FacetSize.aspect` if `facet_size` is a `FacetSize`
+    #   3. `1.0` (matches the prior squareish wrap)
+    layout_aspect = let
+        user_w = get(axis_dict, :width, nothing)
+        user_h = get(axis_dict, :height, nothing)
+        if user_w isa Number && user_h isa Number
+            user_w / user_h
+        elseif facet_size isa FacetSize
+            facet_size.aspect
+        else
+            1.0
+        end
+    end
+    _resolve_lazy_layout!(categoricalscales, layout_aspect)
+
     set_dodge_width_default!(categoricalscales, processedlayers)
     compute_plot_dependent_attributes!(processedlayers)
 
     pls_grid = compute_processedlayers_grid(processedlayers, categoricalscales)
     entries_grid, continuousscales_grid, merged_continuousscales =
         compute_entries_continuousscales(pls_grid, categoricalscales, scale_props)
+
+    # Apply `facet_size` now that we know the grid dimensions
+    if facet_size !== nothing
+        n_rows, n_cols = size(pls_grid)
+        _apply_facet_size!(axis_dict, facet_size, n_rows, n_cols)
+    end
+    final_axis = axis_dict
 
     indices = CartesianIndices(pls_grid)
     axes_grid = map(indices) do c
@@ -363,7 +426,7 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
         end
 
         return AxisSpecEntries(
-            AxisSpec(c, axis),
+            AxisSpec(c, final_axis),
             entries_grid[c],
             categoricalscales,
             mixed_continuousscales,

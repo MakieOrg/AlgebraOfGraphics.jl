@@ -67,14 +67,43 @@ end
     @test apply_palette(p, uv) == [p[1], p[2], p[3], p[1], p[2]]
 
     uv = 1:9
-    @test apply_palette(wrapped(), uv) == [(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3)]
-    @test apply_palette(wrapped(by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (1, 2), (2, 2), (3, 2), (1, 3), (2, 3), (3, 3)]
+    # Default `wrapped()` is lazy: returns linear indices to be resolved later by `resolve_lazy_wrap`.
+    @test apply_palette(wrapped(), uv) == 1:9
+    @test apply_palette(wrapped(by_col = true), uv) == 1:9
     @test apply_palette(wrapped(cols = 4), uv) == [(1, 1), (1, 2), (1, 3), (1, 4), (2, 1), (2, 2), (2, 3), (2, 4), (3, 1)]
     @test apply_palette(wrapped(cols = 4, by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (1, 2), (2, 2), (3, 2), (1, 3), (2, 3), (3, 3)]
     @test apply_palette(wrapped(rows = 4), uv) == [(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3)]
     @test apply_palette(wrapped(rows = 4, by_col = true), uv) == [(1, 1), (2, 1), (3, 1), (4, 1), (1, 2), (2, 2), (3, 2), (4, 2), (1, 3)]
     @test_throws_message "`cols` and `rows` can't both be fixed" apply_palette(wrapped(rows = 4, cols = 5), uv)
 end
+
+@testset "resolve_lazy_wrap" begin
+    using AlgebraOfGraphics: resolve_lazy_wrap
+
+    # Square axes preserve `ceil(sqrt(n))` behavior for common counts
+    @test resolve_lazy_wrap(1:9, 9, 1.0) == [(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 1), (3, 2), (3, 3)]
+    # n=16 → 4×4
+    @test maximum(first, resolve_lazy_wrap(1:16, 16, 1.0)) == 4
+    @test maximum(last, resolve_lazy_wrap(1:16, 16, 1.0)) == 4
+    # n=10 → 3×4
+    @test maximum(first, resolve_lazy_wrap(1:10, 10, 1.0)) == 3
+    @test maximum(last, resolve_lazy_wrap(1:10, 10, 1.0)) == 4
+
+    # Tall axes (aspect 0.5), n=10: more columns → 2×5
+    @test maximum(first, resolve_lazy_wrap(1:10, 10, 0.5)) == 2
+    @test maximum(last, resolve_lazy_wrap(1:10, 10, 0.5)) == 5
+
+    # 2 facets: wide axes stack vertically (2×1), tall axes side-by-side (1×2)
+    @test resolve_lazy_wrap(1:2, 2, 1.5) == [(1, 1), (2, 1)]
+    @test resolve_lazy_wrap(1:2, 2, 0.5) == [(1, 1), (1, 2)]
+
+    # Subset of indices: same wrapping based on `total`. Index 5 of 9 (3-col grid) → (2, 2).
+    @test resolve_lazy_wrap([5], 9, 1.0) == [(2, 2)]
+
+    # by_col swaps row/col output
+    @test resolve_lazy_wrap(1:4, 4, 1.0, true) == [(1, 1), (2, 1), (1, 2), (2, 2)]
+end
+
 
 @testset "datetimes" begin
     for d in [Date(2011, 9, 1), Date(2032, 5, 7), DateTime(2033, 9, 1, 3, 14, 16)]
