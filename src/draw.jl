@@ -192,7 +192,7 @@ function _draw(
     return _draw(ae; figure, facet, legend, colorbar)
 end
 
-function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol, Any}(), figure = Dictionary{Symbol, Any}(), facet = Dictionary{Symbol, Any}(), legend = Dictionary{Symbol, Any}(), colorbar = Dictionary{Symbol, Any}())
+function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol, Any}(), figure = Dictionary{Symbol, Any}(), facet = Dictionary{Symbol, Any}(), legend = Dictionary{Symbol, Any}(), colorbar = Dictionary{Symbol, Any}(), facet_size_grid::Union{Nothing, NTuple{2, Int}} = nothing)
 
     facet_size = get(facet, :size, nothing)
     if facet_size !== nothing
@@ -207,7 +207,9 @@ function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol, Any}(), fi
     if !isempty(axis) || facet_size !== nothing
         axis = copy(axis)
         if facet_size !== nothing
-            n_rows, n_cols = size(ae)
+            # When called from a `Pagination`, `facet_size_grid` is the max grid size across all
+            # pages so trailing pages get the same axis size as full pages.
+            n_rows, n_cols = facet_size_grid === nothing ? size(ae) : facet_size_grid
             _apply_facet_size!(axis, facet_size, n_rows, n_cols)
         end
 

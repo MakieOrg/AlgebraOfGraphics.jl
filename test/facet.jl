@@ -317,4 +317,23 @@ end
     fg_large = draw(plt_large; facet = (; size = fs_dynamic))
     @test maximum(size(fg_large.grid)) >= 3
     @test first(fg_large.grid).axis.height[] == 80
+
+    # Pagination: all pages (including the trailing one with fewer facets) get the same axis
+    # size because the `height` callback is given the max grid across all pages.
+    df_pag = (; x = repeat(1:5, 9), y = rand(45), g = repeat(string.(1:9), inner = 5))
+    plt_pag = data(df_pag) * mapping(:x, :y, layout = :g) * visual(Lines)
+    # Policy crosses tier at 1×1 vs larger: would give trailing 1×1 page a different size
+    # if AoG sized per-page instead of using the max grid.
+    crossing_policy = AlgebraOfGraphics.FacetSize(1.0, (nr, nc) -> max(nr, nc) == 1 ? 200 : 80)
+    pag = paginate(plt_pag, layout = 4)
+    pages = draw(pag; facet = (; size = crossing_policy))
+    @test length(pages) == 3
+    @test size(pages[1].grid) == (2, 2)
+    @test size(pages[3].grid) == (1, 1)  # trailing page
+    # All pages get the size for the max grid (2×2 → 80), not their own grid
+    for fg in pages
+        @test first(fg.grid).axis.height[] == 80
+    end
+    # Single-page draws use the same max-grid policy
+    @test first(draw(pag, 3; facet = (; size = crossing_policy)).grid).axis.height[] == 80
 end
