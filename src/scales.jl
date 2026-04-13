@@ -129,8 +129,10 @@ end
 
 Create an object that can be passed to the `Layout` scale `palette` which controls how many
 rows or columns are allowed at maximum in the wrapped layout. Only one of `cols` or `rows` may
-be set to an integer at the same time. If both are `automatic`, a squareish configuration is chosen.
-If `by_col` is to `true`, the layout is filled top to bottom first and then column by column.
+be set to an integer at the same time. If both are `automatic`, the wrap is *deferred*: positions
+are produced as linear indices and resolved to `(row, col)` later when the axis aspect ratio is
+known (from a `FacetSize`, defaulting to `1` which reproduces the prior squareish wrapping).
+If `by_col` is `true`, the layout is filled top to bottom first and then column by column.
 """
 function wrapped(;
         cols::Union{Integer, Makie.Automatic} = Makie.automatic,
@@ -148,15 +150,51 @@ function wrapped(;
     end
 end
 
+# Default Wrap is *deferred*: returns linear indices to be resolved later in `compute_axes_grid`
+# once the axis aspect ratio (from `FacetSize`) is known.
 function apply_palette(w::Wrap{Automatic}, uv)
-    ncols = ceil(Int, sqrt(length(uv)))
-    return apply_palette(Wrap((n = ncols, cols = true), w.by_col), uv)
+    return collect(eachindex(uv))
 end
 
 function apply_palette(w::Wrap{@NamedTuple{n::Int64, cols::Bool}}, uv)
     n = w.size_restriction.cols != w.by_col ? w.size_restriction.n : ceil(Int, length(uv) / w.size_restriction.n)
     f(ij) = w.by_col ? reverse(ij) : ij
     return [f(fldmod1(idx, n)) for idx in eachindex(uv)]
+end
+
+# Resolve a deferred linear-index layout palette into `(row, col)` positions using the axis aspect.
+# `total` is the total number of facets (used to compute the column count).
+# Picks `ncols` so the bunched-together axis areas (cols * axis_w) / (rows * axis_h) are closest
+# to a square shape. With `aspect = 1` this preserves the prior `ceil(sqrt(n))` behavior for
+# common counts (9 → 3×3, 16 → 4×4). For non-square aspects the layout adapts: wide axes get
+# fewer columns and tall axes get more.
+function resolve_lazy_wrap(linear_idxs::AbstractVector{<:Integer}, total::Integer, aspect::Real, by_col::Bool = false)
+    target_cols = sqrt(total / aspect)
+    candidates = (max(1, floor(Int, target_cols)), ceil(Int, target_cols))
+    distance(c) = abs(log(c * aspect / ceil(Int, total / c)))
+    ncols = candidates[argmin(distance.(candidates))]
+    f(ij) = by_col ? reverse(ij) : ij
+    return [f(fldmod1(idx, ncols)) for idx in linear_idxs]
+end
+
+"""
+    FacetSize(aspect, height)
+
+Encodes how to size the axes in a faceted plot:
+- `aspect`: the axis width-to-height ratio (used upfront to choose wrap layout)
+- `height`: a function `(n_rows, n_cols) -> Int` returning the axis height for the resulting grid
+
+When `FacetSize` is passed as `facet = (; size = FacetSize(...))`:
+- The `Layout` scale's wrap palette uses `aspect` for choosing rows/columns.
+- If the user does not supply `width` or `height` in `axis`, both are computed
+  from `aspect` and `height(n_rows, n_cols)`.
+- If the user supplies only `width`, `height` is derived as `width / aspect`.
+- If the user supplies only `height`, `width` is derived as `height * aspect`.
+- If the user supplies both, neither `aspect` nor `height` is used.
+"""
+struct FacetSize
+    aspect::Float64
+    height::Function  # (n_rows, n_cols) -> Int
 end
 
 struct Clipped{C}
