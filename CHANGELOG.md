@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.12.7 - 2026-04-13
+
 - Added `FacetSize(aspect, height_fn)` and `facet = (; size = FacetSize(...))` for declaring an axis sizing policy that adapts to the resolved grid layout. The default `wrapped()` palette is now lazy and resolves to `(row, col)` positions at draw time using the effective axis aspect (from `FacetSize` or user-supplied width+height, defaulting to 1.0). For square axes this preserves the prior `ceil(sqrt(n))` behavior; non-square aspects pick a column count that brings the bunched axis areas closest to a square shape [#745](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/745).
 
 ## v0.12.6 - 2026-03-30
