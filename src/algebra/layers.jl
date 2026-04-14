@@ -736,6 +736,48 @@ end
 
 scale_setting_name(scale_id, aes::Type{<:Aesthetic}) = scale_id !== nothing ? scale_id : string(nameof(aes))[4:end]
 
+# If the user wrote the generic `dodge_x` / `dodge_y` on a plot that also has its own
+# `:dodge` attribute mapping to the matching `AesDodgeX` / `AesDodgeY`, rename the key
+# to `:dodge` so the plot's native dodge mechanism (e.g. BarPlot's width narrowing) is
+# used. Layers where the plot has no matching `:dodge` (e.g. Scatter), or whose `:dodge`
+# maps to the other axis, keep the generic key and use the manual-offset fallback path.
+function reroute_generic_dodge(p::ProcessedLayer)
+    (haskey(p.primary, :dodge_x) || haskey(p.primary, :dodge_y)) || return p
+
+    aes_map = aesthetic_mapping(p)
+    haskey(aes_map, :dodge) || return p
+    native_dodge_aes = aes_map[:dodge]::Type{<:Aesthetic}
+    native_dodge_aes in (AesDodgeX, AesDodgeY) || return p
+
+    has_native_dodge = haskey(p.primary, :dodge) || haskey(p.named, :dodge)
+
+    primary = copy(p.primary)
+    scale_mapping = copy(p.scale_mapping)
+    labels = copy(p.labels)
+
+    for (key, aes) in ((:dodge_x, AesDodgeX), (:dodge_y, AesDodgeY))
+        haskey(primary, key) || continue
+        aes === native_dodge_aes || continue
+
+        if has_native_dodge
+            error("Layer with plot type `$(Makie.plotsym(p.plottype))` received both `$key` and `dodge` mappings, which both target the $(aesname(aes)) aesthetic. Use only one.")
+        end
+
+        insert!(primary, :dodge, primary[key])
+        delete!(primary, key)
+        if haskey(scale_mapping, key)
+            insert!(scale_mapping, :dodge, scale_mapping[key])
+            delete!(scale_mapping, key)
+        end
+        if haskey(labels, key)
+            insert!(labels, :dodge, labels[key])
+            delete!(labels, key)
+        end
+    end
+
+    return ProcessedLayer(p; primary, scale_mapping, labels)
+end
+
 function compute_dodge(data, key::Symbol, dodgevalues, scale_mapping, categoricalscales, dodge_aes)
     scale_id = get(scale_mapping, key, nothing)
     scale = categoricalscales[dodge_aes][scale_id]
