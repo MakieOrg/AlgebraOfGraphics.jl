@@ -63,6 +63,52 @@ draw(plt, facet=(; linkxaxes=:none, linkyaxes=:none))
 draw(plt, scales(Layout = (; palette = [(1, 1), (2, 1), (3, 1), (1, 2), (2, 2)])))
 ````
 
+## Sizing facets
+
+By default, all facets share the figure size that Makie picks for `Figure`. With many facets that's often too cramped: axes get squeezed, labels overlap, and the figure can't grow because no axis has an explicit `width`/`height`.
+
+You can pass a per-axis `width` and `height` directly via `axis = (; width, height)`, in which case the figure will resize to fit:
+
+````@example faceting
+draw(plt; axis = (; width = 100, height = 100))
+````
+
+Often, though, the right size depends on how many facets there are. For that, AoG provides `FacetSize`:
+
+````@example faceting
+fs = FacetSize(1.0, (n_rows, n_cols) -> max(n_rows, n_cols) <= 2 ? 200 : 100)
+draw(plt; facet = (; size = fs))
+````
+
+`FacetSize(aspect, height_fn)` packages two pieces of information:
+
+- `aspect` (axis width / height) — used upfront when computing the wrap layout, so wide axes get fewer columns and tall axes get more (see [Aspect-aware wrap](@ref) below).
+- `height_fn(n_rows, n_cols) -> Int` — runs after the grid is determined and returns the per-axis height. Width is derived as `aspect * height`.
+
+This lets you write a single sizing policy that adapts to the data. The example above gives a `200×200` axis when there are at most 2 rows or columns, and shrinks to `100×100` for larger grids.
+
+You can still override `width` or `height` (or both) via `axis`. If you supply only one dimension, the other is derived from `FacetSize`'s aspect; if you supply both, your aspect takes over (and the `height_fn` is ignored):
+
+````@example faceting
+draw(plt; facet = (; size = fs), axis = (; width = 200))
+````
+
+## Aspect-aware wrap
+
+When `wrapped()` is the default `Layout` palette (i.e. you don't pass `cols`, `rows`, or a custom palette), the row/column distribution is decided at draw time using the effective axis aspect ratio. The aspect comes from `FacetSize` if provided, otherwise from `axis = (; width, height)` if both are given, otherwise it defaults to `1.0` — which reproduces the prior squareish wrap (`ceil(sqrt(n))` columns).
+
+For non-square axes, the wrap picks a column count that brings the bunched axis areas closest to a square shape. With the same 5 facets above, wide axes prefer fewer columns:
+
+````@example faceting
+draw(plt; facet = (; size = FacetSize(2.0, (nr, nc) -> 100)))
+````
+
+and tall axes prefer more columns:
+
+````@example faceting
+draw(plt; facet = (; size = FacetSize(0.5, (nr, nc) -> 200)))
+````
+
 ## Adding traces to only some subplots
 
 ````@example faceting

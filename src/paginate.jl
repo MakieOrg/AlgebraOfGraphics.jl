@@ -32,7 +32,10 @@ function draw(p::Pagination; axis = (;), figure = (;), facet = (;), legend = (;)
     facet = _kwdict(facet, :facet)
     legend = _kwdict(legend, :legend)
     colorbar = _kwdict(colorbar, :colorbar)
-    return _draw.(p.each; axis, figure, facet, legend, colorbar)
+    # Use max grid size across all pages so a `facet = (; size = ...)` policy gives every page
+    # (including the trailing one) the same axis size.
+    facet_size_grid = _max_grid_size(p)
+    return _draw.(p.each; axis, figure, facet, legend, colorbar, facet_size_grid)
 end
 
 """
@@ -52,7 +55,15 @@ function draw(p::Pagination, i::Int; axis = (;), figure = (;), facet = (;), lege
     facet = _kwdict(facet, :facet)
     legend = _kwdict(legend, :legend)
     colorbar = _kwdict(colorbar, :colorbar)
-    return _draw(p.each[i]; axis, figure, facet, legend, colorbar)
+    facet_size_grid = _max_grid_size(p)
+    return _draw(p.each[i]; axis, figure, facet, legend, colorbar, facet_size_grid)
+end
+
+# Max grid size across all pages, used for cross-page-consistent facet sizing.
+function _max_grid_size(p::Pagination)
+    rows = maximum(page -> size(page, 1), p.each)
+    cols = maximum(page -> size(page, 2), p.each)
+    return (rows, cols)
 end
 
 function draw(p::Pagination, ::Scales, args...; kws...)
@@ -134,7 +145,14 @@ function paginate_axes_grid(agrid::Matrix{AxisSpecEntries}; layout = nothing, ro
 
         for groupindices in Iterators.partition(eachindex(dvalues, pvalues), layout)
             palette = something(scale.props.palette, wrapped())
-            wrapped_positions = apply_palette(palette, 1:length(groupindices))
+            raw_positions = apply_palette(palette, 1:length(groupindices))
+            # The default `Wrap{Automatic}` palette returns linear indices that need to be
+            # resolved to (row, col). Other palettes (custom Wrap, vectors) already return tuples.
+            wrapped_positions = if eltype(raw_positions) <: Integer
+                resolve_lazy_wrap(raw_positions, length(groupindices), 1.0)
+            else
+                raw_positions
+            end
 
             props = scale.props
             sliced_scale = CategoricalScale(

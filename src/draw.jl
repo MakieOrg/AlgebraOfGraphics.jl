@@ -183,13 +183,36 @@ function _draw(
         axis, figure, facet, legend, colorbar
     )
 
-    ae = compute_axes_grid(d, scales; axis)
+    ae = compute_axes_grid(d, scales; axis, facet)
+    # `facet_size` was applied inside `compute_axes_grid`; strip it so `_draw(ae)` doesn't reapply.
+    if haskey(facet, :size)
+        facet = copy(facet)
+        delete!(facet, :size)
+    end
     return _draw(ae; figure, facet, legend, colorbar)
 end
 
-function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol, Any}(), figure = Dictionary{Symbol, Any}(), facet = Dictionary{Symbol, Any}(), legend = Dictionary{Symbol, Any}(), colorbar = Dictionary{Symbol, Any}())
+function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol, Any}(), figure = Dictionary{Symbol, Any}(), facet = Dictionary{Symbol, Any}(), legend = Dictionary{Symbol, Any}(), colorbar = Dictionary{Symbol, Any}(), facet_size_grid::Union{Nothing, NTuple{2, Int}} = nothing)
 
-    if !isempty(axis)
+    facet_size = get(facet, :size, nothing)
+    if facet_size !== nothing
+        facet = copy(facet)
+        delete!(facet, :size)
+    end
+
+    # Apply `axis` overrides and/or `facet_size` to the AxisSpecs. This runs for paginated draws
+    # (where axis kwargs and facet_size were not yet consumed by `compute_axes_grid`) and for
+    # non-paginated with explicit user axis overrides. For non-paginated without overrides, `axis`
+    # is empty and `facet_size` is nothing here (already applied in `compute_axes_grid`).
+    if !isempty(axis) || facet_size !== nothing
+        axis = copy(axis)
+        if facet_size !== nothing
+            # When called from a `Pagination`, `facet_size_grid` is the max grid size across all
+            # pages so trailing pages get the same axis size as full pages.
+            n_rows, n_cols = facet_size_grid === nothing ? size(ae) : facet_size_grid
+            _apply_facet_size!(axis, facet_size, n_rows, n_cols)
+        end
+
         # merge in axis attributes here because pagination runs `compute_axes_grid`
         # which in the normal `draw` pipeline consumes `axis`
         ae = map(ae) do ase

@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-- Plot types with a native `:dodge` attribute (`BarPlot`, `BoxPlot`, `Violin`, `CrossBar`) now also accept the generic `dodge_x`/`dodge_y` mapping, which is routed to `:dodge` when the aesthetic matches the plot's orientation. This makes it possible to share a single `dodge_x`/`dodge_y` mapping across companion layers (e.g., `Scatter` + `BarPlot`) without switching attribute names per layer. Specifying both `:dodge` and `:dodge_x`/`:dodge_y` on the same layer now errors [#747](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/747).
+- Plot types with a native `:dodge` attribute (`BarPlot`, `BoxPlot`, `Violin`, `CrossBar`) now also accept the generic `dodge_x`/`dodge_y` mapping, which is routed to `:dodge` when the aesthetic matches the plot's orientation. This makes it possible to share a single `dodge_x`/`dodge_y` mapping across companion layers (e.g., `Scatter` + `BarPlot`) without switching attribute names per layer. [#747](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/747).
+
+## v0.12.7 - 2026-04-13
+
+- Added `FacetSize(aspect, height_fn)` and `facet = (; size = FacetSize(...))` for declaring an axis sizing policy that adapts to the resolved grid layout. The default `wrapped()` palette is now lazy and resolves to `(row, col)` positions at draw time using the effective axis aspect (from `FacetSize` or user-supplied width+height, defaulting to 1.0). For square axes this preserves the prior `ceil(sqrt(n))` behavior; non-square aspects pick a column count that brings the bunched axis areas closest to a square shape [#745](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/745).
 
 ## v0.12.6 - 2026-03-30
 
