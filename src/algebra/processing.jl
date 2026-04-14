@@ -186,7 +186,7 @@ function process(layer::Layer)
         map(transformed_processlayers.layers) do transformed_processlayer
             attributes = merge(mandatory_attributes(transformed_processlayer.plottype), transformed_processlayer.attributes)
             possibly_without_visual = ProcessedLayer(transformed_processlayer; attributes)
-            return set_missing_visual(possibly_without_visual)
+            return reroute_generic_dodge(set_missing_visual(possibly_without_visual))
         end
     )
 end

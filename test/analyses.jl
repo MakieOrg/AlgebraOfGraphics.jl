@@ -636,3 +636,46 @@ end
     @test x̂[2] ≈ x̂2
     @test ŷ[2] ≈ ŷ2
 end
+
+@testset "generic dodge rerouting" begin
+    df = (
+        x = [1, 1, 2, 2],
+        y = [1.0, 2.0, 3.0, 4.0],
+        group = ["A", "B", "A", "B"],
+    )
+
+    # `dodge_x` on a vertical BarPlot (dodge aesthetic = AesDodgeX) is rerouted to `:dodge`
+    layer = data(df) * mapping(:x, :y, dodge_x = :group) * visual(AlgebraOfGraphics.BarPlot)
+    p = AlgebraOfGraphics.ProcessedLayer(layer)
+    @test haskey(p.primary, :dodge)
+    @test !haskey(p.primary, :dodge_x)
+
+    # `dodge_y` on a horizontal BarPlot (dodge aesthetic = AesDodgeY) is rerouted to `:dodge`
+    layer = data(df) * mapping(:y, :x, dodge_y = :group) * visual(AlgebraOfGraphics.BarPlot, direction = :x)
+    p = AlgebraOfGraphics.ProcessedLayer(layer)
+    @test haskey(p.primary, :dodge)
+    @test !haskey(p.primary, :dodge_y)
+
+    # `dodge_x` on a Scatter (no `:dodge` aesthetic) stays as `:dodge_x`
+    layer = data(df) * mapping(:x, :y, dodge_x = :group) * visual(Scatter)
+    p = AlgebraOfGraphics.ProcessedLayer(layer)
+    @test haskey(p.primary, :dodge_x)
+    @test !haskey(p.primary, :dodge)
+
+    # `dodge_y` on a vertical BarPlot (dodge aesthetic = AesDodgeX) is NOT rerouted (axis mismatch)
+    layer = data(df) * mapping(:x, :y, dodge_y = :group) * visual(AlgebraOfGraphics.BarPlot)
+    p = AlgebraOfGraphics.ProcessedLayer(layer)
+    @test haskey(p.primary, :dodge_y)
+    @test !haskey(p.primary, :dodge)
+
+    # `dodge_x` on a vertical BoxPlot is rerouted to `:dodge`
+    df_box = (x = [1, 1, 1, 2, 2, 2], y = [1.0, 2, 3, 4, 5, 6], group = ["A", "B", "A", "B", "A", "B"])
+    layer = data(df_box) * mapping(:x, :y, dodge_x = :group) * visual(AlgebraOfGraphics.BoxPlot)
+    p = AlgebraOfGraphics.ProcessedLayer(layer)
+    @test haskey(p.primary, :dodge)
+    @test !haskey(p.primary, :dodge_x)
+
+    # Both `:dodge` and `:dodge_x` on the same BarPlot is an error
+    layer = data(df) * mapping(:x, :y, dodge = :group, dodge_x = :group) * visual(AlgebraOfGraphics.BarPlot)
+    @test_throws "both `dodge_x` and `dodge`" AlgebraOfGraphics.ProcessedLayer(layer)
+end
