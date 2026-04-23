@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Created new file CITATION.cff to make it easier to create citations of package.
 
 ## v0.13.1 - 2026-07-09
 
