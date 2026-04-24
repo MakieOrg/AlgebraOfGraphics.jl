@@ -194,7 +194,7 @@ end
 
 if abspath(PROGRAM_FILE) == @__FILE__
     fig = build_figure_fullcode(steps)
-    outpath = joinpath(@__DIR__, "..", "figure_overview.png")
-    save(outpath, fig; px_per_unit = 2)
+    outpath = joinpath(@__DIR__, "..", "figure_overview.pdf")
+    save(outpath, fig)
     println("wrote $(abspath(outpath)), size = ", size(fig.scene))
 end
