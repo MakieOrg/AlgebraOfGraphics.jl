@@ -1824,3 +1824,15 @@ reftest("hide_unused_legend") do
         data(df_lines) * mapping(:x, :y, color = :g) * visual(Lines)
     draw(spec, legend = (; hide_unused = true))
 end
+
+reftest("stem plot") do
+    df = (;
+        x = [1, 2, 3, 4],
+        y = [1, 2, 0.5, 1.3],
+        color = ["a", "a", "b", "b"],
+        marker = ["c", "c", "d", "d"],
+        markersize = [10, 20, 30, 40],
+    )
+    spec = data(df) * mapping(:x, :y, color = :color, marker = :marker, markersize = :markersize) * visual(Stem)
+    draw(spec, legend = (; hide_unused = true))
+end

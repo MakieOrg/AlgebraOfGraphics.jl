@@ -568,6 +568,8 @@ mergeable(::Type{<:Union{BarPlot, CrossBar}}, primary) = true
 mergeable(::Type{<:Waterfall}, primary) = true
 # merge dodged boxplots
 mergeable(::Type{<:BoxPlot}, primary) = haskey(primary, :dodge)
+# merge stem plots
+mergeable(::Type{<:Union{Stem}}, primary) = true
 
 
 # This method works on a list of "sliced" `ProcessedLayer`s
