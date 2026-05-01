@@ -16,11 +16,11 @@ authors:
     orcid: 0000-0003-3751-1181
     affiliation: 2
 affiliations:
-  - name: PumasAI, Hamburg, Germany
+  - name: PumasAI
     index: 1
-  - name: Independent researcher
+  - name: Ottante, Milan, Italy
     index: 2
-date: 24 April 2026
+date: 1 May 2026
 bibliography: paper.bib
 ---
 
