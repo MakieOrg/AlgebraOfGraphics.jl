@@ -581,6 +581,10 @@ function legend_elements(T::Type{Arrows2D}, attributes, scale_args::MixedArgumen
     ]
 end
 
+function legend_elements(T::Type{Stem}, attributes, scale_args::MixedArguments)
+    return legend_elements(Makie.Scatter, attributes, scale_args) # same legend as Scatter
+end
+
 # Notes
 
 # TODO: correctly handle composite plot types (now fall back to poly)
