@@ -5,12 +5,17 @@ type: software
 authors:
   - given-names: Pietro
     family-names: Vertechi
+    website: 'https://piever.github.io'
+    orcid: 'https://orcid.org/0000-0003-3751-1181'
   - given-names: Julius
     family-names: Krumbiegel
+    orcid: 'https://orcid.org/0000-0002-8409-5590'
   - given-names: Simon
     family-names: Danisch
+    orcid: 'https://orcid.org/0000-0001-8834-6644'
   - given-names: Fabian
     family-names: Greimel
+    website: 'https://www.greimel.eu'
 repository-code: 'https://github.com/MakieOrg/AlgebraOfGraphics.jl'
 url: 'https://aog.makie.org/'
 abstract: AlgebraOfGraphics (AoG) defines a language for data visualization, inspired by the grammar-of-graphics system made popular by the R library ggplot2. It is based on the plotting package Makie.jl which means that most capabilities of Makie are available, and AoG plots can be freely composed with normal Makie figures.
