@@ -1,7 +1,7 @@
 """
     Layers(layers::Vector{Layer})
 
-Algebraic object encoding a list of [`AlgebraOfGraphics.Layer`](@ref) objects.
+Algebraic object encoding a list of `Layer` objects.
 `Layers` objects can be added or multiplied, yielding a novel `Layers` object.
 """
 struct Layers <: AbstractAlgebraic
@@ -41,7 +41,7 @@ zerolayer() = Layers(Layer[])
 """
     ProcessedLayers(layers::Vector{ProcessedLayer})
 
-Object encoding a list of [`AlgebraOfGraphics.ProcessedLayer`](@ref) objects.
+Object encoding a list of `ProcessedLayer` objects.
 `ProcessedLayers` objects are the output of the processing pipeline and can be
 drawn without further processing.
 """
@@ -277,10 +277,10 @@ end
 
 function compute_axes_grid(
         fig, d::AbstractDrawable, scales::Scales = scales();
-        axis = NamedTuple()
+        axis = NamedTuple(), facet = NamedTuple()
     )
 
-    axes_grid = compute_axes_grid(d, scales; axis)
+    axes_grid = compute_axes_grid(d, scales; axis, facet)
     sz = size(axes_grid)
     if sz != (1, 1) && fig isa Axis
         msg = "You can only pass an `Axis` to `draw!` if the calculated layout only contains one element. Elements: $(sz)"
@@ -311,7 +311,46 @@ function hardcoded_or_mapped_aes(processedlayer, key::Union{Int, Symbol}, aes_ma
     return aes_mapping[key]
 end
 
-function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis = NamedTuple())
+# Resolve any *deferred* (linear-index) Layout scale positions into proper `(row, col)`
+# tuples using the given `aspect`. Replaces the Layout entry in `categoricalscales` with
+# fresh `CategoricalScale`s whose `plot` field holds tuples.
+function _resolve_lazy_layout!(categoricalscales::MultiAesScaleDict{CategoricalScale}, aspect::Real)
+    haskey(categoricalscales, AesLayout) || return
+    scaledict = categoricalscales[AesLayout]
+    for (key, scale) in pairs(scaledict)
+        plot = scale.plot
+        eltype(plot) <: Integer || continue  # already resolved
+        new_plot = resolve_lazy_wrap(plot, length(plot), aspect)
+        scaledict[key] = CategoricalScale(scale.data, new_plot, scale.label, scale.props, scale.aes)
+    end
+    return
+end
+
+# Apply `facet_size` to populate `axis_dict[:width]` / `axis_dict[:height]`.
+# User-supplied `width`/`height` already in `axis_dict` take precedence.
+function _apply_facet_size!(axis_dict, facet_size::FacetSize, n_rows::Int, n_cols::Int)
+    user_w = get(axis_dict, :width, nothing)
+    user_h = get(axis_dict, :height, nothing)
+    aspect = facet_size.aspect
+    if user_w isa Number && user_h isa Number
+        return  # both supplied, nothing to do
+    elseif user_w isa Number
+        insert!(axis_dict, :height, round(Int, user_w / aspect))
+    elseif user_h isa Number
+        insert!(axis_dict, :width, round(Int, user_h * aspect))
+    else
+        h = facet_size.height(n_rows, n_cols)
+        insert!(axis_dict, :height, h)
+        insert!(axis_dict, :width, round(Int, h * aspect))
+    end
+    return
+end
+
+function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis = NamedTuple(), facet = NamedTuple())
+
+    # Extract optional `facet_size::FacetSize`. User-supplied `width`/`height` in `axis` take precedence.
+    axis_dict::NamedArguments = axis isa NamedArguments ? copy(axis) : dictionary(pairs(axis))
+    facet_size = get(facet, :size, nothing)
 
     processedlayers = ProcessedLayers(d).layers
 
@@ -342,11 +381,36 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
         map!(fitscale, scaledict, scaledict)
     end
 
+    # Resolve any deferred (linear-index) Layout positions to (row, col) using the effective aspect:
+    #   1. User-supplied `width` and `height` in `axis` (both required)
+    #   2. `FacetSize.aspect` if `facet_size` is a `FacetSize`
+    #   3. `1.0` (matches the prior squareish wrap)
+    layout_aspect = let
+        user_w = get(axis_dict, :width, nothing)
+        user_h = get(axis_dict, :height, nothing)
+        if user_w isa Number && user_h isa Number
+            user_w / user_h
+        elseif facet_size isa FacetSize
+            facet_size.aspect
+        else
+            1.0
+        end
+    end
+    _resolve_lazy_layout!(categoricalscales, layout_aspect)
+
     set_dodge_width_default!(categoricalscales, processedlayers)
+    compute_plot_dependent_attributes!(processedlayers)
 
     pls_grid = compute_processedlayers_grid(processedlayers, categoricalscales)
     entries_grid, continuousscales_grid, merged_continuousscales =
         compute_entries_continuousscales(pls_grid, categoricalscales, scale_props)
+
+    # Apply `facet_size` now that we know the grid dimensions
+    if facet_size !== nothing
+        n_rows, n_cols = size(pls_grid)
+        _apply_facet_size!(axis_dict, facet_size, n_rows, n_cols)
+    end
+    final_axis = axis_dict
 
     indices = CartesianIndices(pls_grid)
     axes_grid = map(indices) do c
@@ -362,7 +426,7 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
         end
 
         return AxisSpecEntries(
-            AxisSpec(c, axis),
+            AxisSpec(c, final_axis),
             entries_grid[c],
             categoricalscales,
             mixed_continuousscales,
@@ -374,6 +438,7 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
     for ae in axes_grid
         ndims = isaxis2d(ae) ? 2 : 3
         aesthetics = [AesX, AesY, AesZ]
+        hide_empty_axis = false
         for (aes, var) in zip(aesthetics[1:ndims], (:x, :y, :z)[1:ndims])
             # Determine which scales of type AesX, AesY, AesZ have actually been
             # used by the processed layers in the current AxisSpecEntries.
@@ -382,7 +447,34 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
             # create facet plots in which adjacent facets don't share X and Y scales at all,
             # like completely disjoint categories or categorical next to continuous data.
             used_scale_ids = get_used_scale_ids(ae, aes)
-            isempty(used_scale_ids) && continue
+
+            if isempty(used_scale_ids)
+                # Empty facets still need ticks from merged scales so that linked
+                # datetime axes don't fall back to raw float labels (#471).
+                cont_scales = values(get(merged_continuousscales, aes, Dictionary()))
+                cat_scales = values(get(categoricalscales, aes, Dictionary()))
+                all_scales = merge(cont_scales, cat_scales)
+
+                if length(all_scales) == 1
+                    only_scale = only(all_scales)
+                    _ticks = ticks(only_scale)
+                    if _ticks !== automatic
+                        get!(ae.axis.attributes, Symbol(var, "ticks"), _ticks)
+                        if only_scale isa ContinuousScale
+                            get!(ae.axis.attributes, Symbol(var, "tickformat"), only_scale.props.aesprops.tickformat)
+                        end
+                    end
+                elseif length(all_scales) > 1
+                    # Multiple candidate scales exist but we can't determine which
+                    # one's ticks to display. Mark the axis for hiding so the empty
+                    # facet appears as a blank cell. This is especially important when
+                    # the empty axis sits at the bottom row (for x) or the leftmost
+                    # column (for y), where its ticks would remain visible after
+                    # hideinnerdecorations! and could be misleading for neighboring axes.
+                    hide_empty_axis = true
+                end
+                continue
+            end
             if length(used_scale_ids) > 1
                 error("Found more than two scales of type $aes used in one AxesSpecGrid, this is currently not supported. Scales were: $used_scale_ids")
             end
@@ -418,6 +510,23 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
                 keyword = Symbol(var, k)
                 # Only set attribute if it was not present beforehand
                 get!(ae.axis.attributes, keyword, v)
+            end
+        end
+
+        if hide_empty_axis
+            # When an empty facet has multiple candidate scales for at least one axis
+            # dimension (e.g., different X scales in different columns of a row/col layout),
+            # it's not possible to determine which scale's ticks to display. Hide all axis
+            # decorations so the cell appears blank, similar to unfilled cells in wrapped layouts.
+            for var in (:x, :y, :z)[1:ndims]
+                for attr in (:ticksvisible, :ticklabelsvisible, :labelvisible, :gridvisible, :minorgridvisible)
+                    set!(ae.axis.attributes, Symbol(var, attr), false)
+                end
+            end
+            if isaxis2d(ae)
+                for attr in (:topspinevisible, :bottomspinevisible, :leftspinevisible, :rightspinevisible)
+                    set!(ae.axis.attributes, attr, false)
+                end
             end
         end
     end
@@ -690,6 +799,48 @@ end
 
 scale_setting_name(scale_id, aes::Type{<:Aesthetic}) = scale_id !== nothing ? scale_id : string(nameof(aes))[4:end]
 
+# If the user wrote the generic `dodge_x` / `dodge_y` on a plot that also has its own
+# `:dodge` attribute mapping to the matching `AesDodgeX` / `AesDodgeY`, rename the key
+# to `:dodge` so the plot's native dodge mechanism (e.g. BarPlot's width narrowing) is
+# used. Layers where the plot has no matching `:dodge` (e.g. Scatter), or whose `:dodge`
+# maps to the other axis, keep the generic key and use the manual-offset fallback path.
+function reroute_generic_dodge(p::ProcessedLayer)
+    (haskey(p.primary, :dodge_x) || haskey(p.primary, :dodge_y)) || return p
+
+    aes_map = aesthetic_mapping(p)
+    haskey(aes_map, :dodge) || return p
+    native_dodge_aes = aes_map[:dodge]::Type{<:Aesthetic}
+    native_dodge_aes in (AesDodgeX, AesDodgeY) || return p
+
+    has_native_dodge = haskey(p.primary, :dodge) || haskey(p.named, :dodge)
+
+    primary = copy(p.primary)
+    scale_mapping = copy(p.scale_mapping)
+    labels = copy(p.labels)
+
+    for (key, aes) in ((:dodge_x, AesDodgeX), (:dodge_y, AesDodgeY))
+        haskey(primary, key) || continue
+        aes === native_dodge_aes || continue
+
+        if has_native_dodge
+            error("Layer with plot type `$(Makie.plotsym(p.plottype))` received both `$key` and `dodge` mappings, which both target the $(aesname(aes)) aesthetic. Use only one.")
+        end
+
+        insert!(primary, :dodge, primary[key])
+        delete!(primary, key)
+        if haskey(scale_mapping, key)
+            insert!(scale_mapping, :dodge, scale_mapping[key])
+            delete!(scale_mapping, key)
+        end
+        if haskey(labels, key)
+            insert!(labels, :dodge, labels[key])
+            delete!(labels, key)
+        end
+    end
+
+    return ProcessedLayer(p; primary, scale_mapping, labels)
+end
+
 function compute_dodge(data, key::Symbol, dodgevalues, scale_mapping, categoricalscales, dodge_aes)
     scale_id = get(scale_mapping, key, nothing)
     scale = categoricalscales[dodge_aes][scale_id]
@@ -755,7 +906,7 @@ attribute_or_plot_default(plottype, attributes, key) = get(attributes, key) do
     to_value(Makie.default_theme(nothing, plottype)[key])
 end
 
-function determine_dodge_width(T::Type{BarPlot}, p::ProcessedLayer, aes_mapping, dodgetype, n_dodge)
+function determine_dodge_width(T::Type{<:Union{BarPlot, BoxPlot, CrossBar, Violin}}, p::ProcessedLayer, aes_mapping, dodgetype, n_dodge)
     width = attribute_or_plot_default(T, p.attributes, :width)
     gap = attribute_or_plot_default(T, p.attributes, :gap)
     dodge_gap = attribute_or_plot_default(T, p.attributes, :dodge_gap)
@@ -782,4 +933,34 @@ function resolution(vec_of_vecs)::Float64
     iscategoricalcontainer(vec_of_vecs) && return 1.0
     s = unique(sort(reduce(vcat, vec_of_vecs)))
     return minimum((b - a for (a, b) in @views zip((s[begin:(end - 1)]), s[(begin + 1):end])))
+end
+
+compute_plot_dependent_attributes!(::Type, ::ProcessedLayer) = nothing
+
+function compute_plot_dependent_attributes!(::Type{T}, pl::ProcessedLayer) where {T <: Union{BarPlot, BoxPlot, CrossBar, Violin}}
+    haskey(pl.attributes, :width) && return
+    isempty(pl.positional) && return
+
+    xdata = pl.positional[1]
+    iscategoricalcontainer(xdata) && return
+
+    flat = reduce(vcat, xdata)
+    isempty(flat) && return
+    rescaled = contextfree_rescale(flat)
+    s = unique!(sort(rescaled))
+
+    width = if length(s) <= 1
+        1
+    else
+        minimum(s[i + 1] - s[i] for i in 1:(length(s) - 1))
+    end
+
+    return insert!(pl.attributes, :width, width)
+end
+
+function compute_plot_dependent_attributes!(processedlayers::AbstractVector{ProcessedLayer})
+    for pl in processedlayers
+        compute_plot_dependent_attributes!(pl.plottype, pl)
+    end
+    return
 end

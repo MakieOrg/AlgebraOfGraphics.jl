@@ -1129,6 +1129,29 @@ reftest("dodge scatter with rangebars") do
     f
 end
 
+reftest("dodge scatter with barplot boxplot violin crossbar") do
+    df = (
+        x = [1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2],
+        y = [1.0, 2.0, 3.0, 5.0, 6.0, 7.0, 2.0, 3.0, 4.0, 4.0, 5.0, 6.0],
+        group = ["a", "a", "a", "b", "b", "b", "a", "a", "a", "b", "b", "b"],
+    )
+    df_cross = (
+        x = [1, 1, 2, 2],
+        y = [2.0, 6.0, 3.0, 5.0],
+        ymin = [1.0, 5.0, 2.0, 4.0],
+        ymax = [3.0, 7.0, 4.0, 6.0],
+        group = ["a", "b", "a", "b"],
+    )
+    f = Figure()
+    scatter_layer = mapping(:x, :y, dodge_x = :group) * visual(Scatter, color = :black, markersize = 8)
+    dodged = mapping(:x, :y, dodge = :group, color = :group)
+    draw!(f[1, 1], data(df) * (dodged * visual(BarPlot) + scatter_layer))
+    draw!(f[1, 2], data(df) * (dodged * visual(BoxPlot) + scatter_layer))
+    draw!(f[2, 1], data(df) * (dodged * visual(Violin) + scatter_layer))
+    draw!(f[2, 2], data(df_cross) * (mapping(:x, :y, :ymin, :ymax, dodge = :group, color = :group) * visual(CrossBar) + scatter_layer))
+    f
+end
+
 reftest("manual legend labels in visual") do
     df_subjects = (; x = repeat(1:10, 10), y = cos.(1:100), id = repeat(1:10, inner = 10))
     df_func = (; x = range(1, 10, length = 20), y = cos.(range(1, 10, length = 20)))
@@ -1137,6 +1160,13 @@ reftest("manual legend labels in visual") do
     spec2 = data(df_func) * mapping(:x, :y) * (visual(Lines, color = :tomato) + visual(Scatter, markersize = 12, color = :tomato, strokewidth = 2)) * visual(label = L"\cos(x)")
 
     draw(spec1 + spec2)
+end
+
+reftest("manual legend labels non-first facet") do
+    data((; x = 1:2, y = 1:2, z = ["A", "B"])) *
+        mapping(:x, :y, layout = :z) * visual(Scatter, color = :red, label = "Both") +
+        data((; x = [3], y = [3], z = ["B"])) *
+        mapping(:x, :y, layout = :z) * visual(Scatter, color = :blue, label = "Second") |> draw
 end
 
 reftest("manual legend order") do
@@ -1164,6 +1194,24 @@ reftest("legend element overrides") do
     spec = mapping(1:10, 1:10, color = repeat(["A", "B"], inner = 5)) *
         visual(Scatter, legend = (; markersize = 30))
     draw(spec)
+end
+
+reftest("per-layer legend visible") do
+    df = (; x = [1, 2, 3], y = [4, 5, 6], group = ["A", "B", "A"])
+    base = data(df) * mapping(:x, :y, color = :group)
+    cross = visual(Scatter, marker = :xcross, markersize = 25, alpha = 0.5)
+
+    spec_hidden = base * (visual(Scatter, markersize = 12) + cross * visual(legend = (; visible = false)))
+    spec_default = base * (visual(Scatter, markersize = 12) + cross * visual(legend = (; visible = true)))
+
+    fig = Figure(size = (800, 400))
+    fg1 = draw!(fig[1, 1], spec_hidden)
+    fg2 = draw!(fig[1, 3], spec_default)
+    legend!(fig[1, 2], fg1)
+    legend!(fig[1, 4], fg2)
+    Label(fig[0, 1:2], "visible = false"; fontsize = 16)
+    Label(fig[0, 3:4], "visible = true"; fontsize = 16)
+    fig
 end
 
 reftest("stairs") do
@@ -1691,4 +1739,100 @@ end
 reftest("auto dims labels multiple joined") do
     df = (a = 1:10, b = 11:20, x = sin.(1:10), y = cos.(1:10))
     data(df) * mapping([:a, :b], [:x, :y => rich("Y", color = :red, font = :bold)], color = dims(1)) * (visual(Scatter) + smooth()) |> draw
+end
+
+reftest("datetime ticks") do
+    y4 = [1, 2, 3, 4]
+
+    f = Figure(size = (800, 800))
+
+    dates_years = [Date(2018, 1, 1), Date(2020, 6, 1), Date(2022, 3, 1), Date(2024, 9, 1)]
+    draw!(f[1, 1], data((; x = dates_years, y = y4)) * mapping(:x, :y) * visual(Scatter); axis = (; title = "Years"))
+
+    dates_months = [Date(2022, 1, 15), Date(2022, 4, 10), Date(2022, 7, 20), Date(2022, 11, 5)]
+    draw!(f[1, 2], data((; x = dates_months, y = y4)) * mapping(:x, :y) * visual(Scatter); axis = (; title = "Months"))
+
+    dts_hours = [DateTime(2022, 3, 1, 6), DateTime(2022, 3, 1, 18), DateTime(2022, 3, 2, 8), DateTime(2022, 3, 2, 20)]
+    draw!(f[2, 1], data((; x = dts_hours, y = y4)) * mapping(:x, :y) * visual(Scatter); axis = (; title = "Hours across days"))
+
+    dts_minutes = [DateTime(2022, 3, 1, 14, 0), DateTime(2022, 3, 1, 14, 20), DateTime(2022, 3, 1, 14, 40), DateTime(2022, 3, 1, 15, 0)]
+    draw!(f[2, 2], data((; x = dts_minutes, y = y4)) * mapping(:x, :y) * visual(Scatter); axis = (; title = "Minutes"))
+
+    times = [Time(6, 0), Time(10, 30), Time(15, 0), Time(20, 45)]
+    draw!(f[3, 1:2], data((; x = times, y = y4)) * mapping(:x, :y) * visual(Scatter); axis = (; title = "Time"))
+
+    f
+end
+
+reftest("temporal axes analyses") do
+    dates = Date(2022, 1, 1) .+ Day.(0:9)
+    y = [0.1, 0.5, 0.9, 0.7, 0.3, -0.2, -0.6, -0.8, -0.4, 0.0]
+    df = (; dates, y)
+
+    f = Figure(size = (800, 300))
+    draw!(f[1, 1], data(df) * mapping(:dates, :y) * (visual(Scatter) + smooth()); axis = (; xticklabelrotation = pi / 4))
+    draw!(f[1, 2], data(df) * mapping(:dates, :y) * (visual(Scatter) + linear()); axis = (; xticklabelrotation = pi / 4))
+    draw!(f[1, 3], data(df) * mapping(:dates) * histogram(); axis = (; xticklabelrotation = pi / 4))
+    f
+end
+
+reftest("consistent width across facets") do
+    df = (; x = [10, 15, 25, 10], y = [1, 1, 1, 1], c = [1, 2, 3, 3])
+    df_spread = (;
+        x = repeat([10, 15, 25, 10], inner = 5),
+        y = repeat([1, 1, 1, 1], inner = 5) .+ repeat([-0.2, -0.1, 0, 0.1, 0.2], 4),
+        c = repeat([1, 2, 3, 3], inner = 5),
+    )
+    df_cb = (; x = [10, 15, 25, 10], y = [1, 1, 1, 1], ymin = [0.8, 0.8, 0.8, 0.8], ymax = [1.2, 1.2, 1.2, 1.2], c = [1, 2, 3, 3])
+    df_dt = (; x = [DateTime(2024, 1, 1), DateTime(2024, 1, 6), DateTime(2024, 1, 16), DateTime(2024, 1, 1)], y = [1, 1, 1, 1], c = [1, 2, 3, 3])
+
+    f = Figure(size = (1000, 500))
+    draw!(f[1, 1], data(df) * mapping(:x, :y, row = :c) * visual(BarPlot))
+    draw!(f[1, 2], data(df_spread) * mapping(:x, :y, row = :c) * visual(BoxPlot))
+    draw!(f[1, 3], data(df_spread) * mapping(:x, :y, row = :c) * visual(Violin))
+    draw!(f[1, 4], data(df_cb) * mapping(:x, :y, :ymin, :ymax, row = :c) * visual(CrossBar))
+    draw!(f[1, 5], data(df_dt) * mapping(:x, :y, row = :c) * visual(BarPlot); axis = (; xticklabelrotation = pi / 4))
+    f
+end
+
+reftest("empty facet with ambiguous x scales") do
+    layers = zerolayer()
+    for row in ["A", "B", "C"]
+        for col in ["X", "Y", "Z"]
+            row == "B" && col == "Y" && continue
+            layers += mapping(string.(col, 1:3) => scale(Symbol("X_", col)), 1:3, row = row, col = col)
+        end
+    end
+    draw(layers * visual(Scatter))
+end
+
+reftest("empty facet with ambiguous y scales") do
+    layers = zerolayer()
+    for row in ["A", "B", "C"]
+        for col in ["X", "Y", "Z"]
+            row == "B" && col == "Y" && continue
+            layers += mapping(1:3, string.(row, 1:3) => scale(Symbol("Y_", row)), row = row, col = col)
+        end
+    end
+    draw(layers * visual(Scatter))
+end
+
+reftest("hide_unused_legend") do
+    df_scatter = (; x = [1, 2, 1, 2], y = [1, 2, 3, 4], g = ["a", "a", "b", "b"])
+    df_lines = (; x = [1, 2, 1, 2], y = [2, 1, 4, 3], g = ["b", "b", "c", "c"])
+    spec = data(df_scatter) * mapping(:x, :y, color = :g) * visual(Scatter) +
+        data(df_lines) * mapping(:x, :y, color = :g) * visual(Lines)
+    draw(spec, legend = (; hide_unused = true))
+end
+
+reftest("stem plot") do
+    df = (;
+        x = [1, 2, 3, 4],
+        y = [1, 2, 0.5, 1.3],
+        color = ["a", "a", "b", "b"],
+        marker = ["c", "c", "d", "d"],
+        markersize = [10, 20, 30, 40],
+    )
+    spec = data(df) * mapping(:x, :y, color = :color, marker = :marker, markersize = :markersize) * visual(Stem)
+    draw(spec, legend = (; hide_unused = true))
 end

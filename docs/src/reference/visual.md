@@ -117,6 +117,36 @@ These are the attributes you can override (note that some of them have convenien
 
  More information about legend overrides can be found in [Makie's documentation](https://docs.makie.org/stable/reference/blocks/legend#Overriding-legend-entry-attributes).
 
+### Hiding a layer's legend entry
+
+When combining multiple layers that share a categorical scale, some layers may produce
+unwanted legend elements. For example, `Annotation` labels added on top of `Scatter` points
+generate colored poly squares that cover the scatter markers in the legend:
+
+````@example visual
+df = (;
+    x = [1, 2, 3, 4],
+    y = [3, 5, 2, 6],
+    label = ["A", "B", "C", "D"],
+    group = ["I", "I", "II", "II"],
+)
+
+spec = data(df) * mapping(:x, :y, color = :group) * (
+    visual(Scatter, markersize = 15) +
+    visual(Annotation) * mapping(text = :label => verbatim)
+)
+draw(spec)
+````
+
+You can suppress a layer's legend contribution by passing `legend = (; visible = false)` to `visual`:
+
+````@example visual
+spec = data(df) * mapping(:x, :y, color = :group) * (
+    visual(Scatter, markersize = 15) +
+    visual(Annotation, legend = (; visible = false)) * mapping(text = :label => verbatim)
+)
+draw(spec)
+````
 
 ## Targeting sublayers with `subvisual`
 

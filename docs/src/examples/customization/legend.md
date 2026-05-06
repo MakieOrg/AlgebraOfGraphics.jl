@@ -66,4 +66,3 @@ draw(lin + sca)
 ````
 
 
-

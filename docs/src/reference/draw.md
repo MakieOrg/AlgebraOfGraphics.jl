@@ -45,6 +45,14 @@ legend!(f[2, 2], fg2)
 f
 ```
 
+#### `hide_unused_legend`
+
+By default, a legend entry's element for a given plot type is hidden if that plot type has no data for the entry's category.
+Setting `hide_unused_legend = false` disables this for a specific scale, which can be useful if a plot type should appear in the legend even without data.
+
+This behavior can also be controlled globally via `legend = (; hide_unused = ...)` in [`draw`](@ref).
+See [hide_unused](@ref) for a visual example.
+
 #### `palette`
 
 Each categorical scale has a palette which assigns an attribute value to each data value in the scale.
@@ -670,6 +678,30 @@ If you want to add a title to a merged group, you can add it with the `group => 
 
 ```@example legendorder2
 draw(spec1 + spec2_custom_scale; legend = (; order = [[:Color, :color2] => "Title"]))
+```
+
+### `hide_unused`
+
+By default, when multiple plot types share a categorical scale but each covers only a subset of the categories,
+only the plot types that actually have data for a category contribute their element to the legend entry.
+
+Setting `hide_unused = false` disables this, causing every plot type to contribute its element to every legend entry regardless of whether data exists.
+
+```@example hide_unused
+using AlgebraOfGraphics
+using CairoMakie
+
+df_scatter = (; x = [1, 2, 1, 2], y = [1, 2, 3, 4], g = ["a", "a", "b", "b"])
+df_lines = (; x = [1, 2, 1, 2], y = [2, 1, 4, 3], g = ["b", "b", "c", "c"])
+spec = data(df_scatter) * mapping(:x, :y, color = :g) * visual(Scatter) +
+    data(df_lines) * mapping(:x, :y, color = :g) * visual(Lines)
+
+f = Figure()
+draw!(f[1, 1], spec) |> fg -> legend!(f[1, 2], fg)
+Label(f[1, 1, Top()], "default (hide_unused = true)"; padding = (0, 0, 5, 0))
+draw!(f[2, 1], spec) |> fg -> legend!(f[2, 2], fg; hide_unused = false)
+Label(f[2, 1, Top()], "hide_unused = false"; padding = (0, 0, 5, 0))
+f
 ```
 
 ## Figure options

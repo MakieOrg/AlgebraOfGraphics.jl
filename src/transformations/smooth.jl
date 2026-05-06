@@ -10,9 +10,11 @@ function (l::SmoothAnalysis)(input::ProcessedLayer)
     if isnothing(l.interval)
         output = map(input) do p, _
             x, y = p
-            model = Loess.loess(x, y; l.span, l.degree)
-            x̂ = range(extrema(x)..., length = l.npoints)
-            ŷ = Loess.predict(model, x̂)
+            xn = to_numerical(x)
+            model = Loess.loess(xn, y; l.span, l.degree)
+            x̂n = collect(range(extrema(xn)..., length = l.npoints))
+            ŷ = Loess.predict(model, x̂n)
+            x̂ = from_numerical(x̂n, x)
             return (x̂, ŷ), (;)
         end
         plottype = Makie.plottype(output.plottype, Lines)
@@ -20,12 +22,14 @@ function (l::SmoothAnalysis)(input::ProcessedLayer)
     else
         output = map(input) do p, _
             x, y = p
-            model = Loess.loess(x, y; l.span, l.degree)
-            x̂ = range(extrema(x)..., length = l.npoints)
-            pred = Loess.predict(model, x̂; interval = l.interval, level = l.level)
+            xn = to_numerical(x)
+            model = Loess.loess(xn, y; l.span, l.degree)
+            x̂n = collect(range(extrema(xn)..., length = l.npoints))
+            pred = Loess.predict(model, x̂n; interval = l.interval, level = l.level)
             ŷ = pred.predictions
             lower = pred.lower
             upper = pred.upper
+            x̂ = from_numerical(x̂n, x)
             return (x̂, ŷ, x̂, lower, upper), (;)
         end
 

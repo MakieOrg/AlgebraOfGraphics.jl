@@ -657,6 +657,18 @@ end
 
 mandatory_attributes(::Type{Annotation}) = dictionary([:labelspace => :relative_pixel])
 
+function aesthetic_mapping(::Type{Stem}, ::Normal, ::Normal)
+    return dictionary(
+        [
+            1 => AesX,
+            2 => AesY,
+            :color => AesColor,
+            :marker => AesMarker,
+            :markersize => AesMarkerSize,
+        ]
+    )
+end
+
 aesname(T::Type{<:Aesthetic}) = replace(string(nameof(T)), r"^Aes" => "")
 
 """

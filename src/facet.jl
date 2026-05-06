@@ -236,29 +236,61 @@ end
 hide_xdecorations!(ax) = hidexdecorations!(ax; grid = false, minorgrid = false)
 hide_ydecorations!(ax) = hideydecorations!(ax; grid = false, minorgrid = false)
 
+# An empty facet with ambiguous scales has its decorations hidden by compute_axes_grid.
+# Neighboring axes must keep their decorations visible since the hidden axis can't show them.
+# The check is direction-specific: hiding x decorations depends on whether the neighbor
+# can show x ticks, and likewise for y.
+_has_hidden_decorations(ae::AxisEntries, var::Symbol) =
+    isaxis2d(ae) && isempty(ae.entries) && !to_value(getproperty(ae.axis, Symbol(var, :ticksvisible)))
+
 function hideinnerdecorations!(
         aes::AbstractArray{AxisEntries};
         hidexdecorations, hideydecorations, wrap
     )
     I, J = size(aes)
 
+    # Snapshot which cells were hidden by compute_axes_grid (ambiguous scales) BEFORE
+    # any hide_*decorations! calls mutate axis attributes. Without this, hiding y
+    # decorations on an empty cell (e.g., j=2) would make it look "hidden" to the
+    # next column (j=3), incorrectly preserving that column's y decorations.
+    x_hidden = [_has_hidden_decorations(aes[i, j], :x) for i in 1:I, j in 1:J]
+    y_hidden = [_has_hidden_decorations(aes[i, j], :y) for i in 1:I, j in 1:J]
+
     if hideydecorations
         for i in 1:I, j in 2:J
+            y_hidden[i, j - 1] && continue
             hide_ydecorations!(aes[i, j])
         end
     end
 
-    return if hidexdecorations
+    if hidexdecorations
         for i in 1:(I - 1), j in 1:J
-            if wrap && isempty(aes[i + 1, j].entries)
-                # In facet_wrap, don't hide x decorations if axis below is empty,
-                # but instead improve alignment.
-                aes[i, j].axis.alignmode = Mixed(bottom = Protrusion(0))
-            else
+            below_empty = wrap && isempty(aes[i + 1, j].entries)
+            if !below_empty && !x_hidden[i + 1, j]
                 hide_xdecorations!(aes[i, j])
             end
         end
     end
+
+    # When an axis neighbors a hidden-empty or deleted-empty axis, its tick labels
+    # would otherwise create a gap. Setting Protrusion(0) lets them extend into the
+    # empty space instead.
+    for i in 1:I, j in 1:J
+        overrides = NamedTuple()
+        if hidexdecorations && i < I
+            if (wrap && isempty(aes[i + 1, j].entries)) || x_hidden[i + 1, j]
+                overrides = (; overrides..., bottom = Protrusion(0))
+            end
+        end
+        if hideydecorations && j > 1 && y_hidden[i, j - 1]
+            overrides = (; overrides..., left = Protrusion(0))
+        end
+        if !isempty(overrides)
+            aes[i, j].axis.alignmode = Mixed(; overrides...)
+        end
+    end
+
+    return
 end
 
 # Miscellaneous utilities

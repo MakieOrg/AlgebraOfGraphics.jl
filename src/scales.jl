@@ -129,8 +129,10 @@ end
 
 Create an object that can be passed to the `Layout` scale `palette` which controls how many
 rows or columns are allowed at maximum in the wrapped layout. Only one of `cols` or `rows` may
-be set to an integer at the same time. If both are `automatic`, a squareish configuration is chosen.
-If `by_col` is to `true`, the layout is filled top to bottom first and then column by column.
+be set to an integer at the same time. If both are `automatic`, the wrap is *deferred*: positions
+are produced as linear indices and resolved to `(row, col)` later when the axis aspect ratio is
+known (from a `FacetSize`, defaulting to `1` which reproduces the prior squareish wrapping).
+If `by_col` is `true`, the layout is filled top to bottom first and then column by column.
 """
 function wrapped(;
         cols::Union{Integer, Makie.Automatic} = Makie.automatic,
@@ -148,15 +150,53 @@ function wrapped(;
     end
 end
 
+# Default Wrap is *deferred*: returns linear indices to be resolved later in `compute_axes_grid`
+# once the axis aspect ratio (from `FacetSize`) is known.
 function apply_palette(w::Wrap{Automatic}, uv)
-    ncols = ceil(Int, sqrt(length(uv)))
-    return apply_palette(Wrap((n = ncols, cols = true), w.by_col), uv)
+    return collect(eachindex(uv))
 end
 
 function apply_palette(w::Wrap{@NamedTuple{n::Int64, cols::Bool}}, uv)
     n = w.size_restriction.cols != w.by_col ? w.size_restriction.n : ceil(Int, length(uv) / w.size_restriction.n)
     f(ij) = w.by_col ? reverse(ij) : ij
     return [f(fldmod1(idx, n)) for idx in eachindex(uv)]
+end
+
+# Resolve a deferred linear-index layout palette into `(row, col)` positions using the axis aspect.
+# `total` is the total number of facets (used to compute the column count).
+# Picks `ncols` so the bunched-together axis areas (cols * axis_w) / (rows * axis_h) are closest
+# to a square shape. With `aspect = 1` this preserves the prior `ceil(sqrt(n))` behavior for
+# common counts (9 → 3×3, 16 → 4×4). For non-square aspects the layout adapts: wide axes get
+# fewer columns and tall axes get more.
+function resolve_lazy_wrap(linear_idxs::AbstractVector{<:Integer}, total::Integer, aspect::Real, by_col::Bool = false)
+    target_cols = sqrt(total / aspect)
+    # Order candidates so that on a tie (equal log-distance) `argmin` picks the larger column count.
+    # This matches the prior `ceil(sqrt(n))` behavior for square axes (e.g. n=2 → 1×2, not 2×1).
+    candidates = (ceil(Int, target_cols), max(1, floor(Int, target_cols)))
+    distance(c) = abs(log(c * aspect / ceil(Int, total / c)))
+    ncols = candidates[argmin(distance.(candidates))]
+    f(ij) = by_col ? reverse(ij) : ij
+    return [f(fldmod1(idx, ncols)) for idx in linear_idxs]
+end
+
+"""
+    FacetSize(aspect, height)
+
+Encodes how to size the axes in a faceted plot:
+- `aspect`: the axis width-to-height ratio (used upfront to choose wrap layout)
+- `height`: a function `(n_rows, n_cols) -> Int` returning the axis height for the resulting grid
+
+When `FacetSize` is passed as `facet = (; size = FacetSize(...))`:
+- The `Layout` scale's wrap palette uses `aspect` for choosing rows/columns.
+- If the user does not supply `width` or `height` in `axis`, both are computed
+  from `aspect` and `height(n_rows, n_cols)`.
+- If the user supplies only `width`, `height` is derived as `width / aspect`.
+- If the user supplies only `height`, `width` is derived as `height * aspect`.
+- If the user supplies both, neither `aspect` nor `height` is used.
+"""
+struct FacetSize
+    aspect::Float64
+    height::Function  # (n_rows, n_cols) -> Int
 end
 
 struct Clipped{C}
@@ -193,6 +233,7 @@ struct CategoricalScaleProps
     aesprops::CategoricalAesProps
     label # nothing or any type workable as a label
     legend::Bool
+    hide_unused_legend::Bool
     categories::Union{Nothing, Function, Vector}
     palette # nothing or any type workable as a palette
     dim_labels::Union{Nothing, Dict{DimsIndex, Any}} # labels for dims selectors, indexed by DimsIndex
@@ -202,6 +243,7 @@ function Base.:(==)(a::CategoricalScaleProps, b::CategoricalScaleProps)
     return a.aesprops == b.aesprops &&
         a.label == b.label &&
         a.legend == b.legend &&
+        a.hide_unused_legend == b.hide_unused_legend &&
         a.categories == b.categories &&
         a.palette == b.palette # &&
     # TODO: currently this fails with rich text, need to wait for equality implementation in Makie before adding this back, it's just a guard rail anyway so disabling this field for now
@@ -272,6 +314,7 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
     else
         legend = _pop!(props_copy, :legend, true)
     end
+    hide_unused_legend = _pop!(props_copy, :hide_unused_legend, false)
     label = _pop!(props_copy, :label, nothing)
     categories = _pop!(props_copy, :categories, nothing)
     palette = _pop!(props_copy, :palette, nothing)
@@ -281,6 +324,7 @@ function CategoricalScaleProps(aestype::Type{<:Aesthetic}, props::Dictionary)
         aes_props,
         label,
         legend,
+        hide_unused_legend,
         categories,
         palette,
         dim_labels,
@@ -527,6 +571,25 @@ function datetimeticks(f, datetimes::AbstractVector{<:TimeType})
     return datetimeticks(datetimes, map(string ∘ f, datetimes))
 end
 
+# Analyses like Loess, GLM and StatsBase.Histogram need numeric inputs, so temporal
+# types must be converted to floats before fitting. The results are then converted back
+# to temporal types via `from_numerical`, because the continuous scale system determines
+# axis tick formatting (e.g., date labels) from the element type of the output arrays.
+# If we left the output as plain floats, that type information would be lost.
+to_numerical(x::AbstractVector{<:TimeType}) = map(datetime2float, x)
+to_numerical(x::AbstractVector) = x
+to_numerical(x::TimeType) = datetime2float(x)
+to_numerical(x) = x
+
+function from_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<:Union{DateTime, Date}})
+    epoch = DateTime(2020, 01, 01)
+    return [epoch + Millisecond(round(Int64, v)) for v in x̂]
+end
+function from_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<:Time})
+    return [Time(0) + Millisecond(round(Int64, v)) for v in x̂]
+end
+from_numerical(x̂, ::AbstractVector) = x̂
+
 # Rescaling methods that do not depend on context
 elementwise_rescale(value::Union{TimeType, Period}) = datetime2float(value)
 elementwise_rescale(value::Verbatim) = value[]
@@ -641,33 +704,40 @@ end
 
 ticks((min, max)::NTuple{2, Any}) = automatic
 
-temporal_resolutions(::Type{Date}) = (Year, Month, Day)
-temporal_resolutions(::Type{Time}) = (Hour, Minute, Second, Millisecond)
-temporal_resolutions(::Type{DateTime}) = (temporal_resolutions(Date)..., temporal_resolutions(Time)...)
-
-function optimal_datetime_range((x_min, x_max)::NTuple{2, T}; k_min = 2, k_max = 5) where {T <: TimeType}
-    local P, start, stop
-    for outer P in temporal_resolutions(T)
-        start, stop = trunc(x_min, P), trunc(x_max, P)
-        (start == x_min) || (start += P(1))
-        n = length(start:P(1):stop)
-        n ≥ k_min && return start:P(fld1(n, k_max)):stop
-    end
-    return start:P(1):stop
+struct DateTicksWrapper{T <: TimeType, Ticks}
+    ticks::Ticks
 end
 
-function format_datetimes(datetimes::AbstractVector{DateTime})
-    dates, times = Date.(datetimes), Time.(datetimes)
-    (dates == datetimes) && return string.(dates)
-    isequal(extrema(dates)...) && return string.(times)
-    return string.(datetimes)
+DateTicksWrapper{T}(ticks) where {T <: TimeType} = DateTicksWrapper{T, typeof(ticks)}(ticks)
+
+const DATETIME_EPOCH = DateTime(2020, 01, 01)
+
+function float_to_datetime(vmin, vmax)
+    vmin_dt = DATETIME_EPOCH + Millisecond(round(Int64, vmin))
+    vmax_dt = DATETIME_EPOCH + Millisecond(round(Int64, vmax))
+    return vmin_dt, vmax_dt
 end
 
-format_datetimes(datetimes::AbstractVector) = string.(datetimes)
+function float_to_time(vmin, vmax)
+    vmin_t = Time(0) + Millisecond(round(Int64, vmin))
+    vmax_t = Time(0) + Millisecond(round(Int64, vmax))
+    return vmin_t, vmax_t
+end
 
-function ticks(limits::NTuple{2, TimeType})
-    datetimes = optimal_datetime_range(limits)
-    return datetime2float.(datetimes), format_datetimes(datetimes)
+function Makie.get_ticks(t::DateTicksWrapper{T}, scale, formatter, vmin, vmax) where {T <: Union{DateTime, Date}}
+    vmin_dt, vmax_dt = float_to_datetime(vmin, vmax)
+    datetimes, labels = Makie.get_ticks(t.ticks, scale, formatter, vmin_dt, vmax_dt)
+    return map(datetime2float, datetimes), labels
+end
+
+function Makie.get_ticks(t::DateTicksWrapper{Time}, scale, formatter, vmin, vmax)
+    vmin_t, vmax_t = float_to_time(vmin, vmax)
+    times, labels = Makie.get_ticks(t.ticks, scale, formatter, vmin_t, vmax_t)
+    return map(datetime2float, times), labels
+end
+
+function ticks(::NTuple{2, T}) where {T <: TimeType}
+    return DateTicksWrapper{T}(Makie.automatic)
 end
 
 abstract type ScientificType end

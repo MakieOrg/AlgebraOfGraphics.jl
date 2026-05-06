@@ -69,6 +69,15 @@ aesthetics. And for legend support, `legend_elements` must be overloaded for cus
 as Makie's default legend mechanism relies on instantiated plot objects, while AlgebraOfGraphics
 must go by the type and attributes alone.
 
+To suppress a layer's legend contribution, pass `legend = (; visible = false)` as an attribute.
+This is an AlgebraOfGraphics-specific option that is intercepted before reaching Makie.
+Other entries in the `legend` named tuple are forwarded to Makie's `LegendOverride` mechanism
+as before.
+
+```julia
+data(...) * mapping(..., color = :group) * (visual(Scatter) + visual(Makie.Text, legend = (; visible = false)))
+```
+
 Depending on its `aesthetic_mapping`, a plot type and its attributes may change certain semantics of a given `data(...) * mapping(...)` spec.
 For example, `visual(BarPlot)` will show mapping 1 on the x axis and 2 on the y axis, while `visual(BarPlot, direction = :x)`
 shows mapping 1 on y and 2 on x.

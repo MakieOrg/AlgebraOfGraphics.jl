@@ -1,26 +1,20 @@
 # A poly recipe that takes data in long format, used for the filled_contours analysis
 
-@recipe(LongPoly) do scene
-    default_theme(scene, Poly)
+@recipe LongPoly (x, y, id, subid) begin
+    color = @inherit patchcolor
+    strokecolor = @inherit patchstrokecolor
+    strokewidth = @inherit patchstrokewidth
 end
 
 Makie.convert_arguments(::Type{<:LongPoly}, args...) = args
 
-function Makie.plot!(p::LongPoly{<:Tuple{<:AbstractVector{<:AbstractFloat}, <:AbstractVector{<:AbstractFloat}, <:AbstractVector{<:Integer}, <:AbstractVector{<:Integer}}})
-    x, y, id, subid = p[1:4]
-
+function Makie.plot!(p::LongPoly)
     P = Makie.Point2{Float64}
     POLY = typeof(Makie.GeometryBasics.Polygon(P[]))
 
-    polygons = Observable{Vector{POLY}}([])
-
-    color = Observable{Any}(:red)
-
-    onany(x, y, id, subid; update = true) do x, y, id, subid
-        polys = POLY[]
-
+    map!(p, [:x, :y, :id, :subid, :color], [:polygons, :computed_color]) do x, y, id, subid, color
         if isempty(id)
-            return polys
+            return (POLY[], color)
         end
 
         prev_id = id[begin]
@@ -50,17 +44,23 @@ function Makie.plot!(p::LongPoly{<:Tuple{<:AbstractVector{<:AbstractFloat}, <:Ab
         push!(rings, ring_start:length(x))
         push!(all_rings, rings)
 
-        color.val = slice_rings(p.color[], all_rings)
+        computed_color = slice_rings(color, all_rings)
 
-        polygons[] = map(all_rings) do rings
+        polygons = map(all_rings) do rings
             exterior::Vector{P} = @views P.(x[rings[1]], y[rings[1]])
             interiors::Vector{Vector{P}} = @views [P.(x[ring], y[ring]) for ring in rings[2:end]]
-            pol = Makie.GeometryBasics.Polygon(exterior, interiors)
-            return pol
+            return Makie.GeometryBasics.Polygon(exterior, interiors)
         end
+
+        return (polygons, computed_color)
     end
 
-    return poly!(p, polygons; color)
+    return poly!(
+        p, p.polygons;
+        color = p.computed_color,
+        strokecolor = p.strokecolor,
+        strokewidth = p.strokewidth,
+    )
 end
 
 function slice_rings(x::AbstractVector, all_rings::Vector{Vector{UnitRange{Int}}})

@@ -2,6 +2,41 @@
 
 ## Unreleased
 
+## v0.12.8 - 2026-05-04
+
+- Plot types with a native `:dodge` attribute (`BarPlot`, `BoxPlot`, `Violin`, `CrossBar`) now also accept the generic `dodge_x`/`dodge_y` mapping, which is routed to `:dodge` when the aesthetic matches the plot's orientation. This makes it possible to share a single `dodge_x`/`dodge_y` mapping across companion layers (e.g., `Scatter` + `BarPlot`) without switching attribute names per layer. [#747](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/747).
+- Added support for `Stem` plots [#751](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/751).
+
+## v0.12.7 - 2026-04-13
+
+- Added `FacetSize(aspect, height_fn)` and `facet = (; size = FacetSize(...))` for declaring an axis sizing policy that adapts to the resolved grid layout. The default `wrapped()` palette is now lazy and resolves to `(row, col)` positions at draw time using the effective axis aspect (from `FacetSize` or user-supplied width+height, defaulting to 1.0). For square axes this preserves the prior `ceil(sqrt(n))` behavior; non-square aspects pick a column count that brings the bunched axis areas closest to a square shape [#745](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/745).
+
+## v0.12.6 - 2026-03-30
+
+- Legend entries now hide elements from plot types that have no data for a given category (`hide_unused` defaults to `true`). This fixes misleading legends when layers with different plot types share a categorical scale but cover different subsets of categories (e.g., Scatter for "A" and Lines for "B" no longer both show a marker+line for every entry). The behavior can be controlled globally via `legend = (; hide_unused = false)` in `draw`, or per scale via `scales(Color = (; hide_unused_legend = false))`. Paginated plots also benefit, as each page's legend now only shows categories present on that page [#742](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/742).
+
+## v0.12.5 - 2026-03-23
+
+- Fixed `paginate` discarding the layout scale palette so that one can now use `wrapped` to paginate with specific row/column shapes [#738](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/738).
+
+## v0.12.4 - 2026-03-12
+
+- Empty facets with multiple candidate scales (e.g., different X scales across columns) now hide all axis decorations instead of erroring. Neighboring axes correctly retain their tick labels when adjacent to a hidden-empty facet [#734](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/734).
+
+## v0.12.3 - 2026-03-11
+
+- `BoxPlot`, `CrossBar`, and `Violin` now report an intrinsic dodge width, matching `BarPlot`. This allows companion layers (e.g., `Scatter` with `dodge_x`) to dodge correctly when combined with these plot types [#730](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/730).
+- Fixed `LongPoly` and `Choropleth` recipes breaking with Makie >= 0.24.9 due to ComputePipeline migration. Converted recipes from legacy `@recipe` style to the new ComputePipeline-compatible `@recipe` style [#733](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/733).
+
+## v0.12.2 - 2026-02-26
+
+- Added support for `visual(..., legend = (; visible = false))` to suppress a layer's legend contribution. Useful when combining multiple visual layers (e.g. `Scatter` + `Text`) that share a categorical scale, where some layers produce unwanted legend elements [#728](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/728).
+- Fixed legend labels missing when a layer only exists in non-first facets [#721](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/721).
+- Fixed `smooth()`, `linear()` and `histogram()` failing with `Date`/`DateTime` axes [#724](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/724).
+- Delegate datetime tick computation to Makie's `DateTimeTicks`, which provides better tick placement and context-aware label formatting (e.g., showing only the time when the date hasn't changed between ticks). Ticks now also update dynamically when zooming/panning. Requires Makie >= 0.24.4 [#725](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/725).
+- Fixed empty facets showing raw float values instead of datetime tick labels when sharing a datetime axis with non-empty facets [#726](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/726).
+- Fixed inconsistent bar/box/crossbar/violin widths across facets when different facets contain different subsets of x-values [#727](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/727).
+
 ## v0.12.1 - 2026-01-07
 
 - Make the `visual`s `BarPlot`, `BoxPlot`, `Density` and `CrossBar` aware of the `strokecolor` aesthetic. Note that, for some `visual`s, it is necessary to specify a `strokewidth` strictly larger than 0 to appreciate the effect of the `strokecolor` mapping. Note also that the `strokecolor` aesthetic in itself was already available, and it is defined so that it behaves as the `Color` aesthetic (for example, in terms of scales). Indeed, the `visual`s `Scatter`, `ScatterLines` and `Hist` were already aware of `strokecolor`. There are other `visual`s that also could use `strokecolor` (for example, [violin plots](https://docs.makie.org/stable/reference/plots/violin#strokecolor)), but implementing `strokecolor` for all of them is left for later.
