@@ -19,6 +19,9 @@ function _groupreduce(agg, summaries::Tuple, values::Tuple)
 end
 
 function groupreduce(agg, input::ProcessedLayer)
+    input = map(input) do p, n
+        return _drop_missing_nan_rows(Tuple(p), n; weight_keys = ())
+    end
     N = length(input.positional)
     summaries = Any[mapreduce(collect ∘ uniquesorted, mergesorted, input.positional[idx]) for idx in 1:(N - 1)]
     output = map(input) do p, n

@@ -81,6 +81,7 @@ function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plotty
     plottype = Makie.plottype(_plottype, input.plottype, default_plottype)
 
     output = map(input) do p, n
+        p, n = _drop_missing_nan_rows(Tuple(p), n)
         pn = map(to_numerical, p)
         hist = _histogram(Tuple(pn); pairs(n)..., pairs(options)...)
         edges, weights = hist.edges, hist.weights
@@ -129,6 +130,8 @@ The histogram can be normalized by setting `normalization`. Possible values are:
 *  `:none`: Do not normalize.
 
 Weighted data is supported via the keyword `weights` (passed to `mapping`).
+
+Rows with `missing` or `NaN` in any input are dropped; `Inf`/`-Inf` errors.
 
 !!! note
 

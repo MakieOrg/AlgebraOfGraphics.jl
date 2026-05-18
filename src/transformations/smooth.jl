@@ -8,7 +8,8 @@ end
 
 function (l::SmoothAnalysis)(input::ProcessedLayer)
     if isnothing(l.interval)
-        output = map(input) do p, _
+        output = map(input) do p, n
+            p, _ = _drop_missing_nan_rows(Tuple(p), n)
             x, y = p
             xn = to_numerical(x)
             model = Loess.loess(xn, y; l.span, l.degree)
@@ -20,7 +21,8 @@ function (l::SmoothAnalysis)(input::ProcessedLayer)
         plottype = Makie.plottype(output.plottype, Lines)
         return ProcessedLayer(output; plottype, label = :prediction)
     else
-        output = map(input) do p, _
+        output = map(input) do p, n
+            p, _ = _drop_missing_nan_rows(Tuple(p), n)
             x, y = p
             xn = to_numerical(x)
             model = Loess.loess(xn, y; l.span, l.degree)
@@ -63,6 +65,8 @@ Valid values of `interval` are `:confidence` (the default), to delimit the uncer
 of the predicted relationship. Use `interval = nothing` to only compute the line fit, 
 without any uncertainty estimate.
 `npoints` is the number of points used by Makie to draw the line and shaded band.
+
+Rows with `missing` or `NaN` in any input are dropped; `Inf`/`-Inf` errors.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """

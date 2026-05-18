@@ -679,3 +679,147 @@ end
     layer = data(df) * mapping(:x, :y, dodge = :group, dodge_x = :group) * visual(AlgebraOfGraphics.BarPlot)
     @test_throws "both `dodge_x` and `dodge`" AlgebraOfGraphics.ProcessedLayer(layer)
 end
+
+@testset "missing and NaN handling" begin
+    # density 1D: rows with missing/NaN are dropped, result matches pre-filtered data
+    @testset "density 1D" begin
+        df = (; x = Union{Missing, Float64}[1.0, 2.0, missing, 3.0, NaN, 4.0, 5.0])
+        layer = data(df) * mapping(:x) * AlgebraOfGraphics.density(; npoints = 50, datalimits = extrema)
+        pls = AlgebraOfGraphics.ProcessedLayers(layer).layers
+        line_pl = pls[2]
+        rgx, d = line_pl.positional
+
+        clean = [1.0, 2.0, 3.0, 4.0, 5.0]
+        rgx_ref = range(extrema(clean)..., length = 50)
+        d_ref = pdf(kde(clean), rgx_ref)
+        @test rgx[1] ≈ rgx_ref
+        @test d[1] ≈ d_ref
+    end
+
+    # density 2D: drop row when either x or y is missing/NaN
+    @testset "density 2D" begin
+        df = (;
+            x = Union{Missing, Float64}[1.0, 2.0, missing, 3.0, 4.0, 5.0],
+            y = Union{Missing, Float64}[1.0, NaN, 3.0, 4.0, 5.0, 6.0],
+        )
+        layer = data(df) * mapping(:x, :y) * AlgebraOfGraphics.density(; npoints = 20, datalimits = extrema, bandwidth = (0.5, 0.5))
+        pl = AlgebraOfGraphics.ProcessedLayer(layer)
+        rgx, rgy, d = pl.positional
+
+        x_clean = [1.0, 3.0, 4.0, 5.0]
+        y_clean = [1.0, 4.0, 5.0, 6.0]
+        rgx_ref = range(extrema(x_clean)..., length = 20)
+        rgy_ref = range(extrema(y_clean)..., length = 20)
+        d_ref = pdf(kde((x_clean, y_clean); bandwidth = (0.5, 0.5)), rgx_ref, rgy_ref)
+        @test rgx[1] ≈ rgx_ref
+        @test rgy[1] ≈ rgy_ref
+        @test d[1] ≈ d_ref
+    end
+
+    @testset "histogram" begin
+        df = (; x = Union{Missing, Float64}[1.5, 2.5, missing, 3.5, NaN, 4.5])
+        layer = data(df) * mapping(:x) * histogram(; bins = 1:5)
+        pl = AlgebraOfGraphics.ProcessedLayer(layer)
+        counts = pl.positional[2][1]
+        @test collect(counts) == [1, 1, 1, 1]
+    end
+
+    @testset "linear" begin
+        df = (;
+            x = Union{Missing, Float64}[1.0, 2.0, 3.0, missing, 4.0, 5.0],
+            y = Union{Missing, Float64}[2.0, NaN, 6.0, 8.0, 10.0, 11.0],
+        )
+        layer = data(df) * mapping(:x, :y) * linear()
+        pls = AlgebraOfGraphics.ProcessedLayers(layer).layers
+        line_pl = pls[2]
+        x̂, ŷ = line_pl.positional
+
+        x_clean = [1.0, 3.0, 4.0, 5.0]
+        y_clean = [2.0, 6.0, 10.0, 11.0]
+        β = [ones(length(x_clean)) x_clean] \ y_clean
+        @test first(x̂[1]) ≈ 1.0
+        @test last(x̂[1]) ≈ 5.0
+        @test first(ŷ[1]) ≈ β[1] + β[2] * 1.0
+        @test last(ŷ[1]) ≈ β[1] + β[2] * 5.0
+    end
+
+    @testset "smooth" begin
+        df = (;
+            x = Float64[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+            y = Union{Missing, Float64}[1, NaN, 4, 5, missing, 7, 8, 9, 11, 12],
+        )
+        layer = data(df) * mapping(:x, :y) * smooth(; interval = nothing)
+        pl = AlgebraOfGraphics.ProcessedLayer(layer)
+        x̂, ŷ = pl.positional
+
+        x_clean = [1.0, 3.0, 4.0, 6.0, 7.0, 8.0, 9.0, 10.0]
+        y_clean = [1.0, 4.0, 5.0, 7.0, 8.0, 9.0, 11.0, 12.0]
+        ŷ_ref = Loess.predict(
+            Loess.loess(x_clean, y_clean; span = 0.75, degree = 2),
+            collect(range(extrema(x_clean)..., length = 200)),
+        )
+        @test ŷ[1] ≈ ŷ_ref
+    end
+
+    @testset "frequency" begin
+        df = (; x = Union{Missing, String}["a", "b", missing, "a", "c", missing])
+        layer = data(df) * mapping(:x) * frequency()
+        pl = AlgebraOfGraphics.ProcessedLayer(layer)
+        @test collect(pl.positional[1][1]) == ["a", "b", "c"]
+        @test collect(pl.positional[2][1]) == [2, 1, 1]
+    end
+
+    @testset "expectation" begin
+        # Drop rows where group key or value is missing/NaN, then take mean per group
+        df = (;
+            g = Union{Missing, String}["a", "a", "b", missing, "a", "b"],
+            y = Union{Missing, Float64}[1.0, 2.0, NaN, 5.0, 3.0, 10.0],
+        )
+        layer = data(df) * mapping(:g, :y) * expectation()
+        pl = AlgebraOfGraphics.ProcessedLayer(layer)
+        @test collect(pl.positional[1][1]) == ["a", "b"]
+        @test collect(pl.positional[2][1]) ≈ [2.0, 10.0]
+    end
+
+    @testset "weights paired with retained data row error" begin
+        # NaN weight on a non-missing data row → error
+        df = (; x = [1.0, 2.0, 3.0], w = Union{Missing, Float64}[1.0, NaN, 3.0])
+        layer = data(df) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5)
+        @test_throws "missing` or `NaN` `weights`" AlgebraOfGraphics.ProcessedLayer(layer)
+
+        # NaN weight on a missing data row → row is dropped, no error
+        df_ok = (;
+            x = Union{Missing, Float64}[1.0, missing, 3.0],
+            w = Union{Missing, Float64}[1.0, NaN, 3.0],
+        )
+        layer = data(df_ok) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5)
+        pl = AlgebraOfGraphics.ProcessedLayer(layer)
+        @test collect(pl.positional[2][1]) == [0.0, 1.0, 0.0, 3.0, 0.0]
+    end
+
+    # Inf in inputs throws a clean, uniform error across all analyses
+    @testset "Inf in inputs errors" begin
+        df_x = (; x = [1.0, 2.0, Inf, 4.0])
+        @test_throws "Inf`/`-Inf` value(s) in positional column 1" AlgebraOfGraphics.ProcessedLayer(
+            AlgebraOfGraphics.ProcessedLayers(data(df_x) * mapping(:x) * AlgebraOfGraphics.density(; npoints = 10, datalimits = extrema)).layers[2]
+        )
+        @test_throws "Inf`/`-Inf` value(s) in positional column 1" AlgebraOfGraphics.ProcessedLayer(data(df_x) * mapping(:x) * histogram(; bins = 1:5))
+        @test_throws "Inf`/`-Inf` value(s) in positional column 1" AlgebraOfGraphics.ProcessedLayer(data(df_x) * mapping(:x) * frequency())
+
+        df_xy = (; x = [1.0, 2.0, 3.0, 4.0], y = [1.0, Inf, 3.0, 4.0])
+        @test_throws "Inf`/`-Inf` value(s) in positional column 2" AlgebraOfGraphics.ProcessedLayers(data(df_xy) * mapping(:x, :y) * linear())
+        @test_throws "Inf`/`-Inf` value(s) in positional column 2" AlgebraOfGraphics.ProcessedLayer(data(df_xy) * mapping(:x, :y) * smooth(; interval = nothing))
+
+        df_gy = (; g = ["a", "a", "b", "b"], y = [1.0, 2.0, Inf, 4.0])
+        @test_throws "Inf`/`-Inf` value(s) in positional column 2" AlgebraOfGraphics.ProcessedLayer(data(df_gy) * mapping(:g, :y) * expectation())
+
+        # Inf in weights
+        df_w = (; x = [1.0, 2.0, 3.0], w = [1.0, Inf, 3.0])
+        @test_throws "Inf`/`-Inf` value(s) in `weights`" AlgebraOfGraphics.ProcessedLayer(data(df_w) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5))
+
+        # Inf weight paired with missing data → the row is dropped before the Inf check, so no error.
+        df_ok = (; x = Union{Missing, Float64}[1.0, missing, 3.0], w = Union{Missing, Float64}[1.0, Inf, 3.0])
+        AlgebraOfGraphics.ProcessedLayer(data(df_ok) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5))
+        @test true
+    end
+end

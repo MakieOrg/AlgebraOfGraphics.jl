@@ -15,6 +15,7 @@ end
 # TODO: add multidimensional version
 function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
+        p, n = _drop_missing_nan_rows(Tuple(p), n)
         x, y = p
         xn = to_numerical(x)
         weights = StatsBase.fweights(get(n, :weights, similar(xn, 0)))
@@ -65,6 +66,8 @@ it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.
 
 Weighted data is supported via the keyword `weights` (passed to `mapping`).
+
+Rows with `missing` or `NaN` in any input are dropped; `Inf`/`-Inf` errors.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """

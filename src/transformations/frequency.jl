@@ -20,5 +20,7 @@ end
     frequency()
 
 Compute a frequency table of the arguments.
+
+Rows with `missing` or `NaN` in any input are dropped; `Inf`/`-Inf` errors.
 """
 frequency() = transformation(FrequencyAnalysis())

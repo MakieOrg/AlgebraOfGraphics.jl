@@ -30,7 +30,8 @@ function (d::DensityAnalysis)(input::ProcessedLayer)
     datalimits = d.datalimits === automatic ? defaultdatalimits(input.positional) : d.datalimits
     options = valid_options(; datalimits, d.npoints, d.kernel, d.bandwidth)
     output = map(input) do p, n
-        return _density(Tuple(p); pairs(n)..., pairs(options)...), (;)
+        p, n = _drop_missing_nan_rows(Tuple(p), n)
+        return _density(p; pairs(n)..., pairs(options)...), (;)
     end
     N = length(input.positional)
     if N == 1
@@ -93,5 +94,7 @@ which you can separately style using [`subvisual`](@ref). The direction may be c
 vertical via `direction = :y`.
 
 For 2D, returns a `Heatmap` and for 3D a `Volume` layer.
+
+Rows with `missing` or `NaN` in any input are dropped; `Inf`/`-Inf` errors.
 """
 density(; options...) = transformation(DensityAnalysis(; options...))
