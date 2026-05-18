@@ -66,7 +66,7 @@ of the predicted relationship. Use `interval = nothing` to only compute the line
 without any uncertainty estimate.
 `npoints` is the number of points used by Makie to draw the line and shaded band.
 
-Rows with `missing` or `NaN` in any input are dropped; `Inf`/`-Inf` errors.
+Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """

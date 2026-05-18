@@ -14,6 +14,6 @@ struct ExpectationAnalysis end
 
 Compute the expected value of the last argument conditioned on the preceding ones.
 
-Rows with `missing` or `NaN` in any input are dropped; `Inf`/`-Inf` errors.
+Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.
 """
 expectation() = transformation(ExpectationAnalysis())

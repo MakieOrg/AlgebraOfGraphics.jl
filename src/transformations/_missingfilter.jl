@@ -3,8 +3,9 @@
 # instead of getting downstream "bandwidth must be positive" / "start and stop
 # must be finite" errors or silent nonsense.
 
-_should_drop_missing_nan(v) = ismissing(v) || (v isa Number && isnan(v))
-_is_inf(v) = v isa Number && isinf(v)
+_is_missing_or_nan(v) = ismissing(v) || isnan(v)
+
+_is_numeric_column(col::AbstractVector) = Base.nonmissingtype(eltype(col)) <: Number
 
 function _narrow_nonmissing(v::AbstractVector)
     T = Base.nonmissingtype(eltype(v))
@@ -16,15 +17,14 @@ end
 # specializes on the column's concrete type without forcing the outer filter
 # to recompile for every positional-tuple shape.
 function _accumulate_keep!(keep::BitVector, col::AbstractVector)
-    @inbounds for i in eachindex(keep, col)
-        keep[i] || continue
-        keep[i] = !_should_drop_missing_nan(col[i])
-    end
+    _is_numeric_column(col) || return keep
+    keep .&= .!_is_missing_or_nan.(col)
     return keep
 end
 
 function _check_no_inf(col::AbstractVector, what)
-    n = count(_is_inf, col)
+    _is_numeric_column(col) || return nothing
+    n = count(isinf, col)
     n > 0 && throw(
         ArgumentError(
             "Encountered $n `Inf`/`-Inf` value(s) in $what; analyses do not support infinite values. Filter or transform these rows before passing the data."
@@ -36,29 +36,29 @@ end
 function _filter_and_check(col::AbstractVector, keep::BitVector, what)
     filtered = col[keep]
     _check_no_inf(filtered, what)
-    return _narrow_nonmissing(filtered)
+    return _is_numeric_column(col) ? _narrow_nonmissing(filtered) : filtered
 end
 
-# Drop rows where any column in `positional`, or any column in `named` indexed
-# by `weight_keys`, contains `missing` or `NaN`. After dropping, throw on any
-# remaining `Inf`/`-Inf` in positional or retained weight columns. Returns the
-# filtered (positional, named), with `Union{Missing,T}` element types narrowed
-# to `T`. `positional` is iterated as a generic collection of column vectors so
-# this method does not recompile per positional-tuple shape; the per-column
-# work is delegated to specialized inner helpers.
-function _drop_missing_nan_rows(
-        positional, named::AbstractDictionary;
-        weight_keys = (:weights,),
-    )
+_row_aligned(col, nrows) = col isa AbstractVector && length(col) == nrows
+
+# Drop rows where any numeric column in `positional` or `named` contains
+# `missing` or `NaN`. Categorical columns are never filtered (a `missing` there
+# is treated as a value, not as no-data) but get the same row mask applied so
+# their rows stay aligned with the numeric columns. Throws on any `Inf`/`-Inf`
+# remaining in a numeric column. Numeric `Union{Missing,T}` element types are
+# narrowed to `T` after filtering. `positional` is iterated as a generic
+# collection so this method does not recompile per positional-tuple shape; the
+# per-column work is delegated to specialized inner helpers.
+function _drop_missing_nan_rows(positional, named::AbstractDictionary)
     isempty(positional) && return positional, named
     nrows = length(first(positional))
     keep = trues(nrows)
     for col in positional
         _accumulate_keep!(keep, col)
     end
-    present_weight_keys = filter(k -> haskey(named, k), collect(weight_keys))
-    for k in present_weight_keys
-        _accumulate_keep!(keep, named[k])
+    for (_, col) in pairs(named)
+        _row_aligned(col, nrows) || continue
+        _accumulate_keep!(keep, col)
     end
 
     new_positional = Any[
@@ -67,8 +67,9 @@ function _drop_missing_nan_rows(
     ]
 
     new_named = named
-    for k in present_weight_keys
-        new_named = set(new_named, k => _filter_and_check(named[k], keep, "`$(k)`"))
+    for (k, col) in pairs(named)
+        _row_aligned(col, nrows) || continue
+        new_named = set(new_named, k => _filter_and_check(col, keep, "named column `$(k)`"))
     end
     return new_positional, new_named
 end

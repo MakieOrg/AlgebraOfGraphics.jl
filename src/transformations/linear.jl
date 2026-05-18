@@ -67,7 +67,7 @@ it is possible to set `dropcollinear=true`.
 
 Weighted data is supported via the keyword `weights` (passed to `mapping`).
 
-Rows with `missing` or `NaN` in any input are dropped; `Inf`/`-Inf` errors.
+Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """

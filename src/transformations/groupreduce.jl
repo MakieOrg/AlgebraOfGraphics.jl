@@ -20,7 +20,7 @@ end
 
 function groupreduce(agg, input::ProcessedLayer)
     input = map(input) do p, n
-        return _drop_missing_nan_rows(p, n; weight_keys = ())
+        return _drop_missing_nan_rows(p, n)
     end
     N = length(input.positional)
     summaries = Any[mapreduce(collect ∘ uniquesorted, mergesorted, input.positional[idx]) for idx in 1:(N - 1)]

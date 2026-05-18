@@ -95,6 +95,6 @@ vertical via `direction = :y`.
 
 For 2D, returns a `Heatmap` and for 3D a `Volume` layer.
 
-Rows with `missing` or `NaN` in any input are dropped; `Inf`/`-Inf` errors.
+Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.
 """
 density(; options...) = transformation(DensityAnalysis(; options...))

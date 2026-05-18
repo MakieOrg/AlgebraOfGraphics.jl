@@ -131,7 +131,7 @@ The histogram can be normalized by setting `normalization`. Possible values are:
 
 Weighted data is supported via the keyword `weights` (passed to `mapping`).
 
-Rows with `missing` or `NaN` in any input are dropped; `Inf`/`-Inf` errors.
+Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.
 
 !!! note
 

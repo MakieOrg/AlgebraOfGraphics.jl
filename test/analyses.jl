@@ -762,23 +762,25 @@ end
     end
 
     @testset "frequency" begin
+        # `missing` in a categorical column is a category, not no-data — keep it.
         df = (; x = Union{Missing, String}["a", "b", missing, "a", "c", missing])
         layer = data(df) * mapping(:x) * frequency()
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
-        @test collect(pl.positional[1][1]) == ["a", "b", "c"]
-        @test collect(pl.positional[2][1]) == [2, 1, 1]
+        @test isequal(collect(pl.positional[1][1]), ["a", "b", "c", missing])
+        @test collect(pl.positional[2][1]) == [2, 1, 1, 2]
     end
 
     @testset "expectation" begin
-        # Drop rows where group key or value is missing/NaN, then take mean per group
+        # Numeric value column with NaN → that row drops; categorical grouping
+        # column keeps `missing` as its own group.
         df = (;
             g = Union{Missing, String}["a", "a", "b", missing, "a", "b"],
             y = Union{Missing, Float64}[1.0, 2.0, NaN, 5.0, 3.0, 10.0],
         )
         layer = data(df) * mapping(:g, :y) * expectation()
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
-        @test collect(pl.positional[1][1]) == ["a", "b"]
-        @test collect(pl.positional[2][1]) ≈ [2.0, 10.0]
+        @test isequal(collect(pl.positional[1][1]), ["a", "b", missing])
+        @test collect(pl.positional[2][1]) ≈ [2.0, 10.0, 5.0]
     end
 
     @testset "missing/NaN weight drops the row" begin
@@ -814,7 +816,7 @@ end
 
         # Inf in weights
         df_w = (; x = [1.0, 2.0, 3.0], w = [1.0, Inf, 3.0])
-        @test_throws "Inf`/`-Inf` value(s) in `weights`" AlgebraOfGraphics.ProcessedLayer(data(df_w) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5))
+        @test_throws "Inf`/`-Inf` value(s) in named column `weights`" AlgebraOfGraphics.ProcessedLayer(data(df_w) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5))
 
     end
 end
