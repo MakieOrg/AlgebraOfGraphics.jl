@@ -7,7 +7,12 @@ end
 
 struct ExpectationAnalysis end
 
-(e::ExpectationAnalysis)(input::ProcessedLayer) = groupreduce(Mean, input)
+function (e::ExpectationAnalysis)(input::ProcessedLayer)
+    input = map(input) do p, n
+        return _drop_missing_nan_rows(p, n)
+    end
+    return groupreduce(Mean, input)
+end
 
 """
     expectation()
