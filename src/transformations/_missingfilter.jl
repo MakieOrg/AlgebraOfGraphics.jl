@@ -1,5 +1,9 @@
-_is_missing_or_nan(v) = ismissing(v) || (v isa Number && isnan(v))
-_is_inf(v) = v isa Number && isinf(v)
+_is_missing_or_nan(::Missing) = true
+_is_missing_or_nan(v::Number) = isnan(v)
+_is_missing_or_nan(_) = false
+
+_is_inf(v::Number) = isinf(v)
+_is_inf(_) = false
 
 function _narrow_nonmissing(v::AbstractVector)
     T = Base.nonmissingtype(eltype(v))
@@ -7,8 +11,6 @@ function _narrow_nonmissing(v::AbstractVector)
     return Vector{T}(v)
 end
 
-# Function barriers so the row loop specializes per column type, not per
-# positional-tuple shape.
 function _accumulate_keep!(keep::BitVector, col::AbstractVector)
     iscontinuous(col) || return keep
     keep .&= .!_is_missing_or_nan.(col)
