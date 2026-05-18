@@ -16,8 +16,7 @@ end
 # specializes on the column's concrete type without forcing the outer filter
 # to recompile for every positional-tuple shape.
 function _accumulate_keep!(keep::BitVector, col::AbstractVector)
-    length(keep) == length(col) || throw(DimensionMismatch("column length $(length(col)) does not match $(length(keep))"))
-    @inbounds for i in eachindex(keep)
+    @inbounds for i in eachindex(keep, col)
         keep[i] || continue
         keep[i] = !_should_drop_missing_nan(col[i])
     end
