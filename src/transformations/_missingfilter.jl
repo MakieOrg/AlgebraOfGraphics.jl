@@ -1,8 +1,3 @@
-# Helpers shared by analyses to drop rows with `missing` or `NaN` inputs.
-# `Inf`/`-Inf` are not dropped; they error explicitly so callers see the issue
-# instead of getting downstream "bandwidth must be positive" / "start and stop
-# must be finite" errors or silent nonsense.
-
 _is_missing_or_nan(v) = ismissing(v) || (v isa Number && isnan(v))
 _is_inf(v) = v isa Number && isinf(v)
 
@@ -12,9 +7,8 @@ function _narrow_nonmissing(v::AbstractVector)
     return Vector{T}(v)
 end
 
-# Inner per-column workers — function barriers so the row-iteration hot loop
-# specializes on the column's concrete type without forcing the outer filter
-# to recompile for every positional-tuple shape.
+# Function barriers so the row loop specializes per column type, not per
+# positional-tuple shape.
 function _accumulate_keep!(keep::BitVector, col::AbstractVector)
     iscontinuous(col) || return keep
     keep .&= .!_is_missing_or_nan.(col)
@@ -40,15 +34,9 @@ end
 
 _row_aligned(col, nrows) = col isa AbstractVector && length(col) == nrows
 
-# Drop rows where any continuous column in `positional` or `named` contains
-# `missing` or `NaN`. Categorical columns (per `iscontinuous`) are never
-# filtered (a `missing` there is treated as a value, not as no-data) but get
-# the same row mask applied so their rows stay aligned with the continuous
-# columns. Throws on any `Inf`/`-Inf` remaining in a continuous column.
-# Continuous `Union{Missing,T}` element types are narrowed to `T` after
-# filtering. `positional` is iterated as a generic collection so this method
-# does not recompile per positional-tuple shape; the per-column work is
-# delegated to specialized inner helpers.
+# Categorical columns are never filtered themselves — `missing` is a value
+# there — but get the same row mask so they stay aligned with continuous
+# columns.
 function _drop_missing_nan_rows(positional, named::AbstractDictionary)
     isempty(positional) && return positional, named
     nrows = length(first(positional))

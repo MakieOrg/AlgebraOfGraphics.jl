@@ -681,7 +681,6 @@ end
 end
 
 @testset "missing and NaN handling" begin
-    # density 1D: rows with missing/NaN are dropped, result matches pre-filtered data
     @testset "density 1D" begin
         df = (; x = Union{Missing, Float64}[1.0, 2.0, missing, 3.0, NaN, 4.0, 5.0])
         layer = data(df) * mapping(:x) * AlgebraOfGraphics.density(; npoints = 50, datalimits = extrema)
@@ -692,13 +691,10 @@ end
         clean = [1.0, 2.0, 3.0, 4.0, 5.0]
         rgx_ref = range(extrema(clean)..., length = 50)
         d_ref = pdf(kde(clean), rgx_ref)
-        # `rgx`, `d` are vectors-of-cells; these layers have a single cell (no
-        # grouping), so `only` asserts that and unwraps.
         @test only(rgx) ≈ rgx_ref
         @test only(d) ≈ d_ref
     end
 
-    # density 2D: drop row when either x or y is missing/NaN
     @testset "density 2D" begin
         df = (;
             x = Union{Missing, Float64}[1.0, 2.0, missing, 3.0, 4.0, 5.0],
@@ -763,14 +759,12 @@ end
     end
 
     @testset "frequency" begin
-        # `missing` in a categorical column is a category, not no-data — keep it.
         df = (; x = Union{Missing, String}["a", "b", missing, "a", "c", missing])
         layer = data(df) * mapping(:x) * frequency()
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
         @test isequal(collect(only(pl.positional[1])), ["a", "b", "c", missing])
         @test collect(only(pl.positional[2])) == [2, 1, 1, 2]
 
-        # Bool is categorical in AoG; `missing` is kept as a third category.
         df_b = (; b = Union{Missing, Bool}[true, false, missing, true, false, missing])
         pl_b = AlgebraOfGraphics.ProcessedLayer(data(df_b) * mapping(:b) * frequency())
         @test isequal(collect(only(pl_b.positional[1])), [false, true, missing])
@@ -778,8 +772,6 @@ end
     end
 
     @testset "expectation" begin
-        # Numeric value column with NaN → that row drops; categorical grouping
-        # column keeps `missing` as its own group.
         df = (;
             g = Union{Missing, String}["a", "a", "b", missing, "a", "b"],
             y = Union{Missing, Float64}[1.0, 2.0, NaN, 5.0, 3.0, 10.0],
@@ -805,7 +797,6 @@ end
         @test collect(only(pl.positional[2])) == [0.0, 1.0, 0.0, 3.0, 0.0]
     end
 
-    # Inf in inputs throws a clean, uniform error across all analyses
     @testset "Inf in inputs errors" begin
         df_x = (; x = [1.0, 2.0, Inf, 4.0])
         @test_throws "Inf`/`-Inf` value(s) in positional column 1" AlgebraOfGraphics.ProcessedLayer(
@@ -821,9 +812,7 @@ end
         df_gy = (; g = ["a", "a", "b", "b"], y = [1.0, 2.0, Inf, 4.0])
         @test_throws "Inf`/`-Inf` value(s) in positional column 2" AlgebraOfGraphics.ProcessedLayer(data(df_gy) * mapping(:g, :y) * expectation())
 
-        # Inf in weights
         df_w = (; x = [1.0, 2.0, 3.0], w = [1.0, Inf, 3.0])
         @test_throws "Inf`/`-Inf` value(s) in named column `weights`" AlgebraOfGraphics.ProcessedLayer(data(df_w) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5))
-
     end
 end
