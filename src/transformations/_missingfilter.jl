@@ -3,8 +3,8 @@
 # instead of getting downstream "bandwidth must be positive" / "start and stop
 # must be finite" errors or silent nonsense.
 
-_is_missing_or_nan(v) = ismissing(v) || (v isa AbstractFloat && isnan(v))
-_is_inf(v) = v isa AbstractFloat && isinf(v)
+_is_missing_or_nan(v) = ismissing(v) || (v isa Number && isnan(v))
+_is_inf(v) = v isa Number && isinf(v)
 
 function _narrow_nonmissing(v::AbstractVector)
     T = Base.nonmissingtype(eltype(v))
