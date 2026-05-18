@@ -30,8 +30,8 @@ function (d::DensityAnalysis)(input::ProcessedLayer)
     datalimits = d.datalimits === automatic ? defaultdatalimits(input.positional) : d.datalimits
     options = valid_options(; datalimits, d.npoints, d.kernel, d.bandwidth)
     output = map(input) do p, n
-        p, n = _drop_missing_nan_rows(Tuple(p), n)
-        return _density(p; pairs(n)..., pairs(options)...), (;)
+        p, n = _drop_missing_nan_rows(p, n)
+        return _density(Tuple(p); pairs(n)..., pairs(options)...), (;)
     end
     N = length(input.positional)
     if N == 1

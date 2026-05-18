@@ -9,7 +9,7 @@ end
 function (l::SmoothAnalysis)(input::ProcessedLayer)
     if isnothing(l.interval)
         output = map(input) do p, n
-            p, _ = _drop_missing_nan_rows(Tuple(p), n)
+            p, _ = _drop_missing_nan_rows(p, n)
             x, y = p
             xn = to_numerical(x)
             model = Loess.loess(xn, y; l.span, l.degree)
@@ -22,7 +22,7 @@ function (l::SmoothAnalysis)(input::ProcessedLayer)
         return ProcessedLayer(output; plottype, label = :prediction)
     else
         output = map(input) do p, n
-            p, _ = _drop_missing_nan_rows(Tuple(p), n)
+            p, _ = _drop_missing_nan_rows(p, n)
             x, y = p
             xn = to_numerical(x)
             model = Loess.loess(xn, y; l.span, l.degree)

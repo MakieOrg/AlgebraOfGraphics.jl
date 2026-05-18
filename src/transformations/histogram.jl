@@ -81,7 +81,7 @@ function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plotty
     plottype = Makie.plottype(_plottype, input.plottype, default_plottype)
 
     output = map(input) do p, n
-        p, n = _drop_missing_nan_rows(Tuple(p), n)
+        p, n = _drop_missing_nan_rows(p, n)
         pn = map(to_numerical, p)
         hist = _histogram(Tuple(pn); pairs(n)..., pairs(options)...)
         edges, weights = hist.edges, hist.weights

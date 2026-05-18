@@ -15,7 +15,7 @@ end
 # TODO: add multidimensional version
 function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
-        p, n = _drop_missing_nan_rows(Tuple(p), n)
+        p, n = _drop_missing_nan_rows(p, n)
         x, y = p
         xn = to_numerical(x)
         weights = StatsBase.fweights(get(n, :weights, similar(xn, 0)))
