@@ -781,18 +781,17 @@ end
         @test collect(pl.positional[2][1]) ≈ [2.0, 10.0]
     end
 
-    @testset "weights paired with retained data row error" begin
-        # NaN weight on a non-missing data row → error
+    @testset "missing/NaN weight drops the row" begin
         df = (; x = [1.0, 2.0, 3.0], w = Union{Missing, Float64}[1.0, NaN, 3.0])
         layer = data(df) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5)
-        @test_throws "missing` or `NaN` `weights`" AlgebraOfGraphics.ProcessedLayer(layer)
+        pl = AlgebraOfGraphics.ProcessedLayer(layer)
+        @test collect(pl.positional[2][1]) == [0.0, 1.0, 0.0, 3.0, 0.0]
 
-        # NaN weight on a missing data row → row is dropped, no error
-        df_ok = (;
-            x = Union{Missing, Float64}[1.0, missing, 3.0],
-            w = Union{Missing, Float64}[1.0, NaN, 3.0],
+        df_miss = (;
+            x = [1.0, 2.0, 3.0],
+            w = Union{Missing, Float64}[1.0, missing, 3.0],
         )
-        layer = data(df_ok) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5)
+        layer = data(df_miss) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5)
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
         @test collect(pl.positional[2][1]) == [0.0, 1.0, 0.0, 3.0, 0.0]
     end
@@ -817,9 +816,5 @@ end
         df_w = (; x = [1.0, 2.0, 3.0], w = [1.0, Inf, 3.0])
         @test_throws "Inf`/`-Inf` value(s) in `weights`" AlgebraOfGraphics.ProcessedLayer(data(df_w) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5))
 
-        # Inf weight paired with missing data → the row is dropped before the Inf check, so no error.
-        df_ok = (; x = Union{Missing, Float64}[1.0, missing, 3.0], w = Union{Missing, Float64}[1.0, Inf, 3.0])
-        AlgebraOfGraphics.ProcessedLayer(data(df_ok) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5))
-        @test true
     end
 end

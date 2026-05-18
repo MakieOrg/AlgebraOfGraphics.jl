@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Analyses (`density`, `histogram`, `linear`, `smooth`, `frequency`, `expectation`) now silently drop rows where any positional input is `missing` or `NaN`, instead of erroring or producing garbage. `Inf`/`-Inf` in any positional input throws an explicit `ArgumentError` naming the offending column, replacing inconsistent downstream errors and silent garbage-in/garbage-out behavior. When a `weights` mapping is given, rows with a `missing`/`NaN` weight on a non-missing data row error explicitly (real data must have a usable weight), and `Inf`/`-Inf` in retained weights errors as well [#757](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/757).
+- Analyses (`density`, `histogram`, `linear`, `smooth`, `frequency`, `expectation`) now silently drop rows where any positional input or `weights` value is `missing` or `NaN`, instead of erroring or producing garbage. `Inf`/`-Inf` in any positional input or in retained `weights` throws an explicit `ArgumentError` naming the offending column, replacing inconsistent downstream errors and silent garbage-in/garbage-out behavior [#757](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/757).
 
 ## v0.12.8 - 2026-05-04
 

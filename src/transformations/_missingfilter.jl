@@ -22,12 +22,11 @@ function _check_no_inf(col, what)
     return nothing
 end
 
-# Drop rows where any column in `positional` contains `missing` or `NaN`. After
-# dropping, throw on any remaining `Inf`/`-Inf` in positional. For each key in
-# `weight_keys` present in `named`, drop the same rows and then throw if any
-# retained weight is `missing`/`NaN` (real data must have a usable weight) or
-# `Inf`/`-Inf`. Returns the filtered (positional, named), with
-# `Union{Missing,T}` element types narrowed to `T`.
+# Drop rows where any column in `positional`, or any column in `named` indexed
+# by `weight_keys`, contains `missing` or `NaN`. After dropping, throw on any
+# remaining `Inf`/`-Inf` in positional or retained weight columns. Returns the
+# filtered (positional, named), with `Union{Missing,T}` element types narrowed
+# to `T`.
 function _drop_missing_nan_rows(
         positional::Tuple, named::AbstractDictionary;
         weight_keys = (:weights,),
@@ -42,25 +41,24 @@ function _drop_missing_nan_rows(
             keep[i] = !_should_drop_missing_nan(col[i])
         end
     end
-    new_positional = map(c -> _narrow_nonmissing(c[keep]), positional)
+    present_weight_keys = filter(k -> haskey(named, k), collect(weight_keys))
+    for k in present_weight_keys
+        w = named[k]
+        length(w) == nrows || throw(DimensionMismatch("named column `$(k)` length $(length(w)) does not match positional length $nrows"))
+        for i in 1:nrows
+            keep[i] || continue
+            keep[i] = !_should_drop_missing_nan(w[i])
+        end
+    end
 
+    new_positional = map(c -> _narrow_nonmissing(c[keep]), positional)
     for (idx, col) in enumerate(new_positional)
         _check_no_inf(col, "positional column $idx")
     end
 
     new_named = named
-    for k in weight_keys
-        haskey(named, k) || continue
-        w = named[k]
-        length(w) == nrows || throw(DimensionMismatch("named column `$(k)` length $(length(w)) does not match positional length $nrows"))
-        wfilt = w[keep]
-        for v in wfilt
-            _should_drop_missing_nan(v) && throw(
-                ArgumentError(
-                    "Encountered a `missing` or `NaN` `$(k)` value paired with a non-missing data row; weights must be defined for every retained row."
-                )
-            )
-        end
+    for k in present_weight_keys
+        wfilt = named[k][keep]
         _check_no_inf(wfilt, "`$(k)`")
         new_named = set(new_named, k => _narrow_nonmissing(wfilt))
     end
