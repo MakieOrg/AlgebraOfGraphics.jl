@@ -768,6 +768,12 @@ end
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
         @test isequal(collect(pl.positional[1][1]), ["a", "b", "c", missing])
         @test collect(pl.positional[2][1]) == [2, 1, 1, 2]
+
+        # Bool is categorical in AoG; `missing` is kept as a third category.
+        df_b = (; b = Union{Missing, Bool}[true, false, missing, true, false, missing])
+        pl_b = AlgebraOfGraphics.ProcessedLayer(data(df_b) * mapping(:b) * frequency())
+        @test isequal(collect(pl_b.positional[1][1]), [false, true, missing])
+        @test collect(pl_b.positional[2][1]) == [2, 2, 2]
     end
 
     @testset "expectation" begin
