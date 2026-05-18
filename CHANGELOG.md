@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Analyses (`density`, `histogram`, `linear`, `smooth`, `frequency`, `expectation`) now silently drop rows where any numeric input (positional or named, including `weights`) is `missing` or `NaN`, instead of erroring or producing garbage. `Inf`/`-Inf` in any numeric input throws an explicit `ArgumentError` naming the offending column, replacing inconsistent downstream errors and silent garbage-in/garbage-out behavior [#757](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/757).
+
 ## v0.12.8 - 2026-05-04
 
 - Plot types with a native `:dodge` attribute (`BarPlot`, `BoxPlot`, `Violin`, `CrossBar`) now also accept the generic `dodge_x`/`dodge_y` mapping, which is routed to `:dodge` when the aesthetic matches the plot's orientation. This makes it possible to share a single `dodge_x`/`dodge_y` mapping across companion layers (e.g., `Scatter` + `BarPlot`) without switching attribute names per layer. [#747](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/747).
