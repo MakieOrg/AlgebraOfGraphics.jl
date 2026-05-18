@@ -692,8 +692,10 @@ end
         clean = [1.0, 2.0, 3.0, 4.0, 5.0]
         rgx_ref = range(extrema(clean)..., length = 50)
         d_ref = pdf(kde(clean), rgx_ref)
-        @test rgx[1] ≈ rgx_ref
-        @test d[1] ≈ d_ref
+        # `rgx`, `d` are vectors-of-cells; these layers have a single cell (no
+        # grouping), so `only` asserts that and unwraps.
+        @test only(rgx) ≈ rgx_ref
+        @test only(d) ≈ d_ref
     end
 
     # density 2D: drop row when either x or y is missing/NaN
@@ -711,17 +713,16 @@ end
         rgx_ref = range(extrema(x_clean)..., length = 20)
         rgy_ref = range(extrema(y_clean)..., length = 20)
         d_ref = pdf(kde((x_clean, y_clean); bandwidth = (0.5, 0.5)), rgx_ref, rgy_ref)
-        @test rgx[1] ≈ rgx_ref
-        @test rgy[1] ≈ rgy_ref
-        @test d[1] ≈ d_ref
+        @test only(rgx) ≈ rgx_ref
+        @test only(rgy) ≈ rgy_ref
+        @test only(d) ≈ d_ref
     end
 
     @testset "histogram" begin
         df = (; x = Union{Missing, Float64}[1.5, 2.5, missing, 3.5, NaN, 4.5])
         layer = data(df) * mapping(:x) * histogram(; bins = 1:5)
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
-        counts = pl.positional[2][1]
-        @test collect(counts) == [1, 1, 1, 1]
+        @test collect(only(pl.positional[2])) == [1, 1, 1, 1]
     end
 
     @testset "linear" begin
@@ -737,10 +738,10 @@ end
         x_clean = [1.0, 3.0, 4.0, 5.0]
         y_clean = [2.0, 6.0, 10.0, 11.0]
         β = [ones(length(x_clean)) x_clean] \ y_clean
-        @test first(x̂[1]) ≈ 1.0
-        @test last(x̂[1]) ≈ 5.0
-        @test first(ŷ[1]) ≈ β[1] + β[2] * 1.0
-        @test last(ŷ[1]) ≈ β[1] + β[2] * 5.0
+        @test first(only(x̂)) ≈ 1.0
+        @test last(only(x̂)) ≈ 5.0
+        @test first(only(ŷ)) ≈ β[1] + β[2] * 1.0
+        @test last(only(ŷ)) ≈ β[1] + β[2] * 5.0
     end
 
     @testset "smooth" begin
@@ -758,7 +759,7 @@ end
             Loess.loess(x_clean, y_clean; span = 0.75, degree = 2),
             collect(range(extrema(x_clean)..., length = 200)),
         )
-        @test ŷ[1] ≈ ŷ_ref
+        @test only(ŷ) ≈ ŷ_ref
     end
 
     @testset "frequency" begin
@@ -766,14 +767,14 @@ end
         df = (; x = Union{Missing, String}["a", "b", missing, "a", "c", missing])
         layer = data(df) * mapping(:x) * frequency()
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
-        @test isequal(collect(pl.positional[1][1]), ["a", "b", "c", missing])
-        @test collect(pl.positional[2][1]) == [2, 1, 1, 2]
+        @test isequal(collect(only(pl.positional[1])), ["a", "b", "c", missing])
+        @test collect(only(pl.positional[2])) == [2, 1, 1, 2]
 
         # Bool is categorical in AoG; `missing` is kept as a third category.
         df_b = (; b = Union{Missing, Bool}[true, false, missing, true, false, missing])
         pl_b = AlgebraOfGraphics.ProcessedLayer(data(df_b) * mapping(:b) * frequency())
-        @test isequal(collect(pl_b.positional[1][1]), [false, true, missing])
-        @test collect(pl_b.positional[2][1]) == [2, 2, 2]
+        @test isequal(collect(only(pl_b.positional[1])), [false, true, missing])
+        @test collect(only(pl_b.positional[2])) == [2, 2, 2]
     end
 
     @testset "expectation" begin
@@ -785,15 +786,15 @@ end
         )
         layer = data(df) * mapping(:g, :y) * expectation()
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
-        @test isequal(collect(pl.positional[1][1]), ["a", "b", missing])
-        @test collect(pl.positional[2][1]) ≈ [2.0, 10.0, 5.0]
+        @test isequal(collect(only(pl.positional[1])), ["a", "b", missing])
+        @test collect(only(pl.positional[2])) ≈ [2.0, 10.0, 5.0]
     end
 
     @testset "missing/NaN weight drops the row" begin
         df = (; x = [1.0, 2.0, 3.0], w = Union{Missing, Float64}[1.0, NaN, 3.0])
         layer = data(df) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5)
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
-        @test collect(pl.positional[2][1]) == [0.0, 1.0, 0.0, 3.0, 0.0]
+        @test collect(only(pl.positional[2])) == [0.0, 1.0, 0.0, 3.0, 0.0]
 
         df_miss = (;
             x = [1.0, 2.0, 3.0],
@@ -801,7 +802,7 @@ end
         )
         layer = data(df_miss) * mapping(:x, weights = :w) * histogram(; bins = 0:1:5)
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
-        @test collect(pl.positional[2][1]) == [0.0, 1.0, 0.0, 3.0, 0.0]
+        @test collect(only(pl.positional[2])) == [0.0, 1.0, 0.0, 3.0, 0.0]
     end
 
     # Inf in inputs throws a clean, uniform error across all analyses
