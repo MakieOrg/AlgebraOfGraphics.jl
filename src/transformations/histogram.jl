@@ -53,8 +53,8 @@ function HistogramAnalysis{plottype}(;
 end
 HistogramAnalysis(; options...) = HistogramAnalysis{Plot{plot}}(; options...)
 
-histogram_preprocess_named(::Type{<:Plot}, edges, weights) = (;)
-histogram_preprocess_named(::Type{BarPlot}, edges, weights) = (; width = diff(first(edges)))
+histogram_preprocess_named(::Type{<:Plot}, edges, weights, p) = (;)
+histogram_preprocess_named(::Type{BarPlot}, edges, weights, p) = (; width = from_unitless_numerical(diff(first(edges)), p[1]))
 histogram_preprocess_positional(::Type{<:Plot}, edges, weights) = (map(midpoints, edges)..., weights)
 function histogram_preprocess_positional(::Type{Stairs}, edges, weights)
     edges = only(edges)
@@ -68,12 +68,8 @@ histogram_default_attributes(::Type{<:Plot}) = NamedArguments()
 histogram_default_attributes(::Type{BarPlot}) = NamedArguments((; :gap => 0, :dodge_gap => 0))
 
 function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plottype}
-    datalimits = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
-    if datalimits isa Tuple
-        datalimits = map(datalimits) do (lo, hi)
-            (to_numerical(lo), to_numerical(hi))
-        end
-    end
+    datalimits_raw = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
+    datalimits = _strip_datalimits_units(datalimits_raw)
     options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
 
     N = length(input.positional)
@@ -82,13 +78,13 @@ function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plotty
 
     output = map(input) do p, n
         p, n = _drop_missing_nan_rows(p, n)
-        pn = map(to_numerical, p)
+        pn = map(to_unitless_numerical, p)
         hist = _histogram(Tuple(pn); pairs(n)..., pairs(options)...)
         edges, weights = hist.edges, hist.weights
-        named = histogram_preprocess_named(plottype, edges, weights)
+        named = histogram_preprocess_named(plottype, edges, weights, p)
         positional = histogram_preprocess_positional(plottype, edges, weights)
         positional = ntuple(length(positional)) do i
-            i <= length(p) ? from_numerical(collect(positional[i]), p[i]) : positional[i]
+            i <= length(p) ? from_unitless_numerical(collect(positional[i]), p[i]) : positional[i]
         end
         return positional, named
     end

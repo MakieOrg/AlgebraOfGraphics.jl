@@ -171,10 +171,12 @@ Base.print(io::IO, v::Verbatim) = print(io, v.x)
     end
 end
 
-struct Bin
-    range::Tuple{Float64, Float64}
+struct Bin{T}
+    range::Tuple{T, T}
     inclusive::Tuple{Bool, Bool}
 end
+
+Bin(range::Tuple{T1, T2}, inclusive) where {T1, T2} = Bin{promote_type(T1, T2)}(promote(range...), inclusive)
 
 Base.isless(b1::Bin, b2::Bin) = isless(b1.range, b2.range)
 

@@ -6,16 +6,24 @@ Base.@kwdef struct SmoothAnalysis
     level::Float64 = 0.95
 end
 
+# Loess loses precision when x lives far from 0 (e.g. `datetime2float(DateTime)` is ~1e11),
+# producing wildly wrong predictions between the endpoints. Recenter x around its mean before
+# fitting; Loess is translation-invariant in x, so this is exact, not approximate.
+_recenter(xn) = (offset = sum(xn) / length(xn); (xn .- offset, offset))
+
 function (l::SmoothAnalysis)(input::ProcessedLayer)
     if isnothing(l.interval)
         output = map(input) do p, n
             p, _ = _drop_missing_nan_rows(p, n)
             x, y = p
-            xn = to_numerical(x)
-            model = Loess.loess(xn, y; l.span, l.degree)
+            xn = to_unitless_numerical(x)
+            yn = to_unitless_numerical(y)
+            xn_c, x_offset = _recenter(xn)
+            model = Loess.loess(xn_c, yn; l.span, l.degree)
             x̂n = collect(range(extrema(xn)..., length = l.npoints))
-            ŷ = Loess.predict(model, x̂n)
-            x̂ = from_numerical(x̂n, x)
+            ŷn = Loess.predict(model, x̂n .- x_offset)
+            x̂ = from_unitless_numerical(x̂n, x)
+            ŷ = from_unitless_numerical(ŷn, y)
             return (x̂, ŷ), (;)
         end
         plottype = Makie.plottype(output.plottype, Lines)
@@ -24,14 +32,16 @@ function (l::SmoothAnalysis)(input::ProcessedLayer)
         output = map(input) do p, n
             p, _ = _drop_missing_nan_rows(p, n)
             x, y = p
-            xn = to_numerical(x)
-            model = Loess.loess(xn, y; l.span, l.degree)
+            xn = to_unitless_numerical(x)
+            yn = to_unitless_numerical(y)
+            xn_c, x_offset = _recenter(xn)
+            model = Loess.loess(xn_c, yn; l.span, l.degree)
             x̂n = collect(range(extrema(xn)..., length = l.npoints))
-            pred = Loess.predict(model, x̂n; interval = l.interval, level = l.level)
-            ŷ = pred.predictions
-            lower = pred.lower
-            upper = pred.upper
-            x̂ = from_numerical(x̂n, x)
+            pred = Loess.predict(model, x̂n .- x_offset; interval = l.interval, level = l.level)
+            ŷ = from_unitless_numerical(pred.predictions, y)
+            lower = from_unitless_numerical(pred.lower, y)
+            upper = from_unitless_numerical(pred.upper, y)
+            x̂ = from_unitless_numerical(x̂n, x)
             return (x̂, ŷ, x̂, lower, upper), (;)
         end
 

@@ -10,9 +10,16 @@ function AlgebraOfGraphics.strip_units(scale, data::AbstractVector{<:Unitful.Qua
     return scale_unitless, data_unitless
 end
 
+AlgebraOfGraphics.to_unitless_numerical(x::AbstractVector{<:Unitful.Quantity}) = Unitful.ustrip.(x)
+AlgebraOfGraphics.to_unitless_numerical(x::Unitful.Quantity) = Unitful.ustrip(x)
+AlgebraOfGraphics.from_unitless_numerical(x̂::AbstractArray{<:Real}, x::AbstractVector{<:Unitful.Quantity}) =
+    x̂ .* Unitful.unit(eltype(x))
+
 function AlgebraOfGraphics.unit_string(u::Unitful.FreeUnits)
     return string(u)
 end
+
+AlgebraOfGraphics.getunit(v::AbstractVector{<:Unitful.Quantity}) = Unitful.unit(eltype(v))
 
 AlgebraOfGraphics.is_unit(::Unitful.FreeUnits) = true
 
