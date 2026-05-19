@@ -505,6 +505,9 @@ function append_unit_string(s::String, u::String)
 end
 
 getunit(c::ContinuousScale) = nothing
+# Allow callers that hold a unit-bearing array (rather than a scale) to query its unit
+# the same way. Overridden in the Unitful / DynamicQuantities extensions.
+getunit(::AbstractVector) = nothing
 
 function unit_string end
 
@@ -573,22 +576,22 @@ end
 
 # Analyses like Loess, GLM and StatsBase.Histogram need numeric inputs, so temporal
 # types must be converted to floats before fitting. The results are then converted back
-# to temporal types via `from_numerical`, because the continuous scale system determines
+# to temporal types via `from_unitless_numerical`, because the continuous scale system determines
 # axis tick formatting (e.g., date labels) from the element type of the output arrays.
 # If we left the output as plain floats, that type information would be lost.
-to_numerical(x::AbstractVector{<:TimeType}) = map(datetime2float, x)
-to_numerical(x::AbstractVector) = x
-to_numerical(x::TimeType) = datetime2float(x)
-to_numerical(x) = x
+to_unitless_numerical(x::AbstractVector{<:TimeType}) = map(datetime2float, x)
+to_unitless_numerical(x::AbstractVector) = x
+to_unitless_numerical(x::TimeType) = datetime2float(x)
+to_unitless_numerical(x) = x
 
-function from_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<:Union{DateTime, Date}})
+function from_unitless_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<:Union{DateTime, Date}})
     epoch = DateTime(2020, 01, 01)
     return [epoch + Millisecond(round(Int64, v)) for v in x̂]
 end
-function from_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<:Time})
+function from_unitless_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<:Time})
     return [Time(0) + Millisecond(round(Int64, v)) for v in x̂]
 end
-from_numerical(x̂, ::AbstractVector) = x̂
+from_unitless_numerical(x̂, ::AbstractVector) = x̂
 
 # Rescaling methods that do not depend on context
 elementwise_rescale(value::Union{TimeType, Period}) = datetime2float(value)
@@ -719,8 +722,13 @@ function float_to_datetime(vmin, vmax)
 end
 
 function float_to_time(vmin, vmax)
-    vmin_t = Time(0) + Millisecond(round(Int64, vmin))
-    vmax_t = Time(0) + Millisecond(round(Int64, vmax))
+    # `Time` arithmetic wraps modulo 24h, so a slightly-negative `vmin` (from axis
+    # padding) would silently flip the range. There can be no Time before midnight or
+    # after the end of the day; clamp so Makie's native Time tick finder is asked a
+    # sensible question.
+    day_ms = 24 * 3_600_000 - 1
+    vmin_t = Time(0) + Millisecond(clamp(round(Int64, vmin), 0, day_ms))
+    vmax_t = Time(0) + Millisecond(clamp(round(Int64, vmax), 0, day_ms))
     return vmin_t, vmax_t
 end
 

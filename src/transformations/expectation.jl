@@ -8,10 +8,23 @@ end
 struct ExpectationAnalysis end
 
 function (e::ExpectationAnalysis)(input::ProcessedLayer)
-    input = map(input) do p, n
+    # Strip units from the value column before reducing; the Mean aggregator's
+    # `(0, 0.0)` init isn't dimensionally compatible with unit-bearing values.
+    # Units are reapplied to the per-group means afterwards.
+    y_originals = last(input.positional)
+    input_filtered = map(input) do p, n
         return _drop_missing_nan_rows(p, n)
     end
-    return groupreduce(Mean, input)
+    positional_stripped = copy(input_filtered.positional)
+    positional_stripped[end] = map(to_unitless_numerical, positional_stripped[end])
+    input_stripped = ProcessedLayer(input_filtered; positional = positional_stripped)
+
+    reduced = groupreduce(Mean, input_stripped)
+    positional = copy(reduced.positional)
+    positional[end] = map(positional[end], y_originals) do m, y_orig
+        from_unitless_numerical(m, y_orig)
+    end
+    return ProcessedLayer(reduced; positional)
 end
 
 """
