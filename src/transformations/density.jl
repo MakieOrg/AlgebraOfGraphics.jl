@@ -32,12 +32,8 @@ end
 function (d::DensityAnalysis)(input::ProcessedLayer)
     datalimits = if d.datalimits === automatic
         defaultdatalimits(map(v -> map(to_unitless_numerical, v), input.positional))
-    elseif d.datalimits isa Tuple
-        map(d.datalimits) do (lo, hi)
-            (to_unitless_numerical(lo), to_unitless_numerical(hi))
-        end
     else
-        d.datalimits
+        _strip_datalimits_units(d.datalimits)
     end
     options = valid_options(; datalimits, d.npoints, d.kernel, d.bandwidth)
     output = map(input) do p, n

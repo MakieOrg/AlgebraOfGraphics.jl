@@ -1045,3 +1045,33 @@ end
         @test issorted(ŷ)
     end
 end
+
+@testset "datalimits broadcast vs per-dim" begin
+    # A single `(lo, hi)` is broadcast to every dim by `applydatalimits`. The unit-stripping pass
+    # must preserve that shape rather than destructuring each scalar as `(lo, hi)`.
+    @testset "density 1D" begin
+        df = (; x = collect(0.0:0.5:10.0))
+        layer = data(df) * mapping(:x) * AlgebraOfGraphics.density(npoints = 10, datalimits = (0, 8))
+        pls = AlgebraOfGraphics.ProcessedLayers(layer)
+        rgx = only(pls.layers[2].positional[1])
+        @test first(rgx) == 0
+        @test last(rgx) == 8
+    end
+
+    @testset "density 1D with Unitful" begin
+        df = (; x = collect(0.0:0.5:10.0) .* U.u"m")
+        layer = data(df) * mapping(:x) * AlgebraOfGraphics.density(npoints = 10, datalimits = (0 * U.u"m", 8 * U.u"m"))
+        pls = AlgebraOfGraphics.ProcessedLayers(layer)
+        rgx = only(pls.layers[2].positional[1])
+        @test first(rgx) == 0 * U.u"m"
+        @test last(rgx) == 8 * U.u"m"
+    end
+
+    @testset "histogram 1D" begin
+        df = (; x = collect(1.0:6.0))
+        layer = data(df) * mapping(:x) * histogram(bins = 4, datalimits = (0, 8))
+        pl = AlgebraOfGraphics.ProcessedLayer(layer)
+        @test only(pl.positional[1]) == [1.0, 3.0, 5.0, 7.0, 9.0]
+        @test collect(only(pl.positional[2])) == [1.0, 2.0, 2.0, 1.0, 0.0]
+    end
+end

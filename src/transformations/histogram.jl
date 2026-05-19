@@ -68,12 +68,8 @@ histogram_default_attributes(::Type{<:Plot}) = NamedArguments()
 histogram_default_attributes(::Type{BarPlot}) = NamedArguments((; :gap => 0, :dodge_gap => 0))
 
 function (h::HistogramAnalysis{_plottype})(input::ProcessedLayer) where {_plottype}
-    datalimits = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
-    if datalimits isa Tuple
-        datalimits = map(datalimits) do (lo, hi)
-            (to_unitless_numerical(lo), to_unitless_numerical(hi))
-        end
-    end
+    datalimits_raw = h.datalimits === automatic ? defaultdatalimits(input.positional) : h.datalimits
+    datalimits = _strip_datalimits_units(datalimits_raw)
     options = valid_options(; datalimits, h.bins, h.closed, h.normalization)
 
     N = length(input.positional)

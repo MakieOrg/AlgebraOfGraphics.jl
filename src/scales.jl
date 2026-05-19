@@ -100,7 +100,7 @@ apply_palette(p::Union{AbstractArray, AbstractColorList}, uv) = collect(Iterator
 apply_palette(::Automatic, uv) = eachindex(uv)
 apply_palette(f::Function, uv) = f(uv)
 apply_palette(fc::FromContinuous, uv) = cgrad(Makie.to_colormap(fc.continuous), length(uv); categorical = true)
-function apply_palette(fc::FromContinuous, uv::AbstractVector{Bin})
+function apply_palette(fc::FromContinuous, uv::AbstractVector{<:Bin})
     @assert issorted(uv, by = x -> x.range[1])
     cmap = Makie.to_colormap(fc.continuous)
     if fc.relative
@@ -205,7 +205,7 @@ struct Clipped{C}
     low::Union{Nothing, RGBAf}
 end
 
-function apply_palette(c::Clipped, uv::AbstractVector{Bin})
+function apply_palette(c::Clipped, uv::AbstractVector{<:Bin})
     @assert issorted(uv, by = x -> x.range[1])
 
     lowclip = c.low !== nothing && !isfinite(uv[1].range[1])
@@ -592,6 +592,17 @@ function from_unitless_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<
     return [Time(0) + Millisecond(round(Int64, v)) for v in x̂]
 end
 from_unitless_numerical(x̂, ::AbstractVector) = x̂
+
+# `datalimits` accepts a single `(lo, hi)` (broadcast to every dim) or a tuple-of-pairs (one per dim);
+# strip units from the scalar limit values without disturbing that shape.
+_strip_datalimits_units(dl) = dl
+function _strip_datalimits_units(dl::Tuple)
+    return if length(dl) == 2 && !(first(dl) isa Tuple)
+        (to_unitless_numerical(first(dl)), to_unitless_numerical(last(dl)))
+    else
+        map(_strip_datalimits_units, dl)
+    end
+end
 
 # Rescaling methods that do not depend on context
 elementwise_rescale(value::Union{TimeType, Period}) = datetime2float(value)
