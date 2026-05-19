@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.12.9 - 2026-05-19
+
 - Analyses (`linear`, `smooth`, `density`, `histogram`, `expectation`, `frequency`, `contours`, `filled_contours`) now accept `Unitful.Quantity` and `DynamicQuantities.Quantity` data [#758](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/758).
 - Analyses (`density`, `histogram`, `linear`, `smooth`, `frequency`, `expectation`) now drop rows where any numeric input is `missing` or `NaN`, instead of erroring or producing garbage. `Inf`/`-Inf` throw errors. [#757](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/757).
 
