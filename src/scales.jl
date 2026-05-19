@@ -104,12 +104,14 @@ function apply_palette(fc::FromContinuous, uv::AbstractVector{<:Bin})
     @assert issorted(uv, by = x -> x.range[1])
     cmap = Makie.to_colormap(fc.continuous)
     if fc.relative
-        endpoint_values = (uv[1].range[2], uv[end].range[1])
-        width = endpoint_values[2] - endpoint_values[1]
+        # Bins may carry units (since `Bin` became parametric); strip before mixing into
+        # `interpolated_getindex` which only accepts plain floats.
+        lo = to_unitless_numerical(uv[1].range[2])
+        hi = to_unitless_numerical(uv[end].range[1])
+        width = hi - lo
         fractions = map(uv[2:(end - 1)]) do bin
-            midpoint = (bin.range[1] + bin.range[2]) / 2
-            fraction = (midpoint - endpoint_values[1]) / width
-            return fraction
+            midpoint = (to_unitless_numerical(bin.range[1]) + to_unitless_numerical(bin.range[2])) / 2
+            return (midpoint - lo) / width
         end
 
         colors = Makie.interpolated_getindex.(Ref(cmap), [0.0; fractions; 1.0])
