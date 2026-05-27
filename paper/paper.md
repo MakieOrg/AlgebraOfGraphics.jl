@@ -1,5 +1,5 @@
 ---
-title: 'AlgebraOfGraphics.jl: An algebraic grammar of graphics for Julia, powered by Makie.jl'
+title: 'AlgebraOfGraphics.jl: A Makie-powered algebraic grammar of graphics for Julia'
 tags:
   - Julia
   - visualization
