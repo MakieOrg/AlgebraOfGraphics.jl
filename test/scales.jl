@@ -305,6 +305,34 @@ if VERSION >= v"1.9"
         @test_throws_message "incompatible dimensions for AesY and AesDeltaY scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:id, :value, :err) * visual(Errorbars))
     end
 
+    @testset "ABLines units" begin
+        function ablines_pos(spec)
+            fg = draw(spec)
+            ae = fg.grid[1]
+            e = only(filter(en -> en.plottype == ABLines, collect(ae.entries)))
+            return (only(e.positional[1]), only(e.positional[2]))
+        end
+
+        for (s, minute, meter, km) in [
+                (U.u"s", U.u"minute", U.u"m", U.u"km"),
+                (D.us"s", D.us"minute", D.us"m", D.us"km"),
+            ]
+            s_per_m = s / meter
+            df = (; x = (1:5) .* meter, y = (2.0:2:10) .* s)
+            base = data(df) * mapping(:x, :y) * visual(Scatter)
+
+            # intercept aligns to AesY's unit (1 minute -> 60 s), slope to unit(AesY)/unit(AesX)
+            @test ablines_pos(base + mapping([1.0] .* minute, [0.0] .* s_per_m) * visual(ABLines)) == (60.0, 0.0)
+            @test ablines_pos(base + mapping([0.0] .* s, [2.0] .* s_per_m) * visual(ABLines)) == (0.0, 2.0)
+            # slope conversion across the y unit (1 minute/m -> 60 s/m) and x unit (1 s/km -> 0.001 s/m)
+            @test last(ablines_pos(base + mapping([0.0] .* s, [1.0] .* (minute / meter)) * visual(ABLines))) == 60.0
+            @test last(ablines_pos(base + mapping([0.0] .* s, [1.0] .* (s / km)) * visual(ABLines))) ≈ 0.001
+
+            @test_throws_message "incompatible dimensions for AesY and AesABIntercept" draw(base + mapping([1.0] .* meter, [0.0] .* s_per_m) * visual(ABLines))
+            @test_throws_message "ABLines slope whose unit is not dimensionally compatible" draw(base + mapping([0.0] .* s, [1.0] .* s) * visual(ABLines))
+        end
+    end
+
     @testset "Incompatible extrema in continuous scales" begin
         @test_throws_message "Merging the extrema of two subscales of the continuous scale Y failed" (mapping([1]) + mapping([1 * U.u"kg"])) * visual(Scatter) |> draw
     end

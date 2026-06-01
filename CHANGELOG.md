@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- `ABLines` now aligns `Unitful` and `DynamicQuantities` units, with the intercept matching the y unit and the slope the y/x unit, and errors on incompatible units [#761](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/761).
+
 ## v0.12.9 - 2026-05-19
 
 - Analyses (`linear`, `smooth`, `density`, `histogram`, `expectation`, `frequency`, `contours`, `filled_contours`) now accept `Unitful.Quantity` and `DynamicQuantities.Quantity` data [#758](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/758).

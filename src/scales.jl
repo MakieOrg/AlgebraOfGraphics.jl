@@ -516,6 +516,14 @@ function unit_string end
 dimensionally_compatible(::Nothing, ::Nothing) = true
 dimensionally_compatible(_, _) = false
 
+# unit of a ratio aesthetic (e.g. an ABLines slope is unit(AesY) / unit(AesX)).
+# `/` and `^-1` work for both Unitful's `FreeUnits` and DynamicQuantities' `Quantity`,
+# so no extension methods are needed.
+divide_units(::Nothing, ::Nothing) = nothing
+divide_units(u1, ::Nothing) = u1
+divide_units(::Nothing, u2) = u2^-1
+divide_units(u1, u2) = u1 / u2
+
 struct DimensionMismatch{X1, X2} <: Exception
     x1::X1
     x2::X2
@@ -528,6 +536,18 @@ function align_scale_unit(lead::ContinuousScale, follow::ContinuousScale)
         return Accessors.@set follow.props.unit = ulead
     else
         throw(DimensionMismatch(ulead, ufollow))
+    end
+end
+
+# align `follow` to the unit of `numerator / denominator`, used for ratio aesthetics
+# like an ABLines slope whose unit must equal unit(AesY) / unit(AesX).
+function align_ratio_unit(numerator::ContinuousScale, denominator::ContinuousScale, follow::ContinuousScale)
+    target = divide_units(getunit(numerator), getunit(denominator))
+    ufollow = getunit(follow)
+    if dimensionally_compatible(target, ufollow)
+        return Accessors.@set follow.props.unit = target
+    else
+        throw(DimensionMismatch(target, ufollow))
     end
 end
 
