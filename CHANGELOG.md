@@ -5,6 +5,7 @@
 ## v0.12.11 - 2026-06-02
 
 - Fixed `ABLines` unit alignment rejecting a dimensionless slope when `AesX` and `AesY` carry the same unit [#763](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/763).
+- Multiline footnotes are now justified according to `footnotealign` [#764](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/764).
 
 ## v0.12.10 - 2026-06-02
 

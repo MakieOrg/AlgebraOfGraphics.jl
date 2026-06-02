@@ -254,7 +254,7 @@ function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol, Any}(), fi
         if fs.footnotes !== nothing
             fgl = GridLayout(fg.figure[end + 1, :]; halign = :left, _filter_nothings(; halign = fs.footnotealign)...)
             for (i, note) in enumerate(fs.footnotes)
-                Label(fgl[i, 1], note; tellwidth = false, halign = :left, fontsize = base_fontsize / 1.15, _filter_nothings(; halign = fs.footnotealign, font = fs.footnotefont, color = fs.footnotecolor, fontsize = fs.footnotesize, lineheight = fs.footnotelineheight)...)
+                Label(fgl[i, 1], note; tellwidth = false, halign = :left, justification = :left, fontsize = base_fontsize / 1.15, _filter_nothings(; halign = fs.footnotealign, justification = fs.footnotealign, font = fs.footnotefont, color = fs.footnotecolor, fontsize = fs.footnotesize, lineheight = fs.footnotelineheight)...)
             end
             fgl.addedrowgaps .= Ref(Fixed(0))
         end
