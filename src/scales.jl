@@ -85,7 +85,7 @@ function Cycler(p)
 end
 
 function (c::Cycler)(u)
-    i = findfirst(isequal(u), c.keys)
+    i = findfirst(k -> unwrap_isequal(k, u), c.keys)
     return if isnothing(i)
         l = length(c.defaults)
         l == 0 && throw(ArgumentError("Key $(repr(u)) not found and no default values are present"))
@@ -378,16 +378,17 @@ function datavalues(c::CategoricalScale)
         else
             catvalues = map(category_value, c.props.categories)
         end
-        u = try
-            union(catvalues, c.data)
-        catch e
-            throw(ArgumentError("Custom categories were given but unioning them with the categories determined from the data failed."))
-        end
-        if u != catvalues
-            extraneous = setdiff(c.data, catvalues)
+        extraneous = filter(d -> !any(cv -> unwrap_isequal(cv, d), catvalues), c.data)
+        if !isempty(extraneous)
             throw(ArgumentError("Custom categories were given but there were more categories in the data, which is not allowed. The additional categories were $extraneous"))
         end
-        u
+        # Keep the actual (possibly wrapped) data value where a category matches it, so that the
+        # per-row lookup via `indexin` in `numerical_rescale` still matches; fall back to the
+        # given value for categories that don't appear in the data (reserved legend slots).
+        map(catvalues) do cv
+            i = findfirst(d -> unwrap_isequal(cv, d), c.data)
+            i === nothing ? cv : c.data[i]
+        end
     end
 end
 plotvalues(c::CategoricalScale) = c.plot
