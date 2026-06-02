@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Palette pairs and `categories` passed via `scales` now match `presorted`/`nonnumeric`-wrapped data without needing to re-wrap the keys [#766](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/766).
+
 ## v0.12.11 - 2026-06-02
 
 - Fixed `ABLines` unit alignment rejecting a dimensionless slope when `AesX` and `AesY` carry the same unit [#763](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/763).

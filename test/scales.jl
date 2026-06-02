@@ -33,6 +33,33 @@
     @test scale.plot == 1:2
 end
 
+@testset "wrapped categorical lookup" begin
+    df = (; Pet = ["Fish", "Dog", "Cat", "Bird"], Ranking = 1:4)
+    l = data(df) * mapping(:Pet => presorted, :Ranking, color = :Pet => presorted)
+    pl = ProcessedLayer(l)
+    aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
+
+    palette = ["Cat" => :green, "Dog" => :red, "Fish" => :blue, "Bird" => :yellow]
+    sp = AlgebraOfGraphics.compute_scale_properties([pl], AlgebraOfGraphics.scales(Color = (; palette)))
+    scale = map(fitscale, categoricalscales(pl, sp, aesmapping))[:color]
+    @test datavalues(scale) == Presorted.(["Fish", "Dog", "Cat", "Bird"])
+    @test scale.plot == [:blue, :red, :green, :yellow]
+
+    sp = AlgebraOfGraphics.compute_scale_properties([pl], AlgebraOfGraphics.scales(Color = (; categories = ["Bird", "Cat", "Dog", "Fish"])))
+    scale = map(fitscale, categoricalscales(pl, sp, aesmapping))[:color]
+    dv = datavalues(scale)
+    @test dv == Presorted.(["Bird", "Cat", "Dog", "Fish"])
+    @test eltype(dv) <: Presorted
+    @test indexin(Presorted.(["Fish", "Dog", "Cat", "Bird"]), dv) == [4, 3, 2, 1]
+
+    sp = AlgebraOfGraphics.compute_scale_properties([pl], AlgebraOfGraphics.scales(Color = (; categories = ["Cat", "Dog"])))
+    @test_throws_message "there were more categories in the data" map(fitscale, categoricalscales(pl, sp, aesmapping))
+
+    spec = l * visual(BarPlot)
+    @test draw(spec, AlgebraOfGraphics.scales(Color = (; palette))) isa AlgebraOfGraphics.FigureGrid
+    @test draw(spec, AlgebraOfGraphics.scales(Color = (; categories = ["Bird", "Cat", "Dog", "Fish"]))) isa AlgebraOfGraphics.FigureGrid
+end
+
 @testset "extrema" begin
     v = [1, missing, 2, NaN]
     @test extrema_finite(v) == (1, 2)
