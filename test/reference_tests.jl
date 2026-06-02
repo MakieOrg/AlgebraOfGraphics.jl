@@ -1043,6 +1043,20 @@ reftest("title subtitle footnotes settings") do
 
 end
 
+reftest("footnotes multiline align right") do
+    spec = data((; x = 1:10, y = 11:20)) * mapping(:x, :y) * visual(Scatter)
+    draw(
+        spec;
+        figure = (;
+            footnotes = [
+                "First footnote\nwith a wrapped second line",
+                "Short note",
+            ],
+            footnotealign = :right,
+        ),
+    )
+end
+
 reftest("title subtitle footnotes fontsize inherit") do
     spec = pregrouped(
         fill(1:5, 6),
