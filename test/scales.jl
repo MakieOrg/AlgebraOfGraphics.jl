@@ -291,6 +291,11 @@ if VERSION >= v"1.9"
         @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", nothing)
         @test !AlgebraOfGraphics.dimensionally_compatible(nothing, D.u"kg")
 
+        @test AlgebraOfGraphics.dimensionally_compatible(U.u"ng/mL" / U.u"ng/mL", nothing)
+        @test AlgebraOfGraphics.dimensionally_compatible(nothing, U.u"ng/mL" / U.u"ng/mL")
+        @test AlgebraOfGraphics.dimensionally_compatible(D.us"ng/mL" / D.us"ng/mL", nothing)
+        @test AlgebraOfGraphics.dimensionally_compatible(nothing, D.us"ng/mL" / D.us"ng/mL")
+
         @test !AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"m")
         @test AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"g")
 
@@ -330,6 +335,13 @@ if VERSION >= v"1.9"
 
             @test_throws_message "incompatible dimensions for AesY and AesABIntercept" draw(base + mapping([1.0] .* meter, [0.0] .* s_per_m) * visual(ABLines))
             @test_throws_message "ABLines slope whose unit is not dimensionally compatible" draw(base + mapping([0.0] .* s, [1.0] .* s) * visual(ABLines))
+
+            # AesX and AesY share a unit, so the slope unit(AesY)/unit(AesX) is dimensionless
+            # and collapses to a plain number with no unit; that must still align as the identity line.
+            base_same = data((; x = (1.0:5) .* s, y = (2.0:2:10) .* s)) * mapping(:x, :y) * visual(Scatter)
+            @test ablines_pos(base_same + mapping([0.0] .* s, [1.0]) * visual(ABLines)) == (0.0, 1.0)
+            @test ablines_pos(base_same + mapping([0.0] .* s, [2.0] .* (s / s)) * visual(ABLines)) == (0.0, 2.0)
+            @test_throws_message "ABLines slope whose unit is not dimensionally compatible" draw(base_same + mapping([0.0] .* s, [1.0] .* s) * visual(ABLines))
         end
     end
 

@@ -83,4 +83,9 @@ function AlgebraOfGraphics.dimensionally_compatible(q1::DynamicQuantities.Quanti
     end
 end
 
+# a unit-free aesthetic (`nothing`) is a pure number, so it matches a dimensionless quantity
+# (e.g. an ABLines slope when AesX and AesY share the same unit).
+AlgebraOfGraphics.dimensionally_compatible(q::DQ.Quantity, ::Nothing) = iszero(DQ.dimension(DQ.uexpand(q)))
+AlgebraOfGraphics.dimensionally_compatible(::Nothing, q::DQ.Quantity) = iszero(DQ.dimension(DQ.uexpand(q)))
+
 end
