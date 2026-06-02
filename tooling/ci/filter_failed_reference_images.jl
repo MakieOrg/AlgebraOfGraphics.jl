@@ -24,7 +24,7 @@ function filter_failed_reference_images(dir::String)
         end
     end
 
-    println("Filtering complete. Kept $(length(bases)) failed reference test(s).")
+    return println("Filtering complete. Kept $(length(bases)) failed reference test(s).")
 end
 
 filter_failed_reference_images(joinpath(@__DIR__, "..", "..", "test", "reference_tests"))
