@@ -133,7 +133,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
     # we force AesDeltaX to take the unit of AesX.
     for i in eachindex(continuousscales_grid)
         scales = continuousscales_grid[i]
-        for (aes_lead, aes_follow) in [(AesX, AesDeltaX), (AesY, AesDeltaY), (AesZ, AesDeltaZ)]
+        for (aes_lead, aes_follow) in [(AesX, AesDeltaX), (AesY, AesDeltaY), (AesZ, AesDeltaZ), (AesY, AesABIntercept)]
             lead = extract_single(aes_lead, scales)
             follow = extract_single(aes_follow, scales)
             if lead !== nothing && follow !== nothing
@@ -155,6 +155,31 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
                 key = only(keys(dict))
                 dict[key] = follow_aligned
             end
+        end
+
+        # an ABLines slope is a ratio of the y and x aesthetics, so its unit must equal
+        # unit(AesY) / unit(AesX). align it to that derived unit when all three scales exist.
+        yscale = extract_single(AesY, scales)
+        xscale = extract_single(AesX, scales)
+        slopescale = extract_single(AesABSlope, scales)
+        if yscale !== nothing && xscale !== nothing && slopescale !== nothing
+            local err
+            slope_aligned = try
+                align_ratio_unit(yscale, xscale, slopescale)
+            catch e
+                if e isa DimensionMismatch
+                    err = e
+                    nothing
+                else
+                    rethrow(e)
+                end
+            end
+            if slope_aligned === nothing
+                error("While aligning the units of continuous scales, found an ABLines slope whose unit is not dimensionally compatible with unit(AesY) / unit(AesX). The expected slope unit was \"$(err.x1)\" but the slope had unit \"$(err.x2)\".")
+            end
+            dict = scales[AesABSlope]
+            key = only(keys(dict))
+            dict[key] = slope_aligned
         end
     end
 

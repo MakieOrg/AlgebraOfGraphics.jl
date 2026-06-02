@@ -713,6 +713,12 @@ reftest("ablines cat color linestyle") do
         visual(ABLines) |> draw
 end
 
+reftest("ablines units") do
+    data((; x = (1:5) .* U.u"hr", y = [2.8, 4.6, 6.4, 8.2, 10.0] .* U.u"kg")) *
+        mapping(:x, :y) * visual(Scatter, markersize = 15) +
+        mapping([1000.0] .* U.u"g", [0.5] .* U.u"g/s") * visual(ABLines, color = :red) |> draw
+end
+
 reftest("qqplot") do
     data((; x = sin.(1:100), y = sin.((1:100) .+ 0.2))) * mapping(:x, :y) * visual(QQPlot, qqline = :identity) |> draw
 end
