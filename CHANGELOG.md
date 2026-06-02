@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.12.11 - 2026-06-02
+
+- Fixed `ABLines` unit alignment rejecting a dimensionless slope when `AesX` and `AesY` carry the same unit [#763](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/763).
+
 ## v0.12.10 - 2026-06-02
 
 - `ABLines` now aligns `Unitful` and `DynamicQuantities` units, with the intercept matching the y unit and the slope the y/x unit, and errors on incompatible units [#761](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/761).

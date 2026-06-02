@@ -40,4 +40,9 @@ function AlgebraOfGraphics.dimensionally_compatible(u1::Unitful.FreeUnits, u2::U
     return Unitful.dimension(u1) == Unitful.dimension(u2)
 end
 
+# a unit-free aesthetic (`nothing`) is a pure number, so it matches a dimensionless unit
+# (e.g. an ABLines slope when AesX and AesY share the same unit collapses to a plain number).
+AlgebraOfGraphics.dimensionally_compatible(u::Unitful.FreeUnits, ::Nothing) = Unitful.dimension(u) == Unitful.NoDims
+AlgebraOfGraphics.dimensionally_compatible(::Nothing, u::Unitful.FreeUnits) = Unitful.dimension(u) == Unitful.NoDims
+
 end
