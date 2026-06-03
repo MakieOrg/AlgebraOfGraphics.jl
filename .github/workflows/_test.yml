@@ -32,7 +32,7 @@ jobs:
         run: julia tooling/ci/filter_failed_reference_images.jl
       - name: Upload failed reference images
         if: failure() && steps.runtests.outcome == 'failure'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: failed-reference-images-${{ matrix.version }}
           path: test/reference_tests/*.png
