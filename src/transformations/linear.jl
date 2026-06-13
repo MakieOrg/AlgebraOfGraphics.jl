@@ -15,21 +15,27 @@ end
 # TODO: add multidimensional version
 function (l::LinearAnalysis)(input::ProcessedLayer)
     output = map(input) do p, n
+        p, n = _drop_missing_nan_rows(p, n)
         x, y = p
-        xn = to_numerical(x)
-        weights = StatsBase.fweights(get(n, :weights, similar(xn, 0)))
+        xn = to_unitless_numerical(x)
+        yn = to_unitless_numerical(y)
+        weights_raw = get(n, :weights, similar(xn, 0))
+        weights = StatsBase.fweights(to_unitless_numerical(weights_raw))
         default_interval = length(weights) > 0 ? nothing : :confidence
         interval = l.interval === automatic ? default_interval : l.interval
         # FIXME: handle collinear case gracefully
-        lin_model = GLM.lm(add_intercept_column(xn), y; weights, l.dropcollinear)
+        lin_model = GLM.lm(add_intercept_column(xn), yn; weights, l.dropcollinear)
         x̂n = collect(range(extrema(xn)..., length = l.npoints))
         pred = GLM.predict(lin_model, add_intercept_column(x̂n); interval, l.level)
-        x̂ = from_numerical(x̂n, x)
+        x̂ = from_unitless_numerical(x̂n, x)
         return if !isnothing(interval)
-            ŷ, lower, upper = pred
+            ŷn, lowern, uppern = pred
+            ŷ = from_unitless_numerical(ŷn, y)
+            lower = from_unitless_numerical(lowern, y)
+            upper = from_unitless_numerical(uppern, y)
             (x̂, ŷ, x̂, lower, upper), (;)
         else
-            ŷ = pred
+            ŷ = from_unitless_numerical(pred, y)
             (x̂, ŷ, empty(x̂), empty(ŷ), empty(ŷ)), (;)
         end
     end
@@ -65,6 +71,8 @@ it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.
 
 Weighted data is supported via the keyword `weights` (passed to `mapping`).
+
+Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """

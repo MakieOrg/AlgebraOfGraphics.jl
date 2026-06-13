@@ -2,9 +2,31 @@
 
 ## Unreleased
 
+- Created new file CITATION.cff to make it easier to create citations of package.
+
+## v0.12.12 - 2026-06-04
+
+- Palette pairs and `categories` passed via `scales` now match `presorted`/`nonnumeric`-wrapped data without needing to re-wrap the keys [#766](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/766).
+
+## v0.12.11 - 2026-06-02
+
+- Fixed `ABLines` unit alignment rejecting a dimensionless slope when `AesX` and `AesY` carry the same unit [#763](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/763).
+- Multiline footnotes are now justified according to `footnotealign` [#764](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/764).
+
+## v0.12.10 - 2026-06-02
+
+- `ABLines` now aligns `Unitful` and `DynamicQuantities` units, with the intercept matching the y unit and the slope the y/x unit, and errors on incompatible units [#761](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/761).
+
+## v0.12.9 - 2026-05-19
+
+- Analyses (`linear`, `smooth`, `density`, `histogram`, `expectation`, `frequency`, `contours`, `filled_contours`) now accept `Unitful.Quantity` and `DynamicQuantities.Quantity` data [#758](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/758).
+- Analyses (`density`, `histogram`, `linear`, `smooth`, `frequency`, `expectation`) now drop rows where any numeric input is `missing` or `NaN`, instead of erroring or producing garbage. `Inf`/`-Inf` throw errors. [#757](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/757).
+
+## v0.12.8 - 2026-05-04
+
 - Plot types with a native `:dodge` attribute (`BarPlot`, `BoxPlot`, `Violin`, `CrossBar`) now also accept the generic `dodge_x`/`dodge_y` mapping, which is routed to `:dodge` when the aesthetic matches the plot's orientation. This makes it possible to share a single `dodge_x`/`dodge_y` mapping across companion layers (e.g., `Scatter` + `BarPlot`) without switching attribute names per layer. [#747](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/747).
 - Added aesthetics for `Stem` plots, including `color`, `marker`, and `markersize`. Legend displays like in a `Scatter` plot legend like style. 
-- Created new file CITATION.cff to make it easier to create citations of package.
+- Added support for `Stem` plots [#751](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/751).
 
 ## v0.12.7 - 2026-04-13
 

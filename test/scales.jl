@@ -33,6 +33,33 @@
     @test scale.plot == 1:2
 end
 
+@testset "wrapped categorical lookup" begin
+    df = (; Pet = ["Fish", "Dog", "Cat", "Bird"], Ranking = 1:4)
+    l = data(df) * mapping(:Pet => presorted, :Ranking, color = :Pet => presorted)
+    pl = ProcessedLayer(l)
+    aesmapping = AlgebraOfGraphics.aesthetic_mapping(pl)
+
+    palette = ["Cat" => :green, "Dog" => :red, "Fish" => :blue, "Bird" => :yellow]
+    sp = AlgebraOfGraphics.compute_scale_properties([pl], AlgebraOfGraphics.scales(Color = (; palette)))
+    scale = map(fitscale, categoricalscales(pl, sp, aesmapping))[:color]
+    @test datavalues(scale) == Presorted.(["Fish", "Dog", "Cat", "Bird"])
+    @test scale.plot == [:blue, :red, :green, :yellow]
+
+    sp = AlgebraOfGraphics.compute_scale_properties([pl], AlgebraOfGraphics.scales(Color = (; categories = ["Bird", "Cat", "Dog", "Fish"])))
+    scale = map(fitscale, categoricalscales(pl, sp, aesmapping))[:color]
+    dv = datavalues(scale)
+    @test dv == Presorted.(["Bird", "Cat", "Dog", "Fish"])
+    @test eltype(dv) <: Presorted
+    @test indexin(Presorted.(["Fish", "Dog", "Cat", "Bird"]), dv) == [4, 3, 2, 1]
+
+    sp = AlgebraOfGraphics.compute_scale_properties([pl], AlgebraOfGraphics.scales(Color = (; categories = ["Cat", "Dog"])))
+    @test_throws_message "there were more categories in the data" map(fitscale, categoricalscales(pl, sp, aesmapping))
+
+    spec = l * visual(BarPlot)
+    @test draw(spec, AlgebraOfGraphics.scales(Color = (; palette))) isa AlgebraOfGraphics.FigureGrid
+    @test draw(spec, AlgebraOfGraphics.scales(Color = (; categories = ["Bird", "Cat", "Dog", "Fish"]))) isa AlgebraOfGraphics.FigureGrid
+end
+
 @testset "extrema" begin
     v = [1, missing, 2, NaN]
     @test extrema_finite(v) == (1, 2)
@@ -291,6 +318,11 @@ if VERSION >= v"1.9"
         @test !AlgebraOfGraphics.dimensionally_compatible(D.u"kg", nothing)
         @test !AlgebraOfGraphics.dimensionally_compatible(nothing, D.u"kg")
 
+        @test AlgebraOfGraphics.dimensionally_compatible(U.u"ng/mL" / U.u"ng/mL", nothing)
+        @test AlgebraOfGraphics.dimensionally_compatible(nothing, U.u"ng/mL" / U.u"ng/mL")
+        @test AlgebraOfGraphics.dimensionally_compatible(D.us"ng/mL" / D.us"ng/mL", nothing)
+        @test AlgebraOfGraphics.dimensionally_compatible(nothing, D.us"ng/mL" / D.us"ng/mL")
+
         @test !AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"m")
         @test AlgebraOfGraphics.dimensionally_compatible(U.u"kg", U.u"g")
 
@@ -303,6 +335,41 @@ if VERSION >= v"1.9"
 
         @test_throws_message "incompatible dimensions for AesX and AesDeltaX scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:value, :id, :err) * visual(Errorbars, direction = :x))
         @test_throws_message "incompatible dimensions for AesY and AesDeltaY scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:id, :value, :err) * visual(Errorbars))
+    end
+
+    @testset "ABLines units" begin
+        function ablines_pos(spec)
+            fg = draw(spec)
+            ae = fg.grid[1]
+            e = only(filter(en -> en.plottype == ABLines, collect(ae.entries)))
+            return (only(e.positional[1]), only(e.positional[2]))
+        end
+
+        for (s, minute, meter, km) in [
+                (U.u"s", U.u"minute", U.u"m", U.u"km"),
+                (D.us"s", D.us"minute", D.us"m", D.us"km"),
+            ]
+            s_per_m = s / meter
+            df = (; x = (1:5) .* meter, y = (2.0:2:10) .* s)
+            base = data(df) * mapping(:x, :y) * visual(Scatter)
+
+            # intercept aligns to AesY's unit (1 minute -> 60 s), slope to unit(AesY)/unit(AesX)
+            @test ablines_pos(base + mapping([1.0] .* minute, [0.0] .* s_per_m) * visual(ABLines)) == (60.0, 0.0)
+            @test ablines_pos(base + mapping([0.0] .* s, [2.0] .* s_per_m) * visual(ABLines)) == (0.0, 2.0)
+            # slope conversion across the y unit (1 minute/m -> 60 s/m) and x unit (1 s/km -> 0.001 s/m)
+            @test last(ablines_pos(base + mapping([0.0] .* s, [1.0] .* (minute / meter)) * visual(ABLines))) == 60.0
+            @test last(ablines_pos(base + mapping([0.0] .* s, [1.0] .* (s / km)) * visual(ABLines))) ≈ 0.001
+
+            @test_throws_message "incompatible dimensions for AesY and AesABIntercept" draw(base + mapping([1.0] .* meter, [0.0] .* s_per_m) * visual(ABLines))
+            @test_throws_message "ABLines slope whose unit is not dimensionally compatible" draw(base + mapping([0.0] .* s, [1.0] .* s) * visual(ABLines))
+
+            # AesX and AesY share a unit, so the slope unit(AesY)/unit(AesX) is dimensionless
+            # and collapses to a plain number with no unit; that must still align as the identity line.
+            base_same = data((; x = (1.0:5) .* s, y = (2.0:2:10) .* s)) * mapping(:x, :y) * visual(Scatter)
+            @test ablines_pos(base_same + mapping([0.0] .* s, [1.0]) * visual(ABLines)) == (0.0, 1.0)
+            @test ablines_pos(base_same + mapping([0.0] .* s, [2.0] .* (s / s)) * visual(ABLines)) == (0.0, 2.0)
+            @test_throws_message "ABLines slope whose unit is not dimensionally compatible" draw(base_same + mapping([0.0] .* s, [1.0] .* s) * visual(ABLines))
+        end
     end
 
     @testset "Incompatible extrema in continuous scales" begin

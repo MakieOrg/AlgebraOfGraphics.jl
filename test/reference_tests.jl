@@ -713,6 +713,12 @@ reftest("ablines cat color linestyle") do
         visual(ABLines) |> draw
 end
 
+reftest("ablines units") do
+    data((; x = (1:5) .* U.u"hr", y = [2.8, 4.6, 6.4, 8.2, 10.0] .* U.u"kg")) *
+        mapping(:x, :y) * visual(Scatter, markersize = 15) +
+        mapping([1000.0] .* U.u"g", [0.5] .* U.u"g/s") * visual(ABLines, color = :red) |> draw
+end
+
 reftest("qqplot") do
     data((; x = sin.(1:100), y = sin.((1:100) .+ 0.2))) * mapping(:x, :y) * visual(QQPlot, qqline = :identity) |> draw
 end
@@ -1035,6 +1041,20 @@ reftest("title subtitle footnotes settings") do
         axis = (; width = 100, height = 100)
     )
 
+end
+
+reftest("footnotes multiline align right") do
+    spec = data((; x = 1:10, y = 11:20)) * mapping(:x, :y) * visual(Scatter)
+    draw(
+        spec;
+        figure = (;
+            footnotes = [
+                "First footnote\nwith a wrapped second line",
+                "Short note",
+            ],
+            footnotealign = :right,
+        ),
+    )
 end
 
 reftest("title subtitle footnotes fontsize inherit") do
@@ -1498,6 +1518,57 @@ if VERSION >= v"1.9"
             visual(Violin)
 
         draw(spec_wide)
+    end
+
+    reftest("units analyses grid") do
+        f = Figure(size = (900, 450))
+
+        dt_x = collect(DateTime(2024, 1, 1, 9, 0, 0):Second(30):DateTime(2024, 1, 1, 9, 9, 30))
+        time_x = collect(Time(0, 0, 0):Minute(30):Time(9, 30, 0))
+        ys_dt = sqrt.(1.0:20.0) .* U.u"kg"
+        dt_ticks = AlgebraOfGraphics.DateTicksWrapper{DateTime}(Makie.DateTimeTicks(3))
+        draw!(f[1, 1], data((; x = dt_x, y = ys_dt)) * mapping(:x, :y) * (visual(Scatter) + AlgebraOfGraphics.linear()); axis = (; xticks = dt_ticks))
+        draw!(f[1, 2], data((; x = time_x, y = ys_dt)) * mapping(:x, :y) * (visual(Scatter) + AlgebraOfGraphics.smooth(interval = nothing)))
+
+        xs_u = collect(1.0:20.0) .* U.u"m"
+        draw!(f[1, 3], data((; x = xs_u)) * mapping(:x) * AlgebraOfGraphics.density(npoints = 50, datalimits = extrema))
+        draw!(f[1, 4], data((; x = xs_u)) * mapping(:x) * histogram(bins = 5))
+
+        xs_d = collect(1.0:6.0)
+        ys_d = collect(1.0:6.0)
+        zgrid = [xi + yi for xi in xs_d, yi in ys_d]
+        x_grid_d = repeat(xs_d, inner = 6) .* D.us"m"
+        y_grid_d = repeat(ys_d, outer = 6) .* D.us"kg"
+        z_grid_d = vec(zgrid) .* D.us"K"
+
+        draw!(
+            f[2, 1],
+            data((; g = repeat(["a", "b", "c"], 4), y = (1.0:12.0) .* D.us"kg")) *
+                mapping(:g, :y) * expectation(),
+        )
+
+        fg_contours = draw!(
+            f[2, 2][1, 1],
+            data((; x = x_grid_d, y = y_grid_d, z = z_grid_d)) *
+                mapping(:x, :y, :z) * AlgebraOfGraphics.contours(levels = 4),
+        )
+        colorbar!(f[2, 2][1, 2], fg_contours)
+
+        fg_filled = draw!(
+            f[2, 3][1, 1],
+            data((; x = x_grid_d, y = y_grid_d, z = z_grid_d)) *
+                mapping(:x, :y, :z) * AlgebraOfGraphics.filled_contours(bands = 4),
+        )
+        colorbar!(f[2, 3][1, 2], fg_filled)
+
+        fg_density = draw!(
+            f[2, 4][1, 1],
+            data((; x = (1.0:30.0) .* D.us"m", y = (1.0:30.0) .* D.us"kg")) *
+                mapping(:x, :y) * AlgebraOfGraphics.density(npoints = 20, bandwidth = (1.0, 1.0)),
+        )
+        colorbar!(f[2, 4][1, 2], fg_density)
+
+        f
     end
 end
 

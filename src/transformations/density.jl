@@ -16,21 +16,30 @@ applydatalimits(f::Function, d) = map(f, d)
 applydatalimits(limits::Tuple{Real, Real}, d) = map(_ -> limits, d)
 applydatalimits(limits::Tuple, _) = limits
 
-function _density(vs::Tuple; datalimits, npoints, kwargs...)
+function _density(vs::Tuple, vs_orig::Tuple; datalimits, npoints, kwargs...)
     k = _kde(vs; kwargs...)
     intervals = applydatalimits(datalimits, vs)
     rgs = map(intervals) do (min, max)
         return range(min, max; length = npoints)
     end
     res = pdf(k, rgs...)
-    return (rgs..., res)
+    rgs_reapplied = ntuple(length(vs_orig)) do i
+        from_unitless_numerical(collect(rgs[i]), vs_orig[i])
+    end
+    return (rgs_reapplied..., res)
 end
 
 function (d::DensityAnalysis)(input::ProcessedLayer)
-    datalimits = d.datalimits === automatic ? defaultdatalimits(input.positional) : d.datalimits
+    datalimits = if d.datalimits === automatic
+        defaultdatalimits(map(v -> map(to_unitless_numerical, v), input.positional))
+    else
+        _strip_datalimits_units(d.datalimits)
+    end
     options = valid_options(; datalimits, d.npoints, d.kernel, d.bandwidth)
     output = map(input) do p, n
-        return _density(Tuple(p); pairs(n)..., pairs(options)...), (;)
+        p, n = _drop_missing_nan_rows(p, n)
+        pn = map(to_unitless_numerical, p)
+        return _density(Tuple(pn), Tuple(p); pairs(n)..., pairs(options)...), (;)
     end
     N = length(input.positional)
     if N == 1
@@ -93,5 +102,7 @@ which you can separately style using [`subvisual`](@ref). The direction may be c
 vertical via `direction = :y`.
 
 For 2D, returns a `Heatmap` and for 3D a `Volume` layer.
+
+Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.
 """
 density(; options...) = transformation(DensityAnalysis(; options...))

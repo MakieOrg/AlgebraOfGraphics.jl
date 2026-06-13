@@ -7,11 +7,31 @@ end
 
 struct ExpectationAnalysis end
 
-(e::ExpectationAnalysis)(input::ProcessedLayer) = groupreduce(Mean, input)
+function (e::ExpectationAnalysis)(input::ProcessedLayer)
+    # Strip units from the value column before reducing; the Mean aggregator's
+    # `(0, 0.0)` init isn't dimensionally compatible with unit-bearing values.
+    # Units are reapplied to the per-group means afterwards.
+    y_originals = last(input.positional)
+    input_filtered = map(input) do p, n
+        return _drop_missing_nan_rows(p, n)
+    end
+    positional_stripped = copy(input_filtered.positional)
+    positional_stripped[end] = map(to_unitless_numerical, positional_stripped[end])
+    input_stripped = ProcessedLayer(input_filtered; positional = positional_stripped)
+
+    reduced = groupreduce(Mean, input_stripped)
+    positional = copy(reduced.positional)
+    positional[end] = map(positional[end], y_originals) do m, y_orig
+        from_unitless_numerical(m, y_orig)
+    end
+    return ProcessedLayer(reduced; positional)
+end
 
 """
     expectation()
 
 Compute the expected value of the last argument conditioned on the preceding ones.
+
+Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.
 """
 expectation() = transformation(ExpectationAnalysis())

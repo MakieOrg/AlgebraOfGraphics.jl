@@ -232,7 +232,7 @@ _default_categorical_palette(::Type{AesStack}) = Makie.automatic
 _default_categorical_palette(::Type{AesViolinSide}) = [:left, :right]
 _default_categorical_palette(::Type{AesLineWidth}) = Makie.automatic
 
-function _default_categorical_colors(categories::AbstractVector{Bin})
+function _default_categorical_colors(categories::AbstractVector{<:Bin})
     cmap = to_value(Makie.current_default_theme()[:colormap])
     return apply_palette(from_continuous(cmap), categories)
 end
