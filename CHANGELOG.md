@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Created new file CITATION.cff to make it easier to create citations of package.
+
 ## v0.12.12 - 2026-06-04
 
 - Palette pairs and `categories` passed via `scales` now match `presorted`/`nonnumeric`-wrapped data without needing to re-wrap the keys [#766](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/766).
@@ -23,6 +25,7 @@
 ## v0.12.8 - 2026-05-04
 
 - Plot types with a native `:dodge` attribute (`BarPlot`, `BoxPlot`, `Violin`, `CrossBar`) now also accept the generic `dodge_x`/`dodge_y` mapping, which is routed to `:dodge` when the aesthetic matches the plot's orientation. This makes it possible to share a single `dodge_x`/`dodge_y` mapping across companion layers (e.g., `Scatter` + `BarPlot`) without switching attribute names per layer. [#747](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/747).
+- Added aesthetics for `Stem` plots, including `color`, `marker`, and `markersize`. Legend displays like in a `Scatter` plot legend like style. 
 - Added support for `Stem` plots [#751](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/751).
 
 ## v0.12.7 - 2026-04-13
