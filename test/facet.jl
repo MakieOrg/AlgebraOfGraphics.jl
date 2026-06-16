@@ -336,4 +336,12 @@ end
     end
     # Single-page draws use the same max-grid policy
     @test first(draw(pag, 3; facet = (; size = crossing_policy)).grid).axis.height[] == 80
+
+    # `draw!` honors `facet = (; size = ...)` the same way `draw` does
+    f = Figure()
+    ag = draw!(f, plt; facet = (; size = fs))
+    ax = first(ag).axis
+    @test ax.height[] == 100
+    @test ax.width[] == 200
+    @test size(ag) == (5, 2)
 end
