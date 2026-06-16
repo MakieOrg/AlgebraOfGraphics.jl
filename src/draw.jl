@@ -13,11 +13,11 @@ function update(f, fig)
     return output
 end
 
-function Makie.plot!(fig, d::AbstractDrawable, scales::Scales = scales(); axis = NamedTuple())
+function Makie.plot!(fig, d::AbstractDrawable, scales::Scales = scales(); axis = NamedTuple(), facet = NamedTuple())
     if isa(fig, Union{Axis, Axis3}) && !isempty(axis)
         @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $axis.")
     end
-    grid = update(f -> compute_axes_grid(f, d, scales; axis), fig)
+    grid = update(f -> compute_axes_grid(f, d, scales; axis, facet), fig)
     foreach(plot!, grid)
     return grid
 end
@@ -289,7 +289,12 @@ end
 
 function _draw!(fig, d, scales; axis, facet)
     return update(fig) do f
-        ag = plot!(f, d, scales; axis)
+        ag = plot!(f, d, scales; axis, facet)
+        # `facet_size` was consumed by `compute_axes_grid`; strip it so `facet!` doesn't see it.
+        if haskey(facet, :size)
+            facet = copy(facet)
+            delete!(facet, :size)
+        end
         facet!(f, ag; facet)
         return ag
     end

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.12.13 - 2026-06-16
+
+- `draw!` now honors `facet = (; size = FacetSize(...))` instead of erroring [#770](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/770).
+
 ## v0.12.12 - 2026-06-04
 
 - Palette pairs and `categories` passed via `scales` now match `presorted`/`nonnumeric`-wrapped data without needing to re-wrap the keys [#766](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/766).
