@@ -233,7 +233,7 @@ function axis_transforms_from_scales(scales::Scales)
 end
 
 positional_transform(transforms, ::Nothing) = nothing
-positional_transform(transforms, aes::DataType) = get(transforms, aes, nothing)
+positional_transform(transforms, aes::DataType) = haskey(transforms, aes) ? (aes => transforms[aes]) : nothing
 
 # The positional-index => aesthetic mapping a layer resolves to, via the same `aesthetic_mapping` the final
 # scale resolution uses. Computed with continuous scitypes of the given arity, which is what determines the

@@ -617,18 +617,19 @@ end
 from_unitless_numerical(x̂, ::AbstractVector) = x̂
 
 apply_scale_forward(::Nothing, xn) = xn
-function apply_scale_forward(forward, xn)
+function apply_scale_forward(t::Pair, xn)
+    forward = last(t)
     x̂n = try
         forward.(xn)
     catch e
-        e isa DomainError ? _scale_domain_error(forward, e.val) : rethrow()
+        e isa DomainError ? _scale_domain_error(t, e.val) : rethrow()
     end
     bad = findfirst(i -> isfinite(xn[i]) && !isfinite(x̂n[i]), eachindex(xn))
-    bad === nothing || _scale_domain_error(forward, xn[bad])
+    bad === nothing || _scale_domain_error(t, xn[bad])
     return x̂n
 end
 apply_scale_inverse(::Nothing, x̂n) = x̂n
-apply_scale_inverse(forward, x̂n) = Makie.inverse_transform(forward).(x̂n)
+apply_scale_inverse(t::Pair, x̂n) = Makie.inverse_transform(last(t)).(x̂n)
 
 struct ScaleDomainError <: Exception
     forward::Any
@@ -651,13 +652,13 @@ function Base.showerror(io::IO, e::ScaleDomainError)
     )
 end
 
-_scale_domain_error(forward, value) = throw(ScaleDomainError(forward, value))
+_scale_domain_error(t::Pair, value) = throw(ScaleDomainError(last(t), value, nothing, first(t)))
 
 to_transformed_numerical(v, t) = apply_scale_forward(t, to_unitless_numerical(v))
 from_transformed_numerical(v̂, ref, t) = from_unitless_numerical(apply_scale_inverse(t, v̂), ref)
 
 to_transformed_nested(::Nothing, v) = map(to_unitless_numerical, v)
-to_transformed_nested(forward, v) = map(g -> apply_scale_forward(forward, to_unitless_numerical(g)), v)
+to_transformed_nested(t::Pair, v) = map(g -> apply_scale_forward(t, to_unitless_numerical(g)), v)
 
 forward_datalimits(dl, ts) = dl
 forward_datalimits(dl::Tuple{Real, Real}, ts) =

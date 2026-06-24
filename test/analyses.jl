@@ -1169,6 +1169,10 @@ end
         @test_throws "The scale function `log10` set for aesthetic `Y` is not finite at the data value `0.0`. `LinearAnalysis` fits in transformed scale space" AlgebraOfGraphics.ProcessedLayers(lin([10.0, 0.0, 100.0]), logY)
         @test_throws "not finite at the data value `-5.0`" AlgebraOfGraphics.ProcessedLayers(lin([10.0, -5.0, 100.0]), logY)
         @test_throws "`SmoothAnalysis` fits in transformed scale space" AlgebraOfGraphics.ProcessedLayers(data((; x = [1.0, 2.0, 3.0], y = [10.0, 0.0, 100.0])) * mapping(:x, :y) * smooth(interval = nothing), logY)
+
+        xy(df) = data(df) * mapping(:x, :y) * linear(interval = nothing)
+        @test_throws "aesthetic `X`" AlgebraOfGraphics.ProcessedLayers(xy((; x = [1.0, 0.0, 3.0], y = [10.0, 20.0, 30.0])), logXY)
+        @test_throws "aesthetic `Y`" AlgebraOfGraphics.ProcessedLayers(xy((; x = [1.0, 2.0, 3.0], y = [10.0, 0.0, 30.0])), logXY)
     end
 
     @testset "guard catches a downstream aesthetic flip onto a scaled axis" begin

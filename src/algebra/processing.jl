@@ -190,8 +190,7 @@ function process(layer::Layer, axis_transforms = Dictionary{Type{<:Aesthetic}, B
         (e isa ScaleDomainError && e.analysis === nothing) ? e : rethrow()
     end
     if transformed isa ScaleDomainError
-        aes = findfirst(forward -> forward === transformed.forward, axis_transforms)
-        throw(ScaleDomainError(transformed.forward, transformed.value, analysis_typename(layer.transformation), aes))
+        throw(ScaleDomainError(transformed.forward, transformed.value, analysis_typename(layer.transformation), transformed.aes))
     end
     transformed_processlayers = ProcessedLayers(transformed)
     return ProcessedLayers(
