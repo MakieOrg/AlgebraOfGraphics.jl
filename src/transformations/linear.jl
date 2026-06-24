@@ -14,11 +14,14 @@ end
 
 # TODO: add multidimensional version
 function (l::LinearAnalysis)(input::ProcessedLayer)
+    tx = position_transform(input.axis_transforms, Lines, input.attributes, 2, 1)
+    ty = position_transform(input.axis_transforms, Lines, input.attributes, 2, 2)
+    scales_active = !isempty(input.axis_transforms)
     output = map(input) do p, n
         p, n = _drop_missing_nan_rows(p, n)
         x, y = p
-        xn = to_unitless_numerical(x)
-        yn = to_unitless_numerical(y)
+        xn = to_transformed_numerical(x, tx)
+        yn = to_transformed_numerical(y, ty)
         weights_raw = get(n, :weights, similar(xn, 0))
         weights = StatsBase.fweights(to_unitless_numerical(weights_raw))
         default_interval = length(weights) > 0 ? nothing : :confidence
@@ -27,15 +30,15 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         lin_model = GLM.lm(add_intercept_column(xn), yn; weights, l.dropcollinear)
         x̂n = collect(range(extrema(xn)..., length = l.npoints))
         pred = GLM.predict(lin_model, add_intercept_column(x̂n); interval, l.level)
-        x̂ = from_unitless_numerical(x̂n, x)
+        x̂ = from_transformed_numerical(x̂n, x, tx)
         return if !isnothing(interval)
             ŷn, lowern, uppern = pred
-            ŷ = from_unitless_numerical(ŷn, y)
-            lower = from_unitless_numerical(lowern, y)
-            upper = from_unitless_numerical(uppern, y)
+            ŷ = from_transformed_numerical(ŷn, y, ty)
+            lower = from_transformed_numerical(lowern, y, ty)
+            upper = from_transformed_numerical(uppern, y, ty)
             (x̂, ŷ, x̂, lower, upper), (;)
         else
-            ŷ = from_unitless_numerical(pred, y)
+            ŷ = from_transformed_numerical(pred, y, ty)
             (x̂, ŷ, empty(x̂), empty(ŷ), empty(ŷ)), (;)
         end
     end
@@ -54,7 +57,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         end, plottype = Band, label = :ci, attributes = dictionary([:alpha => 0.15])
     )
 
-    return ProcessedLayers([bandlayer, lineslayer])
+    return tag_scale_aesthetics(ProcessedLayers([bandlayer, lineslayer]), scales_active)
 end
 
 """

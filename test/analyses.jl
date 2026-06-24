@@ -1075,3 +1075,112 @@ end
         @test collect(only(pl.positional[2])) == [1.0, 2.0, 2.0, 1.0, 0.0]
     end
 end
+
+@testset "analyses in transformed scale space" begin
+    transforms(; kwargs...) = AlgebraOfGraphics.axis_transforms_from_scales(scales(; kwargs...))
+    logX = transforms(X = (; scale = log10))
+    logY = transforms(Y = (; scale = log10))
+    logXY = transforms(X = (; scale = log10), Y = (; scale = log10))
+
+    fit_output(layer, tf) = AlgebraOfGraphics.ProcessedLayers(layer, tf).layers[end]
+
+    @testset "linear recovers exponential in log-y space" begin
+        df = (; x = [1.0, 2.0, 3.0, 4.0], y = [10.0, 100.0, 1000.0, 10000.0])
+        layer = data(df) * mapping(:x, :y) * linear(interval = nothing)
+        ll = fit_output(layer, logY)
+        x̂, ŷ = only(ll.positional[1]), only(ll.positional[2])
+        @test ŷ ≈ 10 .^ x̂
+
+        ŷ_plain = only(fit_output(layer, transforms()).positional[2])
+        @test !(ŷ_plain ≈ 10 .^ x̂)
+    end
+
+    @testset "linear recovers power law in log-log space" begin
+        x = [1.0, 2.0, 4.0, 8.0]
+        df = (; x, y = 3 .* x .^ 2)
+        layer = data(df) * mapping(:x, :y) * linear(interval = nothing)
+        ll = fit_output(layer, logXY)
+        x̂, ŷ = only(ll.positional[1]), only(ll.positional[2])
+        @test ŷ ≈ 3 .* x̂ .^ 2
+    end
+
+    @testset "smooth fits in log-y space" begin
+        x = repeat(1.0:6.0, inner = 2)
+        layer = data((; x, y = 10.0 .^ (0.5 .* x))) * mapping(:x, :y) * smooth(interval = nothing)
+        ŷ_log = only(fit_output(layer, logY).positional[2])
+        ŷ_plain = only(fit_output(layer, transforms()).positional[2])
+        @test all(>(0), ŷ_log)
+        @test issorted(ŷ_log)
+        @test !(ŷ_log ≈ ŷ_plain)
+    end
+
+    @testset "histogram bins in log-x space" begin
+        df = (; v = [1.0, 10.0, 100.0, 1000.0])
+        layer = data(df) * mapping(:v) * histogram(bins = 3)
+        pl_log = fit_output(layer, logX)
+        @test only(pl_log.positional[1]) == [5.5, 55.0, 550.0, 5500.0]
+        @test collect(only(pl_log.positional[2])) == [1.0, 1.0, 1.0, 1.0]
+
+        pl_plain = fit_output(layer, transforms())
+        @test only(pl_plain.positional[1]) == [250.0, 750.0, 1250.0]
+        @test collect(only(pl_plain.positional[2])) == [3.0, 0.0, 1.0]
+    end
+
+    @testset "histogram direction = :x bins in log-y space" begin
+        df = (; v = [1.0, 10.0, 100.0, 1000.0])
+        layer = data(df) * mapping(:v) * histogram(bins = 3, direction = :x)
+        pl_log = fit_output(layer, logY)
+        @test get(pl_log.attributes, :direction, nothing) == :x
+        @test pl_log.scale_assumed_aes == AlgebraOfGraphics.position_aesthetics(pl_log.plottype, pl_log.attributes, 2)
+        @test only(pl_log.positional[1]) == [5.5, 55.0, 550.0, 5500.0]
+        @test collect(only(pl_log.positional[2])) == [1.0, 1.0, 1.0, 1.0]
+
+        @test compute_axes_grid(layer, scales(Y = (; scale = log10))) isa AbstractMatrix
+        @test_throws "only be set for the 1-dimensional case" AlgebraOfGraphics.ProcessedLayers(
+            data((; x = [1.0, 2.0, 3.0], y = [1.0, 2.0, 3.0])) * mapping(:x, :y) * histogram(bins = 2, direction = :x)
+        )
+    end
+
+    @testset "expectation is the geometric mean in log-y space" begin
+        df = (; g = ["a", "a", "b", "b"], y = [1.0, 100.0, 10.0, 1000.0])
+        layer = data(df) * mapping(:g, :y) * expectation()
+        @test only(fit_output(layer, logY).positional[2]) == [10.0, 100.0]
+    end
+
+    @testset "units compose with the scale transform" begin
+        x = repeat(1.0:6.0, inner = 2)
+        df = (; t = x .* U.u"hr", c = 10.0 .^ (0.2 .+ 0.3 .* x) .* U.u"mg/L")
+        layer = data(df) * mapping(:t, :c) * linear(interval = nothing)
+        pl = fit_output(layer, logY)
+        x̂, ŷ = only(pl.positional[1]), only(pl.positional[2])
+        @test eltype(x̂) == eltype(df.t)
+        @test eltype(ŷ) == eltype(df.c)
+        @test all(v -> U.ustrip(v) > 0, ŷ)
+    end
+
+    @testset "scale without a known inverse errors" begin
+        df = (; x = [1.0, 2.0], y = [10.0, 100.0])
+        layer = data(df) * mapping(:x, :y) * linear(interval = nothing)
+        @test_throws "has no inverse registered with `Makie.inverse_transform`" AlgebraOfGraphics.ProcessedLayers(layer, transforms(Y = (; scale = x -> x^3)))
+    end
+
+    @testset "data outside the scale domain errors with context" begin
+        lin(yvals) = data((; x = [1.0, 2.0, 3.0], y = yvals)) * mapping(:x, :y) * linear(interval = nothing)
+        @test_throws "The scale function `log10` set for aesthetic `Y` is not finite at the data value `0.0`. `LinearAnalysis` fits in transformed scale space" AlgebraOfGraphics.ProcessedLayers(lin([10.0, 0.0, 100.0]), logY)
+        @test_throws "not finite at the data value `-5.0`" AlgebraOfGraphics.ProcessedLayers(lin([10.0, -5.0, 100.0]), logY)
+        @test_throws "`SmoothAnalysis` fits in transformed scale space" AlgebraOfGraphics.ProcessedLayers(data((; x = [1.0, 2.0, 3.0], y = [10.0, 0.0, 100.0])) * mapping(:x, :y) * smooth(interval = nothing), logY)
+    end
+
+    @testset "guard catches a downstream aesthetic flip onto a scaled axis" begin
+        df = (; v = [1.0, 10.0, 100.0, 1000.0, 10.0, 100.0, 50.0, 5.0])
+        spec = data(df) * mapping(:v) * histogram(bins = 3) * visual(direction = :x)
+        @test_throws "altered the aesthetic mapping" compute_axes_grid(spec, scales(Y = (; scale = log10)))
+    end
+
+    @testset "aesthetic-preserving downstream changes do not fire the guard" begin
+        df = (; x = [1.0, 2.0, 3.0, 4.0], y = [10.0, 100.0, 1000.0, 10000.0])
+        base = data(df) * mapping(:x, :y)
+        @test compute_axes_grid(base * smooth(interval = nothing) * visual(Scatter), scales(Y = (; scale = log10))) isa AbstractMatrix
+        @test compute_axes_grid(base * linear(interval = nothing) * visual(color = :red), scales(Y = (; scale = log10))) isa AbstractMatrix
+    end
+end

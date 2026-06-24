@@ -616,6 +616,54 @@ function from_unitless_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<
 end
 from_unitless_numerical(x̂, ::AbstractVector) = x̂
 
+apply_scale_forward(::Nothing, xn) = xn
+function apply_scale_forward(t::NamedTuple, xn)
+    x̂n = try
+        t.forward.(xn)
+    catch e
+        e isa DomainError ? _scale_domain_error(t, e.val) : rethrow()
+    end
+    bad = findfirst(i -> isfinite(xn[i]) && !isfinite(x̂n[i]), eachindex(xn))
+    bad === nothing || _scale_domain_error(t, xn[bad])
+    return x̂n
+end
+apply_scale_inverse(::Nothing, x̂n) = x̂n
+apply_scale_inverse(t::NamedTuple, x̂n) = t.inverse.(x̂n)
+
+struct ScaleDomainError <: Exception
+    forward::Any
+    sym::Symbol
+    value::Any
+    analysis::Union{Nothing, Symbol}
+end
+ScaleDomainError(forward, sym, value) = ScaleDomainError(forward, sym, value, nothing)
+
+function Base.showerror(io::IO, e::ScaleDomainError)
+    fit_by = e.analysis === nothing ? "Analyses fit" : "`$(e.analysis)` fits"
+    return print(
+        io,
+        "The scale function `$(e.forward)` set for aesthetic `$(e.sym)` is not finite at the data value `$(e.value)`. ",
+        "$fit_by in transformed scale space, so every value mapped onto a scale-transformed aesthetic must lie in the function's domain (e.g. strictly positive for `log`). ",
+        "Filter the offending rows, or use `axis = (; $(lowercase(string(e.sym)))scale = $(e.forward))` instead, which transforms only the display and leaves the analysis in data space.",
+    )
+end
+
+_scale_domain_error(t, value) = throw(ScaleDomainError(t.forward, t.sym, value))
+
+to_transformed_numerical(v, t) = apply_scale_forward(t, to_unitless_numerical(v))
+from_transformed_numerical(v̂, ref, t) = from_unitless_numerical(apply_scale_inverse(t, v̂), ref)
+
+to_transformed_nested(::Nothing, v) = map(to_unitless_numerical, v)
+to_transformed_nested(t::NamedTuple, v) = map(g -> apply_scale_forward(t, to_unitless_numerical(g)), v)
+
+forward_datalimits(dl, ts) = dl
+forward_datalimits(dl::Tuple{Real, Real}, ts) =
+    (only(apply_scale_forward(first(ts), [dl[1]])), only(apply_scale_forward(first(ts), [dl[2]])))
+forward_datalimits(dl::Tuple, ts) = ntuple(length(dl)) do i
+    lo, hi = dl[i]
+    (only(apply_scale_forward(ts[i], [lo])), only(apply_scale_forward(ts[i], [hi])))
+end
+
 # `datalimits` accepts a single `(lo, hi)` (broadcast to every dim) or a tuple-of-pairs (one per dim);
 # strip units from the scalar limit values without disturbing that shape.
 _strip_datalimits_units(dl) = dl

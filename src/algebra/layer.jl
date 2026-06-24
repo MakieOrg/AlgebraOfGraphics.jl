@@ -135,6 +135,8 @@ Base.@kwdef struct ProcessedLayer <: AbstractDrawable
     attributes::NamedArguments = NamedArguments()
     scale_mapping::Dictionary{KeyType, Symbol} = Dictionary{KeyType, Symbol}() # maps mapping entries to scale ids for use of additional scales
     label::Union{Nothing, Symbol} = nothing # for selective styling via `visual(target(label))`
+    axis_transforms::Dictionary{DataType, Any} = Dictionary{DataType, Any}() # aesthetic type => (; forward, inverse) so analyses can fit in scale space
+    scale_assumed_aes::Dictionary{Int, DataType} = Dictionary{Int, DataType}() # positional => aesthetic the analysis assumed when fitting in scale space, checked against the resolved layer
 end
 
 function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
@@ -147,6 +149,8 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
         processedlayer.attributes,
         processedlayer.scale_mapping,
         processedlayer.label,
+        processedlayer.axis_transforms,
+        processedlayer.scale_assumed_aes,
     )
     return ProcessedLayer(; merge(nt, values(kwargs))...)
 end
