@@ -169,7 +169,7 @@ end
 analysis_typename(f::ComposedFunction) = analysis_typename(f.inner)
 analysis_typename(f) = nameof(typeof(f))
 
-function process(layer::Layer, axis_transforms = Dictionary{DataType, Any}())
+function process(layer::Layer, axis_transforms = Dictionary{Type{<:Aesthetic}, Base.Callable}())
     processedlayer = process_mappings(layer)
     grouped_entry = if layer.data === Pregrouped()
         # For pregrouped data, apply shiftdims to match the structure of grouped data
@@ -189,8 +189,10 @@ function process(layer::Layer, axis_transforms = Dictionary{DataType, Any}())
     catch e
         (e isa ScaleDomainError && e.analysis === nothing) ? e : rethrow()
     end
-    transformed isa ScaleDomainError &&
-        throw(ScaleDomainError(transformed.forward, transformed.sym, transformed.value, analysis_typename(layer.transformation)))
+    if transformed isa ScaleDomainError
+        aes = findfirst(forward -> forward === transformed.forward, axis_transforms)
+        throw(ScaleDomainError(transformed.forward, transformed.value, analysis_typename(layer.transformation), aes))
+    end
     transformed_processlayers = ProcessedLayers(transformed)
     return ProcessedLayers(
         map(transformed_processlayers.layers) do transformed_processlayer

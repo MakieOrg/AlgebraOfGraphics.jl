@@ -135,7 +135,7 @@ Base.@kwdef struct ProcessedLayer <: AbstractDrawable
     attributes::NamedArguments = NamedArguments()
     scale_mapping::Dictionary{KeyType, Symbol} = Dictionary{KeyType, Symbol}() # maps mapping entries to scale ids for use of additional scales
     label::Union{Nothing, Symbol} = nothing # for selective styling via `visual(target(label))`
-    axis_transforms::Dictionary{DataType, Any} = Dictionary{DataType, Any}() # aesthetic type => (; forward, inverse) so analyses can fit in scale space
+    axis_transforms::Dictionary{Type{<:Aesthetic}, Base.Callable} = Dictionary{Type{<:Aesthetic}, Base.Callable}() # aesthetic type => forward scale function so analyses can fit in scale space (inverse via `Makie.inverse_transform`)
     scale_assumed_aes::Dictionary{Int, DataType} = Dictionary{Int, DataType}() # positional => aesthetic the analysis assumed when fitting in scale space, checked against the resolved layer
 end
 

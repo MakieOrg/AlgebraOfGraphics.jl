@@ -49,7 +49,7 @@ struct ProcessedLayers <: AbstractDrawable
     layers::Vector{ProcessedLayer}
 end
 
-function ProcessedLayers(a::AbstractAlgebraic, axis_transforms = Dictionary{DataType, Any}())
+function ProcessedLayers(a::AbstractAlgebraic, axis_transforms = Dictionary{Type{<:Aesthetic}, Base.Callable}())
     layers::Layers = a
     processedlayers_array = map(layer -> process(layer, axis_transforms), layers)
     return ProcessedLayers(reduce(vcat, [processedlayer.layers for processedlayer in processedlayers_array]))
@@ -219,16 +219,15 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
 end
 
 function axis_transforms_from_scales(scales::Scales)
-    transforms = Dictionary{DataType, Any}()
+    transforms = Dictionary{Type{<:Aesthetic}, Base.Callable}()
     for (sym, aes) in ((:X, AesX), (:Y, AesY), (:Z, AesZ))
         haskey(scales.dict, sym) || continue
         sub = scales.dict[sym]
         haskey(sub, :scale) || continue
         forward = sub[:scale]
         forward === identity && continue
-        inverse = Makie.inverse_transform(forward)
-        inverse === nothing && error("Scale function `$forward` set for aesthetic `$sym` has no inverse registered with `Makie.inverse_transform`, so analyses cannot back-transform their fit into data space. Use a scale with a known inverse (e.g. `log10`, `log2`, `log`, `sqrt`).")
-        insert!(transforms, aes, (; forward, inverse, sym))
+        Makie.inverse_transform(forward) === nothing && error("Scale function `$forward` set for aesthetic `$sym` has no inverse registered with `Makie.inverse_transform`, so analyses cannot back-transform their fit into data space. Use a scale with a known inverse (e.g. `log10`, `log2`, `log`, `sqrt`).")
+        insert!(transforms, aes, forward)
     end
     return transforms
 end
