@@ -242,9 +242,9 @@ positional_transform(transforms, aes::DataType) = haskey(transforms, aes) ? (aes
 function position_aesthetics(plottype, attributes, arity::Int)
     scitypes = ScientificType[Continuous() for _ in 1:arity]
     am = aesthetic_mapping(plottype, merge(mandatory_attributes(plottype), attributes), scitypes)
-    out = Dictionary{Int, DataType}()
+    out = Dictionary{Int, Type{<:Aesthetic}}()
     for (k, v) in pairs(am)
-        k isa Int && v isa DataType && insert!(out, k, v)
+        k isa Int && v isa Type{<:Aesthetic} && insert!(out, k, v)
     end
     return out
 end
