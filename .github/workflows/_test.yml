@@ -6,6 +6,9 @@ jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      statuses: write
     strategy:
       fail-fast: false
       matrix:
@@ -18,7 +21,7 @@ jobs:
         arch:
           - x64
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: julia-actions/setup-julia@v3
         with:
           version: ${{ matrix.version }}
@@ -33,12 +36,27 @@ jobs:
           f=test/reference_tests/pixelmatch-report.html
           [ -f "$f" ] && mv "$f" "test/reference_tests/pixelmatch-report-${{ matrix.version }}.html" || true
       - name: Upload PixelMatch report
+        id: upload-report
         if: failure() && steps.runtests.outcome == 'failure'
         uses: actions/upload-artifact@v7
         with:
           path: test/reference_tests/pixelmatch-report-${{ matrix.version }}.html
           archive: false
           if-no-files-found: ignore
+      - name: Post failing status linking to the report
+        if: failure() && steps.runtests.outcome == 'failure' && steps.upload-report.outputs.artifact-url != ''
+        uses: actions/github-script@v9
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request?.head?.sha ?? context.sha,
+              state: 'failure',
+              context: `PixelMatch report (Julia ${{ matrix.version }})`,
+              target_url: '${{ steps.upload-report.outputs.artifact-url }}',
+              description: 'Reference image failures, click Details for the HTML report',
+            })
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v7
         with:
