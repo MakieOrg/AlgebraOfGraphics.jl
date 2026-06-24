@@ -1155,7 +1155,7 @@ end
         x̂, ŷ = only(pl.positional[1]), only(pl.positional[2])
         @test eltype(x̂) == eltype(df.t)
         @test eltype(ŷ) == eltype(df.c)
-        @test all(v -> U.ustrip(v) > 0, ŷ)
+        @test ŷ ≈ 10.0 .^ (0.2 .+ 0.3 .* U.ustrip.(x̂)) .* U.u"mg/L"
     end
 
     @testset "scale without a known inverse errors" begin
