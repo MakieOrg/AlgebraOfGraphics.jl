@@ -609,24 +609,30 @@ end
     insert!(labels, :color, "c")
     @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 
-    # Also test integer input
+    # Few distinct integer x values make Loess's kd-tree scale-sensitive, so the reference must
+    # standardize x exactly as `SmoothAnalysis` does to match.
     df = (x = rand(1:3, 1000), y = rand(1000), c = rand(["a", "b"], 1000))
     npoints = 150
     layer = data(df) * mapping(:x, :y, color = :c) * smooth(; npoints)
     processedlayers = AlgebraOfGraphics.ProcessedLayers(layer)
     processedlayer = processedlayers.layers[2]
 
+    function loess_standardized(x, y)
+        offset = sum(x) / length(x)
+        centered = x .- offset
+        scale = sqrt(sum(abs2, centered) / length(centered))
+        model = Loess.loess(centered ./ scale, y)
+        x̂ = collect(range(extrema(x)...; length = npoints))
+        return x̂, Loess.predict(model, (x̂ .- offset) ./ scale)
+    end
+
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
-    loess1 = Loess.loess(x1, y1)
-    x̂1 = range(extrema(x1)...; length = npoints)
-    ŷ1 = Loess.predict(loess1, x̂1)
+    x̂1, ŷ1 = loess_standardized(x1, y1)
 
     x2 = df.x[df.c .== "b"]
     y2 = df.y[df.c .== "b"]
-    loess2 = Loess.loess(x2, y2)
-    x̂2 = range(extrema(x2)...; length = npoints)
-    ŷ2 = Loess.predict(loess2, x̂2)
+    x̂2, ŷ2 = loess_standardized(x2, y2)
 
     x̂, ŷ = processedlayer.positional
 
@@ -1043,6 +1049,20 @@ end
         @test all(>=(1.0), ŷ)
         @test all(<=(sqrt(20.0)), ŷ)
         @test issorted(ŷ)
+    end
+
+    @testset "smooth (Date) degree 2" begin
+        ts = Date(2024, 1, 1):Day(1):Date(2024, 1, 20)
+        df = (; x = collect(ts), y = sqrt.(1.0:20.0))
+        layer = data(df) * mapping(:x, :y) * smooth(; interval = nothing)
+        pl = AlgebraOfGraphics.ProcessedLayer(layer)
+        ŷ = only(pl.positional[2])
+
+        df_num = (; x = collect(1.0:20.0), y = sqrt.(1.0:20.0))
+        pl_num = AlgebraOfGraphics.ProcessedLayer(data(df_num) * mapping(:x, :y) * smooth(; interval = nothing))
+        ŷ_num = only(pl_num.positional[2])
+
+        @test ŷ ≈ ŷ_num
     end
 end
 
