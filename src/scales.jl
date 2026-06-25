@@ -616,6 +616,58 @@ function from_unitless_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<
 end
 from_unitless_numerical(x̂, ::AbstractVector) = x̂
 
+apply_scale_forward(::Nothing, xn) = xn
+function apply_scale_forward(t::Pair, xn)
+    forward = last(t)
+    x̂n = try
+        forward.(xn)
+    catch e
+        e isa DomainError ? _scale_domain_error(t, e.val) : rethrow()
+    end
+    bad = findfirst(i -> isfinite(xn[i]) && !isfinite(x̂n[i]), eachindex(xn))
+    bad === nothing || _scale_domain_error(t, xn[bad])
+    return x̂n
+end
+apply_scale_inverse(::Nothing, x̂n) = x̂n
+apply_scale_inverse(t::Pair, x̂n) = Makie.inverse_transform(last(t)).(x̂n)
+
+struct ScaleDomainError <: Exception
+    forward::Any
+    value::Any
+    analysis::Union{Nothing, Symbol}
+    aes::Union{Nothing, Type}
+end
+ScaleDomainError(forward, value) = ScaleDomainError(forward, value, nothing, nothing)
+
+function Base.showerror(io::IO, e::ScaleDomainError)
+    on_aes = e.aes === nothing ? "" : " set for aesthetic `$(aesname(e.aes))`"
+    fit_by = e.analysis === nothing ? "Analyses fit" : "`$(e.analysis)` fits"
+    hint = e.aes === nothing ? "a display-only axis scale attribute (e.g. `axis = (; yscale = log10)`)" :
+        "`axis = (; $(lowercase(aesname(e.aes)))scale = $(e.forward))`"
+    return print(
+        io,
+        "The scale function `$(e.forward)`$on_aes is not finite at the data value `$(e.value)`. ",
+        "$fit_by in transformed scale space, so every value mapped onto a scale-transformed aesthetic must lie in the function's domain (e.g. strictly positive for `log`). ",
+        "Filter the offending rows, or use $hint instead, which transforms only the display and leaves the analysis in data space.",
+    )
+end
+
+_scale_domain_error(t::Pair, value) = throw(ScaleDomainError(last(t), value, nothing, first(t)))
+
+to_transformed_numerical(v, t) = apply_scale_forward(t, to_unitless_numerical(v))
+from_transformed_numerical(v̂, ref, t) = from_unitless_numerical(apply_scale_inverse(t, v̂), ref)
+
+to_transformed_nested(::Nothing, v) = map(to_unitless_numerical, v)
+to_transformed_nested(t::Pair, v) = map(g -> apply_scale_forward(t, to_unitless_numerical(g)), v)
+
+forward_datalimits(dl, ts) = dl
+forward_datalimits(dl::Tuple{Real, Real}, ts) =
+    (only(apply_scale_forward(first(ts), [dl[1]])), only(apply_scale_forward(first(ts), [dl[2]])))
+forward_datalimits(dl::Tuple, ts) = ntuple(length(dl)) do i
+    lo, hi = dl[i]
+    (only(apply_scale_forward(ts[i], [lo])), only(apply_scale_forward(ts[i], [hi])))
+end
+
 # `datalimits` accepts a single `(lo, hi)` (broadcast to every dim) or a tuple-of-pairs (one per dim);
 # strip units from the scalar limit values without disturbing that shape.
 _strip_datalimits_units(dl) = dl

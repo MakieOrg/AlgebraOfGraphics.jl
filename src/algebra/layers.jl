@@ -49,9 +49,9 @@ struct ProcessedLayers <: AbstractDrawable
     layers::Vector{ProcessedLayer}
 end
 
-function ProcessedLayers(a::AbstractAlgebraic)
+function ProcessedLayers(a::AbstractAlgebraic, axis_transforms = Dictionary{Type{<:Aesthetic}, Base.Callable}())
     layers::Layers = a
-    processedlayers_array = map(process, layers)
+    processedlayers_array = map(layer -> process(layer, axis_transforms), layers)
     return ProcessedLayers(reduce(vcat, [processedlayer.layers for processedlayer in processedlayers_array]))
 end
 
@@ -69,6 +69,9 @@ ProcessedLayers(layer::Layer) = process(layer)
 
 ProcessedLayers(p::ProcessedLayer) = ProcessedLayers([p])
 ProcessedLayers(p::ProcessedLayers) = p
+
+ProcessedLayers(p::ProcessedLayer, ::Any) = ProcessedLayers([p])
+ProcessedLayers(p::ProcessedLayers, ::Any) = p
 
 function compute_processedlayers_grid(processedlayers, categoricalscales)
     gridpositions = compute_grid_positions(categoricalscales)
@@ -89,6 +92,7 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
     continuousscales_grid = map(_ -> MultiAesScaleDict{ContinuousScale}(), pls_grid)
 
     for idx in eachindex(pls_grid), pl in pls_grid[idx]
+        check_scale_aesthetics(pl)
         # Apply continuous transformations
         positional = map(contextfree_rescale, pl.positional)
         named = map(contextfree_rescale, pl.named)
@@ -212,6 +216,68 @@ function compute_entries_continuousscales(pls_grid, categoricalscales, scale_pro
     end
 
     return entries_grid, continuousscales_grid, merged_continuousscales
+end
+
+function axis_transforms_from_scales(scales::Scales)
+    transforms = Dictionary{Type{<:Aesthetic}, Base.Callable}()
+    for (sym, aes) in ((:X, AesX), (:Y, AesY), (:Z, AesZ))
+        haskey(scales.dict, sym) || continue
+        sub = scales.dict[sym]
+        haskey(sub, :scale) || continue
+        forward = sub[:scale]
+        forward === identity && continue
+        Makie.inverse_transform(forward) === nothing && error("Scale function `$forward` set for aesthetic `$sym` has no inverse registered with `Makie.inverse_transform`, so analyses cannot back-transform their fit into data space. Use a scale with a known inverse (e.g. `log10`, `log2`, `log`, `sqrt`).")
+        insert!(transforms, aes, forward)
+    end
+    return transforms
+end
+
+positional_transform(transforms, ::Nothing) = nothing
+positional_transform(transforms, aes::DataType) = haskey(transforms, aes) ? (aes => transforms[aes]) : nothing
+
+# The positional-index => aesthetic mapping a layer resolves to, via the same `aesthetic_mapping` the final
+# scale resolution uses. Computed with continuous scitypes of the given arity, which is what determines the
+# position aesthetics; empty if the plot type has no mapping for that arity. This is the single source for
+# both picking a scale space and checking that the resolved layer still agrees with it.
+function position_aesthetics(plottype, attributes, arity::Int)
+    scitypes = ScientificType[Continuous() for _ in 1:arity]
+    am = aesthetic_mapping(plottype, merge(mandatory_attributes(plottype), attributes), scitypes)
+    out = Dictionary{Int, Type{<:Aesthetic}}()
+    for (k, v) in pairs(am)
+        k isa Int && v isa Type{<:Aesthetic} && insert!(out, k, v)
+    end
+    return out
+end
+
+output_aesthetic(plottype, attributes, arity::Int, idx::Int) =
+    get(position_aesthetics(plottype, attributes, arity), idx, nothing)
+
+position_transform(transforms, plottype, attributes, arity::Int, idx::Int) =
+    isempty(transforms) ? nothing : positional_transform(transforms, output_aesthetic(plottype, attributes, arity, idx))
+
+tag_scale_aesthetics(pl::ProcessedLayer, fit::Bool) =
+    fit ? ProcessedLayer(pl; scale_assumed_aes = position_aesthetics(pl.plottype, pl.attributes, length(pl.positional))) : pl
+tag_scale_aesthetics(pls::ProcessedLayers, fit::Bool) =
+    fit ? ProcessedLayers(map(pl -> tag_scale_aesthetics(pl, true), pls.layers)) : pls
+
+# A downstream transformation (a `visual` switching plot type or orientation) can resolve a positional to a
+# different aesthetic than the analysis assumed when it chose its scale space. Compare the assumed mapping to
+# the resolved one and error if a positional moved on or off a scaled aesthetic, since the fit and the display
+# would then disagree. Aesthetic-preserving changes (color, marker, a plot type with the same position mapping)
+# don't trip it.
+function check_scale_aesthetics(pl::ProcessedLayer)
+    isempty(pl.scale_assumed_aes) && return
+    resolved = position_aesthetics(pl.plottype, pl.attributes, length(pl.positional))
+    scaled = keys(pl.axis_transforms)
+    for (idx, assumed) in pairs(pl.scale_assumed_aes)
+        actual = get(resolved, idx, nothing)
+        if actual !== assumed && (assumed in scaled || (actual !== nothing && actual in scaled))
+            error(
+                "A downstream transformation (e.g. a `visual` changing plot type or orientation) altered the aesthetic mapping of an analysis layer that was fit in a transformed scale space: positional $idx was fit assuming aesthetic `$(nameof(assumed))` but the layer resolves it to `$(actual === nothing ? "none" : nameof(actual))`, so the fit no longer matches the display. Set the plot type and orientation on the analysis itself instead of via a downstream `visual`."
+            )
+        end
+    end
+    return
 end
 
 function aesthetic_for_symbol(s::Symbol)
@@ -377,7 +443,7 @@ function compute_axes_grid(d::AbstractDrawable, scales::Scales = scales(); axis 
     axis_dict::NamedArguments = axis isa NamedArguments ? copy(axis) : dictionary(pairs(axis))
     facet_size = get(facet, :size, nothing)
 
-    processedlayers = ProcessedLayers(d).layers
+    processedlayers = ProcessedLayers(d, axis_transforms_from_scales(scales)).layers
 
     scale_props = compute_scale_properties(processedlayers, scales)
 
