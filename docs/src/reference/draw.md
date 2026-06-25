@@ -617,6 +617,8 @@ fig
 
 The scale function must have an inverse registered with `Makie.inverse_transform` (e.g. `log10`, `log2`, `log`, `sqrt`) so analyses can back-transform their fit.
 
+Only statistics computed by AlgebraOfGraphics analyses participate in this. A statistic computed inside a Makie recipe (e.g. `visual(Density)` or `visual(Hist)`, which run their own kernel density estimate or binning on the data AlgebraOfGraphics hands them) does not see the scale and is computed in data space, only its display is transformed. To compute in the scaled space, use the AlgebraOfGraphics analysis (`AlgebraOfGraphics.density()`, `histogram()`, ...) instead of the recipe.
+
 
 ## Legend options
 
