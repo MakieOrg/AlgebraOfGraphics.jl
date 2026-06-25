@@ -4,6 +4,7 @@
 
 - Analyses (`linear`, `smooth`, `density`, `histogram`, `expectation`, `filled_contours`) now fit in transformed space and back-transform their output when the relevant aesthetic carries a `scale` function set via `scales` (e.g. `scales(Y = (; scale = log10))`), so a fit on log-scaled data is computed in log space. This is distinct from `axis = (; yscale = ...)`, which only transforms the display [#773](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/773).
 - `histogram` now accepts a `direction` (`:x` or `:y`) keyword for 1D histograms, which sets the bar orientation and the aesthetic (and thus scale space) the bins are computed in [#773](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/773).
+- `smooth` with the default `degree = 2` no longer collapses on `Date` (and other large-magnitude) x axes [#774](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/774).
 
 ## v0.12.13 - 2026-06-16
 

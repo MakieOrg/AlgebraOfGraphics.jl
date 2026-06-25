@@ -6,10 +6,19 @@ Base.@kwdef struct SmoothAnalysis
     level::Float64 = 0.95
 end
 
-# Loess loses precision when x lives far from 0 (e.g. `datetime2float(DateTime)` is ~1e11),
-# producing wildly wrong predictions between the endpoints. Recenter x around its mean before
-# fitting; Loess is translation-invariant in x, so this is exact, not approximate.
-_recenter(xn) = (offset = sum(xn) / length(xn); (xn .- offset, offset))
+# Loess loses precision when x lives far from 0 or spans a large magnitude (e.g.
+# `datetime2float(Date)` is ~1e11 and a multi-day range is ~1e9): the degree-2 normal equations
+# then mix terms differing by ~1e18 and the local fit is ill-conditioned, collapsing the prediction.
+# Standardize x (center on the mean, scale by the standard deviation) before fitting. For continuous
+# x this leaves predictions unchanged to machine precision; with few distinct x values Loess's
+# kd-tree becomes mildly scale-sensitive, shifting predictions by a fraction of a percent.
+function _standardize(xn)
+    offset = sum(xn) / length(xn)
+    centered = xn .- offset
+    scale = sqrt(sum(abs2, centered) / length(centered))
+    scale = iszero(scale) ? one(scale) : scale
+    return centered ./ scale, offset, scale
+end
 
 function (l::SmoothAnalysis)(input::ProcessedLayer)
     tx = position_transform(input.axis_transforms, Lines, input.attributes, 2, 1)
@@ -21,10 +30,10 @@ function (l::SmoothAnalysis)(input::ProcessedLayer)
             x, y = p
             xn = to_transformed_numerical(x, tx)
             yn = to_transformed_numerical(y, ty)
-            xn_c, x_offset = _recenter(xn)
-            model = Loess.loess(xn_c, yn; l.span, l.degree)
+            xn_s, x_offset, x_scale = _standardize(xn)
+            model = Loess.loess(xn_s, yn; l.span, l.degree)
             x̂n = collect(range(extrema(xn)..., length = l.npoints))
-            ŷn = Loess.predict(model, x̂n .- x_offset)
+            ŷn = Loess.predict(model, (x̂n .- x_offset) ./ x_scale)
             x̂ = from_transformed_numerical(x̂n, x, tx)
             ŷ = from_transformed_numerical(ŷn, y, ty)
             return (x̂, ŷ), (;)
@@ -37,10 +46,10 @@ function (l::SmoothAnalysis)(input::ProcessedLayer)
             x, y = p
             xn = to_transformed_numerical(x, tx)
             yn = to_transformed_numerical(y, ty)
-            xn_c, x_offset = _recenter(xn)
-            model = Loess.loess(xn_c, yn; l.span, l.degree)
+            xn_s, x_offset, x_scale = _standardize(xn)
+            model = Loess.loess(xn_s, yn; l.span, l.degree)
             x̂n = collect(range(extrema(xn)..., length = l.npoints))
-            pred = Loess.predict(model, x̂n .- x_offset; interval = l.interval, level = l.level)
+            pred = Loess.predict(model, (x̂n .- x_offset) ./ x_scale; interval = l.interval, level = l.level)
             ŷ = from_transformed_numerical(pred.predictions, y, ty)
             lower = from_transformed_numerical(pred.lower, y, ty)
             upper = from_transformed_numerical(pred.upper, y, ty)
@@ -74,8 +83,8 @@ Smaller values result in smaller local context in fitting.
 `degree` is the polynomial degree used in the loess model.
 Use `interval` to specify what type of interval the shaded band should represent,
 for a given coverage `level` (the default `0.95` equates `alpha = 0.05`).
-Valid values of `interval` are `:confidence` (the default), to delimit the uncertainty 
-of the predicted relationship. Use `interval = nothing` to only compute the line fit, 
+Valid values of `interval` are `:confidence` (the default), to delimit the uncertainty
+of the predicted relationship. Use `interval = nothing` to only compute the line fit,
 without any uncertainty estimate.
 `npoints` is the number of points used by Makie to draw the line and shaded band.
 
