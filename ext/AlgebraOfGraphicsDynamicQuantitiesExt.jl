@@ -4,7 +4,9 @@ import AlgebraOfGraphics
 import DynamicQuantities
 const DQ = DynamicQuantities
 
-AlgebraOfGraphics.extrema_finite(v::AbstractVector{<:DQ.Quantity}) = extrema(Iterators.filter(isfinite, skipmissing(v)))
+const MaybeMissingQuantities = AbstractVector{<:Union{Missing, DQ.Quantity}}
+
+AlgebraOfGraphics.extrema_finite(v::MaybeMissingQuantities) = extrema(Iterators.filter(isfinite, skipmissing(v)))
 
 struct DimensionMismatch{X1, X2} <: Exception
     x1::X1
@@ -19,23 +21,23 @@ function dimensionless(x, u::DQ.Quantity{<:Any, <:DQ.Dimensions})
     return DQ.ustrip(xexp)
 end
 
-function AlgebraOfGraphics.strip_units(scale, data::AbstractVector{<:DQ.Quantity})
+function AlgebraOfGraphics.strip_units(scale, data::MaybeMissingQuantities)
     u = AlgebraOfGraphics.getunit(scale)
     scale_unitless = AlgebraOfGraphics.ContinuousScale(dimensionless.(scale.extrema, u), scale.label, scale.force, scale.props)
-    data_unitless = dimensionless.(data, u)
+    data_unitless = AlgebraOfGraphics.map_nonmissing(x -> dimensionless(x, u), data)
     return scale_unitless, data_unitless
 end
 
-AlgebraOfGraphics.to_unitless_numerical(x::AbstractVector{<:DQ.Quantity}) = DQ.ustrip.(x)
+AlgebraOfGraphics.to_unitless_numerical(x::MaybeMissingQuantities) = AlgebraOfGraphics.map_nonmissing(DQ.ustrip, x)
 AlgebraOfGraphics.to_unitless_numerical(x::DQ.Quantity) = DQ.ustrip(x)
 
 # `oneunit` on the DQ.Quantity element type fails because the dimensions are stored at runtime,
 # not in the type, so we have to inspect values. Trusting `first(x)` alone would silently accept
 # vectors with mixed units; instead verify every element shares the same `oneunit` and error
-# otherwise. Empty vectors still error here because there's no element to read the unit from,
+# otherwise. Empty or all-missing vectors still error here because there's no element to read the unit from,
 # which matches the documented limitation that empty unit-bearing groups cannot be analysed.
-function only_oneunit(x::AbstractVector{<:DQ.Quantity})
-    first_q, rest = Iterators.peel(x)
+function only_oneunit(x::MaybeMissingQuantities)
+    first_q, rest = Iterators.peel(skipmissing(x))
     u = oneunit(first_q)
     for q in rest
         oneunit(q) == u || error("Encountered multiple different units in a DynamicQuantities vector: $u and $(oneunit(q))")
@@ -43,7 +45,7 @@ function only_oneunit(x::AbstractVector{<:DQ.Quantity})
     return u
 end
 
-AlgebraOfGraphics.from_unitless_numerical(x̂::AbstractArray{<:Real}, x::AbstractVector{<:DQ.Quantity}) =
+AlgebraOfGraphics.from_unitless_numerical(x̂::AbstractArray{<:Real}, x::MaybeMissingQuantities) =
     x̂ .* only_oneunit(x)
 
 AlgebraOfGraphics.is_unit(::DynamicQuantities.Quantity) = true # there seems to be no FreeUnits equivalent in DQ
@@ -52,7 +54,7 @@ function AlgebraOfGraphics.unit_string(u::DQ.Quantity)
     return string(DQ.dimension(u))
 end
 
-AlgebraOfGraphics.getunit(v::AbstractVector{<:DQ.Quantity}) = only_oneunit(v)
+AlgebraOfGraphics.getunit(v::MaybeMissingQuantities) = only_oneunit(v)
 
 function AlgebraOfGraphics.getunit(scale::AlgebraOfGraphics.ContinuousScale{T}) where {T <: DynamicQuantities.Quantity}
     o1, o2 = oneunit.(scale.extrema)
