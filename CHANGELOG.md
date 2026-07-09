@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.13.1 - 2026-07-09
+
+- Unitful and DynamicQuantities columns containing `missing` values no longer error when drawn [#777](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/777).
+
 ## v0.13.0 - 2026-06-25
 
 - Analyses (`linear`, `smooth`, `density`, `histogram`, `expectation`, `filled_contours`) now fit in transformed space and back-transform their output when the relevant aesthetic carries a `scale` function set via `scales` (e.g. `scales(Y = (; scale = log10))`), so a fit on log-scaled data is computed in log space. This is distinct from `axis = (; yscale = ...)`, which only transforms the display [#773](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/773).

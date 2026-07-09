@@ -514,6 +514,8 @@ getunit(::AbstractVector) = nothing
 
 function unit_string end
 
+map_nonmissing(f, v::AbstractVector) = map(x -> ismissing(x) ? missing : f(x), v)
+
 dimensionally_compatible(::Nothing, ::Nothing) = true
 dimensionally_compatible(_, _) = false
 

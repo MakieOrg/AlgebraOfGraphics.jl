@@ -337,6 +337,29 @@ if VERSION >= v"1.9"
         @test_throws_message "incompatible dimensions for AesY and AesDeltaY scales" draw(data((; id = 1:3, value = [1, 2, 3] .* U.u"m", err = [0.5, 0.6, 0.7] .* U.u"kg")) * mapping(:id, :value, :err) * visual(Errorbars))
     end
 
+    @testset "Units with missing values" begin
+        for (unit, override, factor) in [
+                (U.u"mg/L", U.u"g/L", 0.001),
+                (D.us"mg/L", D.us"g/L", 0.001),
+            ]
+            df = (; x = [1, 2, 3, 4], y = [1.0, missing, 3.0, 4.0] .* Ref(unit))
+            spec = data(df) * mapping(:x, :y) * visual(ScatterLines)
+
+            fg = draw(spec)
+            yscale = fg.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
+            @test AlgebraOfGraphics.getunit(yscale) == unit
+            @test yscale.extrema == (1.0 * unit, 4.0 * unit)
+            e = only(fg.grid[1].entries)
+            @test isequal(e.positional[2], [1.0, missing, 3.0, 4.0])
+
+            fg2 = draw(spec, scales(Y = (; unit = override)))
+            yscale2 = fg2.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
+            @test AlgebraOfGraphics.getunit(yscale2) == override
+            e2 = only(fg2.grid[1].entries)
+            @test isequal(e2.positional[2], factor .* [1.0, missing, 3.0, 4.0])
+        end
+    end
+
     @testset "ABLines units" begin
         function ablines_pos(spec)
             fg = draw(spec)
