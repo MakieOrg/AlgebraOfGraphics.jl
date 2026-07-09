@@ -84,6 +84,21 @@ end
     ]
 end
 
+@testset "unwrap" begin
+    unwrap = AlgebraOfGraphics.unwrap
+    unwrap_isequal = AlgebraOfGraphics.unwrap_isequal
+
+    @test unwrap("a") == "a"
+    @test unwrap(Presorted("a", 0x0003)) == "a"
+    @test unwrap(nonnumeric(1)) == 1
+    @test unwrap(Presorted(nonnumeric(1), 0x0003)) == 1
+
+    @test unwrap_isequal(Presorted("a", 0x0003), "a")
+    @test unwrap_isequal("a", Presorted("a", 0x0003))
+    @test unwrap_isequal(nonnumeric(1), Presorted(1, 0x0001))
+    @test !unwrap_isequal(Presorted("a", 0x0003), "b")
+end
+
 @testset "_kwdict errors" begin
     spec = mapping()
     @test_throws_message "Can't convert value passed via the keyword `axis`" draw(spec, axis = (key = :value))

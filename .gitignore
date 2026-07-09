@@ -10,3 +10,4 @@ docs/src/changelog.md
 /scratch
 docs/cheatsheet.pdf
 .claude
+test/reference_tests/pixelmatch-report*.html

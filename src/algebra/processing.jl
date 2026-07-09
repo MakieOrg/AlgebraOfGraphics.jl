@@ -166,7 +166,10 @@ function process_mappings(layer::Layer)
     return ProcessedLayer(; primary, positional, named, labels, scale_mapping)
 end
 
-function process(layer::Layer)
+analysis_typename(f::ComposedFunction) = analysis_typename(f.inner)
+analysis_typename(f) = nameof(typeof(f))
+
+function process(layer::Layer, axis_transforms = Dictionary{Type{<:Aesthetic}, Base.Callable}())
     processedlayer = process_mappings(layer)
     grouped_entry = if layer.data === Pregrouped()
         # For pregrouped data, apply shiftdims to match the structure of grouped data
@@ -181,7 +184,15 @@ function process(layer::Layer)
         group(processedlayer)
     end
     primary = map(vs -> map(getuniquevalue, vs), grouped_entry.primary)
-    transformed_processlayers = ProcessedLayers(layer.transformation(ProcessedLayer(grouped_entry; primary)))
+    transformed = try
+        layer.transformation(ProcessedLayer(grouped_entry; primary, axis_transforms))
+    catch e
+        (e isa ScaleDomainError && e.analysis === nothing) ? e : rethrow()
+    end
+    if transformed isa ScaleDomainError
+        throw(ScaleDomainError(transformed.forward, transformed.value, analysis_typename(layer.transformation), transformed.aes))
+    end
+    transformed_processlayers = ProcessedLayers(transformed)
     return ProcessedLayers(
         map(transformed_processlayers.layers) do transformed_processlayer
             attributes = merge(mandatory_attributes(transformed_processlayer.plottype), transformed_processlayer.attributes)

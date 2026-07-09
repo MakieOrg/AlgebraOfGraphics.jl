@@ -127,9 +127,16 @@ function categorical_colorbar(scale::CategoricalScale)
             highclip = nothing
         end
 
-        limits = extrema(values)
-        cgrad_stops = (values .- limits[1]) ./ (limits[2] - limits[1])
+        # Colorbar limits/stops need to be unitless; the unit, if any, is appended to the
+        # axis label to match the suffix-on-label convention used by continuous scales.
+        values_n = to_unitless_numerical(values)
+        limits = extrema(values_n)
+        cgrad_stops = (values_n .- limits[1]) ./ (limits[2] - limits[1])
         colormap = cgrad(colors, cgrad_stops; categorical = true)
+        unit = getunit(values)
+        if unit !== nothing
+            label = append_unit_string(label, unit_string(unit))
+        end
         return (;
             limits,
             colormap,

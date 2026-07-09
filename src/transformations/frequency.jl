@@ -10,6 +10,9 @@ struct FrequencyAnalysis end
 to_nothings(v) = fill(nothing, axes(v))
 
 function (f::FrequencyAnalysis)(input::ProcessedLayer)
+    input = map(input) do p, n
+        return _drop_missing_nan_rows(p, n)
+    end
     positional = vcat(input.positional, Any[map(to_nothings, first(input.positional))])
     labels = set(input.labels, length(positional) => "count")
     augmented_input = ProcessedLayer(input; positional, labels)
@@ -20,5 +23,7 @@ end
     frequency()
 
 Compute a frequency table of the arguments.
+
+Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.
 """
 frequency() = transformation(FrequencyAnalysis())

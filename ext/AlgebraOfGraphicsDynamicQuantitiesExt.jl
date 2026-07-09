@@ -26,11 +26,33 @@ function AlgebraOfGraphics.strip_units(scale, data::AbstractVector{<:DQ.Quantity
     return scale_unitless, data_unitless
 end
 
+AlgebraOfGraphics.to_unitless_numerical(x::AbstractVector{<:DQ.Quantity}) = DQ.ustrip.(x)
+AlgebraOfGraphics.to_unitless_numerical(x::DQ.Quantity) = DQ.ustrip(x)
+
+# `oneunit` on the DQ.Quantity element type fails because the dimensions are stored at runtime,
+# not in the type, so we have to inspect values. Trusting `first(x)` alone would silently accept
+# vectors with mixed units; instead verify every element shares the same `oneunit` and error
+# otherwise. Empty vectors still error here because there's no element to read the unit from,
+# which matches the documented limitation that empty unit-bearing groups cannot be analysed.
+function only_oneunit(x::AbstractVector{<:DQ.Quantity})
+    first_q, rest = Iterators.peel(x)
+    u = oneunit(first_q)
+    for q in rest
+        oneunit(q) == u || error("Encountered multiple different units in a DynamicQuantities vector: $u and $(oneunit(q))")
+    end
+    return u
+end
+
+AlgebraOfGraphics.from_unitless_numerical(x̂::AbstractArray{<:Real}, x::AbstractVector{<:DQ.Quantity}) =
+    x̂ .* only_oneunit(x)
+
 AlgebraOfGraphics.is_unit(::DynamicQuantities.Quantity) = true # there seems to be no FreeUnits equivalent in DQ
 
 function AlgebraOfGraphics.unit_string(u::DQ.Quantity)
     return string(DQ.dimension(u))
 end
+
+AlgebraOfGraphics.getunit(v::AbstractVector{<:DQ.Quantity}) = only_oneunit(v)
 
 function AlgebraOfGraphics.getunit(scale::AlgebraOfGraphics.ContinuousScale{T}) where {T <: DynamicQuantities.Quantity}
     o1, o2 = oneunit.(scale.extrema)
@@ -60,5 +82,10 @@ function AlgebraOfGraphics.dimensionally_compatible(q1::DynamicQuantities.Quanti
         end
     end
 end
+
+# a unit-free aesthetic (`nothing`) is a pure number, so it matches a dimensionless quantity
+# (e.g. an ABLines slope when AesX and AesY share the same unit).
+AlgebraOfGraphics.dimensionally_compatible(q::DQ.Quantity, ::Nothing) = iszero(DQ.dimension(DQ.uexpand(q)))
+AlgebraOfGraphics.dimensionally_compatible(::Nothing, q::DQ.Quantity) = iszero(DQ.dimension(DQ.uexpand(q)))
 
 end

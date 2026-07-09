@@ -39,28 +39,37 @@ end
 
 # TODO: add multidimensional version
 function (l::LinearAnalysis)(input::ProcessedLayer)
+    tx = position_transform(input.axis_transforms, Lines, input.attributes, 2, 1)
+    ty = position_transform(input.axis_transforms, Lines, input.attributes, 2, 2)
+    scales_active = !isempty(input.axis_transforms)
     output = map(input) do p, n
+        p, n = _drop_missing_nan_rows(p, n)
         x, y = p
-        xn = to_numerical(x)
-        weights = get_weighttype(l.weighttype)(get(n, :weights, similar(xn, 0)))
+        xn = to_transformed_numerical(x, tx)
+        yn = to_transformed_numerical(y, ty)
+        weights_raw = get(n, :weights, similar(xn, 0))
+        weights = get_weighttype(l.weighttype)(to_unitless_numerical(weights_raw))
         interval = l.interval === automatic ? :confidence : l.interval
         # FIXME: handle collinear case gracefully
         lin_model = if isempty(weights)
-            GLM.lm(add_intercept_column(xn), y; l.dropcollinear)
+            GLM.lm(add_intercept_column(xn), yn; l.dropcollinear)
         else
             # Supports confidence intervals, while `GLM.lm` currently does not
             # TODO: `wts` --> `weights` after GLM v2 is released
             # https://github.com/JuliaStats/GLM.jl/pull/631
-            GLM.glm(add_intercept_column(xn), y, l.distr, l.link; wts = weights, l.dropcollinear)
+            GLM.glm(add_intercept_column(xn), yn, l.distr, l.link; wts = weights, l.dropcollinear)
         end
         x̂n = collect(range(extrema(xn)..., length = l.npoints))
         pred = GLM.predict(lin_model, add_intercept_column(x̂n); interval, l.level)
-        x̂ = from_numerical(x̂n, x)
+        x̂ = from_transformed_numerical(x̂n, x, tx)
         return if !isnothing(interval)
-            ŷ, lower, upper = pred
+            ŷn, lowern, uppern = pred
+            ŷ = from_transformed_numerical(ŷn, y, ty)
+            lower = from_transformed_numerical(lowern, y, ty)
+            upper = from_transformed_numerical(uppern, y, ty)
             (x̂, ŷ, x̂, lower, upper), (;)
         else
-            ŷ = pred
+            ŷ = from_transformed_numerical(pred, y, ty)
             (x̂, ŷ, empty(x̂), empty(ŷ), empty(ŷ)), (;)
         end
     end
@@ -79,7 +88,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
         end, plottype = Band, label = :ci, attributes = dictionary([:alpha => 0.15])
     )
 
-    return ProcessedLayers([bandlayer, lineslayer])
+    return tag_scale_aesthetics(ProcessedLayers([bandlayer, lineslayer]), scales_active)
 end
 
 """
@@ -101,6 +110,8 @@ Additional weight support is provided via the `weighttype`, `weighttransform`, a
 `weighttransform` accepts an optional function to transform the weights before they are passed to `GLM.glm`.
 `distr` is forwarded to `GLM.glm`.
 See the GLM.jl documentation for more on working with weighted data.
+
+Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.
 
 This transformation creates two `ProcessedLayer`s labelled `:prediction` and `:ci`, which can be styled separately with `[subvisual](@ref)`.
 """

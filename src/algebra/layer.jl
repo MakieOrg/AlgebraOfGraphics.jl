@@ -135,6 +135,8 @@ Base.@kwdef struct ProcessedLayer <: AbstractDrawable
     attributes::NamedArguments = NamedArguments()
     scale_mapping::Dictionary{KeyType, Symbol} = Dictionary{KeyType, Symbol}() # maps mapping entries to scale ids for use of additional scales
     label::Union{Nothing, Symbol} = nothing # for selective styling via `visual(target(label))`
+    axis_transforms::Dictionary{Type{<:Aesthetic}, Base.Callable} = Dictionary{Type{<:Aesthetic}, Base.Callable}() # aesthetic type => forward scale function so analyses can fit in scale space (inverse via `Makie.inverse_transform`)
+    scale_assumed_aes::Dictionary{Int, Type{<:Aesthetic}} = Dictionary{Int, Type{<:Aesthetic}}() # positional => aesthetic the analysis assumed when fitting in scale space, checked against the resolved layer
 end
 
 function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
@@ -147,6 +149,8 @@ function ProcessedLayer(processedlayer::ProcessedLayer; kwargs...)
         processedlayer.attributes,
         processedlayer.scale_mapping,
         processedlayer.label,
+        processedlayer.axis_transforms,
+        processedlayer.scale_assumed_aes,
     )
     return ProcessedLayer(; merge(nt, values(kwargs))...)
 end
@@ -232,7 +236,7 @@ _default_categorical_palette(::Type{AesStack}) = Makie.automatic
 _default_categorical_palette(::Type{AesViolinSide}) = [:left, :right]
 _default_categorical_palette(::Type{AesLineWidth}) = Makie.automatic
 
-function _default_categorical_colors(categories::AbstractVector{Bin})
+function _default_categorical_colors(categories::AbstractVector{<:Bin})
     cmap = to_value(Makie.current_default_theme()[:colormap])
     return apply_palette(from_continuous(cmap), categories)
 end

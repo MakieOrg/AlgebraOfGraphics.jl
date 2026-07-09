@@ -10,9 +10,16 @@ function AlgebraOfGraphics.strip_units(scale, data::AbstractVector{<:Unitful.Qua
     return scale_unitless, data_unitless
 end
 
+AlgebraOfGraphics.to_unitless_numerical(x::AbstractVector{<:Unitful.Quantity}) = Unitful.ustrip.(x)
+AlgebraOfGraphics.to_unitless_numerical(x::Unitful.Quantity) = Unitful.ustrip(x)
+AlgebraOfGraphics.from_unitless_numerical(x̂::AbstractArray{<:Real}, x::AbstractVector{<:Unitful.Quantity}) =
+    x̂ .* Unitful.unit(eltype(x))
+
 function AlgebraOfGraphics.unit_string(u::Unitful.FreeUnits)
     return string(u)
 end
+
+AlgebraOfGraphics.getunit(v::AbstractVector{<:Unitful.Quantity}) = Unitful.unit(eltype(v))
 
 AlgebraOfGraphics.is_unit(::Unitful.FreeUnits) = true
 
@@ -32,5 +39,10 @@ end
 function AlgebraOfGraphics.dimensionally_compatible(u1::Unitful.FreeUnits, u2::Unitful.FreeUnits)
     return Unitful.dimension(u1) == Unitful.dimension(u2)
 end
+
+# a unit-free aesthetic (`nothing`) is a pure number, so it matches a dimensionless unit
+# (e.g. an ABLines slope when AesX and AesY share the same unit collapses to a plain number).
+AlgebraOfGraphics.dimensionally_compatible(u::Unitful.FreeUnits, ::Nothing) = Unitful.dimension(u) == Unitful.NoDims
+AlgebraOfGraphics.dimensionally_compatible(::Nothing, u::Unitful.FreeUnits) = Unitful.dimension(u) == Unitful.NoDims
 
 end

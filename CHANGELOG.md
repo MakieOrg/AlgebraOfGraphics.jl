@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+## v0.13.0 - 2026-06-25
+
+- Analyses (`linear`, `smooth`, `density`, `histogram`, `expectation`, `filled_contours`) now fit in transformed space and back-transform their output when the relevant aesthetic carries a `scale` function set via `scales` (e.g. `scales(Y = (; scale = log10))`), so a fit on log-scaled data is computed in log space. This is distinct from `axis = (; yscale = ...)`, which only transforms the display [#773](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/773).
+- `histogram` now accepts a `direction` (`:x` or `:y`) keyword for 1D histograms, which sets the bar orientation and the aesthetic (and thus scale space) the bins are computed in [#773](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/773).
+- `smooth` with the default `degree = 2` no longer collapses on `Date` (and other large-magnitude) x axes [#774](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/774).
+
+## v0.12.13 - 2026-06-16
+
+- `draw!` now honors `facet = (; size = FacetSize(...))` instead of erroring [#770](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/770).
+
+## v0.12.12 - 2026-06-04
+
+- Palette pairs and `categories` passed via `scales` now match `presorted`/`nonnumeric`-wrapped data without needing to re-wrap the keys [#766](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/766).
+
+## v0.12.11 - 2026-06-02
+
+- Fixed `ABLines` unit alignment rejecting a dimensionless slope when `AesX` and `AesY` carry the same unit [#763](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/763).
+- Multiline footnotes are now justified according to `footnotealign` [#764](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/764).
+
+## v0.12.10 - 2026-06-02
+
+- `ABLines` now aligns `Unitful` and `DynamicQuantities` units, with the intercept matching the y unit and the slope the y/x unit, and errors on incompatible units [#761](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/761).
+
+## v0.12.9 - 2026-05-19
+
+- Analyses (`linear`, `smooth`, `density`, `histogram`, `expectation`, `frequency`, `contours`, `filled_contours`) now accept `Unitful.Quantity` and `DynamicQuantities.Quantity` data [#758](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/758).
+- Analyses (`density`, `histogram`, `linear`, `smooth`, `frequency`, `expectation`) now drop rows where any numeric input is `missing` or `NaN`, instead of erroring or producing garbage. `Inf`/`-Inf` throw errors. [#757](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/757).
+
 ## v0.12.8 - 2026-05-04
 
 - Plot types with a native `:dodge` attribute (`BarPlot`, `BoxPlot`, `Violin`, `CrossBar`) now also accept the generic `dodge_x`/`dodge_y` mapping, which is routed to `:dodge` when the aesthetic matches the plot's orientation. This makes it possible to share a single `dodge_x`/`dodge_y` mapping across companion layers (e.g., `Scatter` + `BarPlot`) without switching attribute names per layer. [#747](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/747).

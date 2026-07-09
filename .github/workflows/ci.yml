@@ -19,6 +19,9 @@ jobs:
 
   test:
     uses: ./.github/workflows/_test.yml
+    permissions:
+      contents: read
+      statuses: write
     secrets: inherit
 
   docs:

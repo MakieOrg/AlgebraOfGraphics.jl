@@ -6,14 +6,14 @@ end
 
 function (c::FilledContoursAnalysis)(input::ProcessedLayer)
     z_limits = AlgebraOfGraphics.nested_extrema_finite(input.positional[3])
+    z_limits_n = (to_unitless_numerical(z_limits[1]), to_unitless_numerical(z_limits[2]))
     _levels(limits, bands::Int, levels::Nothing)::Vector{Float64} = collect(range(limits..., length = bands + 1))
     _levels(limits, bands::Nothing, levels::Vector{Float64}) = levels
     _levels(limits, bands, levels) = error("You must specify only either `bands` or `levels`")
-    lvls = _levels(z_limits, c.bands, c.levels)
+    lvls_n = _levels(z_limits_n, c.bands, c.levels)
 
-
-    xs = Vector{Float64}[]
-    ys = Vector{Float64}[]
+    xs = Any[]
+    ys = Any[]
     ids = Vector{Verbatim{Int}}[]
     subids = Vector{Verbatim{Int}}[]
     bins = Bin[]
@@ -21,20 +21,24 @@ function (c::FilledContoursAnalysis)(input::ProcessedLayer)
     named = map(empty, input.named)
     primary = map(empty, input.primary)
 
+    tx = positional_transform(input.axis_transforms, AesX)
+    ty = positional_transform(input.axis_transforms, AesY)
+
     for idx in CartesianIndices(shape(input))
         _x, _y, _z = slice(input.positional, idx)
         nslice = slice(input.named, idx)
         primslice = slice(input.primary, idx)
 
-        (x, y, z) = Makie.convert_arguments(Contourf, _x, _y, _z)
-        _xs, _ys, _ids, _subids, _bins = calculate_pregrouped_poly_columns(x, y, z, lvls)
+        _xn, _yn, _zn = to_transformed_numerical(_x, tx), to_transformed_numerical(_y, ty), to_unitless_numerical(_z)
+        (x, y, z) = Makie.convert_arguments(Contourf, _xn, _yn, _zn)
+        _xs, _ys, _ids, _subids, _bins_n = calculate_pregrouped_poly_columns(x, y, z, lvls_n)
 
-        for (_x, _y, _id, _subid, bin) in zip(_xs, _ys, _ids, _subids, _bins)
-            push!(xs, _x)
-            push!(ys, _y)
+        for (_x_p, _y_p, _id, _subid, bin_n) in zip(_xs, _ys, _ids, _subids, _bins_n)
+            push!(xs, from_transformed_numerical(_x_p, _x, tx))
+            push!(ys, from_transformed_numerical(_y_p, _y, ty))
             push!(ids, _id)
             push!(subids, _subid)
-            push!(bins, bin)
+            push!(bins, _reapply_bin_units(bin_n, _z))
             for key in keys(named)
                 push!(named[key], nslice[key])
             end
@@ -53,6 +57,10 @@ function (c::FilledContoursAnalysis)(input::ProcessedLayer)
     )
 
 end
+
+_reapply_bin_units(bin::Bin, z::AbstractVector{<:Real}) = bin
+_reapply_bin_units(bin::Bin, z::AbstractVector) =
+    Bin((only(from_unitless_numerical([bin.range[1]], z)), only(from_unitless_numerical([bin.range[2]], z))), bin.inclusive)
 
 """
     filled_contours(; bands=automatic, levels=automatic)

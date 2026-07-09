@@ -7,8 +7,11 @@ function (c::ContoursAnalysis)(input::ProcessedLayer)
     z_limits = AlgebraOfGraphics.nested_extrema_finite(input.positional[3])
     _levels(limits, levels::Int) = range(limits..., length = levels)
     lvls = _levels(z_limits, c.levels)
+    # `:color` flows through the scale system, which strips units; `:levels` is forwarded
+    # raw to Makie's Contour and must match the unit-stripped z passed to that recipe.
+    lvls_n = to_unitless_numerical(collect(lvls))
     named = merge(input.named, dictionary([:color => fill(lvls, length(input.positional[3]))]))
-    attributes = merge(input.attributes, dictionary([:levels => lvls, pairs(c.kwargs)...]))
+    attributes = merge(input.attributes, dictionary([:levels => lvls_n, pairs(c.kwargs)...]))
     return ProcessedLayer(input; plottype = Contour, named, attributes)
 end
 

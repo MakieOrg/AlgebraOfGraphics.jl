@@ -171,10 +171,12 @@ Base.print(io::IO, v::Verbatim) = print(io, v.x)
     end
 end
 
-struct Bin
-    range::Tuple{Float64, Float64}
+struct Bin{T}
+    range::Tuple{T, T}
     inclusive::Tuple{Bool, Bool}
 end
+
+Bin(range::Tuple{T1, T2}, inclusive) where {T1, T2} = Bin{promote_type(T1, T2)}(promote(range...), inclusive)
 
 Base.isless(b1::Bin, b2::Bin) = isless(b1.range, b2.range)
 
@@ -244,6 +246,15 @@ Base.isless(p::Presorted, p2::Presorted) = isless(p.i, p2.i)
 Base.isequal(p::Presorted, p2::Presorted) = isequal(p.x, p2.x)
 Base.:(==)(p::Presorted, p2::Presorted) = p.x == p2.x
 Base.hash(p::Presorted) = hash(p.x)
+
+# `presorted` and `nonnumeric` wrap a value to change how it sorts or which scale it gets,
+# without changing its identity. `unwrap` recovers the underlying value (recursively, in case
+# of nesting) so that palette pairs and `categories` passed via `scales` can be matched against
+# wrapped data values without the user having to re-wrap them.
+unwrap(x) = x
+unwrap(p::Presorted) = unwrap(p.x)
+unwrap(n::NonNumeric) = unwrap(n.x)
+unwrap_isequal(a, b) = isequal(unwrap(a), unwrap(b))
 
 struct FromContinuous{T}
     continuous::T

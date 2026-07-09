@@ -26,51 +26,77 @@ function reftest(f::Function, name::String, update::Bool = get(ENV, "UPDATE_REFI
                 cp(rec_path, ref_path; force = true)
             else
                 @test reference_exists
+                PixelMatch._record_failure(;
+                    name, status = :missing_ref, rec_path,
+                    rec_size = size(PNGFiles.load(rec_path))
+                )
             end
         else
             # Load both images
             img_ref = PNGFiles.load(ref_path)
             img_rec = PNGFiles.load(rec_path)
 
-            # Compare images using PixelMatch
-            num_pixels_diff, diff_image = PixelMatch.pixelmatch(img_ref, img_rec)
+            if size(img_ref) != size(img_rec)
+                # PixelMatch.pixelmatch errors on unequal sizes, so this is handled separately.
+                println("Reference test failed for: $name (image size mismatch)")
+                println("  Reference: $ref_path $(size(img_ref))")
+                println("  Recorded:  $rec_path $(size(img_rec))")
 
-            if num_pixels_diff > 0
-                # Save diff image
-                PNGFiles.save(diff_path, diff_image)
-
-                # Print paths for inspection
-                println("Reference test failed for: $name")
-                println("  Reference: $ref_path")
-                println("  Recorded:  $rec_path")
-                println("  Diff:      $diff_path")
-                println("  Pixels different: $num_pixels_diff")
-
-                # In interactive mode, offer to replace reference
-                if isinteractive()
-                    if update
-                        println("update = true, updating reference image")
-                        cp(rec_path, ref_path; force = true)
-                    else
-                        # Display images in VS Code if available
-                        if Base.displayable(MIME("juliavscode/html"))
-                            show_html_differ(; name, num_pixels_diff, ref_path, rec_path, diff_path)
-                        end
-                        print("Replace reference with recorded image? (y/n): ")
-                        response = readline()
-                        if lowercase(strip(response)) == "y"
-                            cp(rec_path, ref_path; force = true)
-                            println("Reference image updated.")
-                        else
-                            @test false
-                        end
-                    end
+                if isinteractive() && update
+                    println("update = true, updating reference image")
+                    cp(rec_path, ref_path; force = true)
                 else
-                    @test false
+                    PixelMatch._record_failure(;
+                        name, status = :size_mismatch, ref_path, rec_path,
+                        ref_size = size(img_ref), rec_size = size(img_rec)
+                    )
+                    @test size(img_ref) == size(img_rec)
                 end
             else
-                # Images match
-                @test true
+                # Compare images using PixelMatch
+                num_pixels_diff, diff_image = PixelMatch.pixelmatch(img_ref, img_rec)
+
+                if num_pixels_diff > 0
+                    # Save diff image
+                    PNGFiles.save(diff_path, diff_image)
+
+                    # Print paths for inspection
+                    println("Reference test failed for: $name")
+                    println("  Reference: $ref_path")
+                    println("  Recorded:  $rec_path")
+                    println("  Diff:      $diff_path")
+                    println("  Pixels different: $num_pixels_diff")
+
+                    # In interactive mode, offer to replace reference
+                    if isinteractive()
+                        if update
+                            println("update = true, updating reference image")
+                            cp(rec_path, ref_path; force = true)
+                        else
+                            # Display images in VS Code if available
+                            if Base.displayable(MIME("juliavscode/html"))
+                                show_html_differ(; name, num_pixels_diff, ref_path, rec_path, diff_path)
+                            end
+                            print("Replace reference with recorded image? (y/n): ")
+                            response = readline()
+                            if lowercase(strip(response)) == "y"
+                                cp(rec_path, ref_path; force = true)
+                                println("Reference image updated.")
+                            else
+                                @test false
+                            end
+                        end
+                    else
+                        PixelMatch._record_failure(;
+                            name, status = :mismatch, num_pixels_diff,
+                            ref_path, rec_path, diff_path, ref_size = size(img_ref), rec_size = size(img_rec)
+                        )
+                        @test false
+                    end
+                else
+                    # Images match
+                    @test true
+                end
             end
         end
     end
