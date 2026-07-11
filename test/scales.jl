@@ -171,6 +171,62 @@ end
 
 end
 
+@testset "temporal continuous color scales" begin
+    df = (; x = 1:4, y = [1, 3, 2, 4], t = DateTime(2024, 1, 1) .+ Day.(0:3))
+    cmap = Makie.to_colormap(AlgebraOfGraphics.default_colormap())
+
+    fg = draw(data(df) * mapping(:x, :y, color = :t))
+    colors = only(fg.grid[1].entries).named[:color]
+    @test colors[1] == cmap[1]
+    @test colors[end] == cmap[end]
+    @test length(unique(colors)) == 4
+
+    cb = only(AlgebraOfGraphics.compute_colorbars(fg))
+    @test cb.limits == datetime2float.([DateTime(2024, 1, 1), DateTime(2024, 1, 4)])
+    @test cb.ticks isa AlgebraOfGraphics.DateTicksWrapper{DateTime}
+
+    # `Date` and `Time` columns take the same path
+    for col in (Date(2024, 1, 1) .+ Month.(0:3), Time(6, 0) .+ Hour.(0:3))
+        fg_col = draw(data((; df.x, df.y, c = col)) * mapping(:x, :y, color = :c))
+        colors_col = only(fg_col.grid[1].entries).named[:color]
+        @test colors_col[1] == cmap[1]
+        @test colors_col[end] == cmap[end]
+    end
+
+    # user-supplied temporal colorrange
+    fg2 = draw(
+        data(df) * mapping(:x, :y, color = :t),
+        scales(Color = (; colorrange = (DateTime(2024, 1, 1), DateTime(2024, 1, 7))))
+    )
+    colors2 = only(fg2.grid[1].entries).named[:color]
+    @test colors2[1] == cmap[1]
+    @test colors2[end] != cmap[end] # data max sits below the colorrange max
+    cb2 = only(AlgebraOfGraphics.compute_colorbars(fg2))
+    @test cb2.limits == datetime2float.([DateTime(2024, 1, 1), DateTime(2024, 1, 7)])
+
+    # all-equal temporal color values don't error
+    fg3 = draw(data((; df.x, df.y, t2 = fill(DateTime(2024, 1, 1), 4))) * mapping(:x, :y, color = :t2))
+    @test only(AlgebraOfGraphics.compute_colorbars(fg3)).limits isa Vector{Float64}
+
+    # heatmap z takes the colorrange from the scale extrema
+    fg4 = draw(
+        data((; x = [1, 1, 2, 2], y = [1, 2, 1, 2], z = DateTime(2024, 1, 1) .+ Day.(0:3))) *
+            mapping(:x, :y, :z) * visual(Heatmap)
+    )
+    e4 = only(fg4.grid[1].entries)
+    @test e4.named[:colorrange] == datetime2float.((DateTime(2024, 1, 1), DateTime(2024, 1, 4)))
+    cb4 = only(AlgebraOfGraphics.compute_colorbars(fg4))
+    @test cb4.ticks isa AlgebraOfGraphics.DateTicksWrapper{DateTime}
+
+    # continuous markersize legend shows date-formatted labels
+    fg5 = draw(data(df) * mapping(:x, :y, markersize = :t))
+    mscale = fg5.grid[].continuousscales[AlgebraOfGraphics.AesMarkerSize][nothing]
+    tickvalues, markersizes, ticklabels =
+        AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale)
+    @test length(tickvalues) == length(markersizes) == length(ticklabels)
+    @test all(l -> occursin("2024", string(l)), ticklabels)
+end
+
 @testset "Aesthetics switch via visual attribute" begin
     spec = data((; x = ["A", "B", "C"], y = 1:3)) * mapping(:x, :y) * visual(BarPlot)
     ag1 = compute_axes_grid(spec)

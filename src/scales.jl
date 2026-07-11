@@ -579,6 +579,26 @@ datetime2float(x::Union{DateTime, Date}) = datetime2float(DateTime(x) - DateTime
 datetime2float(x::Time) = datetime2float(x - Time(0))
 datetime2float(x::Period) = Millisecond(x) / Millisecond(1)
 
+# Temporal data is converted to floats early (`contextfree_rescale`), but scale extrema
+# keep their temporal type so axis ticks can be formatted as dates. Aesthetics that combine
+# data with extrema numerically (color, markersize, linewidth) need the extrema as floats,
+# so scales are passed through `strip_temporal` before rescaling.
+strip_temporal(x::Union{TimeType, Period}) = datetime2float(x)
+strip_temporal(x) = x
+
+strip_temporal(scale::ContinuousScale) = scale
+function strip_temporal(scale::ContinuousScale{<:Union{TimeType, Period}})
+    return ContinuousScale(map(datetime2float, scale.extrema), scale.label, scale.force, scale.props)
+end
+
+# The markersize/linewidth legends compute tick labels from the scale extrema. For temporal
+# extrema, the default numeric tick finder would label the raw millisecond floats, so swap
+# it for date-formatted ticks; user-supplied ticks are kept as-is.
+temporal_tickfinder(::ContinuousScale, ticks) = ticks
+function temporal_tickfinder(::ContinuousScale{T}, ticks) where {T <: TimeType}
+    return ticks === _default_markersize_ticks ? DateTicksWrapper{T}(automatic) : ticks
+end
+
 """
     datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString})
 
