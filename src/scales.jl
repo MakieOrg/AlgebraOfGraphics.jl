@@ -583,6 +583,11 @@ datetime2float(x::Period) = Millisecond(x) / Millisecond(1)
 # keep their temporal type so axis ticks can be formatted as dates. Aesthetics that combine
 # data with extrema numerically (color, markersize, linewidth) need the extrema as floats,
 # so scales are passed through `strip_temporal` before rescaling.
+# This is the temporal analogue of `strip_units`; they differ because units need a target
+# unit (`props.unit`) and data conversion, while temporal data is float already. Should a
+# third non-float continuous family ever arise, consider unifying the pattern shared by
+# the colorbar and markersize/linewidth legends — "derive a tick finder from the typed
+# extrema, then strip the scale to float space" — into a single seam.
 strip_temporal(x::Union{TimeType, Period}) = datetime2float(x)
 strip_temporal(x) = x
 
