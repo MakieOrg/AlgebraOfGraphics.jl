@@ -57,6 +57,9 @@ end
 
 function continuous_colorbar(colorscale::ContinuousScale)
     label = getlabel(colorscale)
+    # temporal extrema get date-formatted colorbar ticks, other types return `automatic`
+    cbar_ticks = ticks(colorscale.extrema)
+    colorscale = strip_temporal(colorscale)
     limits = nonsingular_colorrange(colorscale)
     is_highclipped = limits[2] < colorscale.extrema[2]
     is_lowclipped = limits[1] > colorscale.extrema[1]
@@ -78,6 +81,7 @@ function continuous_colorbar(colorscale::ContinuousScale)
         lowclip,
         highclip,
         scale,
+        ticks = cbar_ticks,
     )
 end
 

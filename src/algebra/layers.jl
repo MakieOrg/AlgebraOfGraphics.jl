@@ -729,6 +729,7 @@ function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, 
     scale === nothing && return data # verbatim data
     if scale isa ContinuousScale
         scale, data = strip_units(scale, data)
+        scale = strip_temporal(scale)
     end
     return full_rescale(data, aes, scale)
 end
@@ -742,7 +743,7 @@ full_rescale(data, aes, scale::CategoricalScale) = rescale(data, scale)
 function nonsingular_colorrange(scale::ContinuousScale)
     props = scale.props.aesprops::AesColorContinuousProps
     cr = @something(props.colorrange, scale.extrema)
-    return nonsingular_limits(cr)
+    return nonsingular_limits(map(strip_temporal, cr))
 end
 
 # expand singular limits to (0, v) or (v, 0) if singular value v is nonzero
