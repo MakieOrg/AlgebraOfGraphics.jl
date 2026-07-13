@@ -3,23 +3,25 @@ module AlgebraOfGraphicsUnitfulExt
 import AlgebraOfGraphics
 import Unitful
 
-function AlgebraOfGraphics.strip_units(scale, data::AbstractVector{<:Unitful.Quantity})
+const MaybeMissingQuantities = AbstractVector{<:Union{Missing, Unitful.Quantity}}
+
+function AlgebraOfGraphics.strip_units(scale, data::MaybeMissingQuantities)
     u = AlgebraOfGraphics.getunit(scale)
     scale_unitless = AlgebraOfGraphics.ContinuousScale(Unitful.ustrip.(u, scale.extrema), scale.label, scale.force, scale.props)
-    data_unitless = Unitful.ustrip.(u, data)
+    data_unitless = AlgebraOfGraphics.map_nonmissing(x -> Unitful.ustrip(u, x), data)
     return scale_unitless, data_unitless
 end
 
-AlgebraOfGraphics.to_unitless_numerical(x::AbstractVector{<:Unitful.Quantity}) = Unitful.ustrip.(x)
+AlgebraOfGraphics.to_unitless_numerical(x::MaybeMissingQuantities) = AlgebraOfGraphics.map_nonmissing(Unitful.ustrip, x)
 AlgebraOfGraphics.to_unitless_numerical(x::Unitful.Quantity) = Unitful.ustrip(x)
-AlgebraOfGraphics.from_unitless_numerical(x̂::AbstractArray{<:Real}, x::AbstractVector{<:Unitful.Quantity}) =
-    x̂ .* Unitful.unit(eltype(x))
+AlgebraOfGraphics.from_unitless_numerical(x̂::AbstractArray{<:Real}, x::MaybeMissingQuantities) =
+    x̂ .* Unitful.unit(nonmissingtype(eltype(x)))
 
 function AlgebraOfGraphics.unit_string(u::Unitful.FreeUnits)
     return string(u)
 end
 
-AlgebraOfGraphics.getunit(v::AbstractVector{<:Unitful.Quantity}) = Unitful.unit(eltype(v))
+AlgebraOfGraphics.getunit(v::MaybeMissingQuantities) = Unitful.unit(nonmissingtype(eltype(v)))
 
 AlgebraOfGraphics.is_unit(::Unitful.FreeUnits) = true
 
