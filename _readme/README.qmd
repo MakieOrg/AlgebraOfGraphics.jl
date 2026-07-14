@@ -70,6 +70,10 @@ draw(facetted)
 draw(facetted, scales(Color = (; palette = :Set1_3)))
 ```
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get help, report bugs, and contribute code or documentation.
+
 ## Acknowledgements
 
 Analyses rely on [StatsBase.jl](https://github.com/JuliaStats/StatsBase.jl), [Loess.jl](https://github.com/JuliaStats/Loess.jl), [KernelDensity.jl](https://github.com/JuliaStats/KernelDensity.jl), and [GLM.jl](https://github.com/JuliaStats/GLM.jl). Some of their documentation is transcribed here.
