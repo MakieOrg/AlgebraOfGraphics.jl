@@ -217,6 +217,30 @@ end
     tickvalues, _, labels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale7)
     @test tickvalues == datetime2float.(user_dts)
     @test labels == ["2024-01-01T00:00:00", "2024-01-03T00:00:00"]
+
+    # any tick spec on a temporal scale runs in date space
+    df_m = (; x = 1:6, y = [1, 3, 2, 4, 3, 5], t = Date(2024, 1, 1) .+ Month.(0:5))
+    lo, hi = datetime2float(DateTime(2024, 1, 1)), datetime2float(DateTime(2024, 6, 1))
+    steps = Date(2024, 1, 1):Month(2):Date(2024, 6, 1)
+    fg8 = draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = steps)))
+    tickvalues, labels = Makie.get_ticks(only(fg8.grid).axis.xticks[], identity, automatic, lo, hi)
+    @test tickvalues == datetime2float.(DateTime.(steps))
+    @test labels == ["2024-01", "2024-03", "2024-05"]
+
+    fg9 = draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = Makie.DateTimeTicks(3))))
+    tickvalues, labels = Makie.get_ticks(only(fg9.grid).axis.xticks[], identity, automatic, lo, hi)
+    @test tickvalues == datetime2float.(DateTime.(steps))
+    @test labels == ["2024-01", "2024-03", "2024-05"]
+
+    fg10 = draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = datetimeticks(Dates.monthname, [Date(2024, 1, 1), Date(2024, 4, 1)]))))
+    tickvalues, labels = Makie.get_ticks(only(fg10.grid).axis.xticks[], identity, automatic, lo, hi)
+    @test tickvalues == datetime2float.([Date(2024, 1, 1), Date(2024, 4, 1)])
+    @test labels == ["January", "April"]
+
+    fg11 = draw(data(df_m) * mapping(:x, :y, markersize = :t), scales(MarkerSize = (; ticks = [Date(2024, 1, 1), Date(2024, 4, 1)], tickformat = "yyyy-mm")))
+    mscale11 = fg11.grid[].continuousscales[AlgebraOfGraphics.AesMarkerSize][nothing]
+    _, _, labels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale11)
+    @test labels == ["2024-01", "2024-04"]
 end
 
 @testset "Aesthetics switch via visual attribute" begin

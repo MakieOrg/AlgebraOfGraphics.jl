@@ -606,11 +606,15 @@ function guide_tickfinder(scale::ContinuousScale, tickfinder)
     return strip_ticks(scale, tickfinder)
 end
 
-# User-specified ticks are given in data space, so typed tick values (temporal here,
-# quantities in the unit extensions) are converted to the float space the data is in.
+# User-specified ticks are given in data space and are converted to the float space the
+# data is in. Mirroring Makie's dim conversions, temporal scales interpret any tick spec
+# in date space by wrapping it in `DateTicksWrapper` (so date vectors, `StepRange`s like
+# `Date(2024):Month(1):Date(2025)` and `Makie.DateTimeTicks` all work), while unit scales
+# find ticks in float space like a plain axis and only need their tick values converted
+# to the display unit (methods in the Unitful/DynamicQuantities extensions).
 strip_ticks(::ContinuousScale, ticks) = ticks
-strip_ticks(::ContinuousScale{T}, ticks::AbstractVector{<:TimeType}) where {T <: TimeType} = DateTicksWrapper{T}(ticks)
-strip_ticks(::ContinuousScale{T}, ticks::Tuple{<:AbstractVector{<:TimeType}, <:Any}) where {T <: TimeType} = DateTicksWrapper{T}(ticks)
+strip_ticks(::ContinuousScale{T}, ticks) where {T <: TimeType} = DateTicksWrapper{T}(ticks)
+strip_ticks(::ContinuousScale{<:TimeType}, ticks::DateTicksWrapper) = ticks
 
 """
     datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString})
@@ -853,16 +857,17 @@ function float_to_time(vmin, vmax)
     return vmin_t, vmax_t
 end
 
+# tick values that are already floats (e.g. from `datetimeticks`) pass through unchanged
 function Makie.get_ticks(t::DateTicksWrapper{T}, scale, formatter, vmin, vmax) where {T <: Union{DateTime, Date}}
     vmin_dt, vmax_dt = float_to_datetime(vmin, vmax)
     datetimes, labels = Makie.get_ticks(t.ticks, scale, formatter, vmin_dt, vmax_dt)
-    return map(datetime2float, datetimes), labels
+    return to_unitless_numerical(datetimes), labels
 end
 
 function Makie.get_ticks(t::DateTicksWrapper{Time}, scale, formatter, vmin, vmax)
     vmin_t, vmax_t = float_to_time(vmin, vmax)
     times, labels = Makie.get_ticks(t.ticks, scale, formatter, vmin_t, vmax_t)
-    return map(datetime2float, times), labels
+    return to_unitless_numerical(times), labels
 end
 
 function ticks(::NTuple{2, T}) where {T <: TimeType}
