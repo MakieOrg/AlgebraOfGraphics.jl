@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Temporal columns (`DateTime`, `Date`, `Time`) can now be mapped to continuous `color` (and other continuous aesthetics like `markersize`), with the colorbar showing date-formatted ticks [#779](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/779).
+- Continuous scale `ticks` can now be specified in data space on temporal and unit scales, as a vector of `DateTime`s or quantities, or a `(values, labels)` tuple [#779](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/779).
 
 ## v0.13.1 - 2026-07-09
 

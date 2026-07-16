@@ -16,6 +16,14 @@ function AlgebraOfGraphics.strip_scale(scale, data::MaybeMissingQuantities)
     return AlgebraOfGraphics.strip_scale(scale), data_unitless
 end
 
+function AlgebraOfGraphics.strip_ticks(scale::AlgebraOfGraphics.ContinuousScale{<:Unitful.Quantity}, ticks::AbstractVector{<:Unitful.Quantity})
+    return Unitful.ustrip.(AlgebraOfGraphics.getunit(scale), ticks)
+end
+
+function AlgebraOfGraphics.strip_ticks(scale::AlgebraOfGraphics.ContinuousScale{<:Unitful.Quantity}, (values, labels)::Tuple{<:AbstractVector{<:Unitful.Quantity}, <:Any})
+    return Unitful.ustrip.(AlgebraOfGraphics.getunit(scale), values), labels
+end
+
 AlgebraOfGraphics.to_unitless_numerical(x::MaybeMissingQuantities) = AlgebraOfGraphics.map_nonmissing(Unitful.ustrip, x)
 AlgebraOfGraphics.to_unitless_numerical(x::Unitful.Quantity) = Unitful.ustrip(x)
 AlgebraOfGraphics.from_unitless_numerical(x̂::AbstractArray{<:Real}, x::MaybeMissingQuantities) =

@@ -197,6 +197,26 @@ end
     mscale = fg4.grid[].continuousscales[AlgebraOfGraphics.AesMarkerSize][nothing]
     _, _, ticklabels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale)
     @test all(l -> occursin("2024-01", string(l)), ticklabels)
+
+    # user ticks given as DateTime values
+    user_dts = [DateTime(2024, 1, 1), DateTime(2024, 1, 3)]
+    fg5 = draw(data(df) * mapping(:t, :y), scales(X = (; ticks = user_dts)))
+    xticks = only(fg5.grid).axis.xticks[]
+    @test xticks isa AlgebraOfGraphics.DateTicksWrapper{DateTime}
+    tickvalues, labels = Makie.get_ticks(xticks, identity, automatic, datetime2float(df.t[1]), datetime2float(df.t[end]))
+    @test tickvalues == datetime2float.(user_dts)
+    @test labels == ["2024-01-01T00:00:00", "2024-01-03T00:00:00"]
+
+    fg6 = draw(data(df) * mapping(:t, :y), scales(X = (; ticks = (user_dts, ["start", "mid"]))))
+    tickvalues, labels = Makie.get_ticks(only(fg6.grid).axis.xticks[], identity, automatic, datetime2float(df.t[1]), datetime2float(df.t[end]))
+    @test tickvalues == datetime2float.(user_dts)
+    @test labels == ["start", "mid"]
+
+    fg7 = draw(data(df) * mapping(:x, :y, markersize = :t), scales(MarkerSize = (; ticks = user_dts)))
+    mscale7 = fg7.grid[].continuousscales[AlgebraOfGraphics.AesMarkerSize][nothing]
+    tickvalues, _, labels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale7)
+    @test tickvalues == datetime2float.(user_dts)
+    @test labels == ["2024-01-01T00:00:00", "2024-01-03T00:00:00"]
 end
 
 @testset "Aesthetics switch via visual attribute" begin
@@ -336,6 +356,21 @@ if VERSION >= v"1.9"
             @test AlgebraOfGraphics.getunit(xscale) == xoverride
             yscale = fg2.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
             @test AlgebraOfGraphics.getunit(yscale) == yoverride
+        end
+
+        for (mm, cm) in [(U.u"mm", U.u"cm"), (D.us"mm", D.us"cm")]
+            df = (; y = [1, 3, 2, 4], q = [10.0, 20.0, 30.0, 40.0] .* mm)
+            fg = draw(data(df) * mapping(:q, :y), scales(X = (; unit = cm, ticks = [10.0, 30.0] .* mm)))
+            @test only(fg.grid).axis.xticks[] == [1, 3]
+
+            fg2 = draw(data(df) * mapping(:q, :y), scales(X = (; ticks = ([10.0, 30.0] .* mm, ["low", "high"]))))
+            @test only(fg2.grid).axis.xticks[] == ([10.0, 30.0], ["low", "high"])
+
+            fg3 = draw(data((; x = 1:4, df.y, df.q)) * mapping(:x, :y, markersize = :q), scales(MarkerSize = (; ticks = [10.0, 30.0] .* mm)))
+            mscale = fg3.grid[].continuousscales[AlgebraOfGraphics.AesMarkerSize][nothing]
+            tickvalues, _, ticklabels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale)
+            @test tickvalues == [10.0, 30.0]
+            @test ticklabels == ["10", "30"]
         end
 
         @test AlgebraOfGraphics.dimensionally_compatible(nothing, nothing)

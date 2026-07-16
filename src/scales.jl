@@ -593,16 +593,24 @@ strip_scale(scale, data) = strip_scale(scale), data
 
 # Guides that compute tick labels from stripped extrema (colorbar, markersize/linewidth
 # legends) would label the raw float values, so a default tick finder is swapped for one
-# derived from the typed extrema (`ticks`); user-supplied ticks are kept as-is.
+# derived from the typed extrema (`ticks`); user-supplied ticks pass through `strip_ticks`.
 function strip_scale_derive_ticks(scale::ContinuousScale, tickfinder)
     return strip_scale(scale), guide_tickfinder(scale, tickfinder)
 end
 
 function guide_tickfinder(scale::ContinuousScale, tickfinder)
-    tickfinder === automatic || tickfinder === _default_markersize_ticks || return tickfinder
-    derived = ticks(scale.extrema)
-    return derived === automatic ? tickfinder : derived
+    if tickfinder === automatic || tickfinder === _default_markersize_ticks
+        derived = ticks(scale.extrema)
+        return derived === automatic ? tickfinder : derived
+    end
+    return strip_ticks(scale, tickfinder)
 end
+
+# User-specified ticks are given in data space, so typed tick values (temporal here,
+# quantities in the unit extensions) are converted to the float space the data is in.
+strip_ticks(::ContinuousScale, ticks) = ticks
+strip_ticks(::ContinuousScale{T}, ticks::AbstractVector{<:TimeType}) where {T <: TimeType} = DateTicksWrapper{T}(ticks)
+strip_ticks(::ContinuousScale{T}, ticks::Tuple{<:AbstractVector{<:TimeType}, <:Any}) where {T <: TimeType} = DateTicksWrapper{T}(ticks)
 
 """
     datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString})
@@ -814,7 +822,7 @@ function ticks(scale::ContinuousScale)
     return if _ticks === nothing
         ticks(scale.extrema)
     else
-        _ticks
+        strip_ticks(scale, _ticks)
     end
 end
 
