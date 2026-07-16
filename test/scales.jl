@@ -176,7 +176,7 @@ end
     colors = only(fg.grid[1].entries).named[:color]
     @test colors[1] == cmap[1] && colors[end] == cmap[end]
     cb = only(AlgebraOfGraphics.compute_colorbars(fg))
-    @test cb.limits == datetime2float.([DateTime(2024, 1, 1), DateTime(2024, 1, 4)])
+    @test cb.limits == datetime2float.((DateTime(2024, 1, 1), DateTime(2024, 1, 4)))
     @test cb.ticks isa AlgebraOfGraphics.DateTicksWrapper{DateTime}
 
     # a DateTime colorrange is stripped to floats like the data
@@ -185,7 +185,7 @@ end
         scales(Color = (; colorrange = (DateTime(2024, 1, 1), DateTime(2024, 1, 7))))
     )
     @test only(fg2.grid[1].entries).named[:color][end] != cmap[end] # data max sits below the colorrange max
-    @test only(AlgebraOfGraphics.compute_colorbars(fg2)).limits == datetime2float.([DateTime(2024, 1, 1), DateTime(2024, 1, 7)])
+    @test only(AlgebraOfGraphics.compute_colorbars(fg2)).limits == datetime2float.((DateTime(2024, 1, 1), DateTime(2024, 1, 7)))
 
     # all-equal values and the heatmap colorrange path don't error
     @test draw(data((; df.x, df.y, t2 = fill(DateTime(2024, 1, 1), 4))) * mapping(:x, :y, color = :t2)) isa AlgebraOfGraphics.FigureGrid

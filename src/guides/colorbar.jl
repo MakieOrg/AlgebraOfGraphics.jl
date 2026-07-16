@@ -57,14 +57,10 @@ end
 
 function continuous_colorbar(colorscale::ContinuousScale)
     label = getlabel(colorscale)
-    # temporal extrema get date-formatted colorbar ticks, other types return `automatic`
-    cbar_ticks = ticks(colorscale.extrema)
-    colorscale = strip_temporal(colorscale)
+    colorscale, cbar_ticks = strip_scale_derive_ticks(colorscale, automatic)
     limits = nonsingular_colorrange(colorscale)
     is_highclipped = limits[2] < colorscale.extrema[2]
     is_lowclipped = limits[1] > colorscale.extrema[1]
-
-    _, limits = strip_units(colorscale, collect(limits))
 
     colormap = @something colorscale.props.aesprops.colormap default_colormap()
     colormap_colors = Makie.to_colormap(colormap)

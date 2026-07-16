@@ -579,29 +579,29 @@ datetime2float(x::Union{DateTime, Date}) = datetime2float(DateTime(x) - DateTime
 datetime2float(x::Time) = datetime2float(x - Time(0))
 datetime2float(x::Period) = Millisecond(x) / Millisecond(1)
 
-# Temporal data is converted to floats early (`contextfree_rescale`), but scale extrema
-# keep their temporal type so axis ticks can be formatted as dates. Aesthetics that combine
-# data with extrema numerically (color, markersize, linewidth) need the extrema as floats,
-# so scales are passed through `strip_temporal` before rescaling.
-# This is the temporal analogue of `strip_units`; they differ because units need a target
-# unit (`props.unit`) and data conversion, while temporal data is float already. Should a
-# third non-float continuous family ever arise, consider unifying the pattern shared by
-# the colorbar and markersize/linewidth legends — "derive a tick finder from the typed
-# extrema, then strip the scale to float space" — into a single seam.
-strip_temporal(x::Union{TimeType, Period}) = datetime2float(x)
-strip_temporal(x) = x
-
-strip_temporal(scale::ContinuousScale) = scale
-function strip_temporal(scale::ContinuousScale{<:Union{TimeType, Period}})
+# Continuous scales can carry non-float extrema: temporal types here, units via the
+# Unitful/DynamicQuantities extensions. Rescaling and guides work in float space, so
+# `strip_scale` converts a scale's extrema (and, for units, the data) to floats.
+# Temporal data needs no conversion because it is turned into floats early
+# (`contextfree_rescale`); only the extrema keep their type so guides can derive
+# date-formatted ticks from them before stripping (`strip_scale_derive_ticks`).
+strip_scale(scale::ContinuousScale) = scale
+function strip_scale(scale::ContinuousScale{<:Union{TimeType, Period}})
     return ContinuousScale(map(datetime2float, scale.extrema), scale.label, scale.force, scale.props)
 end
+strip_scale(scale, data) = strip_scale(scale), data
 
-# The markersize/linewidth legends compute tick labels from the scale extrema. For temporal
-# extrema, the default numeric tick finder would label the raw millisecond floats, so swap
-# it for date-formatted ticks; user-supplied ticks are kept as-is.
-temporal_tickfinder(::ContinuousScale, ticks) = ticks
-function temporal_tickfinder(::ContinuousScale{T}, ticks) where {T <: TimeType}
-    return ticks === _default_markersize_ticks ? DateTicksWrapper{T}(automatic) : ticks
+# Guides that compute tick labels from stripped extrema (colorbar, markersize/linewidth
+# legends) would label the raw float values, so a default tick finder is swapped for one
+# derived from the typed extrema (`ticks`); user-supplied ticks are kept as-is.
+function strip_scale_derive_ticks(scale::ContinuousScale, tickfinder)
+    return strip_scale(scale), guide_tickfinder(scale, tickfinder)
+end
+
+function guide_tickfinder(scale::ContinuousScale, tickfinder)
+    tickfinder === automatic || tickfinder === _default_markersize_ticks || return tickfinder
+    derived = ticks(scale.extrema)
+    return derived === automatic ? tickfinder : derived
 end
 
 """

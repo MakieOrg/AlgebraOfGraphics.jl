@@ -5,11 +5,15 @@ import Unitful
 
 const MaybeMissingQuantities = AbstractVector{<:Union{Missing, Unitful.Quantity}}
 
-function AlgebraOfGraphics.strip_units(scale, data::MaybeMissingQuantities)
+function AlgebraOfGraphics.strip_scale(scale::AlgebraOfGraphics.ContinuousScale{<:Unitful.Quantity})
     u = AlgebraOfGraphics.getunit(scale)
-    scale_unitless = AlgebraOfGraphics.ContinuousScale(Unitful.ustrip.(u, scale.extrema), scale.label, scale.force, scale.props)
+    return AlgebraOfGraphics.ContinuousScale(Unitful.ustrip.(u, scale.extrema), scale.label, scale.force, scale.props)
+end
+
+function AlgebraOfGraphics.strip_scale(scale, data::MaybeMissingQuantities)
+    u = AlgebraOfGraphics.getunit(scale)
     data_unitless = AlgebraOfGraphics.map_nonmissing(x -> Unitful.ustrip(u, x), data)
-    return scale_unitless, data_unitless
+    return AlgebraOfGraphics.strip_scale(scale), data_unitless
 end
 
 AlgebraOfGraphics.to_unitless_numerical(x::MaybeMissingQuantities) = AlgebraOfGraphics.map_nonmissing(Unitful.ustrip, x)

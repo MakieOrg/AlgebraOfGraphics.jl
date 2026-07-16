@@ -21,11 +21,15 @@ function dimensionless(x, u::DQ.Quantity{<:Any, <:DQ.Dimensions})
     return DQ.ustrip(xexp)
 end
 
-function AlgebraOfGraphics.strip_units(scale, data::MaybeMissingQuantities)
+function AlgebraOfGraphics.strip_scale(scale::AlgebraOfGraphics.ContinuousScale{<:DQ.Quantity})
     u = AlgebraOfGraphics.getunit(scale)
-    scale_unitless = AlgebraOfGraphics.ContinuousScale(dimensionless.(scale.extrema, u), scale.label, scale.force, scale.props)
+    return AlgebraOfGraphics.ContinuousScale(dimensionless.(scale.extrema, u), scale.label, scale.force, scale.props)
+end
+
+function AlgebraOfGraphics.strip_scale(scale, data::MaybeMissingQuantities)
+    u = AlgebraOfGraphics.getunit(scale)
     data_unitless = AlgebraOfGraphics.map_nonmissing(x -> dimensionless(x, u), data)
-    return scale_unitless, data_unitless
+    return AlgebraOfGraphics.strip_scale(scale), data_unitless
 end
 
 AlgebraOfGraphics.to_unitless_numerical(x::MaybeMissingQuantities) = AlgebraOfGraphics.map_nonmissing(DQ.ustrip, x)
