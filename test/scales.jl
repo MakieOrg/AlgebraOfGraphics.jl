@@ -160,7 +160,6 @@ end
     @test length(floats) > 0
     @test length(floats) == length(labels)
 
-    # datetimeticks public API unchanged
     floats, labels = datetimeticks(month, [Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
     @test labels == ["1", "3", "5"]
     @test floats == datetime2float.([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
@@ -168,6 +167,10 @@ end
     floats, labels = datetimeticks([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)], ["January", "March", "May"])
     @test labels == ["January", "March", "May"]
     @test floats == datetime2float.([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
+
+    df_at = (; x = 1:3, y = [1, 3, 2], t = [Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
+    fg_at = draw(data(df_at) * mapping(:t, :y), axis = (; xticks = datetimeticks(month, df_at.t)))
+    @test only(fg_at.grid).axis.xticks[] == (datetime2float.(df_at.t), ["1", "3", "5"])
 
     # DateTime as continuous color range
     df = (; x = 1:4, y = [1, 3, 2, 4], t = DateTime(2024, 1, 1) .+ Day.(0:3))
@@ -232,7 +235,7 @@ end
     @test tickvalues == datetime2float.(DateTime.(steps))
     @test labels == ["2024-01", "2024-03", "2024-05"]
 
-    fg10 = draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = datetimeticks(Dates.monthname, [Date(2024, 1, 1), Date(2024, 4, 1)]))))
+    fg10 = draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = ([Date(2024, 1, 1), Date(2024, 4, 1)], ["January", "April"]))))
     tickvalues, labels = Makie.get_ticks(only(fg10.grid).axis.xticks[], identity, automatic, lo, hi)
     @test tickvalues == datetime2float.([Date(2024, 1, 1), Date(2024, 4, 1)])
     @test labels == ["January", "April"]
@@ -242,8 +245,9 @@ end
     _, _, labels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale11)
     @test labels == ["2024-01", "2024-04"]
 
-    @test_throws_message "must be given as `Date`, `DateTime`, or `Time`" draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = [1, 2, 3])))
-    @test_throws_message "must be given as `Date`, `DateTime`, or `Time`" draw(data(df_m) * mapping(:x, :y, markersize = :t), scales(MarkerSize = (; ticks = 1:3)))
+    @test_throws_message "Tick values for a `Date` scale must be given as `Date` values" draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = [1, 2, 3])))
+    @test_throws_message "Tick values for a `Date` scale must be given as `Date` values" draw(data(df_m) * mapping(:x, :y, markersize = :t), scales(MarkerSize = (; ticks = 1:3)))
+    @test_throws_message "Tick values for a `Date` scale must be given as `Date` values" draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = ([1, 2, 3], ["a", "b", "c"]))))
 end
 
 @testset "Aesthetics switch via visual attribute" begin
