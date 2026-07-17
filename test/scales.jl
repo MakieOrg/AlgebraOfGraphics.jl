@@ -241,6 +241,9 @@ end
     mscale11 = fg11.grid[].continuousscales[AlgebraOfGraphics.AesMarkerSize][nothing]
     _, _, labels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale11)
     @test labels == ["2024-01", "2024-04"]
+
+    @test_throws_message "must be given as `Date`, `DateTime`, or `Time`" draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = [1, 2, 3])))
+    @test_throws_message "must be given as `Date`, `DateTime`, or `Time`" draw(data(df_m) * mapping(:x, :y, markersize = :t), scales(MarkerSize = (; ticks = 1:3)))
 end
 
 @testset "Aesthetics switch via visual attribute" begin

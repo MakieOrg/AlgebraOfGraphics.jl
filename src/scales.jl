@@ -616,6 +616,16 @@ strip_ticks(::ContinuousScale, ticks) = ticks
 strip_ticks(::ContinuousScale{T}, ticks) where {T <: TimeType} = DateTicksWrapper{T}(ticks)
 strip_ticks(::ContinuousScale{<:TimeType}, ticks::DateTicksWrapper) = ticks
 
+# Explicit tick positions on a temporal scale must be temporal values; the internal
+# float conversion is not public, so a bare numeric vector is rejected. A `(values, labels)`
+# tuple is still accepted (that is what `datetimeticks` returns).
+function strip_ticks(::ContinuousScale{<:TimeType}, ::AbstractVector{<:Real})
+    return error(
+        "Tick values for a temporal scale must be given as `Date`, `DateTime`, or `Time` values, e.g. `ticks = [Date(2024, 1, 1), Date(2024, 6, 1)]`. " *
+            "Plain numbers are rejected because AlgebraOfGraphics' internal float conversion of temporal values is not part of the public API. Use `datetimeticks` to attach custom labels."
+    )
+end
+
 # Explicit tick positions on a unit scale must carry units, because the display unit can
 # be overridden or derived and plain numbers would silently be taken as that unit. Called
 # from the extensions, where `ContinuousScale{<:Quantity}` can be dispatched on.
