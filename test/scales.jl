@@ -395,6 +395,10 @@ if VERSION >= v"1.9"
             tickvalues, _, ticklabels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale)
             @test tickvalues == [10.0, 30.0]
             @test ticklabels == ["10", "30"]
+
+            @test_throws_message "must carry units" draw(data(df) * mapping(:q, :y), scales(X = (; ticks = [1, 2, 3])))
+            @test_throws_message "must carry units" draw(data(df) * mapping(:q, :y), scales(X = (; ticks = ([1, 2, 3], ["a", "b", "c"]))))
+            @test_throws_message "must carry units" draw(data((; x = 1:4, df.y, df.q)) * mapping(:x, :y, markersize = :q), scales(MarkerSize = (; ticks = [1, 2, 3])))
         end
 
         @test AlgebraOfGraphics.dimensionally_compatible(nothing, nothing)

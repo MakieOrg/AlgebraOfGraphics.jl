@@ -24,6 +24,10 @@ function AlgebraOfGraphics.strip_ticks(scale::AlgebraOfGraphics.ContinuousScale{
     return Unitful.ustrip.(AlgebraOfGraphics.getunit(scale), values), labels
 end
 
+function AlgebraOfGraphics.strip_ticks(scale::AlgebraOfGraphics.ContinuousScale{<:Unitful.Quantity}, ::Union{AbstractVector{<:Real}, Tuple{<:AbstractVector{<:Real}, <:Any}})
+    return AlgebraOfGraphics._unitless_ticks_error(scale)
+end
+
 AlgebraOfGraphics.to_unitless_numerical(x::MaybeMissingQuantities) = AlgebraOfGraphics.map_nonmissing(Unitful.ustrip, x)
 AlgebraOfGraphics.to_unitless_numerical(x::Unitful.Quantity) = Unitful.ustrip(x)
 AlgebraOfGraphics.from_unitless_numerical(x̂::AbstractArray{<:Real}, x::MaybeMissingQuantities) =

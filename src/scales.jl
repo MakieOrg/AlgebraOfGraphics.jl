@@ -616,6 +616,17 @@ strip_ticks(::ContinuousScale, ticks) = ticks
 strip_ticks(::ContinuousScale{T}, ticks) where {T <: TimeType} = DateTicksWrapper{T}(ticks)
 strip_ticks(::ContinuousScale{<:TimeType}, ticks::DateTicksWrapper) = ticks
 
+# Explicit tick positions on a unit scale must carry units, because the display unit can
+# be overridden or derived and plain numbers would silently be taken as that unit. Called
+# from the extensions, where `ContinuousScale{<:Quantity}` can be dispatched on.
+function _unitless_ticks_error(scale::ContinuousScale)
+    u = unit_string(getunit(scale))
+    return error(
+        "Tick values for a scale in units of \"$u\" must carry units themselves, e.g. `ticks = [1, 2, 3] .* u\"$u\"`. " *
+            "Plain numbers are rejected because the display unit can be overridden via `scales(...; unit = ...)` or derived from other scales, which would make their meaning ambiguous."
+    )
+end
+
 """
     datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString})
 
