@@ -74,6 +74,11 @@ draw(facetted, scales(Color = (; palette = :Set1_3)))
 
 ![](README_files/figure-commonmark/cell-7-output-1.svg)
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get help, report bugs,
+and contribute code or documentation.
+
 ## Acknowledgements
 
 Analyses rely on
