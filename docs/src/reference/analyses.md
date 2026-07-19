@@ -152,7 +152,7 @@ specs = data(df) * mapping(:x, :y, color=:a => nonnumeric) * (
 draw(specs)
 ```
 
-Below are a few examples showing the [`linear`](@ref) interface for performing weighted fits:
+Weighted fits are supported via the `weights` keyword of `mapping`. When weights are present, the fit is computed with `GLM.glm`, which also provides a confidence-interval band for weighted models. The weights are interpreted as frequency weights (`StatsBase.fweights`), meaning the effective sample size is the sum of the weights. When weighting by measurement uncertainties (inverse-variance weights), normalize the weights to sum to the number of data points so that the confidence band reflects the true sample size rather than `sum(weights)`:
 
 ```@example analyses
 using Random
@@ -163,22 +163,19 @@ df = let
     y_err = randn(length(x))
     y = x .+ y_err
     y_unc = abs.(y_err)
-    (; x, y, y_unc)
+    # Inverse-variance weights, normalized to sum to the number of data points
+    w = inv.(y_unc .^ 2)
+    weights = w .* (length(w) / sum(w))
+    (; x, y, y_unc, weights)
 end
 specs = data(df) * mapping(:x, :y) * (
     (visual(Scatter) + mapping(:y_unc) * visual(Errorbars)) * visual(; label = "data") +
-    mapping(; weights = :y_unc) * (
-        linear(; weighttype = :fweights, weighttransform = x -> inv.(x .^ 2)) * visual(; color = colors[1], label = "fweights")
-
-        # Other weights available once GLM v2 is released
-        #linear(; weighttype = :aweights) * visual(; color = colors[2], label = "aweights")
-        #linear(; weighttype = :pweights) * visual(; color = colors[3], label = "pweights")
-    )
+    mapping(; weights = :weights) * linear() * visual(; color = colors[1], label = "weighted fit")
 )
 draw(specs)
 ```
 
-Note that the usual caveats still apply for working with different kinds of weights. See the [StatsBase.jl documentation](https://juliastats.org/StatsBase.jl/stable/weights/) for more.
+With this normalization, the frequency-weight fit is numerically identical to one using analytic weights. Other weight types (`:aweights`, `:pweights`) will become available via the `weighttype` keyword of [`linear`](@ref) once GLM.jl v2 is released. Note that the usual caveats still apply for working with different kinds of weights. See the [StatsBase.jl documentation](https://juliastats.org/StatsBase.jl/stable/weights/) for more.
 
 ## Smoothing
 

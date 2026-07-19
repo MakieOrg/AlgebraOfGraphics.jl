@@ -535,26 +535,35 @@ end
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
     z1 = fweights(df.z[df.c .== "a"])
-    lm1 = GLM.lm([fill(one(eltype(x1)), length(x1)) x1], y1; dropcollinear, weights = z1)
+    glm1 = GLM.glm([fill(one(eltype(x1)), length(x1)) x1], y1, GLM.Normal(), GLM.IdentityLink(); wts = z1, dropcollinear)
     x̂1 = range(extrema(x1)...; length = npoints)
-    ŷ1 = vec(GLM.predict(lm1, [ones(length(x̂1)) x̂1]; interval = nothing))
+    ŷ1, lower1, upper1 = map(vec, GLM.predict(glm1, [ones(length(x̂1)) x̂1]; interval = :confidence))
 
     x2 = df.x[df.c .== "b"]
     y2 = df.y[df.c .== "b"]
     z2 = fweights(df.z[df.c .== "b"])
-    lm2 = GLM.lm([fill(one(eltype(x2)), length(x2)) x2], y2; dropcollinear, weights = z2)
+    glm2 = GLM.glm([fill(one(eltype(x2)), length(x2)) x2], y2, GLM.Normal(), GLM.IdentityLink(); wts = z2, dropcollinear)
     x̂2 = range(extrema(x2)...; length = npoints)
-    ŷ2 = vec(GLM.predict(lm2, [ones(length(x̂2)) x̂2]; interval = nothing))
+    ŷ2, lower2, upper2 = map(vec, GLM.predict(glm2, [ones(length(x̂2)) x̂2]; interval = :confidence))
 
     pl_band = processedlayers.layers[1]
     pl_line = processedlayers.layers[2]
     x̂, ŷ = pl_line.positional
+    x̂b, lower, upper = pl_band.positional
 
     @test x̂[1] ≈ x̂1
     @test ŷ[1] ≈ ŷ1
+    @test x̂b[1] ≈ x̂1
+    @test lower[1] ≈ lower1
+    @test upper[1] ≈ upper1
 
     @test x̂[2] ≈ x̂2
     @test ŷ[2] ≈ ŷ2
+    @test x̂b[2] ≈ x̂2
+    @test lower[2] ≈ lower2
+    @test upper[2] ≈ upper2
+
+    @test pl_band.plottype == Band
 
     @test pl_line.primary == NamedArguments((color = ["a", "b"],))
     @test isempty(pl_line.named)
@@ -568,6 +577,16 @@ end
     insert!(labels, :color, "c")
     insert!(labels, :weights, "z")
     @test labels == map(AlgebraOfGraphics.to_label, pl_line.labels)
+end
+
+@testset "weightedlinear invalid weighttype" begin
+    # Only `:fweights` is supported until GLM v2; `:aweights`/`:pweights` would
+    # silently compute frequency-weight statistics on GLM v1.
+    df = (x = [1.0, 2.0, 3.0, 4.0], y = [1.0, 1.9, 3.1, 4.0], z = [1, 2, 1, 2])
+    for weighttype in (:aweights, :pweights, :invalid)
+        layer = data(df) * mapping(:x, :y, weights = :z) * linear(; weighttype)
+        @test_throws ArgumentError AlgebraOfGraphics.ProcessedLayers(layer)
+    end
 end
 
 @testset "smooth" begin

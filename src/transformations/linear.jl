@@ -16,25 +16,14 @@ function add_intercept_column(x::AbstractVector{T}) where {T}
 end
 
 function get_weighttype(s::Symbol)
-    #weighttype = if s == :fweights
-    #    StatsBase.fweights
-    #else
-    #    throw(ArgumentError("Currently, GLM.jl only supports `StatsBase.fweights`."))
-    #end
-
-    # TODO: Can support these weights as well after GLM v2 is released
-    # https://github.com/JuliaStats/GLM.jl/pull/619
-    weighttype = if s == :aweights
-        StatsBase.aweights
-    elseif s == :pweights
-        StatsBase.pweights
-    elseif s == :fweights
-        StatsBase.fweights
-    else
-        throw(ArgumentError("Currently, GLM.jl only supports `aweights`, `pweights`, and `fweights`."))
+    # GLM v1 treats all weights as frequency weights, so allowing `:aweights` or
+    # `:pweights` here would silently compute `:fweights` statistics.
+    # TODO: Support `:aweights` and `:pweights` once GLM v2 is released
+    # https://github.com/JuliaStats/GLM.jl/pull/487
+    if s !== :fweights
+        throw(ArgumentError("Invalid `weighttype = $(repr(s))`. Currently only `:fweights` is supported, as GLM.jl v1 treats all weights as frequency weights. `:aweights` and `:pweights` will become available with GLM.jl v2."))
     end
-
-    return weighttype
+    return StatsBase.fweights
 end
 
 # TODO: add multidimensional version
@@ -92,7 +81,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
 end
 
 """
-    linear(; interval=automatic, level=0.95, dropcollinear=false, npoints=200, weighttype=:fweights, distr=GLM.Normal())
+    linear(; interval = automatic, level = 0.95, dropcollinear = false, npoints = 200, weighttype = :fweights, distr = GLM.Normal(), link = GLM.canonicallink(distr))
 
 Compute a linear fit of `y ~ 1 + x`. An optional named mapping `weights` determines the weights.
 Use `interval` to specify what type of interval the shaded band should represent,
@@ -105,9 +94,16 @@ it is possible to set `dropcollinear=true`.
 `npoints` is the number of points used by Makie to draw the shaded band.
 
 Weighted data is supported via the keyword `weights` (passed to `mapping`).
-Additional weight support is provided via the `weighttype` and `distr` keywords.
-`weighttype` specifies the `StatsBase.AbstractWeights` type to use.
-`distr` is forwarded to `GLM.glm`.
+Weighted fits are computed with `GLM.glm` (which supports confidence intervals,
+while weighted `GLM.lm` currently does not) and default to showing a `:confidence` band;
+`interval = :prediction` is not available for weighted fits.
+Additional weight support is provided via the `weighttype`, `distr`, and `link` keywords.
+`weighttype` specifies the `StatsBase.AbstractWeights` type used to interpret the weights
+(currently only `:fweights`, until GLM.jl v2 is released).
+Since frequency weights treat `sum(weights)` as the effective sample size,
+inverse-variance weights should be normalized to sum to the number of data points
+so that the confidence band reflects the true sample size.
+`distr` and `link` are forwarded to `GLM.glm`.
 See the GLM.jl documentation for more on working with weighted data.
 
 Rows with `missing` or `NaN` in any numeric input are dropped; `Inf`/`-Inf` errors.

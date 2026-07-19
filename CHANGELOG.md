@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Weighted `linear` fits now show a confidence-interval band by default (previously they drew only the fitted line), by fitting via `GLM.glm` which supports confidence intervals for weighted models. `linear` gained the following keywords:
+
+  - `weighttype`: The `StatsBase.AbstractWeights` type used for the `weights` mapping). Currently only supports `:fweights` until GLM.jl v2 is released.
+  - `distr` and `link`: Forwarded to `GLM.glm` for weighted fits.
+
+[#710](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/710)
+
 ## v0.13.1 - 2026-07-09
 
 - Unitful and DynamicQuantities columns containing `missing` values no longer error when drawn [#777](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/777).
