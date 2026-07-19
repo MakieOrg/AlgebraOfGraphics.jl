@@ -535,14 +535,14 @@ end
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
     z1 = fweights(df.z[df.c .== "a"])
-    glm1 = GLM.glm([fill(one(eltype(x1)), length(x1)) x1], y1, GLM.Normal(), GLM.IdentityLink(); wts = z1, dropcollinear)
+    glm1 = GLM.glm([fill(one(eltype(x1)), length(x1)) x1], y1, GLM.Normal(), GLM.IdentityLink(); weights = z1, dropcollinear)
     x̂1 = range(extrema(x1)...; length = npoints)
     ŷ1, lower1, upper1 = map(vec, GLM.predict(glm1, [ones(length(x̂1)) x̂1]; interval = :confidence))
 
     x2 = df.x[df.c .== "b"]
     y2 = df.y[df.c .== "b"]
     z2 = fweights(df.z[df.c .== "b"])
-    glm2 = GLM.glm([fill(one(eltype(x2)), length(x2)) x2], y2, GLM.Normal(), GLM.IdentityLink(); wts = z2, dropcollinear)
+    glm2 = GLM.glm([fill(one(eltype(x2)), length(x2)) x2], y2, GLM.Normal(), GLM.IdentityLink(); weights = z2, dropcollinear)
     x̂2 = range(extrema(x2)...; length = npoints)
     ŷ2, lower2, upper2 = map(vec, GLM.predict(glm2, [ones(length(x̂2)) x̂2]; interval = :confidence))
 

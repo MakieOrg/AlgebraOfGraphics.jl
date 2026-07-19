@@ -44,9 +44,7 @@ function (l::LinearAnalysis)(input::ProcessedLayer)
             GLM.lm(add_intercept_column(xn), yn; l.dropcollinear)
         else
             # Supports confidence intervals, while `GLM.lm` currently does not
-            # TODO: `wts` --> `weights` after GLM v2 is released
-            # https://github.com/JuliaStats/GLM.jl/pull/631
-            GLM.glm(add_intercept_column(xn), yn, l.distr, l.link; wts = weights, l.dropcollinear)
+            GLM.glm(add_intercept_column(xn), yn, l.distr, l.link; weights, l.dropcollinear)
         end
         x̂n = collect(range(extrema(xn)..., length = l.npoints))
         pred = GLM.predict(lin_model, add_intercept_column(x̂n); interval, l.level)
