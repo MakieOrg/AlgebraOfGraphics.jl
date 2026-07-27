@@ -1,0 +1,45 @@
+name: Readme
+on:
+  workflow_call:
+
+jobs:
+  readme:
+    name: Up-to-date readme
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      statuses: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: julia-actions/setup-julia@v3
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v3
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: '1.8.26' # pinned so quarto releases cannot invalidate the committed readme
+      - name: Compare committed readme against a fresh render
+        id: check
+        run: julia _readme/make.jl --check
+      - name: Upload PixelMatch report
+        id: upload-report
+        if: failure() && steps.check.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          path: _readme/pixelmatch-report.html
+          archive: false
+          if-no-files-found: ignore
+      - name: Post failing status linking to the report
+        if: failure() && steps.check.outcome == 'failure' && steps.upload-report.outputs.artifact-url != ''
+        uses: actions/github-script@v9
+        with:
+          script: |
+            await github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.payload.pull_request?.head?.sha ?? context.sha,
+              state: 'failure',
+              context: 'PixelMatch report (readme)',
+              target_url: '${{ steps.upload-report.outputs.artifact-url }}',
+              description: 'Readme image mismatches, click Details for the HTML report',
+            })

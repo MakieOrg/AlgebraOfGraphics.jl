@@ -11,3 +11,6 @@ docs/src/changelog.md
 docs/cheatsheet.pdf
 .claude
 test/reference_tests/pixelmatch-report*.html
+_readme/README.md
+_readme/README_files
+_readme/pixelmatch-report.html
