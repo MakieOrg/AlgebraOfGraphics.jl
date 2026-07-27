@@ -74,3 +74,28 @@ Pkg.add("AlgebraOfGraphics")
 ## First steps
 
 Have a look at the [Intro to AoG - I - Fundamentals](@ref) tutorial to get to know AlgebraOfGraphics!
+
+## Citing AlgebraOfGraphics
+
+If you use AlgebraOfGraphics for a scientific publication, please acknowledge and support our work by citing [our JOSS paper](https://joss.theoj.org/papers/10.21105/joss.10894) the following way:
+
+> Krumbiegel & Vertechi, (2026). AlgebraOfGraphics.jl: A Makie-powered algebraic grammar of graphics for Julia. Journal of Open Source Software, 11(123), 10894, https://doi.org/10.21105/joss.10894
+
+::: details Show BibTeX
+
+```
+@article{Krumbiegel2026,
+  doi = {10.21105/joss.10894},
+  url = {https://doi.org/10.21105/joss.10894},
+  year = {2026},
+  publisher = {The Open Journal},
+  volume = {11},
+  number = {123},
+  pages = {10894},
+  author = {Krumbiegel, Julius and Vertechi, Pietro},
+  title = {{AlgebraOfGraphics.jl}: A {Makie}-powered algebraic grammar of graphics for {Julia}},
+  journal = {Journal of Open Source Software}
+}
+```
+
+:::
