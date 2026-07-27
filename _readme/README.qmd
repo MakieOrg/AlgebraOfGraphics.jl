@@ -1,6 +1,7 @@
 ---
 engine: julia
 format: gfm
+fig-dpi: 192
 ---
 
 <div align="center">
@@ -26,14 +27,6 @@ AlgebraOfGraphics puts a new algebraic spin on the grammar of graphics idea know
 Visualizations are powered by [Makie](https://github.com/MakieOrg/Makie.jl) and you have its full capabilities available to tweak figures produced by AlgebraOfGraphics.
 
 ## Example
-
-```{julia}
-#| echo: false
-#| output: false
-using CairoMakie
-CairoMakie.activate!(type = "svg")
-ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for PalmerPenguins download
-```
 
 ```{julia}
 using AlgebraOfGraphics, CairoMakie
