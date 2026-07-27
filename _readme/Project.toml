@@ -7,4 +7,4 @@ quarto_jll = "b7163347-bfae-5fd9-aba4-19f139889d78"
 
 [compat]
 PixelMatch = "1.5"
-quarto_jll = "=1.9.38" # exact, so a quarto release cannot invalidate the committed readme
+quarto_jll = "=1.9.38"
