@@ -29,6 +29,14 @@ Visualizations are powered by [Makie](https://github.com/MakieOrg/Makie.jl) and 
 ## Example
 
 ```{julia}
+#| echo: false
+#| output: false
+# loaded here so that precompilation output of the quarto worker extensions
+# ends up in this hidden cell and not in the readme
+using CairoMakie
+```
+
+```{julia}
 using AlgebraOfGraphics, CairoMakie
 
 penguins = AlgebraOfGraphics.penguins()

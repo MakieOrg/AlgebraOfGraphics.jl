@@ -43,7 +43,7 @@ spec = data(penguins) * mapping(:bill_length_mm, :bill_depth_mm)
 draw(spec)
 ```
 
-<img src="README_files/figure-commonmark/cell-2-output-1.png"
+<img src="README_files/figure-commonmark/cell-3-output-1.png"
 width="238" height="226" />
 
 ``` julia
@@ -52,7 +52,7 @@ by_color = spec * mapping(color = :species)
 draw(by_color)
 ```
 
-<img src="README_files/figure-commonmark/cell-3-output-1.png"
+<img src="README_files/figure-commonmark/cell-4-output-1.png"
 width="341" height="226" />
 
 ``` julia
@@ -61,7 +61,7 @@ with_regression = by_color * (linear() + visual(alpha = 0.3))
 draw(with_regression)
 ```
 
-<img src="README_files/figure-commonmark/cell-4-output-1.png"
+<img src="README_files/figure-commonmark/cell-5-output-1.png"
 width="341" height="226" />
 
 ``` julia
@@ -70,14 +70,14 @@ facetted = with_regression * mapping(col = :sex)
 draw(facetted)
 ```
 
-<img src="README_files/figure-commonmark/cell-5-output-1.png"
+<img src="README_files/figure-commonmark/cell-6-output-1.png"
 width="509" height="246" />
 
 ``` julia
 draw(facetted, scales(Color = (; palette = :Set1_3)))
 ```
 
-<img src="README_files/figure-commonmark/cell-6-output-1.png"
+<img src="README_files/figure-commonmark/cell-7-output-1.png"
 width="509" height="246" />
 
 ## Citing AlgebraOfGraphics

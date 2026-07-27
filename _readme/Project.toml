@@ -3,6 +3,8 @@ AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 PNGFiles = "f57f5aa1-a3ce-4bc8-8ab9-96f992907883"
 PixelMatch = "433bd86c-62cb-491d-a348-72c5c8365002"
+quarto_jll = "b7163347-bfae-5fd9-aba4-19f139889d78"
 
 [compat]
 PixelMatch = "1.5"
+quarto_jll = "=1.9.38" # exact, so a quarto release cannot invalidate the committed readme

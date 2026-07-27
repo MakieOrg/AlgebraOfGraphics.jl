@@ -15,9 +15,6 @@ jobs:
         with:
           version: '1'
       - uses: julia-actions/cache@v3
-      - uses: quarto-dev/quarto-actions/setup@v2
-        with:
-          version: '1.8.26' # pinned so quarto releases cannot invalidate the committed readme
       - name: Compare committed readme against a fresh render
         id: check
         run: julia _readme/make.jl --check

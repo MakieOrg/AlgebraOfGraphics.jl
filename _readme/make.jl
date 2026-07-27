@@ -6,6 +6,7 @@ Pkg.precompile()
 
 using PixelMatch
 using PNGFiles
+using quarto_jll
 
 const rendered_markdown = "README.md"
 const rendered_figures = "README_files"
@@ -64,7 +65,7 @@ function problems(diff_dir)
     return ps
 end
 
-run(`quarto render README.qmd`)
+run(`$(quarto()) render README.qmd`)
 
 if "--check" in ARGS
     PixelMatch.@pixelmatch_report out_file = "pixelmatch-report.html" begin
