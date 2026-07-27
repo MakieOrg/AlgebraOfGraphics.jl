@@ -1,6 +1,7 @@
 ---
 engine: julia
 format: gfm
+fig-dpi: 192
 ---
 
 <div align="center">
@@ -30,9 +31,9 @@ Visualizations are powered by [Makie](https://github.com/MakieOrg/Makie.jl) and 
 ```{julia}
 #| echo: false
 #| output: false
+# loaded here so that precompilation output of the quarto worker extensions
+# ends up in this hidden cell and not in the readme
 using CairoMakie
-CairoMakie.activate!(type = "svg")
-ENV["DATADEPS_ALWAYS_ACCEPT"] = true # for PalmerPenguins download
 ```
 
 ```{julia}
