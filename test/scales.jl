@@ -160,7 +160,6 @@ end
     @test length(floats) > 0
     @test length(floats) == length(labels)
 
-    # datetimeticks public API unchanged
     floats, labels = datetimeticks(month, [Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
     @test labels == ["1", "3", "5"]
     @test floats == datetime2float.([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
@@ -169,6 +168,86 @@ end
     @test labels == ["January", "March", "May"]
     @test floats == datetime2float.([Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
 
+    df_at = (; x = 1:3, y = [1, 3, 2], t = [Date(2022, 1, 1), Date(2022, 3, 1), Date(2022, 5, 1)])
+    fg_at = draw(data(df_at) * mapping(:t, :y), axis = (; xticks = datetimeticks(month, df_at.t)))
+    @test only(fg_at.grid).axis.xticks[] == (datetime2float.(df_at.t), ["1", "3", "5"])
+
+    # DateTime as continuous color range
+    df = (; x = 1:4, y = [1, 3, 2, 4], t = DateTime(2024, 1, 1) .+ Day.(0:3))
+    cmap = Makie.to_colormap(AlgebraOfGraphics.default_colormap())
+    fg = draw(data(df) * mapping(:x, :y, color = :t))
+    colors = only(fg.grid[1].entries).named[:color]
+    @test colors[1] == cmap[1] && colors[end] == cmap[end]
+    cb = only(AlgebraOfGraphics.compute_colorbars(fg))
+    @test cb.limits == datetime2float.((DateTime(2024, 1, 1), DateTime(2024, 1, 4)))
+    @test cb.ticks isa AlgebraOfGraphics.DateTicksWrapper{DateTime}
+
+    # a DateTime colorrange is stripped to floats like the data
+    fg2 = draw(
+        data(df) * mapping(:x, :y, color = :t),
+        scales(Color = (; colorrange = (DateTime(2024, 1, 1), DateTime(2024, 1, 7))))
+    )
+    @test only(fg2.grid[1].entries).named[:color][end] != cmap[end] # data max sits below the colorrange max
+    @test only(AlgebraOfGraphics.compute_colorbars(fg2)).limits == datetime2float.((DateTime(2024, 1, 1), DateTime(2024, 1, 7)))
+
+    # all-equal values and the heatmap colorrange path don't error
+    @test draw(data((; df.x, df.y, t2 = fill(DateTime(2024, 1, 1), 4))) * mapping(:x, :y, color = :t2)) isa AlgebraOfGraphics.FigureGrid
+    fg3 = draw(data((; x = [1, 1, 2, 2], y = [1, 2, 1, 2], z = DateTime(2024, 1, 1) .+ Day.(0:3))) * mapping(:x, :y, :z) * visual(Heatmap))
+    @test only(fg3.grid[1].entries).named[:colorrange] == datetime2float.((DateTime(2024, 1, 1), DateTime(2024, 1, 4)))
+
+    # DateTime as markersize
+    fg4 = draw(data(df) * mapping(:x, :y, markersize = :t))
+    mscale = fg4.grid[].continuousscales[AlgebraOfGraphics.AesMarkerSize][nothing]
+    _, _, ticklabels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale)
+    @test all(l -> occursin("2024-01", string(l)), ticklabels)
+
+    # user ticks given as DateTime values
+    user_dts = [DateTime(2024, 1, 1), DateTime(2024, 1, 3)]
+    fg5 = draw(data(df) * mapping(:t, :y), scales(X = (; ticks = user_dts)))
+    xticks = only(fg5.grid).axis.xticks[]
+    @test xticks isa AlgebraOfGraphics.DateTicksWrapper{DateTime}
+    tickvalues, labels = Makie.get_ticks(xticks, identity, automatic, datetime2float(df.t[1]), datetime2float(df.t[end]))
+    @test tickvalues == datetime2float.(user_dts)
+    @test labels == ["2024-01-01T00:00:00", "2024-01-03T00:00:00"]
+
+    fg6 = draw(data(df) * mapping(:t, :y), scales(X = (; ticks = (user_dts, ["start", "mid"]))))
+    tickvalues, labels = Makie.get_ticks(only(fg6.grid).axis.xticks[], identity, automatic, datetime2float(df.t[1]), datetime2float(df.t[end]))
+    @test tickvalues == datetime2float.(user_dts)
+    @test labels == ["start", "mid"]
+
+    fg7 = draw(data(df) * mapping(:x, :y, markersize = :t), scales(MarkerSize = (; ticks = user_dts)))
+    mscale7 = fg7.grid[].continuousscales[AlgebraOfGraphics.AesMarkerSize][nothing]
+    tickvalues, _, labels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale7)
+    @test tickvalues == datetime2float.(user_dts)
+    @test labels == ["2024-01-01T00:00:00", "2024-01-03T00:00:00"]
+
+    # any tick spec on a temporal scale runs in date space
+    df_m = (; x = 1:6, y = [1, 3, 2, 4, 3, 5], t = Date(2024, 1, 1) .+ Month.(0:5))
+    lo, hi = datetime2float(DateTime(2024, 1, 1)), datetime2float(DateTime(2024, 6, 1))
+    steps = Date(2024, 1, 1):Month(2):Date(2024, 6, 1)
+    fg8 = draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = steps)))
+    tickvalues, labels = Makie.get_ticks(only(fg8.grid).axis.xticks[], identity, automatic, lo, hi)
+    @test tickvalues == datetime2float.(DateTime.(steps))
+    @test labels == ["2024-01", "2024-03", "2024-05"]
+
+    fg9 = draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = Makie.DateTimeTicks(3))))
+    tickvalues, labels = Makie.get_ticks(only(fg9.grid).axis.xticks[], identity, automatic, lo, hi)
+    @test tickvalues == datetime2float.(DateTime.(steps))
+    @test labels == ["2024-01", "2024-03", "2024-05"]
+
+    fg10 = draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = ([Date(2024, 1, 1), Date(2024, 4, 1)], ["January", "April"]))))
+    tickvalues, labels = Makie.get_ticks(only(fg10.grid).axis.xticks[], identity, automatic, lo, hi)
+    @test tickvalues == datetime2float.([Date(2024, 1, 1), Date(2024, 4, 1)])
+    @test labels == ["January", "April"]
+
+    fg11 = draw(data(df_m) * mapping(:x, :y, markersize = :t), scales(MarkerSize = (; ticks = [Date(2024, 1, 1), Date(2024, 4, 1)], tickformat = "yyyy-mm")))
+    mscale11 = fg11.grid[].continuousscales[AlgebraOfGraphics.AesMarkerSize][nothing]
+    _, _, labels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale11)
+    @test labels == ["2024-01", "2024-04"]
+
+    @test_throws_message "Tick values for a `Date` scale must be given as `Date` values" draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = [1, 2, 3])))
+    @test_throws_message "Tick values for a `Date` scale must be given as `Date` values" draw(data(df_m) * mapping(:x, :y, markersize = :t), scales(MarkerSize = (; ticks = 1:3)))
+    @test_throws_message "Tick values for a `Date` scale must be given as `Date` values" draw(data(df_m) * mapping(:t, :y), scales(X = (; ticks = ([1, 2, 3], ["a", "b", "c"]))))
 end
 
 @testset "Aesthetics switch via visual attribute" begin
@@ -308,6 +387,25 @@ if VERSION >= v"1.9"
             @test AlgebraOfGraphics.getunit(xscale) == xoverride
             yscale = fg2.grid[].continuousscales[AlgebraOfGraphics.AesY][nothing]
             @test AlgebraOfGraphics.getunit(yscale) == yoverride
+        end
+
+        for (mm, cm) in [(U.u"mm", U.u"cm"), (D.us"mm", D.us"cm")]
+            df = (; y = [1, 3, 2, 4], q = [10.0, 20.0, 30.0, 40.0] .* mm)
+            fg = draw(data(df) * mapping(:q, :y), scales(X = (; unit = cm, ticks = [10.0, 30.0] .* mm)))
+            @test only(fg.grid).axis.xticks[] == [1, 3]
+
+            fg2 = draw(data(df) * mapping(:q, :y), scales(X = (; ticks = ([10.0, 30.0] .* mm, ["low", "high"]))))
+            @test only(fg2.grid).axis.xticks[] == ([10.0, 30.0], ["low", "high"])
+
+            fg3 = draw(data((; x = 1:4, df.y, df.q)) * mapping(:x, :y, markersize = :q), scales(MarkerSize = (; ticks = [10.0, 30.0] .* mm)))
+            mscale = fg3.grid[].continuousscales[AlgebraOfGraphics.AesMarkerSize][nothing]
+            tickvalues, _, ticklabels = AlgebraOfGraphics.datavalues_plotvalues_datalabels(AlgebraOfGraphics.AesMarkerSize, mscale)
+            @test tickvalues == [10.0, 30.0]
+            @test ticklabels == ["10", "30"]
+
+            @test_throws_message "must carry units" draw(data(df) * mapping(:q, :y), scales(X = (; ticks = [1, 2, 3])))
+            @test_throws_message "must carry units" draw(data(df) * mapping(:q, :y), scales(X = (; ticks = ([1, 2, 3], ["a", "b", "c"]))))
+            @test_throws_message "must carry units" draw(data((; x = 1:4, df.y, df.q)) * mapping(:x, :y, markersize = :q), scales(MarkerSize = (; ticks = [1, 2, 3])))
         end
 
         @test AlgebraOfGraphics.dimensionally_compatible(nothing, nothing)

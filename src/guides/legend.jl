@@ -380,8 +380,9 @@ end
 datavalues_plotvalues_datalabels(aes, scale::CategoricalScale) = datavalues(scale), plotvalues(scale), datalabels(scale)
 function datavalues_plotvalues_datalabels(aes::Type{AesMarkerSize}, scale::ContinuousScale)
     props = scale.props.aesprops::AesMarkerSizeContinuousProps
-    _, s_extrema = strip_units(scale, collect(nonsingular_limits(scale.extrema)))
-    tickvalues, ticklabels = Makie.get_ticks(props.ticks, identity, props.tickformat, s_extrema...)
+    scale, tickfinder = strip_scale_derive_ticks(scale, props.ticks)
+    s_extrema = nonsingular_limits(scale.extrema)
+    tickvalues, ticklabels = Makie.get_ticks(tickfinder, identity, props.tickformat, s_extrema...)
     t_extrema = extrema(tickvalues)
     if t_extrema[1] < s_extrema[1] || t_extrema[2] > s_extrema[2]
         error("Range of tick values for MarkerSize scale $(t_extrema) exceeds data range $(s_extrema)")
@@ -391,8 +392,9 @@ function datavalues_plotvalues_datalabels(aes::Type{AesMarkerSize}, scale::Conti
 end
 function datavalues_plotvalues_datalabels(aes::Type{AesLineWidth}, scale::ContinuousScale)
     props = scale.props.aesprops::AesLineWidthContinuousProps
-    _, s_extrema = strip_units(scale, collect(nonsingular_limits(scale.extrema)))
-    tickvalues, ticklabels = Makie.get_ticks(props.ticks, identity, props.tickformat, s_extrema...)
+    scale, tickfinder = strip_scale_derive_ticks(scale, props.ticks)
+    s_extrema = nonsingular_limits(scale.extrema)
+    tickvalues, ticklabels = Makie.get_ticks(tickfinder, identity, props.tickformat, s_extrema...)
     t_extrema = extrema(tickvalues)
     if t_extrema[1] < s_extrema[1] || t_extrema[2] > s_extrema[2]
         error("Range of tick values for LineWidth scale $(t_extrema) exceeds data range $(s_extrema)")

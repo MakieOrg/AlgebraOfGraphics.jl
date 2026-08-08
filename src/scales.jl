@@ -579,6 +579,59 @@ datetime2float(x::Union{DateTime, Date}) = datetime2float(DateTime(x) - DateTime
 datetime2float(x::Time) = datetime2float(x - Time(0))
 datetime2float(x::Period) = Millisecond(x) / Millisecond(1)
 
+struct DateTicksWrapper{T <: TimeType, Ticks}
+    ticks::Ticks
+end
+
+DateTicksWrapper{T}(ticks) where {T <: TimeType} = DateTicksWrapper{T, typeof(ticks)}(ticks)
+
+# Continuous scales can carry non-float extrema: temporal types here, units via the
+# Unitful/DynamicQuantities extensions. Rescaling and guides work in float space, so
+# `strip_scale` converts a scale's extrema (and, for units, the data) to floats.
+# Temporal data needs no conversion because it is turned into floats early
+# (`contextfree_rescale`); only the extrema keep their type so guides can derive
+# date-formatted ticks from them before stripping (`strip_scale_derive_ticks`).
+strip_scale(scale::ContinuousScale) = scale
+function strip_scale(scale::ContinuousScale{<:Union{TimeType, Period}})
+    return ContinuousScale(map(datetime2float, scale.extrema), scale.label, scale.force, scale.props)
+end
+strip_scale(scale, data) = strip_scale(scale), data
+
+# Guides that compute tick labels from stripped extrema (colorbar, markersize/linewidth
+# legends) would label the raw float values, so a default tick finder is swapped for one
+# derived from the typed extrema (`ticks`); user-supplied ticks pass through `strip_ticks`.
+function strip_scale_derive_ticks(scale::ContinuousScale, tickfinder)
+    return strip_scale(scale), guide_tickfinder(scale, tickfinder)
+end
+
+function guide_tickfinder(scale::ContinuousScale, tickfinder)
+    if tickfinder === automatic || tickfinder === _default_markersize_ticks
+        derived = ticks(scale.extrema)
+        return derived === automatic ? tickfinder : derived
+    end
+    return strip_ticks(scale, tickfinder)
+end
+
+# User-specified ticks are given in data space and are converted to the float space the
+# data is in. Mirroring Makie's dim conversions, temporal scales interpret any tick spec
+# in date space by wrapping it in `DateTicksWrapper` (so date vectors, `StepRange`s like
+# `Date(2024):Month(1):Date(2025)` and `Makie.DateTimeTicks` all work), while unit scales
+# find ticks in float space like a plain axis and only need their tick values converted
+# to the display unit (methods in the Unitful/DynamicQuantities extensions).
+strip_ticks(::ContinuousScale, ticks) = ticks
+strip_ticks(::ContinuousScale{T}, ticks) where {T <: TimeType} = DateTicksWrapper{T}(ticks)
+strip_ticks(::ContinuousScale{<:TimeType}, ticks::DateTicksWrapper) = ticks
+
+# Explicit tick positions on a temporal scale must be values of the scale's own time type;
+# the internal float conversion is not public, so plain numbers, as a bare vector or as the
+# values of a `(values, labels)` tuple, are rejected.
+function strip_ticks(::ContinuousScale{T}, ::Union{AbstractVector{<:Real}, Tuple{<:AbstractVector{<:Real}, <:Any}}) where {T <: TimeType}
+    return error(
+        "Tick values for a `$T` scale must be given as `$T` values, e.g. `ticks = [$T(...), $T(...)]` or `ticks = ([$T(...), $T(...)], [\"a\", \"b\"])` to attach custom labels. " *
+            "Plain numbers are rejected because AlgebraOfGraphics' internal float conversion of temporal values is not part of the public API."
+    )
+end
+
 """
     datetimeticks(datetimes::AbstractVector{<:TimeType}, labels::AbstractVector{<:AbstractString})
 
@@ -597,6 +650,17 @@ The result can be passed to `xticks`, `yticks`, or `zticks`.
 """
 function datetimeticks(f, datetimes::AbstractVector{<:TimeType})
     return datetimeticks(datetimes, map(string ∘ f, datetimes))
+end
+
+# Explicit tick positions on a unit scale must carry units, because the display unit can
+# be overridden or derived and plain numbers would silently be taken as that unit. Called
+# from the extensions, where `ContinuousScale{<:Quantity}` can be dispatched on.
+function _unitless_ticks_error(scale::ContinuousScale)
+    u = unit_string(getunit(scale))
+    return error(
+        "Tick values for a scale in units of \"$u\" must carry units themselves, e.g. `ticks = [1, 2, 3] .* u\"$u\"`. " *
+            "Plain numbers are rejected because the display unit can be overridden via `scales(...; unit = ...)` or derived from other scales, which would make their meaning ambiguous."
+    )
 end
 
 # Analyses like Loess, GLM and StatsBase.Histogram need numeric inputs, so temporal
@@ -789,17 +853,11 @@ function ticks(scale::ContinuousScale)
     return if _ticks === nothing
         ticks(scale.extrema)
     else
-        _ticks
+        strip_ticks(scale, _ticks)
     end
 end
 
 ticks((min, max)::NTuple{2, Any}) = automatic
-
-struct DateTicksWrapper{T <: TimeType, Ticks}
-    ticks::Ticks
-end
-
-DateTicksWrapper{T}(ticks) where {T <: TimeType} = DateTicksWrapper{T, typeof(ticks)}(ticks)
 
 const DATETIME_EPOCH = DateTime(2020, 01, 01)
 

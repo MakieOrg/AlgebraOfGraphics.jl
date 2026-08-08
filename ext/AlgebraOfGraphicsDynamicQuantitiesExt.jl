@@ -21,11 +21,29 @@ function dimensionless(x, u::DQ.Quantity{<:Any, <:DQ.Dimensions})
     return DQ.ustrip(xexp)
 end
 
-function AlgebraOfGraphics.strip_units(scale, data::MaybeMissingQuantities)
+function AlgebraOfGraphics.strip_scale(scale::AlgebraOfGraphics.ContinuousScale{<:DQ.Quantity})
     u = AlgebraOfGraphics.getunit(scale)
-    scale_unitless = AlgebraOfGraphics.ContinuousScale(dimensionless.(scale.extrema, u), scale.label, scale.force, scale.props)
+    return AlgebraOfGraphics.ContinuousScale(dimensionless.(scale.extrema, u), scale.label, scale.force, scale.props)
+end
+
+function AlgebraOfGraphics.strip_scale(scale, data::MaybeMissingQuantities)
+    u = AlgebraOfGraphics.getunit(scale)
     data_unitless = AlgebraOfGraphics.map_nonmissing(x -> dimensionless(x, u), data)
-    return scale_unitless, data_unitless
+    return AlgebraOfGraphics.strip_scale(scale), data_unitless
+end
+
+function AlgebraOfGraphics.strip_ticks(scale::AlgebraOfGraphics.ContinuousScale{<:DQ.Quantity}, ticks::AbstractVector{<:DQ.Quantity})
+    u = AlgebraOfGraphics.getunit(scale)
+    return dimensionless.(ticks, u)
+end
+
+function AlgebraOfGraphics.strip_ticks(scale::AlgebraOfGraphics.ContinuousScale{<:DQ.Quantity}, (values, labels)::Tuple{<:AbstractVector{<:DQ.Quantity}, <:Any})
+    u = AlgebraOfGraphics.getunit(scale)
+    return dimensionless.(values, u), labels
+end
+
+function AlgebraOfGraphics.strip_ticks(scale::AlgebraOfGraphics.ContinuousScale{<:DQ.Quantity}, ::Union{AbstractVector{<:Real}, Tuple{<:AbstractVector{<:Real}, <:Any}})
+    return AlgebraOfGraphics._unitless_ticks_error(scale)
 end
 
 AlgebraOfGraphics.to_unitless_numerical(x::MaybeMissingQuantities) = AlgebraOfGraphics.map_nonmissing(DQ.ustrip, x)

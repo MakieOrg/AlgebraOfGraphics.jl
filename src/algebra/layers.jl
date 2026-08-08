@@ -719,8 +719,6 @@ function get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     return scale
 end
 
-strip_units(scale, data) = scale, data
-
 function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
     hc_aes = hardcoded_mapping(key)
     aes = hc_aes === nothing ? get(aes_mapping, key, nothing) : hc_aes
@@ -728,7 +726,7 @@ function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, 
     scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
     scale === nothing && return data # verbatim data
     if scale isa ContinuousScale
-        scale, data = strip_units(scale, data)
+        scale, data = strip_scale(scale, data)
     end
     return full_rescale(data, aes, scale)
 end
@@ -742,7 +740,7 @@ full_rescale(data, aes, scale::CategoricalScale) = rescale(data, scale)
 function nonsingular_colorrange(scale::ContinuousScale)
     props = scale.props.aesprops::AesColorContinuousProps
     cr = @something(props.colorrange, scale.extrema)
-    return nonsingular_limits(cr)
+    return nonsingular_limits(map(to_unitless_numerical, cr))
 end
 
 # expand singular limits to (0, v) or (v, 0) if singular value v is nonzero

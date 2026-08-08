@@ -5,11 +5,27 @@ import Unitful
 
 const MaybeMissingQuantities = AbstractVector{<:Union{Missing, Unitful.Quantity}}
 
-function AlgebraOfGraphics.strip_units(scale, data::MaybeMissingQuantities)
+function AlgebraOfGraphics.strip_scale(scale::AlgebraOfGraphics.ContinuousScale{<:Unitful.Quantity})
     u = AlgebraOfGraphics.getunit(scale)
-    scale_unitless = AlgebraOfGraphics.ContinuousScale(Unitful.ustrip.(u, scale.extrema), scale.label, scale.force, scale.props)
+    return AlgebraOfGraphics.ContinuousScale(Unitful.ustrip.(u, scale.extrema), scale.label, scale.force, scale.props)
+end
+
+function AlgebraOfGraphics.strip_scale(scale, data::MaybeMissingQuantities)
+    u = AlgebraOfGraphics.getunit(scale)
     data_unitless = AlgebraOfGraphics.map_nonmissing(x -> Unitful.ustrip(u, x), data)
-    return scale_unitless, data_unitless
+    return AlgebraOfGraphics.strip_scale(scale), data_unitless
+end
+
+function AlgebraOfGraphics.strip_ticks(scale::AlgebraOfGraphics.ContinuousScale{<:Unitful.Quantity}, ticks::AbstractVector{<:Unitful.Quantity})
+    return Unitful.ustrip.(AlgebraOfGraphics.getunit(scale), ticks)
+end
+
+function AlgebraOfGraphics.strip_ticks(scale::AlgebraOfGraphics.ContinuousScale{<:Unitful.Quantity}, (values, labels)::Tuple{<:AbstractVector{<:Unitful.Quantity}, <:Any})
+    return Unitful.ustrip.(AlgebraOfGraphics.getunit(scale), values), labels
+end
+
+function AlgebraOfGraphics.strip_ticks(scale::AlgebraOfGraphics.ContinuousScale{<:Unitful.Quantity}, ::Union{AbstractVector{<:Real}, Tuple{<:AbstractVector{<:Real}, <:Any}})
+    return AlgebraOfGraphics._unitless_ticks_error(scale)
 end
 
 AlgebraOfGraphics.to_unitless_numerical(x::MaybeMissingQuantities) = AlgebraOfGraphics.map_nonmissing(Unitful.ustrip, x)
