@@ -28,11 +28,17 @@ jobs:
     uses: ./.github/workflows/_docs.yml
     secrets: inherit
 
+  readme:
+    uses: ./.github/workflows/_readme.yml
+    permissions:
+      contents: read
+      statuses: write
+
   finalize:
     name: CI result
     runs-on: ubuntu-latest
     if: always()
-    needs: [formatting, test, docs]
+    needs: [formatting, test, docs, readme]
     steps:
       - run: |
           results='${{ toJSON(needs.*.result) }}'
