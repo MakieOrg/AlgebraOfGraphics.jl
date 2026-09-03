@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.13.2 - 2026-09-03
+
 - Mappings with `verbatim` no longer pick up another layer's scale for the same aesthetic [#786](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/786).
 
 ## v0.13.1 - 2026-07-09
