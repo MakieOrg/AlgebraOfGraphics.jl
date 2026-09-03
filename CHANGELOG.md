@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Mappings with `verbatim` no longer pick up another layer's scale for the same aesthetic [#786](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/786).
+
 ## v0.13.1 - 2026-07-09
 
 - Unitful and DynamicQuantities columns containing `missing` values no longer error when drawn [#777](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/777).
