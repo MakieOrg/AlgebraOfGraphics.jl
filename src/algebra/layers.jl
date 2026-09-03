@@ -722,11 +722,14 @@ end
 strip_units(scale, data) = scale, data
 
 function full_rescale(data, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    is_verbatim(data) && return data
     hc_aes = hardcoded_mapping(key)
     aes = hc_aes === nothing ? get(aes_mapping, key, nothing) : hc_aes
-    aes === nothing && return data # verbatim data
+    if aes === nothing
+        error("Found no aesthetic for key $(repr(key)), only verbatim data may use a key that is not part of a plot type's aesthetic mapping and that is handled above.")
+    end
     scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
-    scale === nothing && return data # verbatim data
+    scale === nothing && return data
     if scale isa ContinuousScale
         scale, data = strip_units(scale, data)
     end
@@ -829,6 +832,9 @@ function full_rescale(data, aes::Type{<:Union{AesX, AesY, AesZ, AesDeltaX, AesDe
 end
 
 function numerical_rescale(values, key, aes_mapping, scale_mapping, categoricalscales, continuousscales)
+    if is_verbatim(values)
+        error("Cannot do numerical rescale on verbatim data for $(repr(key))")
+    end
     aes = aes_mapping[key]
     scale = get_scale(key, aes, scale_mapping, categoricalscales, continuousscales)
 
@@ -1037,7 +1043,7 @@ function compute_plot_dependent_attributes!(::Type{T}, pl::ProcessedLayer) where
 
     flat = reduce(vcat, xdata)
     isempty(flat) && return
-    rescaled = contextfree_rescale(flat)
+    rescaled = unwrap_verbatim(contextfree_rescale(flat))
     s = unique!(sort(rescaled))
 
     width = if length(s) <= 1
