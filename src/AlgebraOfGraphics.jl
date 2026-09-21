@@ -30,6 +30,7 @@ import RelocatableFolders
 import PolygonOps
 import Isoband
 import NaturalSort
+import GridLayoutBase
 
 export hideinnerdecorations!, deleteemptyaxes!
 export Layer, Layers, ProcessedLayer, ProcessedLayers, zerolayer

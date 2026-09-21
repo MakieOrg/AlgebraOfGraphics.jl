@@ -98,3 +98,5 @@ end
 
 Base.iterate(fg::FigureGrid) = iterate((fg.figure, fg.grid))
 Base.iterate(fg::FigureGrid, i) = iterate((fg.figure, fg.grid), i)
+
+GridLayoutBase.contents(fg::FigureGrid) = contents(fg.figure.layout)
