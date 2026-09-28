@@ -690,8 +690,16 @@ elementwise_rescale(::Missing) = missing
 # if there were only missings, breaking some plotting scenarios due to downstream Makie failures to convert,
 # this way we at least pass through data that doesn't look like it should be rescaled, also saving some memory,
 # which keeps the annoying behavior for those types but can't really be avoided easily
-contextfree_rescale(values::AbstractArray{<:Union{TimeType, Period, Verbatim, Missing}}) = map(elementwise_rescale, values)
+contextfree_rescale(values::AbstractArray{<:Union{TimeType, Period, Missing}}) = map(elementwise_rescale, values)
 contextfree_rescale(values::AbstractArray) = values
+
+# `Verbatim` values stay wrapped through `contextfree_rescale` so that scale resolution can tell them apart
+# from data of the same aesthetic that does belong to a scale, they are unwrapped when entries are built
+is_verbatim(values::AbstractArray) = eltype(values) !== Missing && nonmissingtype(eltype(values)) <: Verbatim
+is_verbatim(_) = false
+
+unwrap_verbatim(v::Verbatim) = v[]
+unwrap_verbatim(values) = is_verbatim(values) ? map(elementwise_rescale, values) : values
 
 rescale(values, ::Nothing; allow_continuous = true) = values
 

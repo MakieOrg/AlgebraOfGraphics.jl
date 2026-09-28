@@ -7,6 +7,12 @@ struct Entry
     plottype::PlotType
     positional::Arguments
     named::NamedArguments
+
+    # an `Entry` holds plot-ready data, so the `Verbatim` wrappers that mark data
+    # which no scale applies to during scale resolution are stripped here
+    function Entry(plottype::PlotType, positional, named)
+        return new(plottype, map(unwrap_verbatim, positional), map(unwrap_verbatim, named))
+    end
 end
 
 # Use technique from https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/289

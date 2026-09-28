@@ -281,6 +281,18 @@ end
     @test e2.named[:color] == colors[6:10]
 end
 
+@testset "verbatim bypasses a scale of the same aesthetic in another layer" begin
+    colors = [:black, :black, :black, :red]
+    spec = mapping([1, 2, 1, 2], [1, 2, 2, 1]) * (
+        mapping([1, 2, 3, 4]) * visual(Heatmap) +
+            mapping(text = ["A", "B", "C", "D"] => verbatim, color = colors => verbatim) * visual(Makie.Text)
+    )
+
+    ag = compute_axes_grid(spec, scales())
+    entry = only(filter(e -> e.plottype <: Makie.Text, ag[1].entries))
+    @test entry.named[:color] == colors
+end
+
 @testset "hardcoded categoricals work with continuous data" begin
 
     hardcodeds = [:layout, :col, :row, :group]
