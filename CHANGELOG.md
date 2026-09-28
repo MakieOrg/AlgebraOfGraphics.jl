@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Weighted `linear` fits now show a confidence-interval band by default (previously they drew only the fitted line), by fitting via `GLM.glm` which supports confidence intervals for weighted models. `linear` gained the following keywords:
+
+  - `weighttype`: The `StatsBase.AbstractWeights` type used for the `weights` mapping). Currently only supports `:fweights` until GLM.jl v2 is released.
+  - `distr` and `link`: Forwarded to `GLM.glm` for weighted fits.
+
+[#710](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/710)
+
 ## v0.13.2 - 2026-09-03
 
 - Mappings with `verbatim` no longer pick up another layer's scale for the same aesthetic [#786](https://github.com/MakieOrg/AlgebraOfGraphics.jl/pull/786).
