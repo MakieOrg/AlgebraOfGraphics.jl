@@ -16,7 +16,7 @@ applydatalimits(f::Function, d) = map(f, d)
 applydatalimits(limits::Tuple{Real, Real}, d) = map(_ -> limits, d)
 applydatalimits(limits::Tuple, _) = limits
 
-function _density(vs::Tuple, vs_orig::Tuple; datalimits, npoints, kwargs...)
+function _density(vs::Tuple, vs_orig::Tuple, transforms::Tuple; datalimits, npoints, kwargs...)
     k = _kde(vs; kwargs...)
     intervals = applydatalimits(datalimits, vs)
     rgs = map(intervals) do (min, max)
@@ -24,26 +24,35 @@ function _density(vs::Tuple, vs_orig::Tuple; datalimits, npoints, kwargs...)
     end
     res = pdf(k, rgs...)
     rgs_reapplied = ntuple(length(vs_orig)) do i
-        from_unitless_numerical(collect(rgs[i]), vs_orig[i])
+        from_transformed_numerical(collect(rgs[i]), vs_orig[i], transforms[i])
     end
     return (rgs_reapplied..., res)
 end
 
 function (d::DensityAnalysis)(input::ProcessedLayer)
+    N = length(input.positional)
+    direction = N == 1 ? (d.direction === automatic ? :x : d.direction) : nothing
+    nd_plottype = N == 1 ? nothing : Makie.plottype(input.plottype, [Heatmap, Volume][N - 1])
+    dimtransforms = ntuple(N) do i
+        if N == 1
+            positional_transform(input.axis_transforms, direction === :y ? AesY : AesX)
+        else
+            position_transform(input.axis_transforms, nd_plottype, input.attributes, N + 1, i)
+        end
+    end
+    scales_active = !isempty(input.axis_transforms)
     datalimits = if d.datalimits === automatic
-        defaultdatalimits(map(v -> map(to_unitless_numerical, v), input.positional))
+        defaultdatalimits(ntuple(i -> to_transformed_nested(dimtransforms[i], input.positional[i]), N))
     else
-        _strip_datalimits_units(d.datalimits)
+        forward_datalimits(_strip_datalimits_units(d.datalimits), dimtransforms)
     end
     options = valid_options(; datalimits, d.npoints, d.kernel, d.bandwidth)
     output = map(input) do p, n
         p, n = _drop_missing_nan_rows(p, n)
-        pn = map(to_unitless_numerical, p)
-        return _density(Tuple(pn), Tuple(p); pairs(n)..., pairs(options)...), (;)
+        pn = ntuple(i -> to_transformed_numerical(p[i], dimtransforms[i]), length(p))
+        return _density(Tuple(pn), Tuple(p), dimtransforms; pairs(n)..., pairs(options)...), (;)
     end
-    N = length(input.positional)
     if N == 1
-        direction = d.direction === automatic ? :x : d.direction
         labels_base = set(input.labels, N + 1 => "pdf")
         # When direction is :y, Lines reverses the positional arguments, so we need to swap labels 1 and 2
         labels_lines = if direction === :y
@@ -73,13 +82,12 @@ function (d::DensityAnalysis)(input::ProcessedLayer)
                 (p[1], zero(p[2]), p[2]), n
             end; plottype = Band, label = :area, attributes = dictionary([:alpha => 0.15, :direction => direction]), labels = labels_base
         )
-        return ProcessedLayers([bandlayer, linelayer])
+        return tag_scale_aesthetics(ProcessedLayers([bandlayer, linelayer]), scales_active)
     else
         d.direction === automatic || error("The direction = $(repr(d.direction)) keyword in a density analysis may only be set for the 1-dimensional case")
         labels = set(input.labels, N + 1 => "pdf")
-        default_plottype = [Heatmap, Volume][N - 1]
-        plottype = Makie.plottype(input.plottype, default_plottype)
-        return ProcessedLayer(output; plottype, labels)
+        plottype = nd_plottype
+        return tag_scale_aesthetics(ProcessedLayer(output; plottype, labels), scales_active)
     end
 end
 

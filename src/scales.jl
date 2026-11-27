@@ -86,7 +86,7 @@ function Cycler(p)
 end
 
 function (c::Cycler)(u)
-    i = findfirst(isequal(u), c.keys)
+    i = findfirst(k -> unwrap_isequal(k, u), c.keys)
     return if isnothing(i)
         l = length(c.defaults)
         l == 0 && throw(ArgumentError("Key $(repr(u)) not found and no default values are present"))
@@ -379,16 +379,17 @@ function datavalues(c::CategoricalScale)
         else
             catvalues = map(category_value, c.props.categories)
         end
-        u = try
-            union(catvalues, c.data)
-        catch e
-            throw(ArgumentError("Custom categories were given but unioning them with the categories determined from the data failed."))
-        end
-        if u != catvalues
-            extraneous = setdiff(c.data, catvalues)
+        extraneous = filter(d -> !any(cv -> unwrap_isequal(cv, d), catvalues), c.data)
+        if !isempty(extraneous)
             throw(ArgumentError("Custom categories were given but there were more categories in the data, which is not allowed. The additional categories were $extraneous"))
         end
-        u
+        # Keep the actual (possibly wrapped) data value where a category matches it, so that the
+        # per-row lookup via `indexin` in `numerical_rescale` still matches; fall back to the
+        # given value for categories that don't appear in the data (reserved legend slots).
+        map(catvalues) do cv
+            i = findfirst(d -> unwrap_isequal(cv, d), c.data)
+            i === nothing ? cv : c.data[i]
+        end
     end
 end
 plotvalues(c::CategoricalScale) = c.plot
@@ -514,8 +515,18 @@ getunit(::AbstractVector) = nothing
 
 function unit_string end
 
+map_nonmissing(f, v::AbstractVector) = map(x -> ismissing(x) ? missing : f(x), v)
+
 dimensionally_compatible(::Nothing, ::Nothing) = true
 dimensionally_compatible(_, _) = false
+
+# unit of a ratio aesthetic (e.g. an ABLines slope is unit(AesY) / unit(AesX)).
+# `/` and `^-1` work for both Unitful's `FreeUnits` and DynamicQuantities' `Quantity`,
+# so no extension methods are needed.
+divide_units(::Nothing, ::Nothing) = nothing
+divide_units(u1, ::Nothing) = u1
+divide_units(::Nothing, u2) = u2^-1
+divide_units(u1, u2) = u1 / u2
 
 struct DimensionMismatch{X1, X2} <: Exception
     x1::X1
@@ -529,6 +540,18 @@ function align_scale_unit(lead::ContinuousScale, follow::ContinuousScale)
         return Accessors.@set follow.props.unit = ulead
     else
         throw(DimensionMismatch(ulead, ufollow))
+    end
+end
+
+# align `follow` to the unit of `numerator / denominator`, used for ratio aesthetics
+# like an ABLines slope whose unit must equal unit(AesY) / unit(AesX).
+function align_ratio_unit(numerator::ContinuousScale, denominator::ContinuousScale, follow::ContinuousScale)
+    target = divide_units(getunit(numerator), getunit(denominator))
+    ufollow = getunit(follow)
+    if dimensionally_compatible(target, ufollow)
+        return Accessors.@set follow.props.unit = target
+    else
+        throw(DimensionMismatch(target, ufollow))
     end
 end
 
@@ -596,6 +619,58 @@ function from_unitless_numerical(x̂::AbstractVector{<:Real}, ::AbstractVector{<
 end
 from_unitless_numerical(x̂, ::AbstractVector) = x̂
 
+apply_scale_forward(::Nothing, xn) = xn
+function apply_scale_forward(t::Pair, xn)
+    forward = last(t)
+    x̂n = try
+        forward.(xn)
+    catch e
+        e isa DomainError ? _scale_domain_error(t, e.val) : rethrow()
+    end
+    bad = findfirst(i -> isfinite(xn[i]) && !isfinite(x̂n[i]), eachindex(xn))
+    bad === nothing || _scale_domain_error(t, xn[bad])
+    return x̂n
+end
+apply_scale_inverse(::Nothing, x̂n) = x̂n
+apply_scale_inverse(t::Pair, x̂n) = Makie.inverse_transform(last(t)).(x̂n)
+
+struct ScaleDomainError <: Exception
+    forward::Any
+    value::Any
+    analysis::Union{Nothing, Symbol}
+    aes::Union{Nothing, Type}
+end
+ScaleDomainError(forward, value) = ScaleDomainError(forward, value, nothing, nothing)
+
+function Base.showerror(io::IO, e::ScaleDomainError)
+    on_aes = e.aes === nothing ? "" : " set for aesthetic `$(aesname(e.aes))`"
+    fit_by = e.analysis === nothing ? "Analyses fit" : "`$(e.analysis)` fits"
+    hint = e.aes === nothing ? "a display-only axis scale attribute (e.g. `axis = (; yscale = log10)`)" :
+        "`axis = (; $(lowercase(aesname(e.aes)))scale = $(e.forward))`"
+    return print(
+        io,
+        "The scale function `$(e.forward)`$on_aes is not finite at the data value `$(e.value)`. ",
+        "$fit_by in transformed scale space, so every value mapped onto a scale-transformed aesthetic must lie in the function's domain (e.g. strictly positive for `log`). ",
+        "Filter the offending rows, or use $hint instead, which transforms only the display and leaves the analysis in data space.",
+    )
+end
+
+_scale_domain_error(t::Pair, value) = throw(ScaleDomainError(last(t), value, nothing, first(t)))
+
+to_transformed_numerical(v, t) = apply_scale_forward(t, to_unitless_numerical(v))
+from_transformed_numerical(v̂, ref, t) = from_unitless_numerical(apply_scale_inverse(t, v̂), ref)
+
+to_transformed_nested(::Nothing, v) = map(to_unitless_numerical, v)
+to_transformed_nested(t::Pair, v) = map(g -> apply_scale_forward(t, to_unitless_numerical(g)), v)
+
+forward_datalimits(dl, ts) = dl
+forward_datalimits(dl::Tuple{Real, Real}, ts) =
+    (only(apply_scale_forward(first(ts), [dl[1]])), only(apply_scale_forward(first(ts), [dl[2]])))
+forward_datalimits(dl::Tuple, ts) = ntuple(length(dl)) do i
+    lo, hi = dl[i]
+    (only(apply_scale_forward(ts[i], [lo])), only(apply_scale_forward(ts[i], [hi])))
+end
+
 # `datalimits` accepts a single `(lo, hi)` (broadcast to every dim) or a tuple-of-pairs (one per dim);
 # strip units from the scalar limit values without disturbing that shape.
 _strip_datalimits_units(dl) = dl
@@ -616,8 +691,16 @@ elementwise_rescale(::Missing) = missing
 # if there were only missings, breaking some plotting scenarios due to downstream Makie failures to convert,
 # this way we at least pass through data that doesn't look like it should be rescaled, also saving some memory,
 # which keeps the annoying behavior for those types but can't really be avoided easily
-contextfree_rescale(values::AbstractArray{<:Union{TimeType, Period, Verbatim, Missing}}) = map(elementwise_rescale, values)
+contextfree_rescale(values::AbstractArray{<:Union{TimeType, Period, Missing}}) = map(elementwise_rescale, values)
 contextfree_rescale(values::AbstractArray) = values
+
+# `Verbatim` values stay wrapped through `contextfree_rescale` so that scale resolution can tell them apart
+# from data of the same aesthetic that does belong to a scale, they are unwrapped when entries are built
+is_verbatim(values::AbstractArray) = eltype(values) !== Missing && nonmissingtype(eltype(values)) <: Verbatim
+is_verbatim(_) = false
+
+unwrap_verbatim(v::Verbatim) = v[]
+unwrap_verbatim(values) = is_verbatim(values) ? map(elementwise_rescale, values) : values
 
 rescale(values, ::Nothing; allow_continuous = true) = values
 

@@ -713,6 +713,12 @@ reftest("ablines cat color linestyle") do
         visual(ABLines) |> draw
 end
 
+reftest("ablines units") do
+    data((; x = (1:5) .* U.u"hr", y = [2.8, 4.6, 6.4, 8.2, 10.0] .* U.u"kg")) *
+        mapping(:x, :y) * visual(Scatter, markersize = 15) +
+        mapping([1000.0] .* U.u"g", [0.5] .* U.u"g/s") * visual(ABLines, color = :red) |> draw
+end
+
 reftest("qqplot") do
     data((; x = sin.(1:100), y = sin.((1:100) .+ 0.2))) * mapping(:x, :y) * visual(QQPlot, qqline = :identity) |> draw
 end
@@ -1035,6 +1041,20 @@ reftest("title subtitle footnotes settings") do
         axis = (; width = 100, height = 100)
     )
 
+end
+
+reftest("footnotes multiline align right") do
+    spec = data((; x = 1:10, y = 11:20)) * mapping(:x, :y) * visual(Scatter)
+    draw(
+        spec;
+        figure = (;
+            footnotes = [
+                "First footnote\nwith a wrapped second line",
+                "Short note",
+            ],
+            footnotealign = :right,
+        ),
+    )
 end
 
 reftest("title subtitle footnotes fontsize inherit") do

@@ -1,0 +1,37 @@
+cff-version: "1.2.0"
+authors:
+  - family-names: Krumbiegel
+    given-names: Julius
+    orcid: "https://orcid.org/0000-0002-8409-5590"
+  - family-names: Vertechi
+    given-names: Pietro
+    orcid: "https://orcid.org/0000-0003-3751-1181"
+contact:
+  - family-names: Krumbiegel
+    given-names: Julius
+    orcid: "https://orcid.org/0000-0002-8409-5590"
+doi: 10.5281/zenodo.21491846
+message: If you use this software, please cite our article in the Journal of Open Source Software.
+repository-code: "https://github.com/MakieOrg/AlgebraOfGraphics.jl"
+license: MIT
+preferred-citation:
+  authors:
+    - family-names: Krumbiegel
+      given-names: Julius
+      orcid: "https://orcid.org/0000-0002-8409-5590"
+    - family-names: Vertechi
+      given-names: Pietro
+      orcid: "https://orcid.org/0000-0003-3751-1181"
+  date-published: 2026-07-27
+  doi: 10.21105/joss.10894
+  issn: 2475-9066
+  issue: 123
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 10894
+  title: "AlgebraOfGraphics.jl: A Makie-powered algebraic grammar of graphics for Julia"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.10894"
+  volume: 11
+title: "AlgebraOfGraphics.jl: A Makie-powered algebraic grammar of graphics for Julia"

@@ -598,6 +598,27 @@ draw(
 )
 ```
 
+Unlike `ticks` and `tickformat`, the `scale` function also affects [analyses](@ref "Analyses"). When a `scale` is set on an aesthetic, analyses like `linear`, `smooth`, `density` and `histogram` fit in the transformed space and back-transform their output, so the fit matches the scaled display. This differs from setting `axis = (; yscale = log10)`, which is a display-only Makie axis attribute applied after the analysis has already run in data space. In the left panel below the line is fit in linear space and curves away from the log-linear data, in the right panel it is fit in log space and tracks it:
+
+```@example
+using AlgebraOfGraphics
+using CairoMakie
+
+t = repeat(0.0:1:8, inner = 2)
+conc = @. 100 * 10^(-0.09 * t)
+base = data((; t, conc)) * mapping(:t => "time (h)", :conc => "concentration (mg/L)")
+spec = base * visual(Scatter) + base * linear(interval = nothing) * visual(color = :firebrick)
+
+fig = Figure(size = (800, 350))
+draw!(fig[1, 1], spec; axis = (; yscale = log10, title = "axis = (; yscale = log10)"))
+draw!(fig[1, 2], spec, scales(Y = (; scale = log10)); axis = (; title = "scales(Y = (; scale = log10))"))
+fig
+```
+
+The scale function must have an inverse registered with `Makie.inverse_transform` (e.g. `log10`, `log2`, `log`, `sqrt`) so analyses can back-transform their fit.
+
+Only statistics computed by AlgebraOfGraphics analyses participate in this. A statistic computed inside a Makie recipe (e.g. `visual(Density)` or `visual(Hist)`, which run their own kernel density estimate or binning on the data AlgebraOfGraphics hands them) does not see the scale and is computed in data space, only its display is transformed. To compute in the scaled space, use the AlgebraOfGraphics analysis (`AlgebraOfGraphics.density()`, `histogram()`, ...) instead of the recipe.
+
 
 ## Legend options
 

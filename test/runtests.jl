@@ -64,6 +64,8 @@ include("legend.jl")
 include("geometry.jl")
 include("paginate.jl")
 
-@testset "Reference tests" begin
-    include("reference_tests.jl")
+PixelMatch.@pixelmatch_report out_file = joinpath(@__DIR__, "reference_tests", "pixelmatch-report.html") begin
+    @testset "Reference tests" begin
+        include("reference_tests.jl")
+    end
 end

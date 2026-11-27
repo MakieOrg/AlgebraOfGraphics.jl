@@ -11,20 +11,23 @@ function (e::ExpectationAnalysis)(input::ProcessedLayer)
     # Strip units from the value column before reducing; the Mean aggregator's
     # `(0, 0.0)` init isn't dimensionally compatible with unit-bearing values.
     # Units are reapplied to the per-group means afterwards.
+    N = length(input.positional)
+    plottype = Makie.plottype(input.plottype, categoricalplottypes[N - 1])
+    t = position_transform(input.axis_transforms, plottype, input.attributes, N, N)
     y_originals = last(input.positional)
     input_filtered = map(input) do p, n
         return _drop_missing_nan_rows(p, n)
     end
     positional_stripped = copy(input_filtered.positional)
-    positional_stripped[end] = map(to_unitless_numerical, positional_stripped[end])
+    positional_stripped[end] = to_transformed_nested(t, positional_stripped[end])
     input_stripped = ProcessedLayer(input_filtered; positional = positional_stripped)
 
     reduced = groupreduce(Mean, input_stripped)
     positional = copy(reduced.positional)
     positional[end] = map(positional[end], y_originals) do m, y_orig
-        from_unitless_numerical(m, y_orig)
+        from_transformed_numerical(m, y_orig, t)
     end
-    return ProcessedLayer(reduced; positional)
+    return tag_scale_aesthetics(ProcessedLayer(reduced; positional), !isempty(input.axis_transforms))
 end
 
 """

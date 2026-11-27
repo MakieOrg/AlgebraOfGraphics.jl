@@ -609,24 +609,30 @@ end
     insert!(labels, :color, "c")
     @test labels == map(AlgebraOfGraphics.to_label, processedlayer.labels)
 
-    # Also test integer input
+    # Few distinct integer x values make Loess's kd-tree scale-sensitive, so the reference must
+    # standardize x exactly as `SmoothAnalysis` does to match.
     df = (x = rand(1:3, 1000), y = rand(1000), c = rand(["a", "b"], 1000))
     npoints = 150
     layer = data(df) * mapping(:x, :y, color = :c) * smooth(; npoints)
     processedlayers = AlgebraOfGraphics.ProcessedLayers(layer)
     processedlayer = processedlayers.layers[2]
 
+    function loess_standardized(x, y)
+        offset = sum(x) / length(x)
+        centered = x .- offset
+        scale = sqrt(sum(abs2, centered) / length(centered))
+        model = Loess.loess(centered ./ scale, y)
+        x̂ = collect(range(extrema(x)...; length = npoints))
+        return x̂, Loess.predict(model, (x̂ .- offset) ./ scale)
+    end
+
     x1 = df.x[df.c .== "a"]
     y1 = df.y[df.c .== "a"]
-    loess1 = Loess.loess(x1, y1)
-    x̂1 = range(extrema(x1)...; length = npoints)
-    ŷ1 = Loess.predict(loess1, x̂1)
+    x̂1, ŷ1 = loess_standardized(x1, y1)
 
     x2 = df.x[df.c .== "b"]
     y2 = df.y[df.c .== "b"]
-    loess2 = Loess.loess(x2, y2)
-    x̂2 = range(extrema(x2)...; length = npoints)
-    ŷ2 = Loess.predict(loess2, x̂2)
+    x̂2, ŷ2 = loess_standardized(x2, y2)
 
     x̂, ŷ = processedlayer.positional
 
@@ -1044,6 +1050,20 @@ end
         @test all(<=(sqrt(20.0)), ŷ)
         @test issorted(ŷ)
     end
+
+    @testset "smooth (Date) degree 2" begin
+        ts = Date(2024, 1, 1):Day(1):Date(2024, 1, 20)
+        df = (; x = collect(ts), y = sqrt.(1.0:20.0))
+        layer = data(df) * mapping(:x, :y) * smooth(; interval = nothing)
+        pl = AlgebraOfGraphics.ProcessedLayer(layer)
+        ŷ = only(pl.positional[2])
+
+        df_num = (; x = collect(1.0:20.0), y = sqrt.(1.0:20.0))
+        pl_num = AlgebraOfGraphics.ProcessedLayer(data(df_num) * mapping(:x, :y) * smooth(; interval = nothing))
+        ŷ_num = only(pl_num.positional[2])
+
+        @test ŷ ≈ ŷ_num
+    end
 end
 
 @testset "datalimits broadcast vs per-dim" begin
@@ -1073,5 +1093,118 @@ end
         pl = AlgebraOfGraphics.ProcessedLayer(layer)
         @test only(pl.positional[1]) == [1.0, 3.0, 5.0, 7.0, 9.0]
         @test collect(only(pl.positional[2])) == [1.0, 2.0, 2.0, 1.0, 0.0]
+    end
+end
+
+@testset "analyses in transformed scale space" begin
+    transforms(; kwargs...) = AlgebraOfGraphics.axis_transforms_from_scales(scales(; kwargs...))
+    logX = transforms(X = (; scale = log10))
+    logY = transforms(Y = (; scale = log10))
+    logXY = transforms(X = (; scale = log10), Y = (; scale = log10))
+
+    fit_output(layer, tf) = AlgebraOfGraphics.ProcessedLayers(layer, tf).layers[end]
+
+    @testset "linear recovers exponential in log-y space" begin
+        df = (; x = [1.0, 2.0, 3.0, 4.0], y = [10.0, 100.0, 1000.0, 10000.0])
+        layer = data(df) * mapping(:x, :y) * linear(interval = nothing)
+        ll = fit_output(layer, logY)
+        x̂, ŷ = only(ll.positional[1]), only(ll.positional[2])
+        @test ŷ ≈ 10 .^ x̂
+
+        ŷ_plain = only(fit_output(layer, transforms()).positional[2])
+        @test !(ŷ_plain ≈ 10 .^ x̂)
+    end
+
+    @testset "linear recovers power law in log-log space" begin
+        x = [1.0, 2.0, 4.0, 8.0]
+        df = (; x, y = 3 .* x .^ 2)
+        layer = data(df) * mapping(:x, :y) * linear(interval = nothing)
+        ll = fit_output(layer, logXY)
+        x̂, ŷ = only(ll.positional[1]), only(ll.positional[2])
+        @test ŷ ≈ 3 .* x̂ .^ 2
+    end
+
+    @testset "smooth fits in log-y space" begin
+        x = repeat(1.0:6.0, inner = 2)
+        layer = data((; x, y = 10.0 .^ (0.5 .* x))) * mapping(:x, :y) * smooth(interval = nothing)
+        ŷ_log = only(fit_output(layer, logY).positional[2])
+        ŷ_plain = only(fit_output(layer, transforms()).positional[2])
+        @test all(>(0), ŷ_log)
+        @test issorted(ŷ_log)
+        @test !(ŷ_log ≈ ŷ_plain)
+    end
+
+    @testset "histogram bins in log-x space" begin
+        df = (; v = [1.0, 10.0, 100.0, 1000.0])
+        layer = data(df) * mapping(:v) * histogram(bins = 3)
+        pl_log = fit_output(layer, logX)
+        @test only(pl_log.positional[1]) == [5.5, 55.0, 550.0, 5500.0]
+        @test collect(only(pl_log.positional[2])) == [1.0, 1.0, 1.0, 1.0]
+
+        pl_plain = fit_output(layer, transforms())
+        @test only(pl_plain.positional[1]) == [250.0, 750.0, 1250.0]
+        @test collect(only(pl_plain.positional[2])) == [3.0, 0.0, 1.0]
+    end
+
+    @testset "histogram direction = :x bins in log-y space" begin
+        df = (; v = [1.0, 10.0, 100.0, 1000.0])
+        layer = data(df) * mapping(:v) * histogram(bins = 3, direction = :x)
+        pl_log = fit_output(layer, logY)
+        @test get(pl_log.attributes, :direction, nothing) == :x
+        @test pl_log.scale_assumed_aes == AlgebraOfGraphics.position_aesthetics(pl_log.plottype, pl_log.attributes, 2)
+        @test only(pl_log.positional[1]) == [5.5, 55.0, 550.0, 5500.0]
+        @test collect(only(pl_log.positional[2])) == [1.0, 1.0, 1.0, 1.0]
+
+        @test compute_axes_grid(layer, scales(Y = (; scale = log10))) isa AbstractMatrix
+        @test_throws "only be set for the 1-dimensional case" AlgebraOfGraphics.ProcessedLayers(
+            data((; x = [1.0, 2.0, 3.0], y = [1.0, 2.0, 3.0])) * mapping(:x, :y) * histogram(bins = 2, direction = :x)
+        )
+    end
+
+    @testset "expectation is the geometric mean in log-y space" begin
+        df = (; g = ["a", "a", "b", "b"], y = [1.0, 100.0, 10.0, 1000.0])
+        layer = data(df) * mapping(:g, :y) * expectation()
+        @test only(fit_output(layer, logY).positional[2]) == [10.0, 100.0]
+    end
+
+    @testset "units compose with the scale transform" begin
+        x = repeat(1.0:6.0, inner = 2)
+        df = (; t = x .* U.u"hr", c = 10.0 .^ (0.2 .+ 0.3 .* x) .* U.u"mg/L")
+        layer = data(df) * mapping(:t, :c) * linear(interval = nothing)
+        pl = fit_output(layer, logY)
+        x̂, ŷ = only(pl.positional[1]), only(pl.positional[2])
+        @test eltype(x̂) == eltype(df.t)
+        @test eltype(ŷ) == eltype(df.c)
+        @test ŷ ≈ 10.0 .^ (0.2 .+ 0.3 .* U.ustrip.(x̂)) .* U.u"mg/L"
+    end
+
+    @testset "scale without a known inverse errors" begin
+        df = (; x = [1.0, 2.0], y = [10.0, 100.0])
+        layer = data(df) * mapping(:x, :y) * linear(interval = nothing)
+        @test_throws "has no inverse registered with `Makie.inverse_transform`" AlgebraOfGraphics.ProcessedLayers(layer, transforms(Y = (; scale = x -> x^3)))
+    end
+
+    @testset "data outside the scale domain errors with context" begin
+        lin(yvals) = data((; x = [1.0, 2.0, 3.0], y = yvals)) * mapping(:x, :y) * linear(interval = nothing)
+        @test_throws "The scale function `log10` set for aesthetic `Y` is not finite at the data value `0.0`. `LinearAnalysis` fits in transformed scale space" AlgebraOfGraphics.ProcessedLayers(lin([10.0, 0.0, 100.0]), logY)
+        @test_throws "not finite at the data value `-5.0`" AlgebraOfGraphics.ProcessedLayers(lin([10.0, -5.0, 100.0]), logY)
+        @test_throws "`SmoothAnalysis` fits in transformed scale space" AlgebraOfGraphics.ProcessedLayers(data((; x = [1.0, 2.0, 3.0], y = [10.0, 0.0, 100.0])) * mapping(:x, :y) * smooth(interval = nothing), logY)
+
+        xy(df) = data(df) * mapping(:x, :y) * linear(interval = nothing)
+        @test_throws "aesthetic `X`" AlgebraOfGraphics.ProcessedLayers(xy((; x = [1.0, 0.0, 3.0], y = [10.0, 20.0, 30.0])), logXY)
+        @test_throws "aesthetic `Y`" AlgebraOfGraphics.ProcessedLayers(xy((; x = [1.0, 2.0, 3.0], y = [10.0, 0.0, 30.0])), logXY)
+    end
+
+    @testset "guard catches a downstream aesthetic flip onto a scaled axis" begin
+        df = (; v = [1.0, 10.0, 100.0, 1000.0, 10.0, 100.0, 50.0, 5.0])
+        spec = data(df) * mapping(:v) * histogram(bins = 3) * visual(direction = :x)
+        @test_throws "altered the aesthetic mapping" compute_axes_grid(spec, scales(Y = (; scale = log10)))
+    end
+
+    @testset "aesthetic-preserving downstream changes do not fire the guard" begin
+        df = (; x = [1.0, 2.0, 3.0, 4.0], y = [10.0, 100.0, 1000.0, 10000.0])
+        base = data(df) * mapping(:x, :y)
+        @test compute_axes_grid(base * smooth(interval = nothing) * visual(Scatter), scales(Y = (; scale = log10))) isa AbstractMatrix
+        @test compute_axes_grid(base * linear(interval = nothing) * visual(color = :red), scales(Y = (; scale = log10))) isa AbstractMatrix
     end
 end

@@ -247,6 +247,15 @@ Base.isequal(p::Presorted, p2::Presorted) = isequal(p.x, p2.x)
 Base.:(==)(p::Presorted, p2::Presorted) = p.x == p2.x
 Base.hash(p::Presorted) = hash(p.x)
 
+# `presorted` and `nonnumeric` wrap a value to change how it sorts or which scale it gets,
+# without changing its identity. `unwrap` recovers the underlying value (recursively, in case
+# of nesting) so that palette pairs and `categories` passed via `scales` can be matched against
+# wrapped data values without the user having to re-wrap them.
+unwrap(x) = x
+unwrap(p::Presorted) = unwrap(p.x)
+unwrap(n::NonNumeric) = unwrap(n.x)
+unwrap_isequal(a, b) = isequal(unwrap(a), unwrap(b))
+
 struct FromContinuous{T}
     continuous::T
     relative::Bool

@@ -13,11 +13,11 @@ function update(f, fig)
     return output
 end
 
-function Makie.plot!(fig, d::AbstractDrawable, scales::Scales = scales(); axis = NamedTuple())
+function Makie.plot!(fig, d::AbstractDrawable, scales::Scales = scales(); axis = NamedTuple(), facet = NamedTuple())
     if isa(fig, Union{Axis, Axis3}) && !isempty(axis)
         @warn("Axis got passed, but also axis attributes. Ignoring axis attributes $axis.")
     end
-    grid = update(f -> compute_axes_grid(f, d, scales; axis), fig)
+    grid = update(f -> compute_axes_grid(f, d, scales; axis, facet), fig)
     foreach(plot!, grid)
     return grid
 end
@@ -254,7 +254,7 @@ function _draw(ae::Matrix{AxisSpecEntries}; axis = Dictionary{Symbol, Any}(), fi
         if fs.footnotes !== nothing
             fgl = GridLayout(fg.figure[end + 1, :]; halign = :left, _filter_nothings(; halign = fs.footnotealign)...)
             for (i, note) in enumerate(fs.footnotes)
-                Label(fgl[i, 1], note; tellwidth = false, halign = :left, fontsize = base_fontsize / 1.15, _filter_nothings(; halign = fs.footnotealign, font = fs.footnotefont, color = fs.footnotecolor, fontsize = fs.footnotesize, lineheight = fs.footnotelineheight)...)
+                Label(fgl[i, 1], note; tellwidth = false, halign = :left, justification = :left, fontsize = base_fontsize / 1.15, _filter_nothings(; halign = fs.footnotealign, justification = fs.footnotealign, font = fs.footnotefont, color = fs.footnotecolor, fontsize = fs.footnotesize, lineheight = fs.footnotelineheight)...)
             end
             fgl.addedrowgaps .= Ref(Fixed(0))
         end
@@ -289,7 +289,12 @@ end
 
 function _draw!(fig, d, scales; axis, facet)
     return update(fig) do f
-        ag = plot!(f, d, scales; axis)
+        ag = plot!(f, d, scales; axis, facet)
+        # `facet_size` was consumed by `compute_axes_grid`; strip it so `facet!` doesn't see it.
+        if haskey(facet, :size)
+            facet = copy(facet)
+            delete!(facet, :size)
+        end
         facet!(f, ag; facet)
         return ag
     end
