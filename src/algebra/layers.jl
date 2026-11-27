@@ -1061,3 +1061,5 @@ function compute_plot_dependent_attributes!(processedlayers::AbstractVector{Proc
     end
     return
 end
+
+full_rescale(data, ::Type{AesPieValueholder}, ::ContinuousScale) = data # don't scale pie data

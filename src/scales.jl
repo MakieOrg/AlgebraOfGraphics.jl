@@ -30,6 +30,7 @@ struct AesABIntercept <: Aesthetic end
 struct AesABSlope <: Aesthetic end
 struct AesAnnotationOffsetX <: Aesthetic end
 struct AesAnnotationOffsetY <: Aesthetic end
+struct AesPieValueholder <: Aesthetic end # pie values should not get scaled, this is used to select the correct full_rescale function
 
 # helper to dissociate scales belonging to the same Aesthetic type
 struct ScaleID

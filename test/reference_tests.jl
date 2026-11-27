@@ -1907,3 +1907,11 @@ reftest("stem plot") do
     spec = data(df) * mapping(:x, :y, color = :color, marker = :marker, markersize = :markersize) * visual(Stem)
     draw(spec, legend = (; hide_unused = true))
 end
+
+reftest("pie plot") do 
+    df = (;
+        fracs = [1, 2, 3],
+        groups = ["A", "B", "C"],
+    )
+    spec = data(df) * mapping(:fracs, color = :groups) * visual(Pie) |> draw
+end

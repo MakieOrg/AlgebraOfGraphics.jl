@@ -603,6 +603,13 @@ function aesthetic_mapping(::Type{Hist}, ::Normal)
     )
 end
 
+function aesthetic_mapping(::Type{Pie}, ::Normal)
+    return dictionary([
+        1 => AesPieValueholder,
+        :color => AesColor,
+    ])
+end
+
 aesthetic_mapping(::Type{Stairs}, ::Normal) = aesthetic_mapping(Stairs, 1)
 aesthetic_mapping(::Type{Stairs}, ::Normal, ::Normal) = aesthetic_mapping(Stairs, 2)
 
