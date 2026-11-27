@@ -571,6 +571,8 @@ mergeable(::Type{<:BoxPlot}, primary) = haskey(primary, :dodge)
 # merge stem plots
 mergeable(::Type{<:Union{Stem}}, primary) = true
 
+# Pie plots should get merged
+mergeable(::Type{<:Pie}, primary) = true
 
 # This method works on a list of "sliced" `ProcessedLayer`s
 function concatenate(pls::AbstractVector{ProcessedLayer})

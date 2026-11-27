@@ -585,6 +585,16 @@ function legend_elements(T::Type{Stem}, attributes, scale_args::MixedArguments)
     return legend_elements(Makie.Scatter, attributes, scale_args) # same legend as Scatter
 end
 
+function legend_elements(T::Type{Pie}, attributes, scale_args::MixedArguments)
+    return [
+        PolyElement(; # make sure the legend item looks good
+            color = _get(T, scale_args, attributes, :color),
+            polystrokecolor = _get(T, scale_args, attributes, :strokecolor),
+            polystrokewidth = _get(T, scale_args, attributes, :strokewidth),
+        ),
+    ]
+end
+
 # Notes
 
 # TODO: correctly handle composite plot types (now fall back to poly)
